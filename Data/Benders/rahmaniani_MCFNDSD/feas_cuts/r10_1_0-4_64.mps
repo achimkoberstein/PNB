@@ -1,0 +1,16016 @@
+*   
+*   r10_1_0-4_64.mps
+*   
+*   Generated with the MPL Modeling System
+*   Copyright (c) 1988-2018  Maximal Software
+*   
+*   Date:               November 1, 2018
+*   Time:               15:41
+*   
+*   Constraints:        920
+*   Variables:          4920
+*   Integers:           120
+*   Nonzeros:           14520
+*   Density:            0.3 %
+*   
+NAME          MCFNDSD  (MIN)
+ROWS
+  N Total_Cost
+  E NodeBalance0101
+  E NodeBalance0102
+  E NodeBalance0103
+  E NodeBalance0104
+  E NodeBalance0105
+  E NodeBalance0106
+  E NodeBalance0107
+  E NodeBalance0108
+  E NodeBalance0109
+  E NodeBalance0110
+  E NodeBalance0111
+  E NodeBalance0112
+  E NodeBalance0113
+  E NodeBalance0114
+  E NodeBalance0115
+  E NodeBalance0116
+  E NodeBalance0117
+  E NodeBalance0118
+  E NodeBalance0119
+  E NodeBalance0120
+  E NodeBalance0121
+  E NodeBalance0122
+  E NodeBalance0123
+  E NodeBalance0124
+  E NodeBalance0125
+  E NodeBalance0126
+  E NodeBalance0127
+  E NodeBalance0128
+  E NodeBalance0129
+  E NodeBalance0130
+  E NodeBalance0131
+  E NodeBalance0132
+  E NodeBalance0133
+  E NodeBalance0134
+  E NodeBalance0135
+  E NodeBalance0136
+  E NodeBalance0137
+  E NodeBalance0138
+  E NodeBalance0139
+  E NodeBalance0140
+  E NodeBalance0201
+  E NodeBalance0202
+  E NodeBalance0203
+  E NodeBalance0204
+  E NodeBalance0205
+  E NodeBalance0206
+  E NodeBalance0207
+  E NodeBalance0208
+  E NodeBalance0209
+  E NodeBalance0210
+  E NodeBalance0211
+  E NodeBalance0212
+  E NodeBalance0213
+  E NodeBalance0214
+  E NodeBalance0215
+  E NodeBalance0216
+  E NodeBalance0217
+  E NodeBalance0218
+  E NodeBalance0219
+  E NodeBalance0220
+  E NodeBalance0221
+  E NodeBalance0222
+  E NodeBalance0223
+  E NodeBalance0224
+  E NodeBalance0225
+  E NodeBalance0226
+  E NodeBalance0227
+  E NodeBalance0228
+  E NodeBalance0229
+  E NodeBalance0230
+  E NodeBalance0231
+  E NodeBalance0232
+  E NodeBalance0233
+  E NodeBalance0234
+  E NodeBalance0235
+  E NodeBalance0236
+  E NodeBalance0237
+  E NodeBalance0238
+  E NodeBalance0239
+  E NodeBalance0240
+  E NodeBalance0301
+  E NodeBalance0302
+  E NodeBalance0303
+  E NodeBalance0304
+  E NodeBalance0305
+  E NodeBalance0306
+  E NodeBalance0307
+  E NodeBalance0308
+  E NodeBalance0309
+  E NodeBalance0310
+  E NodeBalance0311
+  E NodeBalance0312
+  E NodeBalance0313
+  E NodeBalance0314
+  E NodeBalance0315
+  E NodeBalance0316
+  E NodeBalance0317
+  E NodeBalance0318
+  E NodeBalance0319
+  E NodeBalance0320
+  E NodeBalance0321
+  E NodeBalance0322
+  E NodeBalance0323
+  E NodeBalance0324
+  E NodeBalance0325
+  E NodeBalance0326
+  E NodeBalance0327
+  E NodeBalance0328
+  E NodeBalance0329
+  E NodeBalance0330
+  E NodeBalance0331
+  E NodeBalance0332
+  E NodeBalance0333
+  E NodeBalance0334
+  E NodeBalance0335
+  E NodeBalance0336
+  E NodeBalance0337
+  E NodeBalance0338
+  E NodeBalance0339
+  E NodeBalance0340
+  E NodeBalance0401
+  E NodeBalance0402
+  E NodeBalance0403
+  E NodeBalance0404
+  E NodeBalance0405
+  E NodeBalance0406
+  E NodeBalance0407
+  E NodeBalance0408
+  E NodeBalance0409
+  E NodeBalance0410
+  E NodeBalance0411
+  E NodeBalance0412
+  E NodeBalance0413
+  E NodeBalance0414
+  E NodeBalance0415
+  E NodeBalance0416
+  E NodeBalance0417
+  E NodeBalance0418
+  E NodeBalance0419
+  E NodeBalance0420
+  E NodeBalance0421
+  E NodeBalance0422
+  E NodeBalance0423
+  E NodeBalance0424
+  E NodeBalance0425
+  E NodeBalance0426
+  E NodeBalance0427
+  E NodeBalance0428
+  E NodeBalance0429
+  E NodeBalance0430
+  E NodeBalance0431
+  E NodeBalance0432
+  E NodeBalance0433
+  E NodeBalance0434
+  E NodeBalance0435
+  E NodeBalance0436
+  E NodeBalance0437
+  E NodeBalance0438
+  E NodeBalance0439
+  E NodeBalance0440
+  E NodeBalance0501
+  E NodeBalance0502
+  E NodeBalance0503
+  E NodeBalance0504
+  E NodeBalance0505
+  E NodeBalance0506
+  E NodeBalance0507
+  E NodeBalance0508
+  E NodeBalance0509
+  E NodeBalance0510
+  E NodeBalance0511
+  E NodeBalance0512
+  E NodeBalance0513
+  E NodeBalance0514
+  E NodeBalance0515
+  E NodeBalance0516
+  E NodeBalance0517
+  E NodeBalance0518
+  E NodeBalance0519
+  E NodeBalance0520
+  E NodeBalance0521
+  E NodeBalance0522
+  E NodeBalance0523
+  E NodeBalance0524
+  E NodeBalance0525
+  E NodeBalance0526
+  E NodeBalance0527
+  E NodeBalance0528
+  E NodeBalance0529
+  E NodeBalance0530
+  E NodeBalance0531
+  E NodeBalance0532
+  E NodeBalance0533
+  E NodeBalance0534
+  E NodeBalance0535
+  E NodeBalance0536
+  E NodeBalance0537
+  E NodeBalance0538
+  E NodeBalance0539
+  E NodeBalance0540
+  E NodeBalance0601
+  E NodeBalance0602
+  E NodeBalance0603
+  E NodeBalance0604
+  E NodeBalance0605
+  E NodeBalance0606
+  E NodeBalance0607
+  E NodeBalance0608
+  E NodeBalance0609
+  E NodeBalance0610
+  E NodeBalance0611
+  E NodeBalance0612
+  E NodeBalance0613
+  E NodeBalance0614
+  E NodeBalance0615
+  E NodeBalance0616
+  E NodeBalance0617
+  E NodeBalance0618
+  E NodeBalance0619
+  E NodeBalance0620
+  E NodeBalance0621
+  E NodeBalance0622
+  E NodeBalance0623
+  E NodeBalance0624
+  E NodeBalance0625
+  E NodeBalance0626
+  E NodeBalance0627
+  E NodeBalance0628
+  E NodeBalance0629
+  E NodeBalance0630
+  E NodeBalance0631
+  E NodeBalance0632
+  E NodeBalance0633
+  E NodeBalance0634
+  E NodeBalance0635
+  E NodeBalance0636
+  E NodeBalance0637
+  E NodeBalance0638
+  E NodeBalance0639
+  E NodeBalance0640
+  E NodeBalance0701
+  E NodeBalance0702
+  E NodeBalance0703
+  E NodeBalance0704
+  E NodeBalance0705
+  E NodeBalance0706
+  E NodeBalance0707
+  E NodeBalance0708
+  E NodeBalance0709
+  E NodeBalance0710
+  E NodeBalance0711
+  E NodeBalance0712
+  E NodeBalance0713
+  E NodeBalance0714
+  E NodeBalance0715
+  E NodeBalance0716
+  E NodeBalance0717
+  E NodeBalance0718
+  E NodeBalance0719
+  E NodeBalance0720
+  E NodeBalance0721
+  E NodeBalance0722
+  E NodeBalance0723
+  E NodeBalance0724
+  E NodeBalance0725
+  E NodeBalance0726
+  E NodeBalance0727
+  E NodeBalance0728
+  E NodeBalance0729
+  E NodeBalance0730
+  E NodeBalance0731
+  E NodeBalance0732
+  E NodeBalance0733
+  E NodeBalance0734
+  E NodeBalance0735
+  E NodeBalance0736
+  E NodeBalance0737
+  E NodeBalance0738
+  E NodeBalance0739
+  E NodeBalance0740
+  E NodeBalance0801
+  E NodeBalance0802
+  E NodeBalance0803
+  E NodeBalance0804
+  E NodeBalance0805
+  E NodeBalance0806
+  E NodeBalance0807
+  E NodeBalance0808
+  E NodeBalance0809
+  E NodeBalance0810
+  E NodeBalance0811
+  E NodeBalance0812
+  E NodeBalance0813
+  E NodeBalance0814
+  E NodeBalance0815
+  E NodeBalance0816
+  E NodeBalance0817
+  E NodeBalance0818
+  E NodeBalance0819
+  E NodeBalance0820
+  E NodeBalance0821
+  E NodeBalance0822
+  E NodeBalance0823
+  E NodeBalance0824
+  E NodeBalance0825
+  E NodeBalance0826
+  E NodeBalance0827
+  E NodeBalance0828
+  E NodeBalance0829
+  E NodeBalance0830
+  E NodeBalance0831
+  E NodeBalance0832
+  E NodeBalance0833
+  E NodeBalance0834
+  E NodeBalance0835
+  E NodeBalance0836
+  E NodeBalance0837
+  E NodeBalance0838
+  E NodeBalance0839
+  E NodeBalance0840
+  E NodeBalance0901
+  E NodeBalance0902
+  E NodeBalance0903
+  E NodeBalance0904
+  E NodeBalance0905
+  E NodeBalance0906
+  E NodeBalance0907
+  E NodeBalance0908
+  E NodeBalance0909
+  E NodeBalance0910
+  E NodeBalance0911
+  E NodeBalance0912
+  E NodeBalance0913
+  E NodeBalance0914
+  E NodeBalance0915
+  E NodeBalance0916
+  E NodeBalance0917
+  E NodeBalance0918
+  E NodeBalance0919
+  E NodeBalance0920
+  E NodeBalance0921
+  E NodeBalance0922
+  E NodeBalance0923
+  E NodeBalance0924
+  E NodeBalance0925
+  E NodeBalance0926
+  E NodeBalance0927
+  E NodeBalance0928
+  E NodeBalance0929
+  E NodeBalance0930
+  E NodeBalance0931
+  E NodeBalance0932
+  E NodeBalance0933
+  E NodeBalance0934
+  E NodeBalance0935
+  E NodeBalance0936
+  E NodeBalance0937
+  E NodeBalance0938
+  E NodeBalance0939
+  E NodeBalance0940
+  E NodeBalance1001
+  E NodeBalance1002
+  E NodeBalance1003
+  E NodeBalance1004
+  E NodeBalance1005
+  E NodeBalance1006
+  E NodeBalance1007
+  E NodeBalance1008
+  E NodeBalance1009
+  E NodeBalance1010
+  E NodeBalance1011
+  E NodeBalance1012
+  E NodeBalance1013
+  E NodeBalance1014
+  E NodeBalance1015
+  E NodeBalance1016
+  E NodeBalance1017
+  E NodeBalance1018
+  E NodeBalance1019
+  E NodeBalance1020
+  E NodeBalance1021
+  E NodeBalance1022
+  E NodeBalance1023
+  E NodeBalance1024
+  E NodeBalance1025
+  E NodeBalance1026
+  E NodeBalance1027
+  E NodeBalance1028
+  E NodeBalance1029
+  E NodeBalance1030
+  E NodeBalance1031
+  E NodeBalance1032
+  E NodeBalance1033
+  E NodeBalance1034
+  E NodeBalance1035
+  E NodeBalance1036
+  E NodeBalance1037
+  E NodeBalance1038
+  E NodeBalance1039
+  E NodeBalance1040
+  E NodeBalance1101
+  E NodeBalance1102
+  E NodeBalance1103
+  E NodeBalance1104
+  E NodeBalance1105
+  E NodeBalance1106
+  E NodeBalance1107
+  E NodeBalance1108
+  E NodeBalance1109
+  E NodeBalance1110
+  E NodeBalance1111
+  E NodeBalance1112
+  E NodeBalance1113
+  E NodeBalance1114
+  E NodeBalance1115
+  E NodeBalance1116
+  E NodeBalance1117
+  E NodeBalance1118
+  E NodeBalance1119
+  E NodeBalance1120
+  E NodeBalance1121
+  E NodeBalance1122
+  E NodeBalance1123
+  E NodeBalance1124
+  E NodeBalance1125
+  E NodeBalance1126
+  E NodeBalance1127
+  E NodeBalance1128
+  E NodeBalance1129
+  E NodeBalance1130
+  E NodeBalance1131
+  E NodeBalance1132
+  E NodeBalance1133
+  E NodeBalance1134
+  E NodeBalance1135
+  E NodeBalance1136
+  E NodeBalance1137
+  E NodeBalance1138
+  E NodeBalance1139
+  E NodeBalance1140
+  E NodeBalance1201
+  E NodeBalance1202
+  E NodeBalance1203
+  E NodeBalance1204
+  E NodeBalance1205
+  E NodeBalance1206
+  E NodeBalance1207
+  E NodeBalance1208
+  E NodeBalance1209
+  E NodeBalance1210
+  E NodeBalance1211
+  E NodeBalance1212
+  E NodeBalance1213
+  E NodeBalance1214
+  E NodeBalance1215
+  E NodeBalance1216
+  E NodeBalance1217
+  E NodeBalance1218
+  E NodeBalance1219
+  E NodeBalance1220
+  E NodeBalance1221
+  E NodeBalance1222
+  E NodeBalance1223
+  E NodeBalance1224
+  E NodeBalance1225
+  E NodeBalance1226
+  E NodeBalance1227
+  E NodeBalance1228
+  E NodeBalance1229
+  E NodeBalance1230
+  E NodeBalance1231
+  E NodeBalance1232
+  E NodeBalance1233
+  E NodeBalance1234
+  E NodeBalance1235
+  E NodeBalance1236
+  E NodeBalance1237
+  E NodeBalance1238
+  E NodeBalance1239
+  E NodeBalance1240
+  E NodeBalance1301
+  E NodeBalance1302
+  E NodeBalance1303
+  E NodeBalance1304
+  E NodeBalance1305
+  E NodeBalance1306
+  E NodeBalance1307
+  E NodeBalance1308
+  E NodeBalance1309
+  E NodeBalance1310
+  E NodeBalance1311
+  E NodeBalance1312
+  E NodeBalance1313
+  E NodeBalance1314
+  E NodeBalance1315
+  E NodeBalance1316
+  E NodeBalance1317
+  E NodeBalance1318
+  E NodeBalance1319
+  E NodeBalance1320
+  E NodeBalance1321
+  E NodeBalance1322
+  E NodeBalance1323
+  E NodeBalance1324
+  E NodeBalance1325
+  E NodeBalance1326
+  E NodeBalance1327
+  E NodeBalance1328
+  E NodeBalance1329
+  E NodeBalance1330
+  E NodeBalance1331
+  E NodeBalance1332
+  E NodeBalance1333
+  E NodeBalance1334
+  E NodeBalance1335
+  E NodeBalance1336
+  E NodeBalance1337
+  E NodeBalance1338
+  E NodeBalance1339
+  E NodeBalance1340
+  E NodeBalance1401
+  E NodeBalance1402
+  E NodeBalance1403
+  E NodeBalance1404
+  E NodeBalance1405
+  E NodeBalance1406
+  E NodeBalance1407
+  E NodeBalance1408
+  E NodeBalance1409
+  E NodeBalance1410
+  E NodeBalance1411
+  E NodeBalance1412
+  E NodeBalance1413
+  E NodeBalance1414
+  E NodeBalance1415
+  E NodeBalance1416
+  E NodeBalance1417
+  E NodeBalance1418
+  E NodeBalance1419
+  E NodeBalance1420
+  E NodeBalance1421
+  E NodeBalance1422
+  E NodeBalance1423
+  E NodeBalance1424
+  E NodeBalance1425
+  E NodeBalance1426
+  E NodeBalance1427
+  E NodeBalance1428
+  E NodeBalance1429
+  E NodeBalance1430
+  E NodeBalance1431
+  E NodeBalance1432
+  E NodeBalance1433
+  E NodeBalance1434
+  E NodeBalance1435
+  E NodeBalance1436
+  E NodeBalance1437
+  E NodeBalance1438
+  E NodeBalance1439
+  E NodeBalance1440
+  E NodeBalance1501
+  E NodeBalance1502
+  E NodeBalance1503
+  E NodeBalance1504
+  E NodeBalance1505
+  E NodeBalance1506
+  E NodeBalance1507
+  E NodeBalance1508
+  E NodeBalance1509
+  E NodeBalance1510
+  E NodeBalance1511
+  E NodeBalance1512
+  E NodeBalance1513
+  E NodeBalance1514
+  E NodeBalance1515
+  E NodeBalance1516
+  E NodeBalance1517
+  E NodeBalance1518
+  E NodeBalance1519
+  E NodeBalance1520
+  E NodeBalance1521
+  E NodeBalance1522
+  E NodeBalance1523
+  E NodeBalance1524
+  E NodeBalance1525
+  E NodeBalance1526
+  E NodeBalance1527
+  E NodeBalance1528
+  E NodeBalance1529
+  E NodeBalance1530
+  E NodeBalance1531
+  E NodeBalance1532
+  E NodeBalance1533
+  E NodeBalance1534
+  E NodeBalance1535
+  E NodeBalance1536
+  E NodeBalance1537
+  E NodeBalance1538
+  E NodeBalance1539
+  E NodeBalance1540
+  E NodeBalance1601
+  E NodeBalance1602
+  E NodeBalance1603
+  E NodeBalance1604
+  E NodeBalance1605
+  E NodeBalance1606
+  E NodeBalance1607
+  E NodeBalance1608
+  E NodeBalance1609
+  E NodeBalance1610
+  E NodeBalance1611
+  E NodeBalance1612
+  E NodeBalance1613
+  E NodeBalance1614
+  E NodeBalance1615
+  E NodeBalance1616
+  E NodeBalance1617
+  E NodeBalance1618
+  E NodeBalance1619
+  E NodeBalance1620
+  E NodeBalance1621
+  E NodeBalance1622
+  E NodeBalance1623
+  E NodeBalance1624
+  E NodeBalance1625
+  E NodeBalance1626
+  E NodeBalance1627
+  E NodeBalance1628
+  E NodeBalance1629
+  E NodeBalance1630
+  E NodeBalance1631
+  E NodeBalance1632
+  E NodeBalance1633
+  E NodeBalance1634
+  E NodeBalance1635
+  E NodeBalance1636
+  E NodeBalance1637
+  E NodeBalance1638
+  E NodeBalance1639
+  E NodeBalance1640
+  E NodeBalance1701
+  E NodeBalance1702
+  E NodeBalance1703
+  E NodeBalance1704
+  E NodeBalance1705
+  E NodeBalance1706
+  E NodeBalance1707
+  E NodeBalance1708
+  E NodeBalance1709
+  E NodeBalance1710
+  E NodeBalance1711
+  E NodeBalance1712
+  E NodeBalance1713
+  E NodeBalance1714
+  E NodeBalance1715
+  E NodeBalance1716
+  E NodeBalance1717
+  E NodeBalance1718
+  E NodeBalance1719
+  E NodeBalance1720
+  E NodeBalance1721
+  E NodeBalance1722
+  E NodeBalance1723
+  E NodeBalance1724
+  E NodeBalance1725
+  E NodeBalance1726
+  E NodeBalance1727
+  E NodeBalance1728
+  E NodeBalance1729
+  E NodeBalance1730
+  E NodeBalance1731
+  E NodeBalance1732
+  E NodeBalance1733
+  E NodeBalance1734
+  E NodeBalance1735
+  E NodeBalance1736
+  E NodeBalance1737
+  E NodeBalance1738
+  E NodeBalance1739
+  E NodeBalance1740
+  E NodeBalance1801
+  E NodeBalance1802
+  E NodeBalance1803
+  E NodeBalance1804
+  E NodeBalance1805
+  E NodeBalance1806
+  E NodeBalance1807
+  E NodeBalance1808
+  E NodeBalance1809
+  E NodeBalance1810
+  E NodeBalance1811
+  E NodeBalance1812
+  E NodeBalance1813
+  E NodeBalance1814
+  E NodeBalance1815
+  E NodeBalance1816
+  E NodeBalance1817
+  E NodeBalance1818
+  E NodeBalance1819
+  E NodeBalance1820
+  E NodeBalance1821
+  E NodeBalance1822
+  E NodeBalance1823
+  E NodeBalance1824
+  E NodeBalance1825
+  E NodeBalance1826
+  E NodeBalance1827
+  E NodeBalance1828
+  E NodeBalance1829
+  E NodeBalance1830
+  E NodeBalance1831
+  E NodeBalance1832
+  E NodeBalance1833
+  E NodeBalance1834
+  E NodeBalance1835
+  E NodeBalance1836
+  E NodeBalance1837
+  E NodeBalance1838
+  E NodeBalance1839
+  E NodeBalance1840
+  E NodeBalance1901
+  E NodeBalance1902
+  E NodeBalance1903
+  E NodeBalance1904
+  E NodeBalance1905
+  E NodeBalance1906
+  E NodeBalance1907
+  E NodeBalance1908
+  E NodeBalance1909
+  E NodeBalance1910
+  E NodeBalance1911
+  E NodeBalance1912
+  E NodeBalance1913
+  E NodeBalance1914
+  E NodeBalance1915
+  E NodeBalance1916
+  E NodeBalance1917
+  E NodeBalance1918
+  E NodeBalance1919
+  E NodeBalance1920
+  E NodeBalance1921
+  E NodeBalance1922
+  E NodeBalance1923
+  E NodeBalance1924
+  E NodeBalance1925
+  E NodeBalance1926
+  E NodeBalance1927
+  E NodeBalance1928
+  E NodeBalance1929
+  E NodeBalance1930
+  E NodeBalance1931
+  E NodeBalance1932
+  E NodeBalance1933
+  E NodeBalance1934
+  E NodeBalance1935
+  E NodeBalance1936
+  E NodeBalance1937
+  E NodeBalance1938
+  E NodeBalance1939
+  E NodeBalance1940
+  E NodeBalance2001
+  E NodeBalance2002
+  E NodeBalance2003
+  E NodeBalance2004
+  E NodeBalance2005
+  E NodeBalance2006
+  E NodeBalance2007
+  E NodeBalance2008
+  E NodeBalance2009
+  E NodeBalance2010
+  E NodeBalance2011
+  E NodeBalance2012
+  E NodeBalance2013
+  E NodeBalance2014
+  E NodeBalance2015
+  E NodeBalance2016
+  E NodeBalance2017
+  E NodeBalance2018
+  E NodeBalance2019
+  E NodeBalance2020
+  E NodeBalance2021
+  E NodeBalance2022
+  E NodeBalance2023
+  E NodeBalance2024
+  E NodeBalance2025
+  E NodeBalance2026
+  E NodeBalance2027
+  E NodeBalance2028
+  E NodeBalance2029
+  E NodeBalance2030
+  E NodeBalance2031
+  E NodeBalance2032
+  E NodeBalance2033
+  E NodeBalance2034
+  E NodeBalance2035
+  E NodeBalance2036
+  E NodeBalance2037
+  E NodeBalance2038
+  E NodeBalance2039
+  E NodeBalance2040
+  L Capacity0102
+  L Capacity0103
+  L Capacity0104
+  L Capacity0107
+  L Capacity0108
+  L Capacity0110
+  L Capacity0111
+  L Capacity0115
+  L Capacity0117
+  L Capacity0118
+  L Capacity0119
+  L Capacity0120
+  L Capacity0201
+  L Capacity0203
+  L Capacity0206
+  L Capacity0207
+  L Capacity0209
+  L Capacity0210
+  L Capacity0217
+  L Capacity0304
+  L Capacity0309
+  L Capacity0311
+  L Capacity0314
+  L Capacity0318
+  L Capacity0402
+  L Capacity0405
+  L Capacity0410
+  L Capacity0411
+  L Capacity0415
+  L Capacity0418
+  L Capacity0503
+  L Capacity0506
+  L Capacity0509
+  L Capacity0513
+  L Capacity0516
+  L Capacity0607
+  L Capacity0608
+  L Capacity0611
+  L Capacity0613
+  L Capacity0614
+  L Capacity0615
+  L Capacity0703
+  L Capacity0708
+  L Capacity0709
+  L Capacity0713
+  L Capacity0718
+  L Capacity0719
+  L Capacity0805
+  L Capacity0806
+  L Capacity0807
+  L Capacity0809
+  L Capacity0810
+  L Capacity0817
+  L Capacity0904
+  L Capacity0906
+  L Capacity0908
+  L Capacity0910
+  L Capacity0913
+  L Capacity0916
+  L Capacity0917
+  L Capacity1011
+  L Capacity1012
+  L Capacity1016
+  L Capacity1107
+  L Capacity1112
+  L Capacity1115
+  L Capacity1120
+  L Capacity1203
+  L Capacity1204
+  L Capacity1210
+  L Capacity1213
+  L Capacity1215
+  L Capacity1217
+  L Capacity1218
+  L Capacity1220
+  L Capacity1314
+  L Capacity1316
+  L Capacity1319
+  L Capacity1320
+  L Capacity1403
+  L Capacity1404
+  L Capacity1405
+  L Capacity1410
+  L Capacity1415
+  L Capacity1416
+  L Capacity1420
+  L Capacity1502
+  L Capacity1504
+  L Capacity1512
+  L Capacity1514
+  L Capacity1516
+  L Capacity1517
+  L Capacity1601
+  L Capacity1605
+  L Capacity1606
+  L Capacity1607
+  L Capacity1609
+  L Capacity1611
+  L Capacity1614
+  L Capacity1617
+  L Capacity1619
+  L Capacity1705
+  L Capacity1712
+  L Capacity1714
+  L Capacity1718
+  L Capacity1801
+  L Capacity1804
+  L Capacity1807
+  L Capacity1819
+  L Capacity1820
+  L Capacity1901
+  L Capacity1905
+  L Capacity1912
+  L Capacity1916
+  L Capacity1920
+  L Capacity2001
+  L Capacity2006
+  L Capacity2011
+  L Capacity2018
+  L Capacity2019
+COLUMNS
+    y0102     Total_Cost        2053.0   Capacity0102       -2171.0
+    y0103     Total_Cost         431.0   Capacity0103        -423.0
+    y0104     Total_Cost         247.0   Capacity0104         -64.0
+    y0107     Total_Cost        1068.0   Capacity0107        -254.0
+    y0108     Total_Cost        1293.0   Capacity0108        -450.0
+    y0110     Total_Cost        1930.0   Capacity0110        -418.0
+    y0111     Total_Cost         944.0   Capacity0111        -112.0
+    y0115     Total_Cost        1847.0   Capacity0115        -201.0
+    y0117     Total_Cost        1560.0   Capacity0117        -371.0
+    y0118     Total_Cost        1806.0   Capacity0118        -196.0
+    y0119     Total_Cost         862.0   Capacity0119        -413.0
+    y0120     Total_Cost        1416.0   Capacity0120        -323.0
+    y0201     Total_Cost        1293.0   Capacity0201        -492.0
+    y0203     Total_Cost        2053.0   Capacity0203       -2171.0
+    y0206     Total_Cost        1704.0   Capacity0206        -418.0
+    y0207     Total_Cost        1950.0   Capacity0207        -439.0
+    y0209     Total_Cost        1806.0   Capacity0209        -164.0
+    y0210     Total_Cost        2032.0   Capacity0210        -323.0
+    y0217     Total_Cost        1991.0   Capacity0217        -302.0
+    y0304     Total_Cost        2053.0   Capacity0304       -2171.0
+    y0309     Total_Cost        2032.0   Capacity0309        -402.0
+    y0311     Total_Cost         370.0   Capacity0311        -164.0
+    y0314     Total_Cost         924.0   Capacity0314        -328.0
+    y0318     Total_Cost        1334.0   Capacity0318        -133.0
+    y0402     Total_Cost        1642.0   Capacity0402        -286.0
+    y0405     Total_Cost        2053.0   Capacity0405       -2171.0
+    y0410     Total_Cost        1991.0   Capacity0410        -513.0
+    y0411     Total_Cost         657.0   Capacity0411        -466.0
+    y0415     Total_Cost        1355.0   Capacity0415        -434.0
+    y0418     Total_Cost        1068.0   Capacity0418        -386.0
+    y0503     Total_Cost         883.0   Capacity0503        -392.0
+    y0506     Total_Cost        2053.0   Capacity0506       -2171.0
+    y0509     Total_Cost         329.0   Capacity0509         -59.0
+    y0513     Total_Cost        1006.0   Capacity0513        -466.0
+    y0516     Total_Cost         247.0   Capacity0516        -476.0
+    y0607     Total_Cost        2053.0   Capacity0607       -2171.0
+    y0608     Total_Cost         637.0   Capacity0608         -64.0
+    y0611     Total_Cost        1724.0   Capacity0611        -524.0
+    y0613     Total_Cost         678.0   Capacity0613        -249.0
+    y0614     Total_Cost         267.0   Capacity0614        -360.0
+    y0615     Total_Cost         247.0   Capacity0615        -460.0
+    y0703     Total_Cost        1683.0   Capacity0703        -159.0
+    y0708     Total_Cost        2053.0   Capacity0708       -2171.0
+    y0709     Total_Cost         986.0   Capacity0709        -117.0
+    y0713     Total_Cost        1991.0   Capacity0713        -365.0
+    y0718     Total_Cost         596.0   Capacity0718        -143.0
+    y0719     Total_Cost        1088.0   Capacity0719        -186.0
+    y0805     Total_Cost        1499.0   Capacity0805        -159.0
+    y0806     Total_Cost        1478.0   Capacity0806         -96.0
+    y0807     Total_Cost        1416.0   Capacity0807        -423.0
+    y0809     Total_Cost        2053.0   Capacity0809       -2171.0
+    y0810     Total_Cost        1745.0   Capacity0810        -386.0
+    y0817     Total_Cost        1847.0   Capacity0817        -381.0
+    y0904     Total_Cost        1355.0   Capacity0904        -170.0
+    y0906     Total_Cost        1416.0   Capacity0906        -466.0
+    y0908     Total_Cost        1909.0   Capacity0908        -503.0
+    y0910     Total_Cost        2053.0   Capacity0910       -2171.0
+    y0913     Total_Cost        1334.0   Capacity0913         -69.0
+    y0916     Total_Cost        1191.0   Capacity0916        -101.0
+    y0917     Total_Cost         349.0   Capacity0917        -196.0
+    y1011     Total_Cost        2053.0   Capacity1011       -2171.0
+    y1012     Total_Cost        1088.0   Capacity1012        -349.0
+    y1016     Total_Cost        1745.0   Capacity1016        -381.0
+    y1107     Total_Cost        1150.0   Capacity1107        -471.0
+    y1112     Total_Cost        2053.0   Capacity1112       -2171.0
+    y1115     Total_Cost        1499.0   Capacity1115         -96.0
+    y1120     Total_Cost        1293.0   Capacity1120        -418.0
+    y1203     Total_Cost         842.0   Capacity1203        -260.0
+    y1204     Total_Cost         329.0   Capacity1204        -112.0
+    y1210     Total_Cost        1642.0   Capacity1210        -133.0
+    y1213     Total_Cost        2053.0   Capacity1213       -2171.0
+    y1215     Total_Cost         267.0   Capacity1215        -402.0
+    y1217     Total_Cost        1745.0   Capacity1217        -238.0
+    y1218     Total_Cost        1581.0   Capacity1218        -376.0
+    y1220     Total_Cost         308.0   Capacity1220        -429.0
+    y1314     Total_Cost        2053.0   Capacity1314       -2171.0
+    y1316     Total_Cost        1930.0   Capacity1316        -476.0
+    y1319     Total_Cost        1724.0   Capacity1319        -439.0
+    y1320     Total_Cost         637.0   Capacity1320        -429.0
+    y1403     Total_Cost         370.0   Capacity1403        -217.0
+    y1404     Total_Cost        1642.0   Capacity1404        -503.0
+    y1405     Total_Cost         390.0   Capacity1405        -508.0
+    y1410     Total_Cost         780.0   Capacity1410        -386.0
+    y1415     Total_Cost        2053.0   Capacity1415       -2171.0
+    y1416     Total_Cost        1170.0   Capacity1416        -344.0
+    y1420     Total_Cost        1478.0   Capacity1420         -59.0
+    y1502     Total_Cost        1868.0   Capacity1502        -439.0
+    y1504     Total_Cost        1355.0   Capacity1504        -127.0
+    y1512     Total_Cost         329.0   Capacity1512        -524.0
+    y1514     Total_Cost        1765.0   Capacity1514         -90.0
+    y1516     Total_Cost        2053.0   Capacity1516       -2171.0
+    y1517     Total_Cost         596.0   Capacity1517        -328.0
+    y1601     Total_Cost        1088.0   Capacity1601        -423.0
+    y1605     Total_Cost        1170.0   Capacity1605        -254.0
+    y1606     Total_Cost        1170.0   Capacity1606        -186.0
+    y1607     Total_Cost        1868.0   Capacity1607        -101.0
+    y1609     Total_Cost        1191.0   Capacity1609        -429.0
+    y1611     Total_Cost        1150.0   Capacity1611        -519.0
+    y1614     Total_Cost        1109.0   Capacity1614        -106.0
+    y1617     Total_Cost        2053.0   Capacity1617       -2171.0
+    y1619     Total_Cost        1868.0   Capacity1619        -127.0
+    y1705     Total_Cost        1170.0   Capacity1705        -334.0
+    y1712     Total_Cost         329.0   Capacity1712        -466.0
+    y1714     Total_Cost        1971.0   Capacity1714        -328.0
+    y1718     Total_Cost        2053.0   Capacity1718       -2171.0
+    y1801     Total_Cost         555.0   Capacity1801        -524.0
+    y1804     Total_Cost        1252.0   Capacity1804        -386.0
+    y1807     Total_Cost         616.0   Capacity1807        -143.0
+    y1819     Total_Cost        2053.0   Capacity1819       -2171.0
+    y1820     Total_Cost        1868.0   Capacity1820        -349.0
+    y1901     Total_Cost         986.0   Capacity1901        -201.0
+    y1905     Total_Cost         862.0   Capacity1905        -159.0
+    y1912     Total_Cost         719.0   Capacity1912        -503.0
+    y1916     Total_Cost        1047.0   Capacity1916        -286.0
+    y1920     Total_Cost        2053.0   Capacity1920       -2171.0
+    y2001     Total_Cost        2053.0   Capacity2001       -2171.0
+    y2006     Total_Cost         719.0   Capacity2006        -159.0
+    y2011     Total_Cost        1827.0   Capacity2011        -344.0
+    y2018     Total_Cost        1458.0   Capacity2018        -286.0
+    y2019     Total_Cost        1601.0   Capacity2019        -418.0
+    x010201   Total_Cost         100.0   NodeBalance0101           1.0
+    x010201   NodeBalance0201          -1.0   Capacity0102           1.0
+    x010202   Total_Cost         100.0   NodeBalance0102           1.0
+    x010202   NodeBalance0202          -1.0   Capacity0102           1.0
+    x010203   Total_Cost         100.0   NodeBalance0103           1.0
+    x010203   NodeBalance0203          -1.0   Capacity0102           1.0
+    x010204   Total_Cost         100.0   NodeBalance0104           1.0
+    x010204   NodeBalance0204          -1.0   Capacity0102           1.0
+    x010205   Total_Cost         100.0   NodeBalance0105           1.0
+    x010205   NodeBalance0205          -1.0   Capacity0102           1.0
+    x010206   Total_Cost         100.0   NodeBalance0106           1.0
+    x010206   NodeBalance0206          -1.0   Capacity0102           1.0
+    x010207   Total_Cost         100.0   NodeBalance0107           1.0
+    x010207   NodeBalance0207          -1.0   Capacity0102           1.0
+    x010208   Total_Cost         100.0   NodeBalance0108           1.0
+    x010208   NodeBalance0208          -1.0   Capacity0102           1.0
+    x010209   Total_Cost         100.0   NodeBalance0109           1.0
+    x010209   NodeBalance0209          -1.0   Capacity0102           1.0
+    x010210   Total_Cost         100.0   NodeBalance0110           1.0
+    x010210   NodeBalance0210          -1.0   Capacity0102           1.0
+    x010211   Total_Cost         100.0   NodeBalance0111           1.0
+    x010211   NodeBalance0211          -1.0   Capacity0102           1.0
+    x010212   Total_Cost         100.0   NodeBalance0112           1.0
+    x010212   NodeBalance0212          -1.0   Capacity0102           1.0
+    x010213   Total_Cost         100.0   NodeBalance0113           1.0
+    x010213   NodeBalance0213          -1.0   Capacity0102           1.0
+    x010214   Total_Cost         100.0   NodeBalance0114           1.0
+    x010214   NodeBalance0214          -1.0   Capacity0102           1.0
+    x010215   Total_Cost         100.0   NodeBalance0115           1.0
+    x010215   NodeBalance0215          -1.0   Capacity0102           1.0
+    x010216   Total_Cost         100.0   NodeBalance0116           1.0
+    x010216   NodeBalance0216          -1.0   Capacity0102           1.0
+    x010217   Total_Cost         100.0   NodeBalance0117           1.0
+    x010217   NodeBalance0217          -1.0   Capacity0102           1.0
+    x010218   Total_Cost         100.0   NodeBalance0118           1.0
+    x010218   NodeBalance0218          -1.0   Capacity0102           1.0
+    x010219   Total_Cost         100.0   NodeBalance0119           1.0
+    x010219   NodeBalance0219          -1.0   Capacity0102           1.0
+    x010220   Total_Cost         100.0   NodeBalance0120           1.0
+    x010220   NodeBalance0220          -1.0   Capacity0102           1.0
+    x010221   Total_Cost         100.0   NodeBalance0121           1.0
+    x010221   NodeBalance0221          -1.0   Capacity0102           1.0
+    x010222   Total_Cost         100.0   NodeBalance0122           1.0
+    x010222   NodeBalance0222          -1.0   Capacity0102           1.0
+    x010223   Total_Cost         100.0   NodeBalance0123           1.0
+    x010223   NodeBalance0223          -1.0   Capacity0102           1.0
+    x010224   Total_Cost         100.0   NodeBalance0124           1.0
+    x010224   NodeBalance0224          -1.0   Capacity0102           1.0
+    x010225   Total_Cost         100.0   NodeBalance0125           1.0
+    x010225   NodeBalance0225          -1.0   Capacity0102           1.0
+    x010226   Total_Cost         100.0   NodeBalance0126           1.0
+    x010226   NodeBalance0226          -1.0   Capacity0102           1.0
+    x010227   Total_Cost         100.0   NodeBalance0127           1.0
+    x010227   NodeBalance0227          -1.0   Capacity0102           1.0
+    x010228   Total_Cost         100.0   NodeBalance0128           1.0
+    x010228   NodeBalance0228          -1.0   Capacity0102           1.0
+    x010229   Total_Cost         100.0   NodeBalance0129           1.0
+    x010229   NodeBalance0229          -1.0   Capacity0102           1.0
+    x010230   Total_Cost         100.0   NodeBalance0130           1.0
+    x010230   NodeBalance0230          -1.0   Capacity0102           1.0
+    x010231   Total_Cost         100.0   NodeBalance0131           1.0
+    x010231   NodeBalance0231          -1.0   Capacity0102           1.0
+    x010232   Total_Cost         100.0   NodeBalance0132           1.0
+    x010232   NodeBalance0232          -1.0   Capacity0102           1.0
+    x010233   Total_Cost         100.0   NodeBalance0133           1.0
+    x010233   NodeBalance0233          -1.0   Capacity0102           1.0
+    x010234   Total_Cost         100.0   NodeBalance0134           1.0
+    x010234   NodeBalance0234          -1.0   Capacity0102           1.0
+    x010235   Total_Cost         100.0   NodeBalance0135           1.0
+    x010235   NodeBalance0235          -1.0   Capacity0102           1.0
+    x010236   Total_Cost         100.0   NodeBalance0136           1.0
+    x010236   NodeBalance0236          -1.0   Capacity0102           1.0
+    x010237   Total_Cost         100.0   NodeBalance0137           1.0
+    x010237   NodeBalance0237          -1.0   Capacity0102           1.0
+    x010238   Total_Cost         100.0   NodeBalance0138           1.0
+    x010238   NodeBalance0238          -1.0   Capacity0102           1.0
+    x010239   Total_Cost         100.0   NodeBalance0139           1.0
+    x010239   NodeBalance0239          -1.0   Capacity0102           1.0
+    x010240   Total_Cost         100.0   NodeBalance0140           1.0
+    x010240   NodeBalance0240          -1.0   Capacity0102           1.0
+    x010301   Total_Cost          52.0   NodeBalance0101           1.0
+    x010301   NodeBalance0301          -1.0   Capacity0103           1.0
+    x010302   Total_Cost          52.0   NodeBalance0102           1.0
+    x010302   NodeBalance0302          -1.0   Capacity0103           1.0
+    x010303   Total_Cost          52.0   NodeBalance0103           1.0
+    x010303   NodeBalance0303          -1.0   Capacity0103           1.0
+    x010304   Total_Cost          52.0   NodeBalance0104           1.0
+    x010304   NodeBalance0304          -1.0   Capacity0103           1.0
+    x010305   Total_Cost          52.0   NodeBalance0105           1.0
+    x010305   NodeBalance0305          -1.0   Capacity0103           1.0
+    x010306   Total_Cost          52.0   NodeBalance0106           1.0
+    x010306   NodeBalance0306          -1.0   Capacity0103           1.0
+    x010307   Total_Cost          52.0   NodeBalance0107           1.0
+    x010307   NodeBalance0307          -1.0   Capacity0103           1.0
+    x010308   Total_Cost          52.0   NodeBalance0108           1.0
+    x010308   NodeBalance0308          -1.0   Capacity0103           1.0
+    x010309   Total_Cost          52.0   NodeBalance0109           1.0
+    x010309   NodeBalance0309          -1.0   Capacity0103           1.0
+    x010310   Total_Cost          52.0   NodeBalance0110           1.0
+    x010310   NodeBalance0310          -1.0   Capacity0103           1.0
+    x010311   Total_Cost          52.0   NodeBalance0111           1.0
+    x010311   NodeBalance0311          -1.0   Capacity0103           1.0
+    x010312   Total_Cost          52.0   NodeBalance0112           1.0
+    x010312   NodeBalance0312          -1.0   Capacity0103           1.0
+    x010313   Total_Cost          52.0   NodeBalance0113           1.0
+    x010313   NodeBalance0313          -1.0   Capacity0103           1.0
+    x010314   Total_Cost          52.0   NodeBalance0114           1.0
+    x010314   NodeBalance0314          -1.0   Capacity0103           1.0
+    x010315   Total_Cost          52.0   NodeBalance0115           1.0
+    x010315   NodeBalance0315          -1.0   Capacity0103           1.0
+    x010316   Total_Cost          52.0   NodeBalance0116           1.0
+    x010316   NodeBalance0316          -1.0   Capacity0103           1.0
+    x010317   Total_Cost          52.0   NodeBalance0117           1.0
+    x010317   NodeBalance0317          -1.0   Capacity0103           1.0
+    x010318   Total_Cost          52.0   NodeBalance0118           1.0
+    x010318   NodeBalance0318          -1.0   Capacity0103           1.0
+    x010319   Total_Cost          52.0   NodeBalance0119           1.0
+    x010319   NodeBalance0319          -1.0   Capacity0103           1.0
+    x010320   Total_Cost          52.0   NodeBalance0120           1.0
+    x010320   NodeBalance0320          -1.0   Capacity0103           1.0
+    x010321   Total_Cost          52.0   NodeBalance0121           1.0
+    x010321   NodeBalance0321          -1.0   Capacity0103           1.0
+    x010322   Total_Cost          52.0   NodeBalance0122           1.0
+    x010322   NodeBalance0322          -1.0   Capacity0103           1.0
+    x010323   Total_Cost          52.0   NodeBalance0123           1.0
+    x010323   NodeBalance0323          -1.0   Capacity0103           1.0
+    x010324   Total_Cost          52.0   NodeBalance0124           1.0
+    x010324   NodeBalance0324          -1.0   Capacity0103           1.0
+    x010325   Total_Cost          52.0   NodeBalance0125           1.0
+    x010325   NodeBalance0325          -1.0   Capacity0103           1.0
+    x010326   Total_Cost          52.0   NodeBalance0126           1.0
+    x010326   NodeBalance0326          -1.0   Capacity0103           1.0
+    x010327   Total_Cost          52.0   NodeBalance0127           1.0
+    x010327   NodeBalance0327          -1.0   Capacity0103           1.0
+    x010328   Total_Cost          52.0   NodeBalance0128           1.0
+    x010328   NodeBalance0328          -1.0   Capacity0103           1.0
+    x010329   Total_Cost          52.0   NodeBalance0129           1.0
+    x010329   NodeBalance0329          -1.0   Capacity0103           1.0
+    x010330   Total_Cost          52.0   NodeBalance0130           1.0
+    x010330   NodeBalance0330          -1.0   Capacity0103           1.0
+    x010331   Total_Cost          52.0   NodeBalance0131           1.0
+    x010331   NodeBalance0331          -1.0   Capacity0103           1.0
+    x010332   Total_Cost          52.0   NodeBalance0132           1.0
+    x010332   NodeBalance0332          -1.0   Capacity0103           1.0
+    x010333   Total_Cost          52.0   NodeBalance0133           1.0
+    x010333   NodeBalance0333          -1.0   Capacity0103           1.0
+    x010334   Total_Cost          52.0   NodeBalance0134           1.0
+    x010334   NodeBalance0334          -1.0   Capacity0103           1.0
+    x010335   Total_Cost          52.0   NodeBalance0135           1.0
+    x010335   NodeBalance0335          -1.0   Capacity0103           1.0
+    x010336   Total_Cost          52.0   NodeBalance0136           1.0
+    x010336   NodeBalance0336          -1.0   Capacity0103           1.0
+    x010337   Total_Cost          52.0   NodeBalance0137           1.0
+    x010337   NodeBalance0337          -1.0   Capacity0103           1.0
+    x010338   Total_Cost          52.0   NodeBalance0138           1.0
+    x010338   NodeBalance0338          -1.0   Capacity0103           1.0
+    x010339   Total_Cost          52.0   NodeBalance0139           1.0
+    x010339   NodeBalance0339          -1.0   Capacity0103           1.0
+    x010340   Total_Cost          52.0   NodeBalance0140           1.0
+    x010340   NodeBalance0340          -1.0   Capacity0103           1.0
+    x010401   Total_Cost          56.0   NodeBalance0101           1.0
+    x010401   NodeBalance0401          -1.0   Capacity0104           1.0
+    x010402   Total_Cost          56.0   NodeBalance0102           1.0
+    x010402   NodeBalance0402          -1.0   Capacity0104           1.0
+    x010403   Total_Cost          56.0   NodeBalance0103           1.0
+    x010403   NodeBalance0403          -1.0   Capacity0104           1.0
+    x010404   Total_Cost          56.0   NodeBalance0104           1.0
+    x010404   NodeBalance0404          -1.0   Capacity0104           1.0
+    x010405   Total_Cost          56.0   NodeBalance0105           1.0
+    x010405   NodeBalance0405          -1.0   Capacity0104           1.0
+    x010406   Total_Cost          56.0   NodeBalance0106           1.0
+    x010406   NodeBalance0406          -1.0   Capacity0104           1.0
+    x010407   Total_Cost          56.0   NodeBalance0107           1.0
+    x010407   NodeBalance0407          -1.0   Capacity0104           1.0
+    x010408   Total_Cost          56.0   NodeBalance0108           1.0
+    x010408   NodeBalance0408          -1.0   Capacity0104           1.0
+    x010409   Total_Cost          56.0   NodeBalance0109           1.0
+    x010409   NodeBalance0409          -1.0   Capacity0104           1.0
+    x010410   Total_Cost          56.0   NodeBalance0110           1.0
+    x010410   NodeBalance0410          -1.0   Capacity0104           1.0
+    x010411   Total_Cost          56.0   NodeBalance0111           1.0
+    x010411   NodeBalance0411          -1.0   Capacity0104           1.0
+    x010412   Total_Cost          56.0   NodeBalance0112           1.0
+    x010412   NodeBalance0412          -1.0   Capacity0104           1.0
+    x010413   Total_Cost          56.0   NodeBalance0113           1.0
+    x010413   NodeBalance0413          -1.0   Capacity0104           1.0
+    x010414   Total_Cost          56.0   NodeBalance0114           1.0
+    x010414   NodeBalance0414          -1.0   Capacity0104           1.0
+    x010415   Total_Cost          56.0   NodeBalance0115           1.0
+    x010415   NodeBalance0415          -1.0   Capacity0104           1.0
+    x010416   Total_Cost          56.0   NodeBalance0116           1.0
+    x010416   NodeBalance0416          -1.0   Capacity0104           1.0
+    x010417   Total_Cost          56.0   NodeBalance0117           1.0
+    x010417   NodeBalance0417          -1.0   Capacity0104           1.0
+    x010418   Total_Cost          56.0   NodeBalance0118           1.0
+    x010418   NodeBalance0418          -1.0   Capacity0104           1.0
+    x010419   Total_Cost          56.0   NodeBalance0119           1.0
+    x010419   NodeBalance0419          -1.0   Capacity0104           1.0
+    x010420   Total_Cost          56.0   NodeBalance0120           1.0
+    x010420   NodeBalance0420          -1.0   Capacity0104           1.0
+    x010421   Total_Cost          56.0   NodeBalance0121           1.0
+    x010421   NodeBalance0421          -1.0   Capacity0104           1.0
+    x010422   Total_Cost          56.0   NodeBalance0122           1.0
+    x010422   NodeBalance0422          -1.0   Capacity0104           1.0
+    x010423   Total_Cost          56.0   NodeBalance0123           1.0
+    x010423   NodeBalance0423          -1.0   Capacity0104           1.0
+    x010424   Total_Cost          56.0   NodeBalance0124           1.0
+    x010424   NodeBalance0424          -1.0   Capacity0104           1.0
+    x010425   Total_Cost          56.0   NodeBalance0125           1.0
+    x010425   NodeBalance0425          -1.0   Capacity0104           1.0
+    x010426   Total_Cost          56.0   NodeBalance0126           1.0
+    x010426   NodeBalance0426          -1.0   Capacity0104           1.0
+    x010427   Total_Cost          56.0   NodeBalance0127           1.0
+    x010427   NodeBalance0427          -1.0   Capacity0104           1.0
+    x010428   Total_Cost          56.0   NodeBalance0128           1.0
+    x010428   NodeBalance0428          -1.0   Capacity0104           1.0
+    x010429   Total_Cost          56.0   NodeBalance0129           1.0
+    x010429   NodeBalance0429          -1.0   Capacity0104           1.0
+    x010430   Total_Cost          56.0   NodeBalance0130           1.0
+    x010430   NodeBalance0430          -1.0   Capacity0104           1.0
+    x010431   Total_Cost          56.0   NodeBalance0131           1.0
+    x010431   NodeBalance0431          -1.0   Capacity0104           1.0
+    x010432   Total_Cost          56.0   NodeBalance0132           1.0
+    x010432   NodeBalance0432          -1.0   Capacity0104           1.0
+    x010433   Total_Cost          56.0   NodeBalance0133           1.0
+    x010433   NodeBalance0433          -1.0   Capacity0104           1.0
+    x010434   Total_Cost          56.0   NodeBalance0134           1.0
+    x010434   NodeBalance0434          -1.0   Capacity0104           1.0
+    x010435   Total_Cost          56.0   NodeBalance0135           1.0
+    x010435   NodeBalance0435          -1.0   Capacity0104           1.0
+    x010436   Total_Cost          56.0   NodeBalance0136           1.0
+    x010436   NodeBalance0436          -1.0   Capacity0104           1.0
+    x010437   Total_Cost          56.0   NodeBalance0137           1.0
+    x010437   NodeBalance0437          -1.0   Capacity0104           1.0
+    x010438   Total_Cost          56.0   NodeBalance0138           1.0
+    x010438   NodeBalance0438          -1.0   Capacity0104           1.0
+    x010439   Total_Cost          56.0   NodeBalance0139           1.0
+    x010439   NodeBalance0439          -1.0   Capacity0104           1.0
+    x010440   Total_Cost          56.0   NodeBalance0140           1.0
+    x010440   NodeBalance0440          -1.0   Capacity0104           1.0
+    x010701   Total_Cost          18.0   NodeBalance0101           1.0
+    x010701   NodeBalance0701          -1.0   Capacity0107           1.0
+    x010702   Total_Cost          18.0   NodeBalance0102           1.0
+    x010702   NodeBalance0702          -1.0   Capacity0107           1.0
+    x010703   Total_Cost          18.0   NodeBalance0103           1.0
+    x010703   NodeBalance0703          -1.0   Capacity0107           1.0
+    x010704   Total_Cost          18.0   NodeBalance0104           1.0
+    x010704   NodeBalance0704          -1.0   Capacity0107           1.0
+    x010705   Total_Cost          18.0   NodeBalance0105           1.0
+    x010705   NodeBalance0705          -1.0   Capacity0107           1.0
+    x010706   Total_Cost          18.0   NodeBalance0106           1.0
+    x010706   NodeBalance0706          -1.0   Capacity0107           1.0
+    x010707   Total_Cost          18.0   NodeBalance0107           1.0
+    x010707   NodeBalance0707          -1.0   Capacity0107           1.0
+    x010708   Total_Cost          18.0   NodeBalance0108           1.0
+    x010708   NodeBalance0708          -1.0   Capacity0107           1.0
+    x010709   Total_Cost          18.0   NodeBalance0109           1.0
+    x010709   NodeBalance0709          -1.0   Capacity0107           1.0
+    x010710   Total_Cost          18.0   NodeBalance0110           1.0
+    x010710   NodeBalance0710          -1.0   Capacity0107           1.0
+    x010711   Total_Cost          18.0   NodeBalance0111           1.0
+    x010711   NodeBalance0711          -1.0   Capacity0107           1.0
+    x010712   Total_Cost          18.0   NodeBalance0112           1.0
+    x010712   NodeBalance0712          -1.0   Capacity0107           1.0
+    x010713   Total_Cost          18.0   NodeBalance0113           1.0
+    x010713   NodeBalance0713          -1.0   Capacity0107           1.0
+    x010714   Total_Cost          18.0   NodeBalance0114           1.0
+    x010714   NodeBalance0714          -1.0   Capacity0107           1.0
+    x010715   Total_Cost          18.0   NodeBalance0115           1.0
+    x010715   NodeBalance0715          -1.0   Capacity0107           1.0
+    x010716   Total_Cost          18.0   NodeBalance0116           1.0
+    x010716   NodeBalance0716          -1.0   Capacity0107           1.0
+    x010717   Total_Cost          18.0   NodeBalance0117           1.0
+    x010717   NodeBalance0717          -1.0   Capacity0107           1.0
+    x010718   Total_Cost          18.0   NodeBalance0118           1.0
+    x010718   NodeBalance0718          -1.0   Capacity0107           1.0
+    x010719   Total_Cost          18.0   NodeBalance0119           1.0
+    x010719   NodeBalance0719          -1.0   Capacity0107           1.0
+    x010720   Total_Cost          18.0   NodeBalance0120           1.0
+    x010720   NodeBalance0720          -1.0   Capacity0107           1.0
+    x010721   Total_Cost          18.0   NodeBalance0121           1.0
+    x010721   NodeBalance0721          -1.0   Capacity0107           1.0
+    x010722   Total_Cost          18.0   NodeBalance0122           1.0
+    x010722   NodeBalance0722          -1.0   Capacity0107           1.0
+    x010723   Total_Cost          18.0   NodeBalance0123           1.0
+    x010723   NodeBalance0723          -1.0   Capacity0107           1.0
+    x010724   Total_Cost          18.0   NodeBalance0124           1.0
+    x010724   NodeBalance0724          -1.0   Capacity0107           1.0
+    x010725   Total_Cost          18.0   NodeBalance0125           1.0
+    x010725   NodeBalance0725          -1.0   Capacity0107           1.0
+    x010726   Total_Cost          18.0   NodeBalance0126           1.0
+    x010726   NodeBalance0726          -1.0   Capacity0107           1.0
+    x010727   Total_Cost          18.0   NodeBalance0127           1.0
+    x010727   NodeBalance0727          -1.0   Capacity0107           1.0
+    x010728   Total_Cost          18.0   NodeBalance0128           1.0
+    x010728   NodeBalance0728          -1.0   Capacity0107           1.0
+    x010729   Total_Cost          18.0   NodeBalance0129           1.0
+    x010729   NodeBalance0729          -1.0   Capacity0107           1.0
+    x010730   Total_Cost          18.0   NodeBalance0130           1.0
+    x010730   NodeBalance0730          -1.0   Capacity0107           1.0
+    x010731   Total_Cost          18.0   NodeBalance0131           1.0
+    x010731   NodeBalance0731          -1.0   Capacity0107           1.0
+    x010732   Total_Cost          18.0   NodeBalance0132           1.0
+    x010732   NodeBalance0732          -1.0   Capacity0107           1.0
+    x010733   Total_Cost          18.0   NodeBalance0133           1.0
+    x010733   NodeBalance0733          -1.0   Capacity0107           1.0
+    x010734   Total_Cost          18.0   NodeBalance0134           1.0
+    x010734   NodeBalance0734          -1.0   Capacity0107           1.0
+    x010735   Total_Cost          18.0   NodeBalance0135           1.0
+    x010735   NodeBalance0735          -1.0   Capacity0107           1.0
+    x010736   Total_Cost          18.0   NodeBalance0136           1.0
+    x010736   NodeBalance0736          -1.0   Capacity0107           1.0
+    x010737   Total_Cost          18.0   NodeBalance0137           1.0
+    x010737   NodeBalance0737          -1.0   Capacity0107           1.0
+    x010738   Total_Cost          18.0   NodeBalance0138           1.0
+    x010738   NodeBalance0738          -1.0   Capacity0107           1.0
+    x010739   Total_Cost          18.0   NodeBalance0139           1.0
+    x010739   NodeBalance0739          -1.0   Capacity0107           1.0
+    x010740   Total_Cost          18.0   NodeBalance0140           1.0
+    x010740   NodeBalance0740          -1.0   Capacity0107           1.0
+    x010801   Total_Cost          18.0   NodeBalance0101           1.0
+    x010801   NodeBalance0801          -1.0   Capacity0108           1.0
+    x010802   Total_Cost          18.0   NodeBalance0102           1.0
+    x010802   NodeBalance0802          -1.0   Capacity0108           1.0
+    x010803   Total_Cost          18.0   NodeBalance0103           1.0
+    x010803   NodeBalance0803          -1.0   Capacity0108           1.0
+    x010804   Total_Cost          18.0   NodeBalance0104           1.0
+    x010804   NodeBalance0804          -1.0   Capacity0108           1.0
+    x010805   Total_Cost          18.0   NodeBalance0105           1.0
+    x010805   NodeBalance0805          -1.0   Capacity0108           1.0
+    x010806   Total_Cost          18.0   NodeBalance0106           1.0
+    x010806   NodeBalance0806          -1.0   Capacity0108           1.0
+    x010807   Total_Cost          18.0   NodeBalance0107           1.0
+    x010807   NodeBalance0807          -1.0   Capacity0108           1.0
+    x010808   Total_Cost          18.0   NodeBalance0108           1.0
+    x010808   NodeBalance0808          -1.0   Capacity0108           1.0
+    x010809   Total_Cost          18.0   NodeBalance0109           1.0
+    x010809   NodeBalance0809          -1.0   Capacity0108           1.0
+    x010810   Total_Cost          18.0   NodeBalance0110           1.0
+    x010810   NodeBalance0810          -1.0   Capacity0108           1.0
+    x010811   Total_Cost          18.0   NodeBalance0111           1.0
+    x010811   NodeBalance0811          -1.0   Capacity0108           1.0
+    x010812   Total_Cost          18.0   NodeBalance0112           1.0
+    x010812   NodeBalance0812          -1.0   Capacity0108           1.0
+    x010813   Total_Cost          18.0   NodeBalance0113           1.0
+    x010813   NodeBalance0813          -1.0   Capacity0108           1.0
+    x010814   Total_Cost          18.0   NodeBalance0114           1.0
+    x010814   NodeBalance0814          -1.0   Capacity0108           1.0
+    x010815   Total_Cost          18.0   NodeBalance0115           1.0
+    x010815   NodeBalance0815          -1.0   Capacity0108           1.0
+    x010816   Total_Cost          18.0   NodeBalance0116           1.0
+    x010816   NodeBalance0816          -1.0   Capacity0108           1.0
+    x010817   Total_Cost          18.0   NodeBalance0117           1.0
+    x010817   NodeBalance0817          -1.0   Capacity0108           1.0
+    x010818   Total_Cost          18.0   NodeBalance0118           1.0
+    x010818   NodeBalance0818          -1.0   Capacity0108           1.0
+    x010819   Total_Cost          18.0   NodeBalance0119           1.0
+    x010819   NodeBalance0819          -1.0   Capacity0108           1.0
+    x010820   Total_Cost          18.0   NodeBalance0120           1.0
+    x010820   NodeBalance0820          -1.0   Capacity0108           1.0
+    x010821   Total_Cost          18.0   NodeBalance0121           1.0
+    x010821   NodeBalance0821          -1.0   Capacity0108           1.0
+    x010822   Total_Cost          18.0   NodeBalance0122           1.0
+    x010822   NodeBalance0822          -1.0   Capacity0108           1.0
+    x010823   Total_Cost          18.0   NodeBalance0123           1.0
+    x010823   NodeBalance0823          -1.0   Capacity0108           1.0
+    x010824   Total_Cost          18.0   NodeBalance0124           1.0
+    x010824   NodeBalance0824          -1.0   Capacity0108           1.0
+    x010825   Total_Cost          18.0   NodeBalance0125           1.0
+    x010825   NodeBalance0825          -1.0   Capacity0108           1.0
+    x010826   Total_Cost          18.0   NodeBalance0126           1.0
+    x010826   NodeBalance0826          -1.0   Capacity0108           1.0
+    x010827   Total_Cost          18.0   NodeBalance0127           1.0
+    x010827   NodeBalance0827          -1.0   Capacity0108           1.0
+    x010828   Total_Cost          18.0   NodeBalance0128           1.0
+    x010828   NodeBalance0828          -1.0   Capacity0108           1.0
+    x010829   Total_Cost          18.0   NodeBalance0129           1.0
+    x010829   NodeBalance0829          -1.0   Capacity0108           1.0
+    x010830   Total_Cost          18.0   NodeBalance0130           1.0
+    x010830   NodeBalance0830          -1.0   Capacity0108           1.0
+    x010831   Total_Cost          18.0   NodeBalance0131           1.0
+    x010831   NodeBalance0831          -1.0   Capacity0108           1.0
+    x010832   Total_Cost          18.0   NodeBalance0132           1.0
+    x010832   NodeBalance0832          -1.0   Capacity0108           1.0
+    x010833   Total_Cost          18.0   NodeBalance0133           1.0
+    x010833   NodeBalance0833          -1.0   Capacity0108           1.0
+    x010834   Total_Cost          18.0   NodeBalance0134           1.0
+    x010834   NodeBalance0834          -1.0   Capacity0108           1.0
+    x010835   Total_Cost          18.0   NodeBalance0135           1.0
+    x010835   NodeBalance0835          -1.0   Capacity0108           1.0
+    x010836   Total_Cost          18.0   NodeBalance0136           1.0
+    x010836   NodeBalance0836          -1.0   Capacity0108           1.0
+    x010837   Total_Cost          18.0   NodeBalance0137           1.0
+    x010837   NodeBalance0837          -1.0   Capacity0108           1.0
+    x010838   Total_Cost          18.0   NodeBalance0138           1.0
+    x010838   NodeBalance0838          -1.0   Capacity0108           1.0
+    x010839   Total_Cost          18.0   NodeBalance0139           1.0
+    x010839   NodeBalance0839          -1.0   Capacity0108           1.0
+    x010840   Total_Cost          18.0   NodeBalance0140           1.0
+    x010840   NodeBalance0840          -1.0   Capacity0108           1.0
+    x011001   Total_Cost          72.0   NodeBalance0101           1.0
+    x011001   NodeBalance1001          -1.0   Capacity0110           1.0
+    x011002   Total_Cost          72.0   NodeBalance0102           1.0
+    x011002   NodeBalance1002          -1.0   Capacity0110           1.0
+    x011003   Total_Cost          72.0   NodeBalance0103           1.0
+    x011003   NodeBalance1003          -1.0   Capacity0110           1.0
+    x011004   Total_Cost          72.0   NodeBalance0104           1.0
+    x011004   NodeBalance1004          -1.0   Capacity0110           1.0
+    x011005   Total_Cost          72.0   NodeBalance0105           1.0
+    x011005   NodeBalance1005          -1.0   Capacity0110           1.0
+    x011006   Total_Cost          72.0   NodeBalance0106           1.0
+    x011006   NodeBalance1006          -1.0   Capacity0110           1.0
+    x011007   Total_Cost          72.0   NodeBalance0107           1.0
+    x011007   NodeBalance1007          -1.0   Capacity0110           1.0
+    x011008   Total_Cost          72.0   NodeBalance0108           1.0
+    x011008   NodeBalance1008          -1.0   Capacity0110           1.0
+    x011009   Total_Cost          72.0   NodeBalance0109           1.0
+    x011009   NodeBalance1009          -1.0   Capacity0110           1.0
+    x011010   Total_Cost          72.0   NodeBalance0110           1.0
+    x011010   NodeBalance1010          -1.0   Capacity0110           1.0
+    x011011   Total_Cost          72.0   NodeBalance0111           1.0
+    x011011   NodeBalance1011          -1.0   Capacity0110           1.0
+    x011012   Total_Cost          72.0   NodeBalance0112           1.0
+    x011012   NodeBalance1012          -1.0   Capacity0110           1.0
+    x011013   Total_Cost          72.0   NodeBalance0113           1.0
+    x011013   NodeBalance1013          -1.0   Capacity0110           1.0
+    x011014   Total_Cost          72.0   NodeBalance0114           1.0
+    x011014   NodeBalance1014          -1.0   Capacity0110           1.0
+    x011015   Total_Cost          72.0   NodeBalance0115           1.0
+    x011015   NodeBalance1015          -1.0   Capacity0110           1.0
+    x011016   Total_Cost          72.0   NodeBalance0116           1.0
+    x011016   NodeBalance1016          -1.0   Capacity0110           1.0
+    x011017   Total_Cost          72.0   NodeBalance0117           1.0
+    x011017   NodeBalance1017          -1.0   Capacity0110           1.0
+    x011018   Total_Cost          72.0   NodeBalance0118           1.0
+    x011018   NodeBalance1018          -1.0   Capacity0110           1.0
+    x011019   Total_Cost          72.0   NodeBalance0119           1.0
+    x011019   NodeBalance1019          -1.0   Capacity0110           1.0
+    x011020   Total_Cost          72.0   NodeBalance0120           1.0
+    x011020   NodeBalance1020          -1.0   Capacity0110           1.0
+    x011021   Total_Cost          72.0   NodeBalance0121           1.0
+    x011021   NodeBalance1021          -1.0   Capacity0110           1.0
+    x011022   Total_Cost          72.0   NodeBalance0122           1.0
+    x011022   NodeBalance1022          -1.0   Capacity0110           1.0
+    x011023   Total_Cost          72.0   NodeBalance0123           1.0
+    x011023   NodeBalance1023          -1.0   Capacity0110           1.0
+    x011024   Total_Cost          72.0   NodeBalance0124           1.0
+    x011024   NodeBalance1024          -1.0   Capacity0110           1.0
+    x011025   Total_Cost          72.0   NodeBalance0125           1.0
+    x011025   NodeBalance1025          -1.0   Capacity0110           1.0
+    x011026   Total_Cost          72.0   NodeBalance0126           1.0
+    x011026   NodeBalance1026          -1.0   Capacity0110           1.0
+    x011027   Total_Cost          72.0   NodeBalance0127           1.0
+    x011027   NodeBalance1027          -1.0   Capacity0110           1.0
+    x011028   Total_Cost          72.0   NodeBalance0128           1.0
+    x011028   NodeBalance1028          -1.0   Capacity0110           1.0
+    x011029   Total_Cost          72.0   NodeBalance0129           1.0
+    x011029   NodeBalance1029          -1.0   Capacity0110           1.0
+    x011030   Total_Cost          72.0   NodeBalance0130           1.0
+    x011030   NodeBalance1030          -1.0   Capacity0110           1.0
+    x011031   Total_Cost          72.0   NodeBalance0131           1.0
+    x011031   NodeBalance1031          -1.0   Capacity0110           1.0
+    x011032   Total_Cost          72.0   NodeBalance0132           1.0
+    x011032   NodeBalance1032          -1.0   Capacity0110           1.0
+    x011033   Total_Cost          72.0   NodeBalance0133           1.0
+    x011033   NodeBalance1033          -1.0   Capacity0110           1.0
+    x011034   Total_Cost          72.0   NodeBalance0134           1.0
+    x011034   NodeBalance1034          -1.0   Capacity0110           1.0
+    x011035   Total_Cost          72.0   NodeBalance0135           1.0
+    x011035   NodeBalance1035          -1.0   Capacity0110           1.0
+    x011036   Total_Cost          72.0   NodeBalance0136           1.0
+    x011036   NodeBalance1036          -1.0   Capacity0110           1.0
+    x011037   Total_Cost          72.0   NodeBalance0137           1.0
+    x011037   NodeBalance1037          -1.0   Capacity0110           1.0
+    x011038   Total_Cost          72.0   NodeBalance0138           1.0
+    x011038   NodeBalance1038          -1.0   Capacity0110           1.0
+    x011039   Total_Cost          72.0   NodeBalance0139           1.0
+    x011039   NodeBalance1039          -1.0   Capacity0110           1.0
+    x011040   Total_Cost          72.0   NodeBalance0140           1.0
+    x011040   NodeBalance1040          -1.0   Capacity0110           1.0
+    x011101   Total_Cost          69.0   NodeBalance0101           1.0
+    x011101   NodeBalance1101          -1.0   Capacity0111           1.0
+    x011102   Total_Cost          69.0   NodeBalance0102           1.0
+    x011102   NodeBalance1102          -1.0   Capacity0111           1.0
+    x011103   Total_Cost          69.0   NodeBalance0103           1.0
+    x011103   NodeBalance1103          -1.0   Capacity0111           1.0
+    x011104   Total_Cost          69.0   NodeBalance0104           1.0
+    x011104   NodeBalance1104          -1.0   Capacity0111           1.0
+    x011105   Total_Cost          69.0   NodeBalance0105           1.0
+    x011105   NodeBalance1105          -1.0   Capacity0111           1.0
+    x011106   Total_Cost          69.0   NodeBalance0106           1.0
+    x011106   NodeBalance1106          -1.0   Capacity0111           1.0
+    x011107   Total_Cost          69.0   NodeBalance0107           1.0
+    x011107   NodeBalance1107          -1.0   Capacity0111           1.0
+    x011108   Total_Cost          69.0   NodeBalance0108           1.0
+    x011108   NodeBalance1108          -1.0   Capacity0111           1.0
+    x011109   Total_Cost          69.0   NodeBalance0109           1.0
+    x011109   NodeBalance1109          -1.0   Capacity0111           1.0
+    x011110   Total_Cost          69.0   NodeBalance0110           1.0
+    x011110   NodeBalance1110          -1.0   Capacity0111           1.0
+    x011111   Total_Cost          69.0   NodeBalance0111           1.0
+    x011111   NodeBalance1111          -1.0   Capacity0111           1.0
+    x011112   Total_Cost          69.0   NodeBalance0112           1.0
+    x011112   NodeBalance1112          -1.0   Capacity0111           1.0
+    x011113   Total_Cost          69.0   NodeBalance0113           1.0
+    x011113   NodeBalance1113          -1.0   Capacity0111           1.0
+    x011114   Total_Cost          69.0   NodeBalance0114           1.0
+    x011114   NodeBalance1114          -1.0   Capacity0111           1.0
+    x011115   Total_Cost          69.0   NodeBalance0115           1.0
+    x011115   NodeBalance1115          -1.0   Capacity0111           1.0
+    x011116   Total_Cost          69.0   NodeBalance0116           1.0
+    x011116   NodeBalance1116          -1.0   Capacity0111           1.0
+    x011117   Total_Cost          69.0   NodeBalance0117           1.0
+    x011117   NodeBalance1117          -1.0   Capacity0111           1.0
+    x011118   Total_Cost          69.0   NodeBalance0118           1.0
+    x011118   NodeBalance1118          -1.0   Capacity0111           1.0
+    x011119   Total_Cost          69.0   NodeBalance0119           1.0
+    x011119   NodeBalance1119          -1.0   Capacity0111           1.0
+    x011120   Total_Cost          69.0   NodeBalance0120           1.0
+    x011120   NodeBalance1120          -1.0   Capacity0111           1.0
+    x011121   Total_Cost          69.0   NodeBalance0121           1.0
+    x011121   NodeBalance1121          -1.0   Capacity0111           1.0
+    x011122   Total_Cost          69.0   NodeBalance0122           1.0
+    x011122   NodeBalance1122          -1.0   Capacity0111           1.0
+    x011123   Total_Cost          69.0   NodeBalance0123           1.0
+    x011123   NodeBalance1123          -1.0   Capacity0111           1.0
+    x011124   Total_Cost          69.0   NodeBalance0124           1.0
+    x011124   NodeBalance1124          -1.0   Capacity0111           1.0
+    x011125   Total_Cost          69.0   NodeBalance0125           1.0
+    x011125   NodeBalance1125          -1.0   Capacity0111           1.0
+    x011126   Total_Cost          69.0   NodeBalance0126           1.0
+    x011126   NodeBalance1126          -1.0   Capacity0111           1.0
+    x011127   Total_Cost          69.0   NodeBalance0127           1.0
+    x011127   NodeBalance1127          -1.0   Capacity0111           1.0
+    x011128   Total_Cost          69.0   NodeBalance0128           1.0
+    x011128   NodeBalance1128          -1.0   Capacity0111           1.0
+    x011129   Total_Cost          69.0   NodeBalance0129           1.0
+    x011129   NodeBalance1129          -1.0   Capacity0111           1.0
+    x011130   Total_Cost          69.0   NodeBalance0130           1.0
+    x011130   NodeBalance1130          -1.0   Capacity0111           1.0
+    x011131   Total_Cost          69.0   NodeBalance0131           1.0
+    x011131   NodeBalance1131          -1.0   Capacity0111           1.0
+    x011132   Total_Cost          69.0   NodeBalance0132           1.0
+    x011132   NodeBalance1132          -1.0   Capacity0111           1.0
+    x011133   Total_Cost          69.0   NodeBalance0133           1.0
+    x011133   NodeBalance1133          -1.0   Capacity0111           1.0
+    x011134   Total_Cost          69.0   NodeBalance0134           1.0
+    x011134   NodeBalance1134          -1.0   Capacity0111           1.0
+    x011135   Total_Cost          69.0   NodeBalance0135           1.0
+    x011135   NodeBalance1135          -1.0   Capacity0111           1.0
+    x011136   Total_Cost          69.0   NodeBalance0136           1.0
+    x011136   NodeBalance1136          -1.0   Capacity0111           1.0
+    x011137   Total_Cost          69.0   NodeBalance0137           1.0
+    x011137   NodeBalance1137          -1.0   Capacity0111           1.0
+    x011138   Total_Cost          69.0   NodeBalance0138           1.0
+    x011138   NodeBalance1138          -1.0   Capacity0111           1.0
+    x011139   Total_Cost          69.0   NodeBalance0139           1.0
+    x011139   NodeBalance1139          -1.0   Capacity0111           1.0
+    x011140   Total_Cost          69.0   NodeBalance0140           1.0
+    x011140   NodeBalance1140          -1.0   Capacity0111           1.0
+    x011501   Total_Cost          62.0   NodeBalance0101           1.0
+    x011501   NodeBalance1501          -1.0   Capacity0115           1.0
+    x011502   Total_Cost          62.0   NodeBalance0102           1.0
+    x011502   NodeBalance1502          -1.0   Capacity0115           1.0
+    x011503   Total_Cost          62.0   NodeBalance0103           1.0
+    x011503   NodeBalance1503          -1.0   Capacity0115           1.0
+    x011504   Total_Cost          62.0   NodeBalance0104           1.0
+    x011504   NodeBalance1504          -1.0   Capacity0115           1.0
+    x011505   Total_Cost          62.0   NodeBalance0105           1.0
+    x011505   NodeBalance1505          -1.0   Capacity0115           1.0
+    x011506   Total_Cost          62.0   NodeBalance0106           1.0
+    x011506   NodeBalance1506          -1.0   Capacity0115           1.0
+    x011507   Total_Cost          62.0   NodeBalance0107           1.0
+    x011507   NodeBalance1507          -1.0   Capacity0115           1.0
+    x011508   Total_Cost          62.0   NodeBalance0108           1.0
+    x011508   NodeBalance1508          -1.0   Capacity0115           1.0
+    x011509   Total_Cost          62.0   NodeBalance0109           1.0
+    x011509   NodeBalance1509          -1.0   Capacity0115           1.0
+    x011510   Total_Cost          62.0   NodeBalance0110           1.0
+    x011510   NodeBalance1510          -1.0   Capacity0115           1.0
+    x011511   Total_Cost          62.0   NodeBalance0111           1.0
+    x011511   NodeBalance1511          -1.0   Capacity0115           1.0
+    x011512   Total_Cost          62.0   NodeBalance0112           1.0
+    x011512   NodeBalance1512          -1.0   Capacity0115           1.0
+    x011513   Total_Cost          62.0   NodeBalance0113           1.0
+    x011513   NodeBalance1513          -1.0   Capacity0115           1.0
+    x011514   Total_Cost          62.0   NodeBalance0114           1.0
+    x011514   NodeBalance1514          -1.0   Capacity0115           1.0
+    x011515   Total_Cost          62.0   NodeBalance0115           1.0
+    x011515   NodeBalance1515          -1.0   Capacity0115           1.0
+    x011516   Total_Cost          62.0   NodeBalance0116           1.0
+    x011516   NodeBalance1516          -1.0   Capacity0115           1.0
+    x011517   Total_Cost          62.0   NodeBalance0117           1.0
+    x011517   NodeBalance1517          -1.0   Capacity0115           1.0
+    x011518   Total_Cost          62.0   NodeBalance0118           1.0
+    x011518   NodeBalance1518          -1.0   Capacity0115           1.0
+    x011519   Total_Cost          62.0   NodeBalance0119           1.0
+    x011519   NodeBalance1519          -1.0   Capacity0115           1.0
+    x011520   Total_Cost          62.0   NodeBalance0120           1.0
+    x011520   NodeBalance1520          -1.0   Capacity0115           1.0
+    x011521   Total_Cost          62.0   NodeBalance0121           1.0
+    x011521   NodeBalance1521          -1.0   Capacity0115           1.0
+    x011522   Total_Cost          62.0   NodeBalance0122           1.0
+    x011522   NodeBalance1522          -1.0   Capacity0115           1.0
+    x011523   Total_Cost          62.0   NodeBalance0123           1.0
+    x011523   NodeBalance1523          -1.0   Capacity0115           1.0
+    x011524   Total_Cost          62.0   NodeBalance0124           1.0
+    x011524   NodeBalance1524          -1.0   Capacity0115           1.0
+    x011525   Total_Cost          62.0   NodeBalance0125           1.0
+    x011525   NodeBalance1525          -1.0   Capacity0115           1.0
+    x011526   Total_Cost          62.0   NodeBalance0126           1.0
+    x011526   NodeBalance1526          -1.0   Capacity0115           1.0
+    x011527   Total_Cost          62.0   NodeBalance0127           1.0
+    x011527   NodeBalance1527          -1.0   Capacity0115           1.0
+    x011528   Total_Cost          62.0   NodeBalance0128           1.0
+    x011528   NodeBalance1528          -1.0   Capacity0115           1.0
+    x011529   Total_Cost          62.0   NodeBalance0129           1.0
+    x011529   NodeBalance1529          -1.0   Capacity0115           1.0
+    x011530   Total_Cost          62.0   NodeBalance0130           1.0
+    x011530   NodeBalance1530          -1.0   Capacity0115           1.0
+    x011531   Total_Cost          62.0   NodeBalance0131           1.0
+    x011531   NodeBalance1531          -1.0   Capacity0115           1.0
+    x011532   Total_Cost          62.0   NodeBalance0132           1.0
+    x011532   NodeBalance1532          -1.0   Capacity0115           1.0
+    x011533   Total_Cost          62.0   NodeBalance0133           1.0
+    x011533   NodeBalance1533          -1.0   Capacity0115           1.0
+    x011534   Total_Cost          62.0   NodeBalance0134           1.0
+    x011534   NodeBalance1534          -1.0   Capacity0115           1.0
+    x011535   Total_Cost          62.0   NodeBalance0135           1.0
+    x011535   NodeBalance1535          -1.0   Capacity0115           1.0
+    x011536   Total_Cost          62.0   NodeBalance0136           1.0
+    x011536   NodeBalance1536          -1.0   Capacity0115           1.0
+    x011537   Total_Cost          62.0   NodeBalance0137           1.0
+    x011537   NodeBalance1537          -1.0   Capacity0115           1.0
+    x011538   Total_Cost          62.0   NodeBalance0138           1.0
+    x011538   NodeBalance1538          -1.0   Capacity0115           1.0
+    x011539   Total_Cost          62.0   NodeBalance0139           1.0
+    x011539   NodeBalance1539          -1.0   Capacity0115           1.0
+    x011540   Total_Cost          62.0   NodeBalance0140           1.0
+    x011540   NodeBalance1540          -1.0   Capacity0115           1.0
+    x011701   Total_Cost          21.0   NodeBalance0101           1.0
+    x011701   NodeBalance1701          -1.0   Capacity0117           1.0
+    x011702   Total_Cost          21.0   NodeBalance0102           1.0
+    x011702   NodeBalance1702          -1.0   Capacity0117           1.0
+    x011703   Total_Cost          21.0   NodeBalance0103           1.0
+    x011703   NodeBalance1703          -1.0   Capacity0117           1.0
+    x011704   Total_Cost          21.0   NodeBalance0104           1.0
+    x011704   NodeBalance1704          -1.0   Capacity0117           1.0
+    x011705   Total_Cost          21.0   NodeBalance0105           1.0
+    x011705   NodeBalance1705          -1.0   Capacity0117           1.0
+    x011706   Total_Cost          21.0   NodeBalance0106           1.0
+    x011706   NodeBalance1706          -1.0   Capacity0117           1.0
+    x011707   Total_Cost          21.0   NodeBalance0107           1.0
+    x011707   NodeBalance1707          -1.0   Capacity0117           1.0
+    x011708   Total_Cost          21.0   NodeBalance0108           1.0
+    x011708   NodeBalance1708          -1.0   Capacity0117           1.0
+    x011709   Total_Cost          21.0   NodeBalance0109           1.0
+    x011709   NodeBalance1709          -1.0   Capacity0117           1.0
+    x011710   Total_Cost          21.0   NodeBalance0110           1.0
+    x011710   NodeBalance1710          -1.0   Capacity0117           1.0
+    x011711   Total_Cost          21.0   NodeBalance0111           1.0
+    x011711   NodeBalance1711          -1.0   Capacity0117           1.0
+    x011712   Total_Cost          21.0   NodeBalance0112           1.0
+    x011712   NodeBalance1712          -1.0   Capacity0117           1.0
+    x011713   Total_Cost          21.0   NodeBalance0113           1.0
+    x011713   NodeBalance1713          -1.0   Capacity0117           1.0
+    x011714   Total_Cost          21.0   NodeBalance0114           1.0
+    x011714   NodeBalance1714          -1.0   Capacity0117           1.0
+    x011715   Total_Cost          21.0   NodeBalance0115           1.0
+    x011715   NodeBalance1715          -1.0   Capacity0117           1.0
+    x011716   Total_Cost          21.0   NodeBalance0116           1.0
+    x011716   NodeBalance1716          -1.0   Capacity0117           1.0
+    x011717   Total_Cost          21.0   NodeBalance0117           1.0
+    x011717   NodeBalance1717          -1.0   Capacity0117           1.0
+    x011718   Total_Cost          21.0   NodeBalance0118           1.0
+    x011718   NodeBalance1718          -1.0   Capacity0117           1.0
+    x011719   Total_Cost          21.0   NodeBalance0119           1.0
+    x011719   NodeBalance1719          -1.0   Capacity0117           1.0
+    x011720   Total_Cost          21.0   NodeBalance0120           1.0
+    x011720   NodeBalance1720          -1.0   Capacity0117           1.0
+    x011721   Total_Cost          21.0   NodeBalance0121           1.0
+    x011721   NodeBalance1721          -1.0   Capacity0117           1.0
+    x011722   Total_Cost          21.0   NodeBalance0122           1.0
+    x011722   NodeBalance1722          -1.0   Capacity0117           1.0
+    x011723   Total_Cost          21.0   NodeBalance0123           1.0
+    x011723   NodeBalance1723          -1.0   Capacity0117           1.0
+    x011724   Total_Cost          21.0   NodeBalance0124           1.0
+    x011724   NodeBalance1724          -1.0   Capacity0117           1.0
+    x011725   Total_Cost          21.0   NodeBalance0125           1.0
+    x011725   NodeBalance1725          -1.0   Capacity0117           1.0
+    x011726   Total_Cost          21.0   NodeBalance0126           1.0
+    x011726   NodeBalance1726          -1.0   Capacity0117           1.0
+    x011727   Total_Cost          21.0   NodeBalance0127           1.0
+    x011727   NodeBalance1727          -1.0   Capacity0117           1.0
+    x011728   Total_Cost          21.0   NodeBalance0128           1.0
+    x011728   NodeBalance1728          -1.0   Capacity0117           1.0
+    x011729   Total_Cost          21.0   NodeBalance0129           1.0
+    x011729   NodeBalance1729          -1.0   Capacity0117           1.0
+    x011730   Total_Cost          21.0   NodeBalance0130           1.0
+    x011730   NodeBalance1730          -1.0   Capacity0117           1.0
+    x011731   Total_Cost          21.0   NodeBalance0131           1.0
+    x011731   NodeBalance1731          -1.0   Capacity0117           1.0
+    x011732   Total_Cost          21.0   NodeBalance0132           1.0
+    x011732   NodeBalance1732          -1.0   Capacity0117           1.0
+    x011733   Total_Cost          21.0   NodeBalance0133           1.0
+    x011733   NodeBalance1733          -1.0   Capacity0117           1.0
+    x011734   Total_Cost          21.0   NodeBalance0134           1.0
+    x011734   NodeBalance1734          -1.0   Capacity0117           1.0
+    x011735   Total_Cost          21.0   NodeBalance0135           1.0
+    x011735   NodeBalance1735          -1.0   Capacity0117           1.0
+    x011736   Total_Cost          21.0   NodeBalance0136           1.0
+    x011736   NodeBalance1736          -1.0   Capacity0117           1.0
+    x011737   Total_Cost          21.0   NodeBalance0137           1.0
+    x011737   NodeBalance1737          -1.0   Capacity0117           1.0
+    x011738   Total_Cost          21.0   NodeBalance0138           1.0
+    x011738   NodeBalance1738          -1.0   Capacity0117           1.0
+    x011739   Total_Cost          21.0   NodeBalance0139           1.0
+    x011739   NodeBalance1739          -1.0   Capacity0117           1.0
+    x011740   Total_Cost          21.0   NodeBalance0140           1.0
+    x011740   NodeBalance1740          -1.0   Capacity0117           1.0
+    x011801   Total_Cost          65.0   NodeBalance0101           1.0
+    x011801   NodeBalance1801          -1.0   Capacity0118           1.0
+    x011802   Total_Cost          65.0   NodeBalance0102           1.0
+    x011802   NodeBalance1802          -1.0   Capacity0118           1.0
+    x011803   Total_Cost          65.0   NodeBalance0103           1.0
+    x011803   NodeBalance1803          -1.0   Capacity0118           1.0
+    x011804   Total_Cost          65.0   NodeBalance0104           1.0
+    x011804   NodeBalance1804          -1.0   Capacity0118           1.0
+    x011805   Total_Cost          65.0   NodeBalance0105           1.0
+    x011805   NodeBalance1805          -1.0   Capacity0118           1.0
+    x011806   Total_Cost          65.0   NodeBalance0106           1.0
+    x011806   NodeBalance1806          -1.0   Capacity0118           1.0
+    x011807   Total_Cost          65.0   NodeBalance0107           1.0
+    x011807   NodeBalance1807          -1.0   Capacity0118           1.0
+    x011808   Total_Cost          65.0   NodeBalance0108           1.0
+    x011808   NodeBalance1808          -1.0   Capacity0118           1.0
+    x011809   Total_Cost          65.0   NodeBalance0109           1.0
+    x011809   NodeBalance1809          -1.0   Capacity0118           1.0
+    x011810   Total_Cost          65.0   NodeBalance0110           1.0
+    x011810   NodeBalance1810          -1.0   Capacity0118           1.0
+    x011811   Total_Cost          65.0   NodeBalance0111           1.0
+    x011811   NodeBalance1811          -1.0   Capacity0118           1.0
+    x011812   Total_Cost          65.0   NodeBalance0112           1.0
+    x011812   NodeBalance1812          -1.0   Capacity0118           1.0
+    x011813   Total_Cost          65.0   NodeBalance0113           1.0
+    x011813   NodeBalance1813          -1.0   Capacity0118           1.0
+    x011814   Total_Cost          65.0   NodeBalance0114           1.0
+    x011814   NodeBalance1814          -1.0   Capacity0118           1.0
+    x011815   Total_Cost          65.0   NodeBalance0115           1.0
+    x011815   NodeBalance1815          -1.0   Capacity0118           1.0
+    x011816   Total_Cost          65.0   NodeBalance0116           1.0
+    x011816   NodeBalance1816          -1.0   Capacity0118           1.0
+    x011817   Total_Cost          65.0   NodeBalance0117           1.0
+    x011817   NodeBalance1817          -1.0   Capacity0118           1.0
+    x011818   Total_Cost          65.0   NodeBalance0118           1.0
+    x011818   NodeBalance1818          -1.0   Capacity0118           1.0
+    x011819   Total_Cost          65.0   NodeBalance0119           1.0
+    x011819   NodeBalance1819          -1.0   Capacity0118           1.0
+    x011820   Total_Cost          65.0   NodeBalance0120           1.0
+    x011820   NodeBalance1820          -1.0   Capacity0118           1.0
+    x011821   Total_Cost          65.0   NodeBalance0121           1.0
+    x011821   NodeBalance1821          -1.0   Capacity0118           1.0
+    x011822   Total_Cost          65.0   NodeBalance0122           1.0
+    x011822   NodeBalance1822          -1.0   Capacity0118           1.0
+    x011823   Total_Cost          65.0   NodeBalance0123           1.0
+    x011823   NodeBalance1823          -1.0   Capacity0118           1.0
+    x011824   Total_Cost          65.0   NodeBalance0124           1.0
+    x011824   NodeBalance1824          -1.0   Capacity0118           1.0
+    x011825   Total_Cost          65.0   NodeBalance0125           1.0
+    x011825   NodeBalance1825          -1.0   Capacity0118           1.0
+    x011826   Total_Cost          65.0   NodeBalance0126           1.0
+    x011826   NodeBalance1826          -1.0   Capacity0118           1.0
+    x011827   Total_Cost          65.0   NodeBalance0127           1.0
+    x011827   NodeBalance1827          -1.0   Capacity0118           1.0
+    x011828   Total_Cost          65.0   NodeBalance0128           1.0
+    x011828   NodeBalance1828          -1.0   Capacity0118           1.0
+    x011829   Total_Cost          65.0   NodeBalance0129           1.0
+    x011829   NodeBalance1829          -1.0   Capacity0118           1.0
+    x011830   Total_Cost          65.0   NodeBalance0130           1.0
+    x011830   NodeBalance1830          -1.0   Capacity0118           1.0
+    x011831   Total_Cost          65.0   NodeBalance0131           1.0
+    x011831   NodeBalance1831          -1.0   Capacity0118           1.0
+    x011832   Total_Cost          65.0   NodeBalance0132           1.0
+    x011832   NodeBalance1832          -1.0   Capacity0118           1.0
+    x011833   Total_Cost          65.0   NodeBalance0133           1.0
+    x011833   NodeBalance1833          -1.0   Capacity0118           1.0
+    x011834   Total_Cost          65.0   NodeBalance0134           1.0
+    x011834   NodeBalance1834          -1.0   Capacity0118           1.0
+    x011835   Total_Cost          65.0   NodeBalance0135           1.0
+    x011835   NodeBalance1835          -1.0   Capacity0118           1.0
+    x011836   Total_Cost          65.0   NodeBalance0136           1.0
+    x011836   NodeBalance1836          -1.0   Capacity0118           1.0
+    x011837   Total_Cost          65.0   NodeBalance0137           1.0
+    x011837   NodeBalance1837          -1.0   Capacity0118           1.0
+    x011838   Total_Cost          65.0   NodeBalance0138           1.0
+    x011838   NodeBalance1838          -1.0   Capacity0118           1.0
+    x011839   Total_Cost          65.0   NodeBalance0139           1.0
+    x011839   NodeBalance1839          -1.0   Capacity0118           1.0
+    x011840   Total_Cost          65.0   NodeBalance0140           1.0
+    x011840   NodeBalance1840          -1.0   Capacity0118           1.0
+    x011901   Total_Cost          79.0   NodeBalance0101           1.0
+    x011901   NodeBalance1901          -1.0   Capacity0119           1.0
+    x011902   Total_Cost          79.0   NodeBalance0102           1.0
+    x011902   NodeBalance1902          -1.0   Capacity0119           1.0
+    x011903   Total_Cost          79.0   NodeBalance0103           1.0
+    x011903   NodeBalance1903          -1.0   Capacity0119           1.0
+    x011904   Total_Cost          79.0   NodeBalance0104           1.0
+    x011904   NodeBalance1904          -1.0   Capacity0119           1.0
+    x011905   Total_Cost          79.0   NodeBalance0105           1.0
+    x011905   NodeBalance1905          -1.0   Capacity0119           1.0
+    x011906   Total_Cost          79.0   NodeBalance0106           1.0
+    x011906   NodeBalance1906          -1.0   Capacity0119           1.0
+    x011907   Total_Cost          79.0   NodeBalance0107           1.0
+    x011907   NodeBalance1907          -1.0   Capacity0119           1.0
+    x011908   Total_Cost          79.0   NodeBalance0108           1.0
+    x011908   NodeBalance1908          -1.0   Capacity0119           1.0
+    x011909   Total_Cost          79.0   NodeBalance0109           1.0
+    x011909   NodeBalance1909          -1.0   Capacity0119           1.0
+    x011910   Total_Cost          79.0   NodeBalance0110           1.0
+    x011910   NodeBalance1910          -1.0   Capacity0119           1.0
+    x011911   Total_Cost          79.0   NodeBalance0111           1.0
+    x011911   NodeBalance1911          -1.0   Capacity0119           1.0
+    x011912   Total_Cost          79.0   NodeBalance0112           1.0
+    x011912   NodeBalance1912          -1.0   Capacity0119           1.0
+    x011913   Total_Cost          79.0   NodeBalance0113           1.0
+    x011913   NodeBalance1913          -1.0   Capacity0119           1.0
+    x011914   Total_Cost          79.0   NodeBalance0114           1.0
+    x011914   NodeBalance1914          -1.0   Capacity0119           1.0
+    x011915   Total_Cost          79.0   NodeBalance0115           1.0
+    x011915   NodeBalance1915          -1.0   Capacity0119           1.0
+    x011916   Total_Cost          79.0   NodeBalance0116           1.0
+    x011916   NodeBalance1916          -1.0   Capacity0119           1.0
+    x011917   Total_Cost          79.0   NodeBalance0117           1.0
+    x011917   NodeBalance1917          -1.0   Capacity0119           1.0
+    x011918   Total_Cost          79.0   NodeBalance0118           1.0
+    x011918   NodeBalance1918          -1.0   Capacity0119           1.0
+    x011919   Total_Cost          79.0   NodeBalance0119           1.0
+    x011919   NodeBalance1919          -1.0   Capacity0119           1.0
+    x011920   Total_Cost          79.0   NodeBalance0120           1.0
+    x011920   NodeBalance1920          -1.0   Capacity0119           1.0
+    x011921   Total_Cost          79.0   NodeBalance0121           1.0
+    x011921   NodeBalance1921          -1.0   Capacity0119           1.0
+    x011922   Total_Cost          79.0   NodeBalance0122           1.0
+    x011922   NodeBalance1922          -1.0   Capacity0119           1.0
+    x011923   Total_Cost          79.0   NodeBalance0123           1.0
+    x011923   NodeBalance1923          -1.0   Capacity0119           1.0
+    x011924   Total_Cost          79.0   NodeBalance0124           1.0
+    x011924   NodeBalance1924          -1.0   Capacity0119           1.0
+    x011925   Total_Cost          79.0   NodeBalance0125           1.0
+    x011925   NodeBalance1925          -1.0   Capacity0119           1.0
+    x011926   Total_Cost          79.0   NodeBalance0126           1.0
+    x011926   NodeBalance1926          -1.0   Capacity0119           1.0
+    x011927   Total_Cost          79.0   NodeBalance0127           1.0
+    x011927   NodeBalance1927          -1.0   Capacity0119           1.0
+    x011928   Total_Cost          79.0   NodeBalance0128           1.0
+    x011928   NodeBalance1928          -1.0   Capacity0119           1.0
+    x011929   Total_Cost          79.0   NodeBalance0129           1.0
+    x011929   NodeBalance1929          -1.0   Capacity0119           1.0
+    x011930   Total_Cost          79.0   NodeBalance0130           1.0
+    x011930   NodeBalance1930          -1.0   Capacity0119           1.0
+    x011931   Total_Cost          79.0   NodeBalance0131           1.0
+    x011931   NodeBalance1931          -1.0   Capacity0119           1.0
+    x011932   Total_Cost          79.0   NodeBalance0132           1.0
+    x011932   NodeBalance1932          -1.0   Capacity0119           1.0
+    x011933   Total_Cost          79.0   NodeBalance0133           1.0
+    x011933   NodeBalance1933          -1.0   Capacity0119           1.0
+    x011934   Total_Cost          79.0   NodeBalance0134           1.0
+    x011934   NodeBalance1934          -1.0   Capacity0119           1.0
+    x011935   Total_Cost          79.0   NodeBalance0135           1.0
+    x011935   NodeBalance1935          -1.0   Capacity0119           1.0
+    x011936   Total_Cost          79.0   NodeBalance0136           1.0
+    x011936   NodeBalance1936          -1.0   Capacity0119           1.0
+    x011937   Total_Cost          79.0   NodeBalance0137           1.0
+    x011937   NodeBalance1937          -1.0   Capacity0119           1.0
+    x011938   Total_Cost          79.0   NodeBalance0138           1.0
+    x011938   NodeBalance1938          -1.0   Capacity0119           1.0
+    x011939   Total_Cost          79.0   NodeBalance0139           1.0
+    x011939   NodeBalance1939          -1.0   Capacity0119           1.0
+    x011940   Total_Cost          79.0   NodeBalance0140           1.0
+    x011940   NodeBalance1940          -1.0   Capacity0119           1.0
+    x012001   Total_Cost          27.0   NodeBalance0101           1.0
+    x012001   NodeBalance2001          -1.0   Capacity0120           1.0
+    x012002   Total_Cost          27.0   NodeBalance0102           1.0
+    x012002   NodeBalance2002          -1.0   Capacity0120           1.0
+    x012003   Total_Cost          27.0   NodeBalance0103           1.0
+    x012003   NodeBalance2003          -1.0   Capacity0120           1.0
+    x012004   Total_Cost          27.0   NodeBalance0104           1.0
+    x012004   NodeBalance2004          -1.0   Capacity0120           1.0
+    x012005   Total_Cost          27.0   NodeBalance0105           1.0
+    x012005   NodeBalance2005          -1.0   Capacity0120           1.0
+    x012006   Total_Cost          27.0   NodeBalance0106           1.0
+    x012006   NodeBalance2006          -1.0   Capacity0120           1.0
+    x012007   Total_Cost          27.0   NodeBalance0107           1.0
+    x012007   NodeBalance2007          -1.0   Capacity0120           1.0
+    x012008   Total_Cost          27.0   NodeBalance0108           1.0
+    x012008   NodeBalance2008          -1.0   Capacity0120           1.0
+    x012009   Total_Cost          27.0   NodeBalance0109           1.0
+    x012009   NodeBalance2009          -1.0   Capacity0120           1.0
+    x012010   Total_Cost          27.0   NodeBalance0110           1.0
+    x012010   NodeBalance2010          -1.0   Capacity0120           1.0
+    x012011   Total_Cost          27.0   NodeBalance0111           1.0
+    x012011   NodeBalance2011          -1.0   Capacity0120           1.0
+    x012012   Total_Cost          27.0   NodeBalance0112           1.0
+    x012012   NodeBalance2012          -1.0   Capacity0120           1.0
+    x012013   Total_Cost          27.0   NodeBalance0113           1.0
+    x012013   NodeBalance2013          -1.0   Capacity0120           1.0
+    x012014   Total_Cost          27.0   NodeBalance0114           1.0
+    x012014   NodeBalance2014          -1.0   Capacity0120           1.0
+    x012015   Total_Cost          27.0   NodeBalance0115           1.0
+    x012015   NodeBalance2015          -1.0   Capacity0120           1.0
+    x012016   Total_Cost          27.0   NodeBalance0116           1.0
+    x012016   NodeBalance2016          -1.0   Capacity0120           1.0
+    x012017   Total_Cost          27.0   NodeBalance0117           1.0
+    x012017   NodeBalance2017          -1.0   Capacity0120           1.0
+    x012018   Total_Cost          27.0   NodeBalance0118           1.0
+    x012018   NodeBalance2018          -1.0   Capacity0120           1.0
+    x012019   Total_Cost          27.0   NodeBalance0119           1.0
+    x012019   NodeBalance2019          -1.0   Capacity0120           1.0
+    x012020   Total_Cost          27.0   NodeBalance0120           1.0
+    x012020   NodeBalance2020          -1.0   Capacity0120           1.0
+    x012021   Total_Cost          27.0   NodeBalance0121           1.0
+    x012021   NodeBalance2021          -1.0   Capacity0120           1.0
+    x012022   Total_Cost          27.0   NodeBalance0122           1.0
+    x012022   NodeBalance2022          -1.0   Capacity0120           1.0
+    x012023   Total_Cost          27.0   NodeBalance0123           1.0
+    x012023   NodeBalance2023          -1.0   Capacity0120           1.0
+    x012024   Total_Cost          27.0   NodeBalance0124           1.0
+    x012024   NodeBalance2024          -1.0   Capacity0120           1.0
+    x012025   Total_Cost          27.0   NodeBalance0125           1.0
+    x012025   NodeBalance2025          -1.0   Capacity0120           1.0
+    x012026   Total_Cost          27.0   NodeBalance0126           1.0
+    x012026   NodeBalance2026          -1.0   Capacity0120           1.0
+    x012027   Total_Cost          27.0   NodeBalance0127           1.0
+    x012027   NodeBalance2027          -1.0   Capacity0120           1.0
+    x012028   Total_Cost          27.0   NodeBalance0128           1.0
+    x012028   NodeBalance2028          -1.0   Capacity0120           1.0
+    x012029   Total_Cost          27.0   NodeBalance0129           1.0
+    x012029   NodeBalance2029          -1.0   Capacity0120           1.0
+    x012030   Total_Cost          27.0   NodeBalance0130           1.0
+    x012030   NodeBalance2030          -1.0   Capacity0120           1.0
+    x012031   Total_Cost          27.0   NodeBalance0131           1.0
+    x012031   NodeBalance2031          -1.0   Capacity0120           1.0
+    x012032   Total_Cost          27.0   NodeBalance0132           1.0
+    x012032   NodeBalance2032          -1.0   Capacity0120           1.0
+    x012033   Total_Cost          27.0   NodeBalance0133           1.0
+    x012033   NodeBalance2033          -1.0   Capacity0120           1.0
+    x012034   Total_Cost          27.0   NodeBalance0134           1.0
+    x012034   NodeBalance2034          -1.0   Capacity0120           1.0
+    x012035   Total_Cost          27.0   NodeBalance0135           1.0
+    x012035   NodeBalance2035          -1.0   Capacity0120           1.0
+    x012036   Total_Cost          27.0   NodeBalance0136           1.0
+    x012036   NodeBalance2036          -1.0   Capacity0120           1.0
+    x012037   Total_Cost          27.0   NodeBalance0137           1.0
+    x012037   NodeBalance2037          -1.0   Capacity0120           1.0
+    x012038   Total_Cost          27.0   NodeBalance0138           1.0
+    x012038   NodeBalance2038          -1.0   Capacity0120           1.0
+    x012039   Total_Cost          27.0   NodeBalance0139           1.0
+    x012039   NodeBalance2039          -1.0   Capacity0120           1.0
+    x012040   Total_Cost          27.0   NodeBalance0140           1.0
+    x012040   NodeBalance2040          -1.0   Capacity0120           1.0
+    x020101   Total_Cost          14.0   NodeBalance0101          -1.0
+    x020101   NodeBalance0201           1.0   Capacity0201           1.0
+    x020102   Total_Cost          14.0   NodeBalance0102          -1.0
+    x020102   NodeBalance0202           1.0   Capacity0201           1.0
+    x020103   Total_Cost          14.0   NodeBalance0103          -1.0
+    x020103   NodeBalance0203           1.0   Capacity0201           1.0
+    x020104   Total_Cost          14.0   NodeBalance0104          -1.0
+    x020104   NodeBalance0204           1.0   Capacity0201           1.0
+    x020105   Total_Cost          14.0   NodeBalance0105          -1.0
+    x020105   NodeBalance0205           1.0   Capacity0201           1.0
+    x020106   Total_Cost          14.0   NodeBalance0106          -1.0
+    x020106   NodeBalance0206           1.0   Capacity0201           1.0
+    x020107   Total_Cost          14.0   NodeBalance0107          -1.0
+    x020107   NodeBalance0207           1.0   Capacity0201           1.0
+    x020108   Total_Cost          14.0   NodeBalance0108          -1.0
+    x020108   NodeBalance0208           1.0   Capacity0201           1.0
+    x020109   Total_Cost          14.0   NodeBalance0109          -1.0
+    x020109   NodeBalance0209           1.0   Capacity0201           1.0
+    x020110   Total_Cost          14.0   NodeBalance0110          -1.0
+    x020110   NodeBalance0210           1.0   Capacity0201           1.0
+    x020111   Total_Cost          14.0   NodeBalance0111          -1.0
+    x020111   NodeBalance0211           1.0   Capacity0201           1.0
+    x020112   Total_Cost          14.0   NodeBalance0112          -1.0
+    x020112   NodeBalance0212           1.0   Capacity0201           1.0
+    x020113   Total_Cost          14.0   NodeBalance0113          -1.0
+    x020113   NodeBalance0213           1.0   Capacity0201           1.0
+    x020114   Total_Cost          14.0   NodeBalance0114          -1.0
+    x020114   NodeBalance0214           1.0   Capacity0201           1.0
+    x020115   Total_Cost          14.0   NodeBalance0115          -1.0
+    x020115   NodeBalance0215           1.0   Capacity0201           1.0
+    x020116   Total_Cost          14.0   NodeBalance0116          -1.0
+    x020116   NodeBalance0216           1.0   Capacity0201           1.0
+    x020117   Total_Cost          14.0   NodeBalance0117          -1.0
+    x020117   NodeBalance0217           1.0   Capacity0201           1.0
+    x020118   Total_Cost          14.0   NodeBalance0118          -1.0
+    x020118   NodeBalance0218           1.0   Capacity0201           1.0
+    x020119   Total_Cost          14.0   NodeBalance0119          -1.0
+    x020119   NodeBalance0219           1.0   Capacity0201           1.0
+    x020120   Total_Cost          14.0   NodeBalance0120          -1.0
+    x020120   NodeBalance0220           1.0   Capacity0201           1.0
+    x020121   Total_Cost          14.0   NodeBalance0121          -1.0
+    x020121   NodeBalance0221           1.0   Capacity0201           1.0
+    x020122   Total_Cost          14.0   NodeBalance0122          -1.0
+    x020122   NodeBalance0222           1.0   Capacity0201           1.0
+    x020123   Total_Cost          14.0   NodeBalance0123          -1.0
+    x020123   NodeBalance0223           1.0   Capacity0201           1.0
+    x020124   Total_Cost          14.0   NodeBalance0124          -1.0
+    x020124   NodeBalance0224           1.0   Capacity0201           1.0
+    x020125   Total_Cost          14.0   NodeBalance0125          -1.0
+    x020125   NodeBalance0225           1.0   Capacity0201           1.0
+    x020126   Total_Cost          14.0   NodeBalance0126          -1.0
+    x020126   NodeBalance0226           1.0   Capacity0201           1.0
+    x020127   Total_Cost          14.0   NodeBalance0127          -1.0
+    x020127   NodeBalance0227           1.0   Capacity0201           1.0
+    x020128   Total_Cost          14.0   NodeBalance0128          -1.0
+    x020128   NodeBalance0228           1.0   Capacity0201           1.0
+    x020129   Total_Cost          14.0   NodeBalance0129          -1.0
+    x020129   NodeBalance0229           1.0   Capacity0201           1.0
+    x020130   Total_Cost          14.0   NodeBalance0130          -1.0
+    x020130   NodeBalance0230           1.0   Capacity0201           1.0
+    x020131   Total_Cost          14.0   NodeBalance0131          -1.0
+    x020131   NodeBalance0231           1.0   Capacity0201           1.0
+    x020132   Total_Cost          14.0   NodeBalance0132          -1.0
+    x020132   NodeBalance0232           1.0   Capacity0201           1.0
+    x020133   Total_Cost          14.0   NodeBalance0133          -1.0
+    x020133   NodeBalance0233           1.0   Capacity0201           1.0
+    x020134   Total_Cost          14.0   NodeBalance0134          -1.0
+    x020134   NodeBalance0234           1.0   Capacity0201           1.0
+    x020135   Total_Cost          14.0   NodeBalance0135          -1.0
+    x020135   NodeBalance0235           1.0   Capacity0201           1.0
+    x020136   Total_Cost          14.0   NodeBalance0136          -1.0
+    x020136   NodeBalance0236           1.0   Capacity0201           1.0
+    x020137   Total_Cost          14.0   NodeBalance0137          -1.0
+    x020137   NodeBalance0237           1.0   Capacity0201           1.0
+    x020138   Total_Cost          14.0   NodeBalance0138          -1.0
+    x020138   NodeBalance0238           1.0   Capacity0201           1.0
+    x020139   Total_Cost          14.0   NodeBalance0139          -1.0
+    x020139   NodeBalance0239           1.0   Capacity0201           1.0
+    x020140   Total_Cost          14.0   NodeBalance0140          -1.0
+    x020140   NodeBalance0240           1.0   Capacity0201           1.0
+    x020301   Total_Cost         100.0   NodeBalance0201           1.0
+    x020301   NodeBalance0301          -1.0   Capacity0203           1.0
+    x020302   Total_Cost         100.0   NodeBalance0202           1.0
+    x020302   NodeBalance0302          -1.0   Capacity0203           1.0
+    x020303   Total_Cost         100.0   NodeBalance0203           1.0
+    x020303   NodeBalance0303          -1.0   Capacity0203           1.0
+    x020304   Total_Cost         100.0   NodeBalance0204           1.0
+    x020304   NodeBalance0304          -1.0   Capacity0203           1.0
+    x020305   Total_Cost         100.0   NodeBalance0205           1.0
+    x020305   NodeBalance0305          -1.0   Capacity0203           1.0
+    x020306   Total_Cost         100.0   NodeBalance0206           1.0
+    x020306   NodeBalance0306          -1.0   Capacity0203           1.0
+    x020307   Total_Cost         100.0   NodeBalance0207           1.0
+    x020307   NodeBalance0307          -1.0   Capacity0203           1.0
+    x020308   Total_Cost         100.0   NodeBalance0208           1.0
+    x020308   NodeBalance0308          -1.0   Capacity0203           1.0
+    x020309   Total_Cost         100.0   NodeBalance0209           1.0
+    x020309   NodeBalance0309          -1.0   Capacity0203           1.0
+    x020310   Total_Cost         100.0   NodeBalance0210           1.0
+    x020310   NodeBalance0310          -1.0   Capacity0203           1.0
+    x020311   Total_Cost         100.0   NodeBalance0211           1.0
+    x020311   NodeBalance0311          -1.0   Capacity0203           1.0
+    x020312   Total_Cost         100.0   NodeBalance0212           1.0
+    x020312   NodeBalance0312          -1.0   Capacity0203           1.0
+    x020313   Total_Cost         100.0   NodeBalance0213           1.0
+    x020313   NodeBalance0313          -1.0   Capacity0203           1.0
+    x020314   Total_Cost         100.0   NodeBalance0214           1.0
+    x020314   NodeBalance0314          -1.0   Capacity0203           1.0
+    x020315   Total_Cost         100.0   NodeBalance0215           1.0
+    x020315   NodeBalance0315          -1.0   Capacity0203           1.0
+    x020316   Total_Cost         100.0   NodeBalance0216           1.0
+    x020316   NodeBalance0316          -1.0   Capacity0203           1.0
+    x020317   Total_Cost         100.0   NodeBalance0217           1.0
+    x020317   NodeBalance0317          -1.0   Capacity0203           1.0
+    x020318   Total_Cost         100.0   NodeBalance0218           1.0
+    x020318   NodeBalance0318          -1.0   Capacity0203           1.0
+    x020319   Total_Cost         100.0   NodeBalance0219           1.0
+    x020319   NodeBalance0319          -1.0   Capacity0203           1.0
+    x020320   Total_Cost         100.0   NodeBalance0220           1.0
+    x020320   NodeBalance0320          -1.0   Capacity0203           1.0
+    x020321   Total_Cost         100.0   NodeBalance0221           1.0
+    x020321   NodeBalance0321          -1.0   Capacity0203           1.0
+    x020322   Total_Cost         100.0   NodeBalance0222           1.0
+    x020322   NodeBalance0322          -1.0   Capacity0203           1.0
+    x020323   Total_Cost         100.0   NodeBalance0223           1.0
+    x020323   NodeBalance0323          -1.0   Capacity0203           1.0
+    x020324   Total_Cost         100.0   NodeBalance0224           1.0
+    x020324   NodeBalance0324          -1.0   Capacity0203           1.0
+    x020325   Total_Cost         100.0   NodeBalance0225           1.0
+    x020325   NodeBalance0325          -1.0   Capacity0203           1.0
+    x020326   Total_Cost         100.0   NodeBalance0226           1.0
+    x020326   NodeBalance0326          -1.0   Capacity0203           1.0
+    x020327   Total_Cost         100.0   NodeBalance0227           1.0
+    x020327   NodeBalance0327          -1.0   Capacity0203           1.0
+    x020328   Total_Cost         100.0   NodeBalance0228           1.0
+    x020328   NodeBalance0328          -1.0   Capacity0203           1.0
+    x020329   Total_Cost         100.0   NodeBalance0229           1.0
+    x020329   NodeBalance0329          -1.0   Capacity0203           1.0
+    x020330   Total_Cost         100.0   NodeBalance0230           1.0
+    x020330   NodeBalance0330          -1.0   Capacity0203           1.0
+    x020331   Total_Cost         100.0   NodeBalance0231           1.0
+    x020331   NodeBalance0331          -1.0   Capacity0203           1.0
+    x020332   Total_Cost         100.0   NodeBalance0232           1.0
+    x020332   NodeBalance0332          -1.0   Capacity0203           1.0
+    x020333   Total_Cost         100.0   NodeBalance0233           1.0
+    x020333   NodeBalance0333          -1.0   Capacity0203           1.0
+    x020334   Total_Cost         100.0   NodeBalance0234           1.0
+    x020334   NodeBalance0334          -1.0   Capacity0203           1.0
+    x020335   Total_Cost         100.0   NodeBalance0235           1.0
+    x020335   NodeBalance0335          -1.0   Capacity0203           1.0
+    x020336   Total_Cost         100.0   NodeBalance0236           1.0
+    x020336   NodeBalance0336          -1.0   Capacity0203           1.0
+    x020337   Total_Cost         100.0   NodeBalance0237           1.0
+    x020337   NodeBalance0337          -1.0   Capacity0203           1.0
+    x020338   Total_Cost         100.0   NodeBalance0238           1.0
+    x020338   NodeBalance0338          -1.0   Capacity0203           1.0
+    x020339   Total_Cost         100.0   NodeBalance0239           1.0
+    x020339   NodeBalance0339          -1.0   Capacity0203           1.0
+    x020340   Total_Cost         100.0   NodeBalance0240           1.0
+    x020340   NodeBalance0340          -1.0   Capacity0203           1.0
+    x020601   Total_Cost          38.0   NodeBalance0201           1.0
+    x020601   NodeBalance0601          -1.0   Capacity0206           1.0
+    x020602   Total_Cost          38.0   NodeBalance0202           1.0
+    x020602   NodeBalance0602          -1.0   Capacity0206           1.0
+    x020603   Total_Cost          38.0   NodeBalance0203           1.0
+    x020603   NodeBalance0603          -1.0   Capacity0206           1.0
+    x020604   Total_Cost          38.0   NodeBalance0204           1.0
+    x020604   NodeBalance0604          -1.0   Capacity0206           1.0
+    x020605   Total_Cost          38.0   NodeBalance0205           1.0
+    x020605   NodeBalance0605          -1.0   Capacity0206           1.0
+    x020606   Total_Cost          38.0   NodeBalance0206           1.0
+    x020606   NodeBalance0606          -1.0   Capacity0206           1.0
+    x020607   Total_Cost          38.0   NodeBalance0207           1.0
+    x020607   NodeBalance0607          -1.0   Capacity0206           1.0
+    x020608   Total_Cost          38.0   NodeBalance0208           1.0
+    x020608   NodeBalance0608          -1.0   Capacity0206           1.0
+    x020609   Total_Cost          38.0   NodeBalance0209           1.0
+    x020609   NodeBalance0609          -1.0   Capacity0206           1.0
+    x020610   Total_Cost          38.0   NodeBalance0210           1.0
+    x020610   NodeBalance0610          -1.0   Capacity0206           1.0
+    x020611   Total_Cost          38.0   NodeBalance0211           1.0
+    x020611   NodeBalance0611          -1.0   Capacity0206           1.0
+    x020612   Total_Cost          38.0   NodeBalance0212           1.0
+    x020612   NodeBalance0612          -1.0   Capacity0206           1.0
+    x020613   Total_Cost          38.0   NodeBalance0213           1.0
+    x020613   NodeBalance0613          -1.0   Capacity0206           1.0
+    x020614   Total_Cost          38.0   NodeBalance0214           1.0
+    x020614   NodeBalance0614          -1.0   Capacity0206           1.0
+    x020615   Total_Cost          38.0   NodeBalance0215           1.0
+    x020615   NodeBalance0615          -1.0   Capacity0206           1.0
+    x020616   Total_Cost          38.0   NodeBalance0216           1.0
+    x020616   NodeBalance0616          -1.0   Capacity0206           1.0
+    x020617   Total_Cost          38.0   NodeBalance0217           1.0
+    x020617   NodeBalance0617          -1.0   Capacity0206           1.0
+    x020618   Total_Cost          38.0   NodeBalance0218           1.0
+    x020618   NodeBalance0618          -1.0   Capacity0206           1.0
+    x020619   Total_Cost          38.0   NodeBalance0219           1.0
+    x020619   NodeBalance0619          -1.0   Capacity0206           1.0
+    x020620   Total_Cost          38.0   NodeBalance0220           1.0
+    x020620   NodeBalance0620          -1.0   Capacity0206           1.0
+    x020621   Total_Cost          38.0   NodeBalance0221           1.0
+    x020621   NodeBalance0621          -1.0   Capacity0206           1.0
+    x020622   Total_Cost          38.0   NodeBalance0222           1.0
+    x020622   NodeBalance0622          -1.0   Capacity0206           1.0
+    x020623   Total_Cost          38.0   NodeBalance0223           1.0
+    x020623   NodeBalance0623          -1.0   Capacity0206           1.0
+    x020624   Total_Cost          38.0   NodeBalance0224           1.0
+    x020624   NodeBalance0624          -1.0   Capacity0206           1.0
+    x020625   Total_Cost          38.0   NodeBalance0225           1.0
+    x020625   NodeBalance0625          -1.0   Capacity0206           1.0
+    x020626   Total_Cost          38.0   NodeBalance0226           1.0
+    x020626   NodeBalance0626          -1.0   Capacity0206           1.0
+    x020627   Total_Cost          38.0   NodeBalance0227           1.0
+    x020627   NodeBalance0627          -1.0   Capacity0206           1.0
+    x020628   Total_Cost          38.0   NodeBalance0228           1.0
+    x020628   NodeBalance0628          -1.0   Capacity0206           1.0
+    x020629   Total_Cost          38.0   NodeBalance0229           1.0
+    x020629   NodeBalance0629          -1.0   Capacity0206           1.0
+    x020630   Total_Cost          38.0   NodeBalance0230           1.0
+    x020630   NodeBalance0630          -1.0   Capacity0206           1.0
+    x020631   Total_Cost          38.0   NodeBalance0231           1.0
+    x020631   NodeBalance0631          -1.0   Capacity0206           1.0
+    x020632   Total_Cost          38.0   NodeBalance0232           1.0
+    x020632   NodeBalance0632          -1.0   Capacity0206           1.0
+    x020633   Total_Cost          38.0   NodeBalance0233           1.0
+    x020633   NodeBalance0633          -1.0   Capacity0206           1.0
+    x020634   Total_Cost          38.0   NodeBalance0234           1.0
+    x020634   NodeBalance0634          -1.0   Capacity0206           1.0
+    x020635   Total_Cost          38.0   NodeBalance0235           1.0
+    x020635   NodeBalance0635          -1.0   Capacity0206           1.0
+    x020636   Total_Cost          38.0   NodeBalance0236           1.0
+    x020636   NodeBalance0636          -1.0   Capacity0206           1.0
+    x020637   Total_Cost          38.0   NodeBalance0237           1.0
+    x020637   NodeBalance0637          -1.0   Capacity0206           1.0
+    x020638   Total_Cost          38.0   NodeBalance0238           1.0
+    x020638   NodeBalance0638          -1.0   Capacity0206           1.0
+    x020639   Total_Cost          38.0   NodeBalance0239           1.0
+    x020639   NodeBalance0639          -1.0   Capacity0206           1.0
+    x020640   Total_Cost          38.0   NodeBalance0240           1.0
+    x020640   NodeBalance0640          -1.0   Capacity0206           1.0
+    x020701   Total_Cost          24.0   NodeBalance0201           1.0
+    x020701   NodeBalance0701          -1.0   Capacity0207           1.0
+    x020702   Total_Cost          24.0   NodeBalance0202           1.0
+    x020702   NodeBalance0702          -1.0   Capacity0207           1.0
+    x020703   Total_Cost          24.0   NodeBalance0203           1.0
+    x020703   NodeBalance0703          -1.0   Capacity0207           1.0
+    x020704   Total_Cost          24.0   NodeBalance0204           1.0
+    x020704   NodeBalance0704          -1.0   Capacity0207           1.0
+    x020705   Total_Cost          24.0   NodeBalance0205           1.0
+    x020705   NodeBalance0705          -1.0   Capacity0207           1.0
+    x020706   Total_Cost          24.0   NodeBalance0206           1.0
+    x020706   NodeBalance0706          -1.0   Capacity0207           1.0
+    x020707   Total_Cost          24.0   NodeBalance0207           1.0
+    x020707   NodeBalance0707          -1.0   Capacity0207           1.0
+    x020708   Total_Cost          24.0   NodeBalance0208           1.0
+    x020708   NodeBalance0708          -1.0   Capacity0207           1.0
+    x020709   Total_Cost          24.0   NodeBalance0209           1.0
+    x020709   NodeBalance0709          -1.0   Capacity0207           1.0
+    x020710   Total_Cost          24.0   NodeBalance0210           1.0
+    x020710   NodeBalance0710          -1.0   Capacity0207           1.0
+    x020711   Total_Cost          24.0   NodeBalance0211           1.0
+    x020711   NodeBalance0711          -1.0   Capacity0207           1.0
+    x020712   Total_Cost          24.0   NodeBalance0212           1.0
+    x020712   NodeBalance0712          -1.0   Capacity0207           1.0
+    x020713   Total_Cost          24.0   NodeBalance0213           1.0
+    x020713   NodeBalance0713          -1.0   Capacity0207           1.0
+    x020714   Total_Cost          24.0   NodeBalance0214           1.0
+    x020714   NodeBalance0714          -1.0   Capacity0207           1.0
+    x020715   Total_Cost          24.0   NodeBalance0215           1.0
+    x020715   NodeBalance0715          -1.0   Capacity0207           1.0
+    x020716   Total_Cost          24.0   NodeBalance0216           1.0
+    x020716   NodeBalance0716          -1.0   Capacity0207           1.0
+    x020717   Total_Cost          24.0   NodeBalance0217           1.0
+    x020717   NodeBalance0717          -1.0   Capacity0207           1.0
+    x020718   Total_Cost          24.0   NodeBalance0218           1.0
+    x020718   NodeBalance0718          -1.0   Capacity0207           1.0
+    x020719   Total_Cost          24.0   NodeBalance0219           1.0
+    x020719   NodeBalance0719          -1.0   Capacity0207           1.0
+    x020720   Total_Cost          24.0   NodeBalance0220           1.0
+    x020720   NodeBalance0720          -1.0   Capacity0207           1.0
+    x020721   Total_Cost          24.0   NodeBalance0221           1.0
+    x020721   NodeBalance0721          -1.0   Capacity0207           1.0
+    x020722   Total_Cost          24.0   NodeBalance0222           1.0
+    x020722   NodeBalance0722          -1.0   Capacity0207           1.0
+    x020723   Total_Cost          24.0   NodeBalance0223           1.0
+    x020723   NodeBalance0723          -1.0   Capacity0207           1.0
+    x020724   Total_Cost          24.0   NodeBalance0224           1.0
+    x020724   NodeBalance0724          -1.0   Capacity0207           1.0
+    x020725   Total_Cost          24.0   NodeBalance0225           1.0
+    x020725   NodeBalance0725          -1.0   Capacity0207           1.0
+    x020726   Total_Cost          24.0   NodeBalance0226           1.0
+    x020726   NodeBalance0726          -1.0   Capacity0207           1.0
+    x020727   Total_Cost          24.0   NodeBalance0227           1.0
+    x020727   NodeBalance0727          -1.0   Capacity0207           1.0
+    x020728   Total_Cost          24.0   NodeBalance0228           1.0
+    x020728   NodeBalance0728          -1.0   Capacity0207           1.0
+    x020729   Total_Cost          24.0   NodeBalance0229           1.0
+    x020729   NodeBalance0729          -1.0   Capacity0207           1.0
+    x020730   Total_Cost          24.0   NodeBalance0230           1.0
+    x020730   NodeBalance0730          -1.0   Capacity0207           1.0
+    x020731   Total_Cost          24.0   NodeBalance0231           1.0
+    x020731   NodeBalance0731          -1.0   Capacity0207           1.0
+    x020732   Total_Cost          24.0   NodeBalance0232           1.0
+    x020732   NodeBalance0732          -1.0   Capacity0207           1.0
+    x020733   Total_Cost          24.0   NodeBalance0233           1.0
+    x020733   NodeBalance0733          -1.0   Capacity0207           1.0
+    x020734   Total_Cost          24.0   NodeBalance0234           1.0
+    x020734   NodeBalance0734          -1.0   Capacity0207           1.0
+    x020735   Total_Cost          24.0   NodeBalance0235           1.0
+    x020735   NodeBalance0735          -1.0   Capacity0207           1.0
+    x020736   Total_Cost          24.0   NodeBalance0236           1.0
+    x020736   NodeBalance0736          -1.0   Capacity0207           1.0
+    x020737   Total_Cost          24.0   NodeBalance0237           1.0
+    x020737   NodeBalance0737          -1.0   Capacity0207           1.0
+    x020738   Total_Cost          24.0   NodeBalance0238           1.0
+    x020738   NodeBalance0738          -1.0   Capacity0207           1.0
+    x020739   Total_Cost          24.0   NodeBalance0239           1.0
+    x020739   NodeBalance0739          -1.0   Capacity0207           1.0
+    x020740   Total_Cost          24.0   NodeBalance0240           1.0
+    x020740   NodeBalance0740          -1.0   Capacity0207           1.0
+    x020901   Total_Cost          49.0   NodeBalance0201           1.0
+    x020901   NodeBalance0901          -1.0   Capacity0209           1.0
+    x020902   Total_Cost          49.0   NodeBalance0202           1.0
+    x020902   NodeBalance0902          -1.0   Capacity0209           1.0
+    x020903   Total_Cost          49.0   NodeBalance0203           1.0
+    x020903   NodeBalance0903          -1.0   Capacity0209           1.0
+    x020904   Total_Cost          49.0   NodeBalance0204           1.0
+    x020904   NodeBalance0904          -1.0   Capacity0209           1.0
+    x020905   Total_Cost          49.0   NodeBalance0205           1.0
+    x020905   NodeBalance0905          -1.0   Capacity0209           1.0
+    x020906   Total_Cost          49.0   NodeBalance0206           1.0
+    x020906   NodeBalance0906          -1.0   Capacity0209           1.0
+    x020907   Total_Cost          49.0   NodeBalance0207           1.0
+    x020907   NodeBalance0907          -1.0   Capacity0209           1.0
+    x020908   Total_Cost          49.0   NodeBalance0208           1.0
+    x020908   NodeBalance0908          -1.0   Capacity0209           1.0
+    x020909   Total_Cost          49.0   NodeBalance0209           1.0
+    x020909   NodeBalance0909          -1.0   Capacity0209           1.0
+    x020910   Total_Cost          49.0   NodeBalance0210           1.0
+    x020910   NodeBalance0910          -1.0   Capacity0209           1.0
+    x020911   Total_Cost          49.0   NodeBalance0211           1.0
+    x020911   NodeBalance0911          -1.0   Capacity0209           1.0
+    x020912   Total_Cost          49.0   NodeBalance0212           1.0
+    x020912   NodeBalance0912          -1.0   Capacity0209           1.0
+    x020913   Total_Cost          49.0   NodeBalance0213           1.0
+    x020913   NodeBalance0913          -1.0   Capacity0209           1.0
+    x020914   Total_Cost          49.0   NodeBalance0214           1.0
+    x020914   NodeBalance0914          -1.0   Capacity0209           1.0
+    x020915   Total_Cost          49.0   NodeBalance0215           1.0
+    x020915   NodeBalance0915          -1.0   Capacity0209           1.0
+    x020916   Total_Cost          49.0   NodeBalance0216           1.0
+    x020916   NodeBalance0916          -1.0   Capacity0209           1.0
+    x020917   Total_Cost          49.0   NodeBalance0217           1.0
+    x020917   NodeBalance0917          -1.0   Capacity0209           1.0
+    x020918   Total_Cost          49.0   NodeBalance0218           1.0
+    x020918   NodeBalance0918          -1.0   Capacity0209           1.0
+    x020919   Total_Cost          49.0   NodeBalance0219           1.0
+    x020919   NodeBalance0919          -1.0   Capacity0209           1.0
+    x020920   Total_Cost          49.0   NodeBalance0220           1.0
+    x020920   NodeBalance0920          -1.0   Capacity0209           1.0
+    x020921   Total_Cost          49.0   NodeBalance0221           1.0
+    x020921   NodeBalance0921          -1.0   Capacity0209           1.0
+    x020922   Total_Cost          49.0   NodeBalance0222           1.0
+    x020922   NodeBalance0922          -1.0   Capacity0209           1.0
+    x020923   Total_Cost          49.0   NodeBalance0223           1.0
+    x020923   NodeBalance0923          -1.0   Capacity0209           1.0
+    x020924   Total_Cost          49.0   NodeBalance0224           1.0
+    x020924   NodeBalance0924          -1.0   Capacity0209           1.0
+    x020925   Total_Cost          49.0   NodeBalance0225           1.0
+    x020925   NodeBalance0925          -1.0   Capacity0209           1.0
+    x020926   Total_Cost          49.0   NodeBalance0226           1.0
+    x020926   NodeBalance0926          -1.0   Capacity0209           1.0
+    x020927   Total_Cost          49.0   NodeBalance0227           1.0
+    x020927   NodeBalance0927          -1.0   Capacity0209           1.0
+    x020928   Total_Cost          49.0   NodeBalance0228           1.0
+    x020928   NodeBalance0928          -1.0   Capacity0209           1.0
+    x020929   Total_Cost          49.0   NodeBalance0229           1.0
+    x020929   NodeBalance0929          -1.0   Capacity0209           1.0
+    x020930   Total_Cost          49.0   NodeBalance0230           1.0
+    x020930   NodeBalance0930          -1.0   Capacity0209           1.0
+    x020931   Total_Cost          49.0   NodeBalance0231           1.0
+    x020931   NodeBalance0931          -1.0   Capacity0209           1.0
+    x020932   Total_Cost          49.0   NodeBalance0232           1.0
+    x020932   NodeBalance0932          -1.0   Capacity0209           1.0
+    x020933   Total_Cost          49.0   NodeBalance0233           1.0
+    x020933   NodeBalance0933          -1.0   Capacity0209           1.0
+    x020934   Total_Cost          49.0   NodeBalance0234           1.0
+    x020934   NodeBalance0934          -1.0   Capacity0209           1.0
+    x020935   Total_Cost          49.0   NodeBalance0235           1.0
+    x020935   NodeBalance0935          -1.0   Capacity0209           1.0
+    x020936   Total_Cost          49.0   NodeBalance0236           1.0
+    x020936   NodeBalance0936          -1.0   Capacity0209           1.0
+    x020937   Total_Cost          49.0   NodeBalance0237           1.0
+    x020937   NodeBalance0937          -1.0   Capacity0209           1.0
+    x020938   Total_Cost          49.0   NodeBalance0238           1.0
+    x020938   NodeBalance0938          -1.0   Capacity0209           1.0
+    x020939   Total_Cost          49.0   NodeBalance0239           1.0
+    x020939   NodeBalance0939          -1.0   Capacity0209           1.0
+    x020940   Total_Cost          49.0   NodeBalance0240           1.0
+    x020940   NodeBalance0940          -1.0   Capacity0209           1.0
+    x021001   Total_Cost          90.0   NodeBalance0201           1.0
+    x021001   NodeBalance1001          -1.0   Capacity0210           1.0
+    x021002   Total_Cost          90.0   NodeBalance0202           1.0
+    x021002   NodeBalance1002          -1.0   Capacity0210           1.0
+    x021003   Total_Cost          90.0   NodeBalance0203           1.0
+    x021003   NodeBalance1003          -1.0   Capacity0210           1.0
+    x021004   Total_Cost          90.0   NodeBalance0204           1.0
+    x021004   NodeBalance1004          -1.0   Capacity0210           1.0
+    x021005   Total_Cost          90.0   NodeBalance0205           1.0
+    x021005   NodeBalance1005          -1.0   Capacity0210           1.0
+    x021006   Total_Cost          90.0   NodeBalance0206           1.0
+    x021006   NodeBalance1006          -1.0   Capacity0210           1.0
+    x021007   Total_Cost          90.0   NodeBalance0207           1.0
+    x021007   NodeBalance1007          -1.0   Capacity0210           1.0
+    x021008   Total_Cost          90.0   NodeBalance0208           1.0
+    x021008   NodeBalance1008          -1.0   Capacity0210           1.0
+    x021009   Total_Cost          90.0   NodeBalance0209           1.0
+    x021009   NodeBalance1009          -1.0   Capacity0210           1.0
+    x021010   Total_Cost          90.0   NodeBalance0210           1.0
+    x021010   NodeBalance1010          -1.0   Capacity0210           1.0
+    x021011   Total_Cost          90.0   NodeBalance0211           1.0
+    x021011   NodeBalance1011          -1.0   Capacity0210           1.0
+    x021012   Total_Cost          90.0   NodeBalance0212           1.0
+    x021012   NodeBalance1012          -1.0   Capacity0210           1.0
+    x021013   Total_Cost          90.0   NodeBalance0213           1.0
+    x021013   NodeBalance1013          -1.0   Capacity0210           1.0
+    x021014   Total_Cost          90.0   NodeBalance0214           1.0
+    x021014   NodeBalance1014          -1.0   Capacity0210           1.0
+    x021015   Total_Cost          90.0   NodeBalance0215           1.0
+    x021015   NodeBalance1015          -1.0   Capacity0210           1.0
+    x021016   Total_Cost          90.0   NodeBalance0216           1.0
+    x021016   NodeBalance1016          -1.0   Capacity0210           1.0
+    x021017   Total_Cost          90.0   NodeBalance0217           1.0
+    x021017   NodeBalance1017          -1.0   Capacity0210           1.0
+    x021018   Total_Cost          90.0   NodeBalance0218           1.0
+    x021018   NodeBalance1018          -1.0   Capacity0210           1.0
+    x021019   Total_Cost          90.0   NodeBalance0219           1.0
+    x021019   NodeBalance1019          -1.0   Capacity0210           1.0
+    x021020   Total_Cost          90.0   NodeBalance0220           1.0
+    x021020   NodeBalance1020          -1.0   Capacity0210           1.0
+    x021021   Total_Cost          90.0   NodeBalance0221           1.0
+    x021021   NodeBalance1021          -1.0   Capacity0210           1.0
+    x021022   Total_Cost          90.0   NodeBalance0222           1.0
+    x021022   NodeBalance1022          -1.0   Capacity0210           1.0
+    x021023   Total_Cost          90.0   NodeBalance0223           1.0
+    x021023   NodeBalance1023          -1.0   Capacity0210           1.0
+    x021024   Total_Cost          90.0   NodeBalance0224           1.0
+    x021024   NodeBalance1024          -1.0   Capacity0210           1.0
+    x021025   Total_Cost          90.0   NodeBalance0225           1.0
+    x021025   NodeBalance1025          -1.0   Capacity0210           1.0
+    x021026   Total_Cost          90.0   NodeBalance0226           1.0
+    x021026   NodeBalance1026          -1.0   Capacity0210           1.0
+    x021027   Total_Cost          90.0   NodeBalance0227           1.0
+    x021027   NodeBalance1027          -1.0   Capacity0210           1.0
+    x021028   Total_Cost          90.0   NodeBalance0228           1.0
+    x021028   NodeBalance1028          -1.0   Capacity0210           1.0
+    x021029   Total_Cost          90.0   NodeBalance0229           1.0
+    x021029   NodeBalance1029          -1.0   Capacity0210           1.0
+    x021030   Total_Cost          90.0   NodeBalance0230           1.0
+    x021030   NodeBalance1030          -1.0   Capacity0210           1.0
+    x021031   Total_Cost          90.0   NodeBalance0231           1.0
+    x021031   NodeBalance1031          -1.0   Capacity0210           1.0
+    x021032   Total_Cost          90.0   NodeBalance0232           1.0
+    x021032   NodeBalance1032          -1.0   Capacity0210           1.0
+    x021033   Total_Cost          90.0   NodeBalance0233           1.0
+    x021033   NodeBalance1033          -1.0   Capacity0210           1.0
+    x021034   Total_Cost          90.0   NodeBalance0234           1.0
+    x021034   NodeBalance1034          -1.0   Capacity0210           1.0
+    x021035   Total_Cost          90.0   NodeBalance0235           1.0
+    x021035   NodeBalance1035          -1.0   Capacity0210           1.0
+    x021036   Total_Cost          90.0   NodeBalance0236           1.0
+    x021036   NodeBalance1036          -1.0   Capacity0210           1.0
+    x021037   Total_Cost          90.0   NodeBalance0237           1.0
+    x021037   NodeBalance1037          -1.0   Capacity0210           1.0
+    x021038   Total_Cost          90.0   NodeBalance0238           1.0
+    x021038   NodeBalance1038          -1.0   Capacity0210           1.0
+    x021039   Total_Cost          90.0   NodeBalance0239           1.0
+    x021039   NodeBalance1039          -1.0   Capacity0210           1.0
+    x021040   Total_Cost          90.0   NodeBalance0240           1.0
+    x021040   NodeBalance1040          -1.0   Capacity0210           1.0
+    x021701   Total_Cost          70.0   NodeBalance0201           1.0
+    x021701   NodeBalance1701          -1.0   Capacity0217           1.0
+    x021702   Total_Cost          70.0   NodeBalance0202           1.0
+    x021702   NodeBalance1702          -1.0   Capacity0217           1.0
+    x021703   Total_Cost          70.0   NodeBalance0203           1.0
+    x021703   NodeBalance1703          -1.0   Capacity0217           1.0
+    x021704   Total_Cost          70.0   NodeBalance0204           1.0
+    x021704   NodeBalance1704          -1.0   Capacity0217           1.0
+    x021705   Total_Cost          70.0   NodeBalance0205           1.0
+    x021705   NodeBalance1705          -1.0   Capacity0217           1.0
+    x021706   Total_Cost          70.0   NodeBalance0206           1.0
+    x021706   NodeBalance1706          -1.0   Capacity0217           1.0
+    x021707   Total_Cost          70.0   NodeBalance0207           1.0
+    x021707   NodeBalance1707          -1.0   Capacity0217           1.0
+    x021708   Total_Cost          70.0   NodeBalance0208           1.0
+    x021708   NodeBalance1708          -1.0   Capacity0217           1.0
+    x021709   Total_Cost          70.0   NodeBalance0209           1.0
+    x021709   NodeBalance1709          -1.0   Capacity0217           1.0
+    x021710   Total_Cost          70.0   NodeBalance0210           1.0
+    x021710   NodeBalance1710          -1.0   Capacity0217           1.0
+    x021711   Total_Cost          70.0   NodeBalance0211           1.0
+    x021711   NodeBalance1711          -1.0   Capacity0217           1.0
+    x021712   Total_Cost          70.0   NodeBalance0212           1.0
+    x021712   NodeBalance1712          -1.0   Capacity0217           1.0
+    x021713   Total_Cost          70.0   NodeBalance0213           1.0
+    x021713   NodeBalance1713          -1.0   Capacity0217           1.0
+    x021714   Total_Cost          70.0   NodeBalance0214           1.0
+    x021714   NodeBalance1714          -1.0   Capacity0217           1.0
+    x021715   Total_Cost          70.0   NodeBalance0215           1.0
+    x021715   NodeBalance1715          -1.0   Capacity0217           1.0
+    x021716   Total_Cost          70.0   NodeBalance0216           1.0
+    x021716   NodeBalance1716          -1.0   Capacity0217           1.0
+    x021717   Total_Cost          70.0   NodeBalance0217           1.0
+    x021717   NodeBalance1717          -1.0   Capacity0217           1.0
+    x021718   Total_Cost          70.0   NodeBalance0218           1.0
+    x021718   NodeBalance1718          -1.0   Capacity0217           1.0
+    x021719   Total_Cost          70.0   NodeBalance0219           1.0
+    x021719   NodeBalance1719          -1.0   Capacity0217           1.0
+    x021720   Total_Cost          70.0   NodeBalance0220           1.0
+    x021720   NodeBalance1720          -1.0   Capacity0217           1.0
+    x021721   Total_Cost          70.0   NodeBalance0221           1.0
+    x021721   NodeBalance1721          -1.0   Capacity0217           1.0
+    x021722   Total_Cost          70.0   NodeBalance0222           1.0
+    x021722   NodeBalance1722          -1.0   Capacity0217           1.0
+    x021723   Total_Cost          70.0   NodeBalance0223           1.0
+    x021723   NodeBalance1723          -1.0   Capacity0217           1.0
+    x021724   Total_Cost          70.0   NodeBalance0224           1.0
+    x021724   NodeBalance1724          -1.0   Capacity0217           1.0
+    x021725   Total_Cost          70.0   NodeBalance0225           1.0
+    x021725   NodeBalance1725          -1.0   Capacity0217           1.0
+    x021726   Total_Cost          70.0   NodeBalance0226           1.0
+    x021726   NodeBalance1726          -1.0   Capacity0217           1.0
+    x021727   Total_Cost          70.0   NodeBalance0227           1.0
+    x021727   NodeBalance1727          -1.0   Capacity0217           1.0
+    x021728   Total_Cost          70.0   NodeBalance0228           1.0
+    x021728   NodeBalance1728          -1.0   Capacity0217           1.0
+    x021729   Total_Cost          70.0   NodeBalance0229           1.0
+    x021729   NodeBalance1729          -1.0   Capacity0217           1.0
+    x021730   Total_Cost          70.0   NodeBalance0230           1.0
+    x021730   NodeBalance1730          -1.0   Capacity0217           1.0
+    x021731   Total_Cost          70.0   NodeBalance0231           1.0
+    x021731   NodeBalance1731          -1.0   Capacity0217           1.0
+    x021732   Total_Cost          70.0   NodeBalance0232           1.0
+    x021732   NodeBalance1732          -1.0   Capacity0217           1.0
+    x021733   Total_Cost          70.0   NodeBalance0233           1.0
+    x021733   NodeBalance1733          -1.0   Capacity0217           1.0
+    x021734   Total_Cost          70.0   NodeBalance0234           1.0
+    x021734   NodeBalance1734          -1.0   Capacity0217           1.0
+    x021735   Total_Cost          70.0   NodeBalance0235           1.0
+    x021735   NodeBalance1735          -1.0   Capacity0217           1.0
+    x021736   Total_Cost          70.0   NodeBalance0236           1.0
+    x021736   NodeBalance1736          -1.0   Capacity0217           1.0
+    x021737   Total_Cost          70.0   NodeBalance0237           1.0
+    x021737   NodeBalance1737          -1.0   Capacity0217           1.0
+    x021738   Total_Cost          70.0   NodeBalance0238           1.0
+    x021738   NodeBalance1738          -1.0   Capacity0217           1.0
+    x021739   Total_Cost          70.0   NodeBalance0239           1.0
+    x021739   NodeBalance1739          -1.0   Capacity0217           1.0
+    x021740   Total_Cost          70.0   NodeBalance0240           1.0
+    x021740   NodeBalance1740          -1.0   Capacity0217           1.0
+    x030401   Total_Cost         100.0   NodeBalance0301           1.0
+    x030401   NodeBalance0401          -1.0   Capacity0304           1.0
+    x030402   Total_Cost         100.0   NodeBalance0302           1.0
+    x030402   NodeBalance0402          -1.0   Capacity0304           1.0
+    x030403   Total_Cost         100.0   NodeBalance0303           1.0
+    x030403   NodeBalance0403          -1.0   Capacity0304           1.0
+    x030404   Total_Cost         100.0   NodeBalance0304           1.0
+    x030404   NodeBalance0404          -1.0   Capacity0304           1.0
+    x030405   Total_Cost         100.0   NodeBalance0305           1.0
+    x030405   NodeBalance0405          -1.0   Capacity0304           1.0
+    x030406   Total_Cost         100.0   NodeBalance0306           1.0
+    x030406   NodeBalance0406          -1.0   Capacity0304           1.0
+    x030407   Total_Cost         100.0   NodeBalance0307           1.0
+    x030407   NodeBalance0407          -1.0   Capacity0304           1.0
+    x030408   Total_Cost         100.0   NodeBalance0308           1.0
+    x030408   NodeBalance0408          -1.0   Capacity0304           1.0
+    x030409   Total_Cost         100.0   NodeBalance0309           1.0
+    x030409   NodeBalance0409          -1.0   Capacity0304           1.0
+    x030410   Total_Cost         100.0   NodeBalance0310           1.0
+    x030410   NodeBalance0410          -1.0   Capacity0304           1.0
+    x030411   Total_Cost         100.0   NodeBalance0311           1.0
+    x030411   NodeBalance0411          -1.0   Capacity0304           1.0
+    x030412   Total_Cost         100.0   NodeBalance0312           1.0
+    x030412   NodeBalance0412          -1.0   Capacity0304           1.0
+    x030413   Total_Cost         100.0   NodeBalance0313           1.0
+    x030413   NodeBalance0413          -1.0   Capacity0304           1.0
+    x030414   Total_Cost         100.0   NodeBalance0314           1.0
+    x030414   NodeBalance0414          -1.0   Capacity0304           1.0
+    x030415   Total_Cost         100.0   NodeBalance0315           1.0
+    x030415   NodeBalance0415          -1.0   Capacity0304           1.0
+    x030416   Total_Cost         100.0   NodeBalance0316           1.0
+    x030416   NodeBalance0416          -1.0   Capacity0304           1.0
+    x030417   Total_Cost         100.0   NodeBalance0317           1.0
+    x030417   NodeBalance0417          -1.0   Capacity0304           1.0
+    x030418   Total_Cost         100.0   NodeBalance0318           1.0
+    x030418   NodeBalance0418          -1.0   Capacity0304           1.0
+    x030419   Total_Cost         100.0   NodeBalance0319           1.0
+    x030419   NodeBalance0419          -1.0   Capacity0304           1.0
+    x030420   Total_Cost         100.0   NodeBalance0320           1.0
+    x030420   NodeBalance0420          -1.0   Capacity0304           1.0
+    x030421   Total_Cost         100.0   NodeBalance0321           1.0
+    x030421   NodeBalance0421          -1.0   Capacity0304           1.0
+    x030422   Total_Cost         100.0   NodeBalance0322           1.0
+    x030422   NodeBalance0422          -1.0   Capacity0304           1.0
+    x030423   Total_Cost         100.0   NodeBalance0323           1.0
+    x030423   NodeBalance0423          -1.0   Capacity0304           1.0
+    x030424   Total_Cost         100.0   NodeBalance0324           1.0
+    x030424   NodeBalance0424          -1.0   Capacity0304           1.0
+    x030425   Total_Cost         100.0   NodeBalance0325           1.0
+    x030425   NodeBalance0425          -1.0   Capacity0304           1.0
+    x030426   Total_Cost         100.0   NodeBalance0326           1.0
+    x030426   NodeBalance0426          -1.0   Capacity0304           1.0
+    x030427   Total_Cost         100.0   NodeBalance0327           1.0
+    x030427   NodeBalance0427          -1.0   Capacity0304           1.0
+    x030428   Total_Cost         100.0   NodeBalance0328           1.0
+    x030428   NodeBalance0428          -1.0   Capacity0304           1.0
+    x030429   Total_Cost         100.0   NodeBalance0329           1.0
+    x030429   NodeBalance0429          -1.0   Capacity0304           1.0
+    x030430   Total_Cost         100.0   NodeBalance0330           1.0
+    x030430   NodeBalance0430          -1.0   Capacity0304           1.0
+    x030431   Total_Cost         100.0   NodeBalance0331           1.0
+    x030431   NodeBalance0431          -1.0   Capacity0304           1.0
+    x030432   Total_Cost         100.0   NodeBalance0332           1.0
+    x030432   NodeBalance0432          -1.0   Capacity0304           1.0
+    x030433   Total_Cost         100.0   NodeBalance0333           1.0
+    x030433   NodeBalance0433          -1.0   Capacity0304           1.0
+    x030434   Total_Cost         100.0   NodeBalance0334           1.0
+    x030434   NodeBalance0434          -1.0   Capacity0304           1.0
+    x030435   Total_Cost         100.0   NodeBalance0335           1.0
+    x030435   NodeBalance0435          -1.0   Capacity0304           1.0
+    x030436   Total_Cost         100.0   NodeBalance0336           1.0
+    x030436   NodeBalance0436          -1.0   Capacity0304           1.0
+    x030437   Total_Cost         100.0   NodeBalance0337           1.0
+    x030437   NodeBalance0437          -1.0   Capacity0304           1.0
+    x030438   Total_Cost         100.0   NodeBalance0338           1.0
+    x030438   NodeBalance0438          -1.0   Capacity0304           1.0
+    x030439   Total_Cost         100.0   NodeBalance0339           1.0
+    x030439   NodeBalance0439          -1.0   Capacity0304           1.0
+    x030440   Total_Cost         100.0   NodeBalance0340           1.0
+    x030440   NodeBalance0440          -1.0   Capacity0304           1.0
+    x030901   Total_Cost          38.0   NodeBalance0301           1.0
+    x030901   NodeBalance0901          -1.0   Capacity0309           1.0
+    x030902   Total_Cost          38.0   NodeBalance0302           1.0
+    x030902   NodeBalance0902          -1.0   Capacity0309           1.0
+    x030903   Total_Cost          38.0   NodeBalance0303           1.0
+    x030903   NodeBalance0903          -1.0   Capacity0309           1.0
+    x030904   Total_Cost          38.0   NodeBalance0304           1.0
+    x030904   NodeBalance0904          -1.0   Capacity0309           1.0
+    x030905   Total_Cost          38.0   NodeBalance0305           1.0
+    x030905   NodeBalance0905          -1.0   Capacity0309           1.0
+    x030906   Total_Cost          38.0   NodeBalance0306           1.0
+    x030906   NodeBalance0906          -1.0   Capacity0309           1.0
+    x030907   Total_Cost          38.0   NodeBalance0307           1.0
+    x030907   NodeBalance0907          -1.0   Capacity0309           1.0
+    x030908   Total_Cost          38.0   NodeBalance0308           1.0
+    x030908   NodeBalance0908          -1.0   Capacity0309           1.0
+    x030909   Total_Cost          38.0   NodeBalance0309           1.0
+    x030909   NodeBalance0909          -1.0   Capacity0309           1.0
+    x030910   Total_Cost          38.0   NodeBalance0310           1.0
+    x030910   NodeBalance0910          -1.0   Capacity0309           1.0
+    x030911   Total_Cost          38.0   NodeBalance0311           1.0
+    x030911   NodeBalance0911          -1.0   Capacity0309           1.0
+    x030912   Total_Cost          38.0   NodeBalance0312           1.0
+    x030912   NodeBalance0912          -1.0   Capacity0309           1.0
+    x030913   Total_Cost          38.0   NodeBalance0313           1.0
+    x030913   NodeBalance0913          -1.0   Capacity0309           1.0
+    x030914   Total_Cost          38.0   NodeBalance0314           1.0
+    x030914   NodeBalance0914          -1.0   Capacity0309           1.0
+    x030915   Total_Cost          38.0   NodeBalance0315           1.0
+    x030915   NodeBalance0915          -1.0   Capacity0309           1.0
+    x030916   Total_Cost          38.0   NodeBalance0316           1.0
+    x030916   NodeBalance0916          -1.0   Capacity0309           1.0
+    x030917   Total_Cost          38.0   NodeBalance0317           1.0
+    x030917   NodeBalance0917          -1.0   Capacity0309           1.0
+    x030918   Total_Cost          38.0   NodeBalance0318           1.0
+    x030918   NodeBalance0918          -1.0   Capacity0309           1.0
+    x030919   Total_Cost          38.0   NodeBalance0319           1.0
+    x030919   NodeBalance0919          -1.0   Capacity0309           1.0
+    x030920   Total_Cost          38.0   NodeBalance0320           1.0
+    x030920   NodeBalance0920          -1.0   Capacity0309           1.0
+    x030921   Total_Cost          38.0   NodeBalance0321           1.0
+    x030921   NodeBalance0921          -1.0   Capacity0309           1.0
+    x030922   Total_Cost          38.0   NodeBalance0322           1.0
+    x030922   NodeBalance0922          -1.0   Capacity0309           1.0
+    x030923   Total_Cost          38.0   NodeBalance0323           1.0
+    x030923   NodeBalance0923          -1.0   Capacity0309           1.0
+    x030924   Total_Cost          38.0   NodeBalance0324           1.0
+    x030924   NodeBalance0924          -1.0   Capacity0309           1.0
+    x030925   Total_Cost          38.0   NodeBalance0325           1.0
+    x030925   NodeBalance0925          -1.0   Capacity0309           1.0
+    x030926   Total_Cost          38.0   NodeBalance0326           1.0
+    x030926   NodeBalance0926          -1.0   Capacity0309           1.0
+    x030927   Total_Cost          38.0   NodeBalance0327           1.0
+    x030927   NodeBalance0927          -1.0   Capacity0309           1.0
+    x030928   Total_Cost          38.0   NodeBalance0328           1.0
+    x030928   NodeBalance0928          -1.0   Capacity0309           1.0
+    x030929   Total_Cost          38.0   NodeBalance0329           1.0
+    x030929   NodeBalance0929          -1.0   Capacity0309           1.0
+    x030930   Total_Cost          38.0   NodeBalance0330           1.0
+    x030930   NodeBalance0930          -1.0   Capacity0309           1.0
+    x030931   Total_Cost          38.0   NodeBalance0331           1.0
+    x030931   NodeBalance0931          -1.0   Capacity0309           1.0
+    x030932   Total_Cost          38.0   NodeBalance0332           1.0
+    x030932   NodeBalance0932          -1.0   Capacity0309           1.0
+    x030933   Total_Cost          38.0   NodeBalance0333           1.0
+    x030933   NodeBalance0933          -1.0   Capacity0309           1.0
+    x030934   Total_Cost          38.0   NodeBalance0334           1.0
+    x030934   NodeBalance0934          -1.0   Capacity0309           1.0
+    x030935   Total_Cost          38.0   NodeBalance0335           1.0
+    x030935   NodeBalance0935          -1.0   Capacity0309           1.0
+    x030936   Total_Cost          38.0   NodeBalance0336           1.0
+    x030936   NodeBalance0936          -1.0   Capacity0309           1.0
+    x030937   Total_Cost          38.0   NodeBalance0337           1.0
+    x030937   NodeBalance0937          -1.0   Capacity0309           1.0
+    x030938   Total_Cost          38.0   NodeBalance0338           1.0
+    x030938   NodeBalance0938          -1.0   Capacity0309           1.0
+    x030939   Total_Cost          38.0   NodeBalance0339           1.0
+    x030939   NodeBalance0939          -1.0   Capacity0309           1.0
+    x030940   Total_Cost          38.0   NodeBalance0340           1.0
+    x030940   NodeBalance0940          -1.0   Capacity0309           1.0
+    x031101   Total_Cost          57.0   NodeBalance0301           1.0
+    x031101   NodeBalance1101          -1.0   Capacity0311           1.0
+    x031102   Total_Cost          57.0   NodeBalance0302           1.0
+    x031102   NodeBalance1102          -1.0   Capacity0311           1.0
+    x031103   Total_Cost          57.0   NodeBalance0303           1.0
+    x031103   NodeBalance1103          -1.0   Capacity0311           1.0
+    x031104   Total_Cost          57.0   NodeBalance0304           1.0
+    x031104   NodeBalance1104          -1.0   Capacity0311           1.0
+    x031105   Total_Cost          57.0   NodeBalance0305           1.0
+    x031105   NodeBalance1105          -1.0   Capacity0311           1.0
+    x031106   Total_Cost          57.0   NodeBalance0306           1.0
+    x031106   NodeBalance1106          -1.0   Capacity0311           1.0
+    x031107   Total_Cost          57.0   NodeBalance0307           1.0
+    x031107   NodeBalance1107          -1.0   Capacity0311           1.0
+    x031108   Total_Cost          57.0   NodeBalance0308           1.0
+    x031108   NodeBalance1108          -1.0   Capacity0311           1.0
+    x031109   Total_Cost          57.0   NodeBalance0309           1.0
+    x031109   NodeBalance1109          -1.0   Capacity0311           1.0
+    x031110   Total_Cost          57.0   NodeBalance0310           1.0
+    x031110   NodeBalance1110          -1.0   Capacity0311           1.0
+    x031111   Total_Cost          57.0   NodeBalance0311           1.0
+    x031111   NodeBalance1111          -1.0   Capacity0311           1.0
+    x031112   Total_Cost          57.0   NodeBalance0312           1.0
+    x031112   NodeBalance1112          -1.0   Capacity0311           1.0
+    x031113   Total_Cost          57.0   NodeBalance0313           1.0
+    x031113   NodeBalance1113          -1.0   Capacity0311           1.0
+    x031114   Total_Cost          57.0   NodeBalance0314           1.0
+    x031114   NodeBalance1114          -1.0   Capacity0311           1.0
+    x031115   Total_Cost          57.0   NodeBalance0315           1.0
+    x031115   NodeBalance1115          -1.0   Capacity0311           1.0
+    x031116   Total_Cost          57.0   NodeBalance0316           1.0
+    x031116   NodeBalance1116          -1.0   Capacity0311           1.0
+    x031117   Total_Cost          57.0   NodeBalance0317           1.0
+    x031117   NodeBalance1117          -1.0   Capacity0311           1.0
+    x031118   Total_Cost          57.0   NodeBalance0318           1.0
+    x031118   NodeBalance1118          -1.0   Capacity0311           1.0
+    x031119   Total_Cost          57.0   NodeBalance0319           1.0
+    x031119   NodeBalance1119          -1.0   Capacity0311           1.0
+    x031120   Total_Cost          57.0   NodeBalance0320           1.0
+    x031120   NodeBalance1120          -1.0   Capacity0311           1.0
+    x031121   Total_Cost          57.0   NodeBalance0321           1.0
+    x031121   NodeBalance1121          -1.0   Capacity0311           1.0
+    x031122   Total_Cost          57.0   NodeBalance0322           1.0
+    x031122   NodeBalance1122          -1.0   Capacity0311           1.0
+    x031123   Total_Cost          57.0   NodeBalance0323           1.0
+    x031123   NodeBalance1123          -1.0   Capacity0311           1.0
+    x031124   Total_Cost          57.0   NodeBalance0324           1.0
+    x031124   NodeBalance1124          -1.0   Capacity0311           1.0
+    x031125   Total_Cost          57.0   NodeBalance0325           1.0
+    x031125   NodeBalance1125          -1.0   Capacity0311           1.0
+    x031126   Total_Cost          57.0   NodeBalance0326           1.0
+    x031126   NodeBalance1126          -1.0   Capacity0311           1.0
+    x031127   Total_Cost          57.0   NodeBalance0327           1.0
+    x031127   NodeBalance1127          -1.0   Capacity0311           1.0
+    x031128   Total_Cost          57.0   NodeBalance0328           1.0
+    x031128   NodeBalance1128          -1.0   Capacity0311           1.0
+    x031129   Total_Cost          57.0   NodeBalance0329           1.0
+    x031129   NodeBalance1129          -1.0   Capacity0311           1.0
+    x031130   Total_Cost          57.0   NodeBalance0330           1.0
+    x031130   NodeBalance1130          -1.0   Capacity0311           1.0
+    x031131   Total_Cost          57.0   NodeBalance0331           1.0
+    x031131   NodeBalance1131          -1.0   Capacity0311           1.0
+    x031132   Total_Cost          57.0   NodeBalance0332           1.0
+    x031132   NodeBalance1132          -1.0   Capacity0311           1.0
+    x031133   Total_Cost          57.0   NodeBalance0333           1.0
+    x031133   NodeBalance1133          -1.0   Capacity0311           1.0
+    x031134   Total_Cost          57.0   NodeBalance0334           1.0
+    x031134   NodeBalance1134          -1.0   Capacity0311           1.0
+    x031135   Total_Cost          57.0   NodeBalance0335           1.0
+    x031135   NodeBalance1135          -1.0   Capacity0311           1.0
+    x031136   Total_Cost          57.0   NodeBalance0336           1.0
+    x031136   NodeBalance1136          -1.0   Capacity0311           1.0
+    x031137   Total_Cost          57.0   NodeBalance0337           1.0
+    x031137   NodeBalance1137          -1.0   Capacity0311           1.0
+    x031138   Total_Cost          57.0   NodeBalance0338           1.0
+    x031138   NodeBalance1138          -1.0   Capacity0311           1.0
+    x031139   Total_Cost          57.0   NodeBalance0339           1.0
+    x031139   NodeBalance1139          -1.0   Capacity0311           1.0
+    x031140   Total_Cost          57.0   NodeBalance0340           1.0
+    x031140   NodeBalance1140          -1.0   Capacity0311           1.0
+    x031401   Total_Cost          22.0   NodeBalance0301           1.0
+    x031401   NodeBalance1401          -1.0   Capacity0314           1.0
+    x031402   Total_Cost          22.0   NodeBalance0302           1.0
+    x031402   NodeBalance1402          -1.0   Capacity0314           1.0
+    x031403   Total_Cost          22.0   NodeBalance0303           1.0
+    x031403   NodeBalance1403          -1.0   Capacity0314           1.0
+    x031404   Total_Cost          22.0   NodeBalance0304           1.0
+    x031404   NodeBalance1404          -1.0   Capacity0314           1.0
+    x031405   Total_Cost          22.0   NodeBalance0305           1.0
+    x031405   NodeBalance1405          -1.0   Capacity0314           1.0
+    x031406   Total_Cost          22.0   NodeBalance0306           1.0
+    x031406   NodeBalance1406          -1.0   Capacity0314           1.0
+    x031407   Total_Cost          22.0   NodeBalance0307           1.0
+    x031407   NodeBalance1407          -1.0   Capacity0314           1.0
+    x031408   Total_Cost          22.0   NodeBalance0308           1.0
+    x031408   NodeBalance1408          -1.0   Capacity0314           1.0
+    x031409   Total_Cost          22.0   NodeBalance0309           1.0
+    x031409   NodeBalance1409          -1.0   Capacity0314           1.0
+    x031410   Total_Cost          22.0   NodeBalance0310           1.0
+    x031410   NodeBalance1410          -1.0   Capacity0314           1.0
+    x031411   Total_Cost          22.0   NodeBalance0311           1.0
+    x031411   NodeBalance1411          -1.0   Capacity0314           1.0
+    x031412   Total_Cost          22.0   NodeBalance0312           1.0
+    x031412   NodeBalance1412          -1.0   Capacity0314           1.0
+    x031413   Total_Cost          22.0   NodeBalance0313           1.0
+    x031413   NodeBalance1413          -1.0   Capacity0314           1.0
+    x031414   Total_Cost          22.0   NodeBalance0314           1.0
+    x031414   NodeBalance1414          -1.0   Capacity0314           1.0
+    x031415   Total_Cost          22.0   NodeBalance0315           1.0
+    x031415   NodeBalance1415          -1.0   Capacity0314           1.0
+    x031416   Total_Cost          22.0   NodeBalance0316           1.0
+    x031416   NodeBalance1416          -1.0   Capacity0314           1.0
+    x031417   Total_Cost          22.0   NodeBalance0317           1.0
+    x031417   NodeBalance1417          -1.0   Capacity0314           1.0
+    x031418   Total_Cost          22.0   NodeBalance0318           1.0
+    x031418   NodeBalance1418          -1.0   Capacity0314           1.0
+    x031419   Total_Cost          22.0   NodeBalance0319           1.0
+    x031419   NodeBalance1419          -1.0   Capacity0314           1.0
+    x031420   Total_Cost          22.0   NodeBalance0320           1.0
+    x031420   NodeBalance1420          -1.0   Capacity0314           1.0
+    x031421   Total_Cost          22.0   NodeBalance0321           1.0
+    x031421   NodeBalance1421          -1.0   Capacity0314           1.0
+    x031422   Total_Cost          22.0   NodeBalance0322           1.0
+    x031422   NodeBalance1422          -1.0   Capacity0314           1.0
+    x031423   Total_Cost          22.0   NodeBalance0323           1.0
+    x031423   NodeBalance1423          -1.0   Capacity0314           1.0
+    x031424   Total_Cost          22.0   NodeBalance0324           1.0
+    x031424   NodeBalance1424          -1.0   Capacity0314           1.0
+    x031425   Total_Cost          22.0   NodeBalance0325           1.0
+    x031425   NodeBalance1425          -1.0   Capacity0314           1.0
+    x031426   Total_Cost          22.0   NodeBalance0326           1.0
+    x031426   NodeBalance1426          -1.0   Capacity0314           1.0
+    x031427   Total_Cost          22.0   NodeBalance0327           1.0
+    x031427   NodeBalance1427          -1.0   Capacity0314           1.0
+    x031428   Total_Cost          22.0   NodeBalance0328           1.0
+    x031428   NodeBalance1428          -1.0   Capacity0314           1.0
+    x031429   Total_Cost          22.0   NodeBalance0329           1.0
+    x031429   NodeBalance1429          -1.0   Capacity0314           1.0
+    x031430   Total_Cost          22.0   NodeBalance0330           1.0
+    x031430   NodeBalance1430          -1.0   Capacity0314           1.0
+    x031431   Total_Cost          22.0   NodeBalance0331           1.0
+    x031431   NodeBalance1431          -1.0   Capacity0314           1.0
+    x031432   Total_Cost          22.0   NodeBalance0332           1.0
+    x031432   NodeBalance1432          -1.0   Capacity0314           1.0
+    x031433   Total_Cost          22.0   NodeBalance0333           1.0
+    x031433   NodeBalance1433          -1.0   Capacity0314           1.0
+    x031434   Total_Cost          22.0   NodeBalance0334           1.0
+    x031434   NodeBalance1434          -1.0   Capacity0314           1.0
+    x031435   Total_Cost          22.0   NodeBalance0335           1.0
+    x031435   NodeBalance1435          -1.0   Capacity0314           1.0
+    x031436   Total_Cost          22.0   NodeBalance0336           1.0
+    x031436   NodeBalance1436          -1.0   Capacity0314           1.0
+    x031437   Total_Cost          22.0   NodeBalance0337           1.0
+    x031437   NodeBalance1437          -1.0   Capacity0314           1.0
+    x031438   Total_Cost          22.0   NodeBalance0338           1.0
+    x031438   NodeBalance1438          -1.0   Capacity0314           1.0
+    x031439   Total_Cost          22.0   NodeBalance0339           1.0
+    x031439   NodeBalance1439          -1.0   Capacity0314           1.0
+    x031440   Total_Cost          22.0   NodeBalance0340           1.0
+    x031440   NodeBalance1440          -1.0   Capacity0314           1.0
+    x031801   Total_Cost          73.0   NodeBalance0301           1.0
+    x031801   NodeBalance1801          -1.0   Capacity0318           1.0
+    x031802   Total_Cost          73.0   NodeBalance0302           1.0
+    x031802   NodeBalance1802          -1.0   Capacity0318           1.0
+    x031803   Total_Cost          73.0   NodeBalance0303           1.0
+    x031803   NodeBalance1803          -1.0   Capacity0318           1.0
+    x031804   Total_Cost          73.0   NodeBalance0304           1.0
+    x031804   NodeBalance1804          -1.0   Capacity0318           1.0
+    x031805   Total_Cost          73.0   NodeBalance0305           1.0
+    x031805   NodeBalance1805          -1.0   Capacity0318           1.0
+    x031806   Total_Cost          73.0   NodeBalance0306           1.0
+    x031806   NodeBalance1806          -1.0   Capacity0318           1.0
+    x031807   Total_Cost          73.0   NodeBalance0307           1.0
+    x031807   NodeBalance1807          -1.0   Capacity0318           1.0
+    x031808   Total_Cost          73.0   NodeBalance0308           1.0
+    x031808   NodeBalance1808          -1.0   Capacity0318           1.0
+    x031809   Total_Cost          73.0   NodeBalance0309           1.0
+    x031809   NodeBalance1809          -1.0   Capacity0318           1.0
+    x031810   Total_Cost          73.0   NodeBalance0310           1.0
+    x031810   NodeBalance1810          -1.0   Capacity0318           1.0
+    x031811   Total_Cost          73.0   NodeBalance0311           1.0
+    x031811   NodeBalance1811          -1.0   Capacity0318           1.0
+    x031812   Total_Cost          73.0   NodeBalance0312           1.0
+    x031812   NodeBalance1812          -1.0   Capacity0318           1.0
+    x031813   Total_Cost          73.0   NodeBalance0313           1.0
+    x031813   NodeBalance1813          -1.0   Capacity0318           1.0
+    x031814   Total_Cost          73.0   NodeBalance0314           1.0
+    x031814   NodeBalance1814          -1.0   Capacity0318           1.0
+    x031815   Total_Cost          73.0   NodeBalance0315           1.0
+    x031815   NodeBalance1815          -1.0   Capacity0318           1.0
+    x031816   Total_Cost          73.0   NodeBalance0316           1.0
+    x031816   NodeBalance1816          -1.0   Capacity0318           1.0
+    x031817   Total_Cost          73.0   NodeBalance0317           1.0
+    x031817   NodeBalance1817          -1.0   Capacity0318           1.0
+    x031818   Total_Cost          73.0   NodeBalance0318           1.0
+    x031818   NodeBalance1818          -1.0   Capacity0318           1.0
+    x031819   Total_Cost          73.0   NodeBalance0319           1.0
+    x031819   NodeBalance1819          -1.0   Capacity0318           1.0
+    x031820   Total_Cost          73.0   NodeBalance0320           1.0
+    x031820   NodeBalance1820          -1.0   Capacity0318           1.0
+    x031821   Total_Cost          73.0   NodeBalance0321           1.0
+    x031821   NodeBalance1821          -1.0   Capacity0318           1.0
+    x031822   Total_Cost          73.0   NodeBalance0322           1.0
+    x031822   NodeBalance1822          -1.0   Capacity0318           1.0
+    x031823   Total_Cost          73.0   NodeBalance0323           1.0
+    x031823   NodeBalance1823          -1.0   Capacity0318           1.0
+    x031824   Total_Cost          73.0   NodeBalance0324           1.0
+    x031824   NodeBalance1824          -1.0   Capacity0318           1.0
+    x031825   Total_Cost          73.0   NodeBalance0325           1.0
+    x031825   NodeBalance1825          -1.0   Capacity0318           1.0
+    x031826   Total_Cost          73.0   NodeBalance0326           1.0
+    x031826   NodeBalance1826          -1.0   Capacity0318           1.0
+    x031827   Total_Cost          73.0   NodeBalance0327           1.0
+    x031827   NodeBalance1827          -1.0   Capacity0318           1.0
+    x031828   Total_Cost          73.0   NodeBalance0328           1.0
+    x031828   NodeBalance1828          -1.0   Capacity0318           1.0
+    x031829   Total_Cost          73.0   NodeBalance0329           1.0
+    x031829   NodeBalance1829          -1.0   Capacity0318           1.0
+    x031830   Total_Cost          73.0   NodeBalance0330           1.0
+    x031830   NodeBalance1830          -1.0   Capacity0318           1.0
+    x031831   Total_Cost          73.0   NodeBalance0331           1.0
+    x031831   NodeBalance1831          -1.0   Capacity0318           1.0
+    x031832   Total_Cost          73.0   NodeBalance0332           1.0
+    x031832   NodeBalance1832          -1.0   Capacity0318           1.0
+    x031833   Total_Cost          73.0   NodeBalance0333           1.0
+    x031833   NodeBalance1833          -1.0   Capacity0318           1.0
+    x031834   Total_Cost          73.0   NodeBalance0334           1.0
+    x031834   NodeBalance1834          -1.0   Capacity0318           1.0
+    x031835   Total_Cost          73.0   NodeBalance0335           1.0
+    x031835   NodeBalance1835          -1.0   Capacity0318           1.0
+    x031836   Total_Cost          73.0   NodeBalance0336           1.0
+    x031836   NodeBalance1836          -1.0   Capacity0318           1.0
+    x031837   Total_Cost          73.0   NodeBalance0337           1.0
+    x031837   NodeBalance1837          -1.0   Capacity0318           1.0
+    x031838   Total_Cost          73.0   NodeBalance0338           1.0
+    x031838   NodeBalance1838          -1.0   Capacity0318           1.0
+    x031839   Total_Cost          73.0   NodeBalance0339           1.0
+    x031839   NodeBalance1839          -1.0   Capacity0318           1.0
+    x031840   Total_Cost          73.0   NodeBalance0340           1.0
+    x031840   NodeBalance1840          -1.0   Capacity0318           1.0
+    x040201   Total_Cost          44.0   NodeBalance0201          -1.0
+    x040201   NodeBalance0401           1.0   Capacity0402           1.0
+    x040202   Total_Cost          44.0   NodeBalance0202          -1.0
+    x040202   NodeBalance0402           1.0   Capacity0402           1.0
+    x040203   Total_Cost          44.0   NodeBalance0203          -1.0
+    x040203   NodeBalance0403           1.0   Capacity0402           1.0
+    x040204   Total_Cost          44.0   NodeBalance0204          -1.0
+    x040204   NodeBalance0404           1.0   Capacity0402           1.0
+    x040205   Total_Cost          44.0   NodeBalance0205          -1.0
+    x040205   NodeBalance0405           1.0   Capacity0402           1.0
+    x040206   Total_Cost          44.0   NodeBalance0206          -1.0
+    x040206   NodeBalance0406           1.0   Capacity0402           1.0
+    x040207   Total_Cost          44.0   NodeBalance0207          -1.0
+    x040207   NodeBalance0407           1.0   Capacity0402           1.0
+    x040208   Total_Cost          44.0   NodeBalance0208          -1.0
+    x040208   NodeBalance0408           1.0   Capacity0402           1.0
+    x040209   Total_Cost          44.0   NodeBalance0209          -1.0
+    x040209   NodeBalance0409           1.0   Capacity0402           1.0
+    x040210   Total_Cost          44.0   NodeBalance0210          -1.0
+    x040210   NodeBalance0410           1.0   Capacity0402           1.0
+    x040211   Total_Cost          44.0   NodeBalance0211          -1.0
+    x040211   NodeBalance0411           1.0   Capacity0402           1.0
+    x040212   Total_Cost          44.0   NodeBalance0212          -1.0
+    x040212   NodeBalance0412           1.0   Capacity0402           1.0
+    x040213   Total_Cost          44.0   NodeBalance0213          -1.0
+    x040213   NodeBalance0413           1.0   Capacity0402           1.0
+    x040214   Total_Cost          44.0   NodeBalance0214          -1.0
+    x040214   NodeBalance0414           1.0   Capacity0402           1.0
+    x040215   Total_Cost          44.0   NodeBalance0215          -1.0
+    x040215   NodeBalance0415           1.0   Capacity0402           1.0
+    x040216   Total_Cost          44.0   NodeBalance0216          -1.0
+    x040216   NodeBalance0416           1.0   Capacity0402           1.0
+    x040217   Total_Cost          44.0   NodeBalance0217          -1.0
+    x040217   NodeBalance0417           1.0   Capacity0402           1.0
+    x040218   Total_Cost          44.0   NodeBalance0218          -1.0
+    x040218   NodeBalance0418           1.0   Capacity0402           1.0
+    x040219   Total_Cost          44.0   NodeBalance0219          -1.0
+    x040219   NodeBalance0419           1.0   Capacity0402           1.0
+    x040220   Total_Cost          44.0   NodeBalance0220          -1.0
+    x040220   NodeBalance0420           1.0   Capacity0402           1.0
+    x040221   Total_Cost          44.0   NodeBalance0221          -1.0
+    x040221   NodeBalance0421           1.0   Capacity0402           1.0
+    x040222   Total_Cost          44.0   NodeBalance0222          -1.0
+    x040222   NodeBalance0422           1.0   Capacity0402           1.0
+    x040223   Total_Cost          44.0   NodeBalance0223          -1.0
+    x040223   NodeBalance0423           1.0   Capacity0402           1.0
+    x040224   Total_Cost          44.0   NodeBalance0224          -1.0
+    x040224   NodeBalance0424           1.0   Capacity0402           1.0
+    x040225   Total_Cost          44.0   NodeBalance0225          -1.0
+    x040225   NodeBalance0425           1.0   Capacity0402           1.0
+    x040226   Total_Cost          44.0   NodeBalance0226          -1.0
+    x040226   NodeBalance0426           1.0   Capacity0402           1.0
+    x040227   Total_Cost          44.0   NodeBalance0227          -1.0
+    x040227   NodeBalance0427           1.0   Capacity0402           1.0
+    x040228   Total_Cost          44.0   NodeBalance0228          -1.0
+    x040228   NodeBalance0428           1.0   Capacity0402           1.0
+    x040229   Total_Cost          44.0   NodeBalance0229          -1.0
+    x040229   NodeBalance0429           1.0   Capacity0402           1.0
+    x040230   Total_Cost          44.0   NodeBalance0230          -1.0
+    x040230   NodeBalance0430           1.0   Capacity0402           1.0
+    x040231   Total_Cost          44.0   NodeBalance0231          -1.0
+    x040231   NodeBalance0431           1.0   Capacity0402           1.0
+    x040232   Total_Cost          44.0   NodeBalance0232          -1.0
+    x040232   NodeBalance0432           1.0   Capacity0402           1.0
+    x040233   Total_Cost          44.0   NodeBalance0233          -1.0
+    x040233   NodeBalance0433           1.0   Capacity0402           1.0
+    x040234   Total_Cost          44.0   NodeBalance0234          -1.0
+    x040234   NodeBalance0434           1.0   Capacity0402           1.0
+    x040235   Total_Cost          44.0   NodeBalance0235          -1.0
+    x040235   NodeBalance0435           1.0   Capacity0402           1.0
+    x040236   Total_Cost          44.0   NodeBalance0236          -1.0
+    x040236   NodeBalance0436           1.0   Capacity0402           1.0
+    x040237   Total_Cost          44.0   NodeBalance0237          -1.0
+    x040237   NodeBalance0437           1.0   Capacity0402           1.0
+    x040238   Total_Cost          44.0   NodeBalance0238          -1.0
+    x040238   NodeBalance0438           1.0   Capacity0402           1.0
+    x040239   Total_Cost          44.0   NodeBalance0239          -1.0
+    x040239   NodeBalance0439           1.0   Capacity0402           1.0
+    x040240   Total_Cost          44.0   NodeBalance0240          -1.0
+    x040240   NodeBalance0440           1.0   Capacity0402           1.0
+    x040501   Total_Cost         100.0   NodeBalance0401           1.0
+    x040501   NodeBalance0501          -1.0   Capacity0405           1.0
+    x040502   Total_Cost         100.0   NodeBalance0402           1.0
+    x040502   NodeBalance0502          -1.0   Capacity0405           1.0
+    x040503   Total_Cost         100.0   NodeBalance0403           1.0
+    x040503   NodeBalance0503          -1.0   Capacity0405           1.0
+    x040504   Total_Cost         100.0   NodeBalance0404           1.0
+    x040504   NodeBalance0504          -1.0   Capacity0405           1.0
+    x040505   Total_Cost         100.0   NodeBalance0405           1.0
+    x040505   NodeBalance0505          -1.0   Capacity0405           1.0
+    x040506   Total_Cost         100.0   NodeBalance0406           1.0
+    x040506   NodeBalance0506          -1.0   Capacity0405           1.0
+    x040507   Total_Cost         100.0   NodeBalance0407           1.0
+    x040507   NodeBalance0507          -1.0   Capacity0405           1.0
+    x040508   Total_Cost         100.0   NodeBalance0408           1.0
+    x040508   NodeBalance0508          -1.0   Capacity0405           1.0
+    x040509   Total_Cost         100.0   NodeBalance0409           1.0
+    x040509   NodeBalance0509          -1.0   Capacity0405           1.0
+    x040510   Total_Cost         100.0   NodeBalance0410           1.0
+    x040510   NodeBalance0510          -1.0   Capacity0405           1.0
+    x040511   Total_Cost         100.0   NodeBalance0411           1.0
+    x040511   NodeBalance0511          -1.0   Capacity0405           1.0
+    x040512   Total_Cost         100.0   NodeBalance0412           1.0
+    x040512   NodeBalance0512          -1.0   Capacity0405           1.0
+    x040513   Total_Cost         100.0   NodeBalance0413           1.0
+    x040513   NodeBalance0513          -1.0   Capacity0405           1.0
+    x040514   Total_Cost         100.0   NodeBalance0414           1.0
+    x040514   NodeBalance0514          -1.0   Capacity0405           1.0
+    x040515   Total_Cost         100.0   NodeBalance0415           1.0
+    x040515   NodeBalance0515          -1.0   Capacity0405           1.0
+    x040516   Total_Cost         100.0   NodeBalance0416           1.0
+    x040516   NodeBalance0516          -1.0   Capacity0405           1.0
+    x040517   Total_Cost         100.0   NodeBalance0417           1.0
+    x040517   NodeBalance0517          -1.0   Capacity0405           1.0
+    x040518   Total_Cost         100.0   NodeBalance0418           1.0
+    x040518   NodeBalance0518          -1.0   Capacity0405           1.0
+    x040519   Total_Cost         100.0   NodeBalance0419           1.0
+    x040519   NodeBalance0519          -1.0   Capacity0405           1.0
+    x040520   Total_Cost         100.0   NodeBalance0420           1.0
+    x040520   NodeBalance0520          -1.0   Capacity0405           1.0
+    x040521   Total_Cost         100.0   NodeBalance0421           1.0
+    x040521   NodeBalance0521          -1.0   Capacity0405           1.0
+    x040522   Total_Cost         100.0   NodeBalance0422           1.0
+    x040522   NodeBalance0522          -1.0   Capacity0405           1.0
+    x040523   Total_Cost         100.0   NodeBalance0423           1.0
+    x040523   NodeBalance0523          -1.0   Capacity0405           1.0
+    x040524   Total_Cost         100.0   NodeBalance0424           1.0
+    x040524   NodeBalance0524          -1.0   Capacity0405           1.0
+    x040525   Total_Cost         100.0   NodeBalance0425           1.0
+    x040525   NodeBalance0525          -1.0   Capacity0405           1.0
+    x040526   Total_Cost         100.0   NodeBalance0426           1.0
+    x040526   NodeBalance0526          -1.0   Capacity0405           1.0
+    x040527   Total_Cost         100.0   NodeBalance0427           1.0
+    x040527   NodeBalance0527          -1.0   Capacity0405           1.0
+    x040528   Total_Cost         100.0   NodeBalance0428           1.0
+    x040528   NodeBalance0528          -1.0   Capacity0405           1.0
+    x040529   Total_Cost         100.0   NodeBalance0429           1.0
+    x040529   NodeBalance0529          -1.0   Capacity0405           1.0
+    x040530   Total_Cost         100.0   NodeBalance0430           1.0
+    x040530   NodeBalance0530          -1.0   Capacity0405           1.0
+    x040531   Total_Cost         100.0   NodeBalance0431           1.0
+    x040531   NodeBalance0531          -1.0   Capacity0405           1.0
+    x040532   Total_Cost         100.0   NodeBalance0432           1.0
+    x040532   NodeBalance0532          -1.0   Capacity0405           1.0
+    x040533   Total_Cost         100.0   NodeBalance0433           1.0
+    x040533   NodeBalance0533          -1.0   Capacity0405           1.0
+    x040534   Total_Cost         100.0   NodeBalance0434           1.0
+    x040534   NodeBalance0534          -1.0   Capacity0405           1.0
+    x040535   Total_Cost         100.0   NodeBalance0435           1.0
+    x040535   NodeBalance0535          -1.0   Capacity0405           1.0
+    x040536   Total_Cost         100.0   NodeBalance0436           1.0
+    x040536   NodeBalance0536          -1.0   Capacity0405           1.0
+    x040537   Total_Cost         100.0   NodeBalance0437           1.0
+    x040537   NodeBalance0537          -1.0   Capacity0405           1.0
+    x040538   Total_Cost         100.0   NodeBalance0438           1.0
+    x040538   NodeBalance0538          -1.0   Capacity0405           1.0
+    x040539   Total_Cost         100.0   NodeBalance0439           1.0
+    x040539   NodeBalance0539          -1.0   Capacity0405           1.0
+    x040540   Total_Cost         100.0   NodeBalance0440           1.0
+    x040540   NodeBalance0540          -1.0   Capacity0405           1.0
+    x041001   Total_Cost          41.0   NodeBalance0401           1.0
+    x041001   NodeBalance1001          -1.0   Capacity0410           1.0
+    x041002   Total_Cost          41.0   NodeBalance0402           1.0
+    x041002   NodeBalance1002          -1.0   Capacity0410           1.0
+    x041003   Total_Cost          41.0   NodeBalance0403           1.0
+    x041003   NodeBalance1003          -1.0   Capacity0410           1.0
+    x041004   Total_Cost          41.0   NodeBalance0404           1.0
+    x041004   NodeBalance1004          -1.0   Capacity0410           1.0
+    x041005   Total_Cost          41.0   NodeBalance0405           1.0
+    x041005   NodeBalance1005          -1.0   Capacity0410           1.0
+    x041006   Total_Cost          41.0   NodeBalance0406           1.0
+    x041006   NodeBalance1006          -1.0   Capacity0410           1.0
+    x041007   Total_Cost          41.0   NodeBalance0407           1.0
+    x041007   NodeBalance1007          -1.0   Capacity0410           1.0
+    x041008   Total_Cost          41.0   NodeBalance0408           1.0
+    x041008   NodeBalance1008          -1.0   Capacity0410           1.0
+    x041009   Total_Cost          41.0   NodeBalance0409           1.0
+    x041009   NodeBalance1009          -1.0   Capacity0410           1.0
+    x041010   Total_Cost          41.0   NodeBalance0410           1.0
+    x041010   NodeBalance1010          -1.0   Capacity0410           1.0
+    x041011   Total_Cost          41.0   NodeBalance0411           1.0
+    x041011   NodeBalance1011          -1.0   Capacity0410           1.0
+    x041012   Total_Cost          41.0   NodeBalance0412           1.0
+    x041012   NodeBalance1012          -1.0   Capacity0410           1.0
+    x041013   Total_Cost          41.0   NodeBalance0413           1.0
+    x041013   NodeBalance1013          -1.0   Capacity0410           1.0
+    x041014   Total_Cost          41.0   NodeBalance0414           1.0
+    x041014   NodeBalance1014          -1.0   Capacity0410           1.0
+    x041015   Total_Cost          41.0   NodeBalance0415           1.0
+    x041015   NodeBalance1015          -1.0   Capacity0410           1.0
+    x041016   Total_Cost          41.0   NodeBalance0416           1.0
+    x041016   NodeBalance1016          -1.0   Capacity0410           1.0
+    x041017   Total_Cost          41.0   NodeBalance0417           1.0
+    x041017   NodeBalance1017          -1.0   Capacity0410           1.0
+    x041018   Total_Cost          41.0   NodeBalance0418           1.0
+    x041018   NodeBalance1018          -1.0   Capacity0410           1.0
+    x041019   Total_Cost          41.0   NodeBalance0419           1.0
+    x041019   NodeBalance1019          -1.0   Capacity0410           1.0
+    x041020   Total_Cost          41.0   NodeBalance0420           1.0
+    x041020   NodeBalance1020          -1.0   Capacity0410           1.0
+    x041021   Total_Cost          41.0   NodeBalance0421           1.0
+    x041021   NodeBalance1021          -1.0   Capacity0410           1.0
+    x041022   Total_Cost          41.0   NodeBalance0422           1.0
+    x041022   NodeBalance1022          -1.0   Capacity0410           1.0
+    x041023   Total_Cost          41.0   NodeBalance0423           1.0
+    x041023   NodeBalance1023          -1.0   Capacity0410           1.0
+    x041024   Total_Cost          41.0   NodeBalance0424           1.0
+    x041024   NodeBalance1024          -1.0   Capacity0410           1.0
+    x041025   Total_Cost          41.0   NodeBalance0425           1.0
+    x041025   NodeBalance1025          -1.0   Capacity0410           1.0
+    x041026   Total_Cost          41.0   NodeBalance0426           1.0
+    x041026   NodeBalance1026          -1.0   Capacity0410           1.0
+    x041027   Total_Cost          41.0   NodeBalance0427           1.0
+    x041027   NodeBalance1027          -1.0   Capacity0410           1.0
+    x041028   Total_Cost          41.0   NodeBalance0428           1.0
+    x041028   NodeBalance1028          -1.0   Capacity0410           1.0
+    x041029   Total_Cost          41.0   NodeBalance0429           1.0
+    x041029   NodeBalance1029          -1.0   Capacity0410           1.0
+    x041030   Total_Cost          41.0   NodeBalance0430           1.0
+    x041030   NodeBalance1030          -1.0   Capacity0410           1.0
+    x041031   Total_Cost          41.0   NodeBalance0431           1.0
+    x041031   NodeBalance1031          -1.0   Capacity0410           1.0
+    x041032   Total_Cost          41.0   NodeBalance0432           1.0
+    x041032   NodeBalance1032          -1.0   Capacity0410           1.0
+    x041033   Total_Cost          41.0   NodeBalance0433           1.0
+    x041033   NodeBalance1033          -1.0   Capacity0410           1.0
+    x041034   Total_Cost          41.0   NodeBalance0434           1.0
+    x041034   NodeBalance1034          -1.0   Capacity0410           1.0
+    x041035   Total_Cost          41.0   NodeBalance0435           1.0
+    x041035   NodeBalance1035          -1.0   Capacity0410           1.0
+    x041036   Total_Cost          41.0   NodeBalance0436           1.0
+    x041036   NodeBalance1036          -1.0   Capacity0410           1.0
+    x041037   Total_Cost          41.0   NodeBalance0437           1.0
+    x041037   NodeBalance1037          -1.0   Capacity0410           1.0
+    x041038   Total_Cost          41.0   NodeBalance0438           1.0
+    x041038   NodeBalance1038          -1.0   Capacity0410           1.0
+    x041039   Total_Cost          41.0   NodeBalance0439           1.0
+    x041039   NodeBalance1039          -1.0   Capacity0410           1.0
+    x041040   Total_Cost          41.0   NodeBalance0440           1.0
+    x041040   NodeBalance1040          -1.0   Capacity0410           1.0
+    x041101   Total_Cost          20.0   NodeBalance0401           1.0
+    x041101   NodeBalance1101          -1.0   Capacity0411           1.0
+    x041102   Total_Cost          20.0   NodeBalance0402           1.0
+    x041102   NodeBalance1102          -1.0   Capacity0411           1.0
+    x041103   Total_Cost          20.0   NodeBalance0403           1.0
+    x041103   NodeBalance1103          -1.0   Capacity0411           1.0
+    x041104   Total_Cost          20.0   NodeBalance0404           1.0
+    x041104   NodeBalance1104          -1.0   Capacity0411           1.0
+    x041105   Total_Cost          20.0   NodeBalance0405           1.0
+    x041105   NodeBalance1105          -1.0   Capacity0411           1.0
+    x041106   Total_Cost          20.0   NodeBalance0406           1.0
+    x041106   NodeBalance1106          -1.0   Capacity0411           1.0
+    x041107   Total_Cost          20.0   NodeBalance0407           1.0
+    x041107   NodeBalance1107          -1.0   Capacity0411           1.0
+    x041108   Total_Cost          20.0   NodeBalance0408           1.0
+    x041108   NodeBalance1108          -1.0   Capacity0411           1.0
+    x041109   Total_Cost          20.0   NodeBalance0409           1.0
+    x041109   NodeBalance1109          -1.0   Capacity0411           1.0
+    x041110   Total_Cost          20.0   NodeBalance0410           1.0
+    x041110   NodeBalance1110          -1.0   Capacity0411           1.0
+    x041111   Total_Cost          20.0   NodeBalance0411           1.0
+    x041111   NodeBalance1111          -1.0   Capacity0411           1.0
+    x041112   Total_Cost          20.0   NodeBalance0412           1.0
+    x041112   NodeBalance1112          -1.0   Capacity0411           1.0
+    x041113   Total_Cost          20.0   NodeBalance0413           1.0
+    x041113   NodeBalance1113          -1.0   Capacity0411           1.0
+    x041114   Total_Cost          20.0   NodeBalance0414           1.0
+    x041114   NodeBalance1114          -1.0   Capacity0411           1.0
+    x041115   Total_Cost          20.0   NodeBalance0415           1.0
+    x041115   NodeBalance1115          -1.0   Capacity0411           1.0
+    x041116   Total_Cost          20.0   NodeBalance0416           1.0
+    x041116   NodeBalance1116          -1.0   Capacity0411           1.0
+    x041117   Total_Cost          20.0   NodeBalance0417           1.0
+    x041117   NodeBalance1117          -1.0   Capacity0411           1.0
+    x041118   Total_Cost          20.0   NodeBalance0418           1.0
+    x041118   NodeBalance1118          -1.0   Capacity0411           1.0
+    x041119   Total_Cost          20.0   NodeBalance0419           1.0
+    x041119   NodeBalance1119          -1.0   Capacity0411           1.0
+    x041120   Total_Cost          20.0   NodeBalance0420           1.0
+    x041120   NodeBalance1120          -1.0   Capacity0411           1.0
+    x041121   Total_Cost          20.0   NodeBalance0421           1.0
+    x041121   NodeBalance1121          -1.0   Capacity0411           1.0
+    x041122   Total_Cost          20.0   NodeBalance0422           1.0
+    x041122   NodeBalance1122          -1.0   Capacity0411           1.0
+    x041123   Total_Cost          20.0   NodeBalance0423           1.0
+    x041123   NodeBalance1123          -1.0   Capacity0411           1.0
+    x041124   Total_Cost          20.0   NodeBalance0424           1.0
+    x041124   NodeBalance1124          -1.0   Capacity0411           1.0
+    x041125   Total_Cost          20.0   NodeBalance0425           1.0
+    x041125   NodeBalance1125          -1.0   Capacity0411           1.0
+    x041126   Total_Cost          20.0   NodeBalance0426           1.0
+    x041126   NodeBalance1126          -1.0   Capacity0411           1.0
+    x041127   Total_Cost          20.0   NodeBalance0427           1.0
+    x041127   NodeBalance1127          -1.0   Capacity0411           1.0
+    x041128   Total_Cost          20.0   NodeBalance0428           1.0
+    x041128   NodeBalance1128          -1.0   Capacity0411           1.0
+    x041129   Total_Cost          20.0   NodeBalance0429           1.0
+    x041129   NodeBalance1129          -1.0   Capacity0411           1.0
+    x041130   Total_Cost          20.0   NodeBalance0430           1.0
+    x041130   NodeBalance1130          -1.0   Capacity0411           1.0
+    x041131   Total_Cost          20.0   NodeBalance0431           1.0
+    x041131   NodeBalance1131          -1.0   Capacity0411           1.0
+    x041132   Total_Cost          20.0   NodeBalance0432           1.0
+    x041132   NodeBalance1132          -1.0   Capacity0411           1.0
+    x041133   Total_Cost          20.0   NodeBalance0433           1.0
+    x041133   NodeBalance1133          -1.0   Capacity0411           1.0
+    x041134   Total_Cost          20.0   NodeBalance0434           1.0
+    x041134   NodeBalance1134          -1.0   Capacity0411           1.0
+    x041135   Total_Cost          20.0   NodeBalance0435           1.0
+    x041135   NodeBalance1135          -1.0   Capacity0411           1.0
+    x041136   Total_Cost          20.0   NodeBalance0436           1.0
+    x041136   NodeBalance1136          -1.0   Capacity0411           1.0
+    x041137   Total_Cost          20.0   NodeBalance0437           1.0
+    x041137   NodeBalance1137          -1.0   Capacity0411           1.0
+    x041138   Total_Cost          20.0   NodeBalance0438           1.0
+    x041138   NodeBalance1138          -1.0   Capacity0411           1.0
+    x041139   Total_Cost          20.0   NodeBalance0439           1.0
+    x041139   NodeBalance1139          -1.0   Capacity0411           1.0
+    x041140   Total_Cost          20.0   NodeBalance0440           1.0
+    x041140   NodeBalance1140          -1.0   Capacity0411           1.0
+    x041501   Total_Cost          44.0   NodeBalance0401           1.0
+    x041501   NodeBalance1501          -1.0   Capacity0415           1.0
+    x041502   Total_Cost          44.0   NodeBalance0402           1.0
+    x041502   NodeBalance1502          -1.0   Capacity0415           1.0
+    x041503   Total_Cost          44.0   NodeBalance0403           1.0
+    x041503   NodeBalance1503          -1.0   Capacity0415           1.0
+    x041504   Total_Cost          44.0   NodeBalance0404           1.0
+    x041504   NodeBalance1504          -1.0   Capacity0415           1.0
+    x041505   Total_Cost          44.0   NodeBalance0405           1.0
+    x041505   NodeBalance1505          -1.0   Capacity0415           1.0
+    x041506   Total_Cost          44.0   NodeBalance0406           1.0
+    x041506   NodeBalance1506          -1.0   Capacity0415           1.0
+    x041507   Total_Cost          44.0   NodeBalance0407           1.0
+    x041507   NodeBalance1507          -1.0   Capacity0415           1.0
+    x041508   Total_Cost          44.0   NodeBalance0408           1.0
+    x041508   NodeBalance1508          -1.0   Capacity0415           1.0
+    x041509   Total_Cost          44.0   NodeBalance0409           1.0
+    x041509   NodeBalance1509          -1.0   Capacity0415           1.0
+    x041510   Total_Cost          44.0   NodeBalance0410           1.0
+    x041510   NodeBalance1510          -1.0   Capacity0415           1.0
+    x041511   Total_Cost          44.0   NodeBalance0411           1.0
+    x041511   NodeBalance1511          -1.0   Capacity0415           1.0
+    x041512   Total_Cost          44.0   NodeBalance0412           1.0
+    x041512   NodeBalance1512          -1.0   Capacity0415           1.0
+    x041513   Total_Cost          44.0   NodeBalance0413           1.0
+    x041513   NodeBalance1513          -1.0   Capacity0415           1.0
+    x041514   Total_Cost          44.0   NodeBalance0414           1.0
+    x041514   NodeBalance1514          -1.0   Capacity0415           1.0
+    x041515   Total_Cost          44.0   NodeBalance0415           1.0
+    x041515   NodeBalance1515          -1.0   Capacity0415           1.0
+    x041516   Total_Cost          44.0   NodeBalance0416           1.0
+    x041516   NodeBalance1516          -1.0   Capacity0415           1.0
+    x041517   Total_Cost          44.0   NodeBalance0417           1.0
+    x041517   NodeBalance1517          -1.0   Capacity0415           1.0
+    x041518   Total_Cost          44.0   NodeBalance0418           1.0
+    x041518   NodeBalance1518          -1.0   Capacity0415           1.0
+    x041519   Total_Cost          44.0   NodeBalance0419           1.0
+    x041519   NodeBalance1519          -1.0   Capacity0415           1.0
+    x041520   Total_Cost          44.0   NodeBalance0420           1.0
+    x041520   NodeBalance1520          -1.0   Capacity0415           1.0
+    x041521   Total_Cost          44.0   NodeBalance0421           1.0
+    x041521   NodeBalance1521          -1.0   Capacity0415           1.0
+    x041522   Total_Cost          44.0   NodeBalance0422           1.0
+    x041522   NodeBalance1522          -1.0   Capacity0415           1.0
+    x041523   Total_Cost          44.0   NodeBalance0423           1.0
+    x041523   NodeBalance1523          -1.0   Capacity0415           1.0
+    x041524   Total_Cost          44.0   NodeBalance0424           1.0
+    x041524   NodeBalance1524          -1.0   Capacity0415           1.0
+    x041525   Total_Cost          44.0   NodeBalance0425           1.0
+    x041525   NodeBalance1525          -1.0   Capacity0415           1.0
+    x041526   Total_Cost          44.0   NodeBalance0426           1.0
+    x041526   NodeBalance1526          -1.0   Capacity0415           1.0
+    x041527   Total_Cost          44.0   NodeBalance0427           1.0
+    x041527   NodeBalance1527          -1.0   Capacity0415           1.0
+    x041528   Total_Cost          44.0   NodeBalance0428           1.0
+    x041528   NodeBalance1528          -1.0   Capacity0415           1.0
+    x041529   Total_Cost          44.0   NodeBalance0429           1.0
+    x041529   NodeBalance1529          -1.0   Capacity0415           1.0
+    x041530   Total_Cost          44.0   NodeBalance0430           1.0
+    x041530   NodeBalance1530          -1.0   Capacity0415           1.0
+    x041531   Total_Cost          44.0   NodeBalance0431           1.0
+    x041531   NodeBalance1531          -1.0   Capacity0415           1.0
+    x041532   Total_Cost          44.0   NodeBalance0432           1.0
+    x041532   NodeBalance1532          -1.0   Capacity0415           1.0
+    x041533   Total_Cost          44.0   NodeBalance0433           1.0
+    x041533   NodeBalance1533          -1.0   Capacity0415           1.0
+    x041534   Total_Cost          44.0   NodeBalance0434           1.0
+    x041534   NodeBalance1534          -1.0   Capacity0415           1.0
+    x041535   Total_Cost          44.0   NodeBalance0435           1.0
+    x041535   NodeBalance1535          -1.0   Capacity0415           1.0
+    x041536   Total_Cost          44.0   NodeBalance0436           1.0
+    x041536   NodeBalance1536          -1.0   Capacity0415           1.0
+    x041537   Total_Cost          44.0   NodeBalance0437           1.0
+    x041537   NodeBalance1537          -1.0   Capacity0415           1.0
+    x041538   Total_Cost          44.0   NodeBalance0438           1.0
+    x041538   NodeBalance1538          -1.0   Capacity0415           1.0
+    x041539   Total_Cost          44.0   NodeBalance0439           1.0
+    x041539   NodeBalance1539          -1.0   Capacity0415           1.0
+    x041540   Total_Cost          44.0   NodeBalance0440           1.0
+    x041540   NodeBalance1540          -1.0   Capacity0415           1.0
+    x041801   Total_Cost          26.0   NodeBalance0401           1.0
+    x041801   NodeBalance1801          -1.0   Capacity0418           1.0
+    x041802   Total_Cost          26.0   NodeBalance0402           1.0
+    x041802   NodeBalance1802          -1.0   Capacity0418           1.0
+    x041803   Total_Cost          26.0   NodeBalance0403           1.0
+    x041803   NodeBalance1803          -1.0   Capacity0418           1.0
+    x041804   Total_Cost          26.0   NodeBalance0404           1.0
+    x041804   NodeBalance1804          -1.0   Capacity0418           1.0
+    x041805   Total_Cost          26.0   NodeBalance0405           1.0
+    x041805   NodeBalance1805          -1.0   Capacity0418           1.0
+    x041806   Total_Cost          26.0   NodeBalance0406           1.0
+    x041806   NodeBalance1806          -1.0   Capacity0418           1.0
+    x041807   Total_Cost          26.0   NodeBalance0407           1.0
+    x041807   NodeBalance1807          -1.0   Capacity0418           1.0
+    x041808   Total_Cost          26.0   NodeBalance0408           1.0
+    x041808   NodeBalance1808          -1.0   Capacity0418           1.0
+    x041809   Total_Cost          26.0   NodeBalance0409           1.0
+    x041809   NodeBalance1809          -1.0   Capacity0418           1.0
+    x041810   Total_Cost          26.0   NodeBalance0410           1.0
+    x041810   NodeBalance1810          -1.0   Capacity0418           1.0
+    x041811   Total_Cost          26.0   NodeBalance0411           1.0
+    x041811   NodeBalance1811          -1.0   Capacity0418           1.0
+    x041812   Total_Cost          26.0   NodeBalance0412           1.0
+    x041812   NodeBalance1812          -1.0   Capacity0418           1.0
+    x041813   Total_Cost          26.0   NodeBalance0413           1.0
+    x041813   NodeBalance1813          -1.0   Capacity0418           1.0
+    x041814   Total_Cost          26.0   NodeBalance0414           1.0
+    x041814   NodeBalance1814          -1.0   Capacity0418           1.0
+    x041815   Total_Cost          26.0   NodeBalance0415           1.0
+    x041815   NodeBalance1815          -1.0   Capacity0418           1.0
+    x041816   Total_Cost          26.0   NodeBalance0416           1.0
+    x041816   NodeBalance1816          -1.0   Capacity0418           1.0
+    x041817   Total_Cost          26.0   NodeBalance0417           1.0
+    x041817   NodeBalance1817          -1.0   Capacity0418           1.0
+    x041818   Total_Cost          26.0   NodeBalance0418           1.0
+    x041818   NodeBalance1818          -1.0   Capacity0418           1.0
+    x041819   Total_Cost          26.0   NodeBalance0419           1.0
+    x041819   NodeBalance1819          -1.0   Capacity0418           1.0
+    x041820   Total_Cost          26.0   NodeBalance0420           1.0
+    x041820   NodeBalance1820          -1.0   Capacity0418           1.0
+    x041821   Total_Cost          26.0   NodeBalance0421           1.0
+    x041821   NodeBalance1821          -1.0   Capacity0418           1.0
+    x041822   Total_Cost          26.0   NodeBalance0422           1.0
+    x041822   NodeBalance1822          -1.0   Capacity0418           1.0
+    x041823   Total_Cost          26.0   NodeBalance0423           1.0
+    x041823   NodeBalance1823          -1.0   Capacity0418           1.0
+    x041824   Total_Cost          26.0   NodeBalance0424           1.0
+    x041824   NodeBalance1824          -1.0   Capacity0418           1.0
+    x041825   Total_Cost          26.0   NodeBalance0425           1.0
+    x041825   NodeBalance1825          -1.0   Capacity0418           1.0
+    x041826   Total_Cost          26.0   NodeBalance0426           1.0
+    x041826   NodeBalance1826          -1.0   Capacity0418           1.0
+    x041827   Total_Cost          26.0   NodeBalance0427           1.0
+    x041827   NodeBalance1827          -1.0   Capacity0418           1.0
+    x041828   Total_Cost          26.0   NodeBalance0428           1.0
+    x041828   NodeBalance1828          -1.0   Capacity0418           1.0
+    x041829   Total_Cost          26.0   NodeBalance0429           1.0
+    x041829   NodeBalance1829          -1.0   Capacity0418           1.0
+    x041830   Total_Cost          26.0   NodeBalance0430           1.0
+    x041830   NodeBalance1830          -1.0   Capacity0418           1.0
+    x041831   Total_Cost          26.0   NodeBalance0431           1.0
+    x041831   NodeBalance1831          -1.0   Capacity0418           1.0
+    x041832   Total_Cost          26.0   NodeBalance0432           1.0
+    x041832   NodeBalance1832          -1.0   Capacity0418           1.0
+    x041833   Total_Cost          26.0   NodeBalance0433           1.0
+    x041833   NodeBalance1833          -1.0   Capacity0418           1.0
+    x041834   Total_Cost          26.0   NodeBalance0434           1.0
+    x041834   NodeBalance1834          -1.0   Capacity0418           1.0
+    x041835   Total_Cost          26.0   NodeBalance0435           1.0
+    x041835   NodeBalance1835          -1.0   Capacity0418           1.0
+    x041836   Total_Cost          26.0   NodeBalance0436           1.0
+    x041836   NodeBalance1836          -1.0   Capacity0418           1.0
+    x041837   Total_Cost          26.0   NodeBalance0437           1.0
+    x041837   NodeBalance1837          -1.0   Capacity0418           1.0
+    x041838   Total_Cost          26.0   NodeBalance0438           1.0
+    x041838   NodeBalance1838          -1.0   Capacity0418           1.0
+    x041839   Total_Cost          26.0   NodeBalance0439           1.0
+    x041839   NodeBalance1839          -1.0   Capacity0418           1.0
+    x041840   Total_Cost          26.0   NodeBalance0440           1.0
+    x041840   NodeBalance1840          -1.0   Capacity0418           1.0
+    x050301   Total_Cost          28.0   NodeBalance0301          -1.0
+    x050301   NodeBalance0501           1.0   Capacity0503           1.0
+    x050302   Total_Cost          28.0   NodeBalance0302          -1.0
+    x050302   NodeBalance0502           1.0   Capacity0503           1.0
+    x050303   Total_Cost          28.0   NodeBalance0303          -1.0
+    x050303   NodeBalance0503           1.0   Capacity0503           1.0
+    x050304   Total_Cost          28.0   NodeBalance0304          -1.0
+    x050304   NodeBalance0504           1.0   Capacity0503           1.0
+    x050305   Total_Cost          28.0   NodeBalance0305          -1.0
+    x050305   NodeBalance0505           1.0   Capacity0503           1.0
+    x050306   Total_Cost          28.0   NodeBalance0306          -1.0
+    x050306   NodeBalance0506           1.0   Capacity0503           1.0
+    x050307   Total_Cost          28.0   NodeBalance0307          -1.0
+    x050307   NodeBalance0507           1.0   Capacity0503           1.0
+    x050308   Total_Cost          28.0   NodeBalance0308          -1.0
+    x050308   NodeBalance0508           1.0   Capacity0503           1.0
+    x050309   Total_Cost          28.0   NodeBalance0309          -1.0
+    x050309   NodeBalance0509           1.0   Capacity0503           1.0
+    x050310   Total_Cost          28.0   NodeBalance0310          -1.0
+    x050310   NodeBalance0510           1.0   Capacity0503           1.0
+    x050311   Total_Cost          28.0   NodeBalance0311          -1.0
+    x050311   NodeBalance0511           1.0   Capacity0503           1.0
+    x050312   Total_Cost          28.0   NodeBalance0312          -1.0
+    x050312   NodeBalance0512           1.0   Capacity0503           1.0
+    x050313   Total_Cost          28.0   NodeBalance0313          -1.0
+    x050313   NodeBalance0513           1.0   Capacity0503           1.0
+    x050314   Total_Cost          28.0   NodeBalance0314          -1.0
+    x050314   NodeBalance0514           1.0   Capacity0503           1.0
+    x050315   Total_Cost          28.0   NodeBalance0315          -1.0
+    x050315   NodeBalance0515           1.0   Capacity0503           1.0
+    x050316   Total_Cost          28.0   NodeBalance0316          -1.0
+    x050316   NodeBalance0516           1.0   Capacity0503           1.0
+    x050317   Total_Cost          28.0   NodeBalance0317          -1.0
+    x050317   NodeBalance0517           1.0   Capacity0503           1.0
+    x050318   Total_Cost          28.0   NodeBalance0318          -1.0
+    x050318   NodeBalance0518           1.0   Capacity0503           1.0
+    x050319   Total_Cost          28.0   NodeBalance0319          -1.0
+    x050319   NodeBalance0519           1.0   Capacity0503           1.0
+    x050320   Total_Cost          28.0   NodeBalance0320          -1.0
+    x050320   NodeBalance0520           1.0   Capacity0503           1.0
+    x050321   Total_Cost          28.0   NodeBalance0321          -1.0
+    x050321   NodeBalance0521           1.0   Capacity0503           1.0
+    x050322   Total_Cost          28.0   NodeBalance0322          -1.0
+    x050322   NodeBalance0522           1.0   Capacity0503           1.0
+    x050323   Total_Cost          28.0   NodeBalance0323          -1.0
+    x050323   NodeBalance0523           1.0   Capacity0503           1.0
+    x050324   Total_Cost          28.0   NodeBalance0324          -1.0
+    x050324   NodeBalance0524           1.0   Capacity0503           1.0
+    x050325   Total_Cost          28.0   NodeBalance0325          -1.0
+    x050325   NodeBalance0525           1.0   Capacity0503           1.0
+    x050326   Total_Cost          28.0   NodeBalance0326          -1.0
+    x050326   NodeBalance0526           1.0   Capacity0503           1.0
+    x050327   Total_Cost          28.0   NodeBalance0327          -1.0
+    x050327   NodeBalance0527           1.0   Capacity0503           1.0
+    x050328   Total_Cost          28.0   NodeBalance0328          -1.0
+    x050328   NodeBalance0528           1.0   Capacity0503           1.0
+    x050329   Total_Cost          28.0   NodeBalance0329          -1.0
+    x050329   NodeBalance0529           1.0   Capacity0503           1.0
+    x050330   Total_Cost          28.0   NodeBalance0330          -1.0
+    x050330   NodeBalance0530           1.0   Capacity0503           1.0
+    x050331   Total_Cost          28.0   NodeBalance0331          -1.0
+    x050331   NodeBalance0531           1.0   Capacity0503           1.0
+    x050332   Total_Cost          28.0   NodeBalance0332          -1.0
+    x050332   NodeBalance0532           1.0   Capacity0503           1.0
+    x050333   Total_Cost          28.0   NodeBalance0333          -1.0
+    x050333   NodeBalance0533           1.0   Capacity0503           1.0
+    x050334   Total_Cost          28.0   NodeBalance0334          -1.0
+    x050334   NodeBalance0534           1.0   Capacity0503           1.0
+    x050335   Total_Cost          28.0   NodeBalance0335          -1.0
+    x050335   NodeBalance0535           1.0   Capacity0503           1.0
+    x050336   Total_Cost          28.0   NodeBalance0336          -1.0
+    x050336   NodeBalance0536           1.0   Capacity0503           1.0
+    x050337   Total_Cost          28.0   NodeBalance0337          -1.0
+    x050337   NodeBalance0537           1.0   Capacity0503           1.0
+    x050338   Total_Cost          28.0   NodeBalance0338          -1.0
+    x050338   NodeBalance0538           1.0   Capacity0503           1.0
+    x050339   Total_Cost          28.0   NodeBalance0339          -1.0
+    x050339   NodeBalance0539           1.0   Capacity0503           1.0
+    x050340   Total_Cost          28.0   NodeBalance0340          -1.0
+    x050340   NodeBalance0540           1.0   Capacity0503           1.0
+    x050601   Total_Cost         100.0   NodeBalance0501           1.0
+    x050601   NodeBalance0601          -1.0   Capacity0506           1.0
+    x050602   Total_Cost         100.0   NodeBalance0502           1.0
+    x050602   NodeBalance0602          -1.0   Capacity0506           1.0
+    x050603   Total_Cost         100.0   NodeBalance0503           1.0
+    x050603   NodeBalance0603          -1.0   Capacity0506           1.0
+    x050604   Total_Cost         100.0   NodeBalance0504           1.0
+    x050604   NodeBalance0604          -1.0   Capacity0506           1.0
+    x050605   Total_Cost         100.0   NodeBalance0505           1.0
+    x050605   NodeBalance0605          -1.0   Capacity0506           1.0
+    x050606   Total_Cost         100.0   NodeBalance0506           1.0
+    x050606   NodeBalance0606          -1.0   Capacity0506           1.0
+    x050607   Total_Cost         100.0   NodeBalance0507           1.0
+    x050607   NodeBalance0607          -1.0   Capacity0506           1.0
+    x050608   Total_Cost         100.0   NodeBalance0508           1.0
+    x050608   NodeBalance0608          -1.0   Capacity0506           1.0
+    x050609   Total_Cost         100.0   NodeBalance0509           1.0
+    x050609   NodeBalance0609          -1.0   Capacity0506           1.0
+    x050610   Total_Cost         100.0   NodeBalance0510           1.0
+    x050610   NodeBalance0610          -1.0   Capacity0506           1.0
+    x050611   Total_Cost         100.0   NodeBalance0511           1.0
+    x050611   NodeBalance0611          -1.0   Capacity0506           1.0
+    x050612   Total_Cost         100.0   NodeBalance0512           1.0
+    x050612   NodeBalance0612          -1.0   Capacity0506           1.0
+    x050613   Total_Cost         100.0   NodeBalance0513           1.0
+    x050613   NodeBalance0613          -1.0   Capacity0506           1.0
+    x050614   Total_Cost         100.0   NodeBalance0514           1.0
+    x050614   NodeBalance0614          -1.0   Capacity0506           1.0
+    x050615   Total_Cost         100.0   NodeBalance0515           1.0
+    x050615   NodeBalance0615          -1.0   Capacity0506           1.0
+    x050616   Total_Cost         100.0   NodeBalance0516           1.0
+    x050616   NodeBalance0616          -1.0   Capacity0506           1.0
+    x050617   Total_Cost         100.0   NodeBalance0517           1.0
+    x050617   NodeBalance0617          -1.0   Capacity0506           1.0
+    x050618   Total_Cost         100.0   NodeBalance0518           1.0
+    x050618   NodeBalance0618          -1.0   Capacity0506           1.0
+    x050619   Total_Cost         100.0   NodeBalance0519           1.0
+    x050619   NodeBalance0619          -1.0   Capacity0506           1.0
+    x050620   Total_Cost         100.0   NodeBalance0520           1.0
+    x050620   NodeBalance0620          -1.0   Capacity0506           1.0
+    x050621   Total_Cost         100.0   NodeBalance0521           1.0
+    x050621   NodeBalance0621          -1.0   Capacity0506           1.0
+    x050622   Total_Cost         100.0   NodeBalance0522           1.0
+    x050622   NodeBalance0622          -1.0   Capacity0506           1.0
+    x050623   Total_Cost         100.0   NodeBalance0523           1.0
+    x050623   NodeBalance0623          -1.0   Capacity0506           1.0
+    x050624   Total_Cost         100.0   NodeBalance0524           1.0
+    x050624   NodeBalance0624          -1.0   Capacity0506           1.0
+    x050625   Total_Cost         100.0   NodeBalance0525           1.0
+    x050625   NodeBalance0625          -1.0   Capacity0506           1.0
+    x050626   Total_Cost         100.0   NodeBalance0526           1.0
+    x050626   NodeBalance0626          -1.0   Capacity0506           1.0
+    x050627   Total_Cost         100.0   NodeBalance0527           1.0
+    x050627   NodeBalance0627          -1.0   Capacity0506           1.0
+    x050628   Total_Cost         100.0   NodeBalance0528           1.0
+    x050628   NodeBalance0628          -1.0   Capacity0506           1.0
+    x050629   Total_Cost         100.0   NodeBalance0529           1.0
+    x050629   NodeBalance0629          -1.0   Capacity0506           1.0
+    x050630   Total_Cost         100.0   NodeBalance0530           1.0
+    x050630   NodeBalance0630          -1.0   Capacity0506           1.0
+    x050631   Total_Cost         100.0   NodeBalance0531           1.0
+    x050631   NodeBalance0631          -1.0   Capacity0506           1.0
+    x050632   Total_Cost         100.0   NodeBalance0532           1.0
+    x050632   NodeBalance0632          -1.0   Capacity0506           1.0
+    x050633   Total_Cost         100.0   NodeBalance0533           1.0
+    x050633   NodeBalance0633          -1.0   Capacity0506           1.0
+    x050634   Total_Cost         100.0   NodeBalance0534           1.0
+    x050634   NodeBalance0634          -1.0   Capacity0506           1.0
+    x050635   Total_Cost         100.0   NodeBalance0535           1.0
+    x050635   NodeBalance0635          -1.0   Capacity0506           1.0
+    x050636   Total_Cost         100.0   NodeBalance0536           1.0
+    x050636   NodeBalance0636          -1.0   Capacity0506           1.0
+    x050637   Total_Cost         100.0   NodeBalance0537           1.0
+    x050637   NodeBalance0637          -1.0   Capacity0506           1.0
+    x050638   Total_Cost         100.0   NodeBalance0538           1.0
+    x050638   NodeBalance0638          -1.0   Capacity0506           1.0
+    x050639   Total_Cost         100.0   NodeBalance0539           1.0
+    x050639   NodeBalance0639          -1.0   Capacity0506           1.0
+    x050640   Total_Cost         100.0   NodeBalance0540           1.0
+    x050640   NodeBalance0640          -1.0   Capacity0506           1.0
+    x050901   Total_Cost          20.0   NodeBalance0501           1.0
+    x050901   NodeBalance0901          -1.0   Capacity0509           1.0
+    x050902   Total_Cost          20.0   NodeBalance0502           1.0
+    x050902   NodeBalance0902          -1.0   Capacity0509           1.0
+    x050903   Total_Cost          20.0   NodeBalance0503           1.0
+    x050903   NodeBalance0903          -1.0   Capacity0509           1.0
+    x050904   Total_Cost          20.0   NodeBalance0504           1.0
+    x050904   NodeBalance0904          -1.0   Capacity0509           1.0
+    x050905   Total_Cost          20.0   NodeBalance0505           1.0
+    x050905   NodeBalance0905          -1.0   Capacity0509           1.0
+    x050906   Total_Cost          20.0   NodeBalance0506           1.0
+    x050906   NodeBalance0906          -1.0   Capacity0509           1.0
+    x050907   Total_Cost          20.0   NodeBalance0507           1.0
+    x050907   NodeBalance0907          -1.0   Capacity0509           1.0
+    x050908   Total_Cost          20.0   NodeBalance0508           1.0
+    x050908   NodeBalance0908          -1.0   Capacity0509           1.0
+    x050909   Total_Cost          20.0   NodeBalance0509           1.0
+    x050909   NodeBalance0909          -1.0   Capacity0509           1.0
+    x050910   Total_Cost          20.0   NodeBalance0510           1.0
+    x050910   NodeBalance0910          -1.0   Capacity0509           1.0
+    x050911   Total_Cost          20.0   NodeBalance0511           1.0
+    x050911   NodeBalance0911          -1.0   Capacity0509           1.0
+    x050912   Total_Cost          20.0   NodeBalance0512           1.0
+    x050912   NodeBalance0912          -1.0   Capacity0509           1.0
+    x050913   Total_Cost          20.0   NodeBalance0513           1.0
+    x050913   NodeBalance0913          -1.0   Capacity0509           1.0
+    x050914   Total_Cost          20.0   NodeBalance0514           1.0
+    x050914   NodeBalance0914          -1.0   Capacity0509           1.0
+    x050915   Total_Cost          20.0   NodeBalance0515           1.0
+    x050915   NodeBalance0915          -1.0   Capacity0509           1.0
+    x050916   Total_Cost          20.0   NodeBalance0516           1.0
+    x050916   NodeBalance0916          -1.0   Capacity0509           1.0
+    x050917   Total_Cost          20.0   NodeBalance0517           1.0
+    x050917   NodeBalance0917          -1.0   Capacity0509           1.0
+    x050918   Total_Cost          20.0   NodeBalance0518           1.0
+    x050918   NodeBalance0918          -1.0   Capacity0509           1.0
+    x050919   Total_Cost          20.0   NodeBalance0519           1.0
+    x050919   NodeBalance0919          -1.0   Capacity0509           1.0
+    x050920   Total_Cost          20.0   NodeBalance0520           1.0
+    x050920   NodeBalance0920          -1.0   Capacity0509           1.0
+    x050921   Total_Cost          20.0   NodeBalance0521           1.0
+    x050921   NodeBalance0921          -1.0   Capacity0509           1.0
+    x050922   Total_Cost          20.0   NodeBalance0522           1.0
+    x050922   NodeBalance0922          -1.0   Capacity0509           1.0
+    x050923   Total_Cost          20.0   NodeBalance0523           1.0
+    x050923   NodeBalance0923          -1.0   Capacity0509           1.0
+    x050924   Total_Cost          20.0   NodeBalance0524           1.0
+    x050924   NodeBalance0924          -1.0   Capacity0509           1.0
+    x050925   Total_Cost          20.0   NodeBalance0525           1.0
+    x050925   NodeBalance0925          -1.0   Capacity0509           1.0
+    x050926   Total_Cost          20.0   NodeBalance0526           1.0
+    x050926   NodeBalance0926          -1.0   Capacity0509           1.0
+    x050927   Total_Cost          20.0   NodeBalance0527           1.0
+    x050927   NodeBalance0927          -1.0   Capacity0509           1.0
+    x050928   Total_Cost          20.0   NodeBalance0528           1.0
+    x050928   NodeBalance0928          -1.0   Capacity0509           1.0
+    x050929   Total_Cost          20.0   NodeBalance0529           1.0
+    x050929   NodeBalance0929          -1.0   Capacity0509           1.0
+    x050930   Total_Cost          20.0   NodeBalance0530           1.0
+    x050930   NodeBalance0930          -1.0   Capacity0509           1.0
+    x050931   Total_Cost          20.0   NodeBalance0531           1.0
+    x050931   NodeBalance0931          -1.0   Capacity0509           1.0
+    x050932   Total_Cost          20.0   NodeBalance0532           1.0
+    x050932   NodeBalance0932          -1.0   Capacity0509           1.0
+    x050933   Total_Cost          20.0   NodeBalance0533           1.0
+    x050933   NodeBalance0933          -1.0   Capacity0509           1.0
+    x050934   Total_Cost          20.0   NodeBalance0534           1.0
+    x050934   NodeBalance0934          -1.0   Capacity0509           1.0
+    x050935   Total_Cost          20.0   NodeBalance0535           1.0
+    x050935   NodeBalance0935          -1.0   Capacity0509           1.0
+    x050936   Total_Cost          20.0   NodeBalance0536           1.0
+    x050936   NodeBalance0936          -1.0   Capacity0509           1.0
+    x050937   Total_Cost          20.0   NodeBalance0537           1.0
+    x050937   NodeBalance0937          -1.0   Capacity0509           1.0
+    x050938   Total_Cost          20.0   NodeBalance0538           1.0
+    x050938   NodeBalance0938          -1.0   Capacity0509           1.0
+    x050939   Total_Cost          20.0   NodeBalance0539           1.0
+    x050939   NodeBalance0939          -1.0   Capacity0509           1.0
+    x050940   Total_Cost          20.0   NodeBalance0540           1.0
+    x050940   NodeBalance0940          -1.0   Capacity0509           1.0
+    x051301   Total_Cost          34.0   NodeBalance0501           1.0
+    x051301   NodeBalance1301          -1.0   Capacity0513           1.0
+    x051302   Total_Cost          34.0   NodeBalance0502           1.0
+    x051302   NodeBalance1302          -1.0   Capacity0513           1.0
+    x051303   Total_Cost          34.0   NodeBalance0503           1.0
+    x051303   NodeBalance1303          -1.0   Capacity0513           1.0
+    x051304   Total_Cost          34.0   NodeBalance0504           1.0
+    x051304   NodeBalance1304          -1.0   Capacity0513           1.0
+    x051305   Total_Cost          34.0   NodeBalance0505           1.0
+    x051305   NodeBalance1305          -1.0   Capacity0513           1.0
+    x051306   Total_Cost          34.0   NodeBalance0506           1.0
+    x051306   NodeBalance1306          -1.0   Capacity0513           1.0
+    x051307   Total_Cost          34.0   NodeBalance0507           1.0
+    x051307   NodeBalance1307          -1.0   Capacity0513           1.0
+    x051308   Total_Cost          34.0   NodeBalance0508           1.0
+    x051308   NodeBalance1308          -1.0   Capacity0513           1.0
+    x051309   Total_Cost          34.0   NodeBalance0509           1.0
+    x051309   NodeBalance1309          -1.0   Capacity0513           1.0
+    x051310   Total_Cost          34.0   NodeBalance0510           1.0
+    x051310   NodeBalance1310          -1.0   Capacity0513           1.0
+    x051311   Total_Cost          34.0   NodeBalance0511           1.0
+    x051311   NodeBalance1311          -1.0   Capacity0513           1.0
+    x051312   Total_Cost          34.0   NodeBalance0512           1.0
+    x051312   NodeBalance1312          -1.0   Capacity0513           1.0
+    x051313   Total_Cost          34.0   NodeBalance0513           1.0
+    x051313   NodeBalance1313          -1.0   Capacity0513           1.0
+    x051314   Total_Cost          34.0   NodeBalance0514           1.0
+    x051314   NodeBalance1314          -1.0   Capacity0513           1.0
+    x051315   Total_Cost          34.0   NodeBalance0515           1.0
+    x051315   NodeBalance1315          -1.0   Capacity0513           1.0
+    x051316   Total_Cost          34.0   NodeBalance0516           1.0
+    x051316   NodeBalance1316          -1.0   Capacity0513           1.0
+    x051317   Total_Cost          34.0   NodeBalance0517           1.0
+    x051317   NodeBalance1317          -1.0   Capacity0513           1.0
+    x051318   Total_Cost          34.0   NodeBalance0518           1.0
+    x051318   NodeBalance1318          -1.0   Capacity0513           1.0
+    x051319   Total_Cost          34.0   NodeBalance0519           1.0
+    x051319   NodeBalance1319          -1.0   Capacity0513           1.0
+    x051320   Total_Cost          34.0   NodeBalance0520           1.0
+    x051320   NodeBalance1320          -1.0   Capacity0513           1.0
+    x051321   Total_Cost          34.0   NodeBalance0521           1.0
+    x051321   NodeBalance1321          -1.0   Capacity0513           1.0
+    x051322   Total_Cost          34.0   NodeBalance0522           1.0
+    x051322   NodeBalance1322          -1.0   Capacity0513           1.0
+    x051323   Total_Cost          34.0   NodeBalance0523           1.0
+    x051323   NodeBalance1323          -1.0   Capacity0513           1.0
+    x051324   Total_Cost          34.0   NodeBalance0524           1.0
+    x051324   NodeBalance1324          -1.0   Capacity0513           1.0
+    x051325   Total_Cost          34.0   NodeBalance0525           1.0
+    x051325   NodeBalance1325          -1.0   Capacity0513           1.0
+    x051326   Total_Cost          34.0   NodeBalance0526           1.0
+    x051326   NodeBalance1326          -1.0   Capacity0513           1.0
+    x051327   Total_Cost          34.0   NodeBalance0527           1.0
+    x051327   NodeBalance1327          -1.0   Capacity0513           1.0
+    x051328   Total_Cost          34.0   NodeBalance0528           1.0
+    x051328   NodeBalance1328          -1.0   Capacity0513           1.0
+    x051329   Total_Cost          34.0   NodeBalance0529           1.0
+    x051329   NodeBalance1329          -1.0   Capacity0513           1.0
+    x051330   Total_Cost          34.0   NodeBalance0530           1.0
+    x051330   NodeBalance1330          -1.0   Capacity0513           1.0
+    x051331   Total_Cost          34.0   NodeBalance0531           1.0
+    x051331   NodeBalance1331          -1.0   Capacity0513           1.0
+    x051332   Total_Cost          34.0   NodeBalance0532           1.0
+    x051332   NodeBalance1332          -1.0   Capacity0513           1.0
+    x051333   Total_Cost          34.0   NodeBalance0533           1.0
+    x051333   NodeBalance1333          -1.0   Capacity0513           1.0
+    x051334   Total_Cost          34.0   NodeBalance0534           1.0
+    x051334   NodeBalance1334          -1.0   Capacity0513           1.0
+    x051335   Total_Cost          34.0   NodeBalance0535           1.0
+    x051335   NodeBalance1335          -1.0   Capacity0513           1.0
+    x051336   Total_Cost          34.0   NodeBalance0536           1.0
+    x051336   NodeBalance1336          -1.0   Capacity0513           1.0
+    x051337   Total_Cost          34.0   NodeBalance0537           1.0
+    x051337   NodeBalance1337          -1.0   Capacity0513           1.0
+    x051338   Total_Cost          34.0   NodeBalance0538           1.0
+    x051338   NodeBalance1338          -1.0   Capacity0513           1.0
+    x051339   Total_Cost          34.0   NodeBalance0539           1.0
+    x051339   NodeBalance1339          -1.0   Capacity0513           1.0
+    x051340   Total_Cost          34.0   NodeBalance0540           1.0
+    x051340   NodeBalance1340          -1.0   Capacity0513           1.0
+    x051601   Total_Cost          80.0   NodeBalance0501           1.0
+    x051601   NodeBalance1601          -1.0   Capacity0516           1.0
+    x051602   Total_Cost          80.0   NodeBalance0502           1.0
+    x051602   NodeBalance1602          -1.0   Capacity0516           1.0
+    x051603   Total_Cost          80.0   NodeBalance0503           1.0
+    x051603   NodeBalance1603          -1.0   Capacity0516           1.0
+    x051604   Total_Cost          80.0   NodeBalance0504           1.0
+    x051604   NodeBalance1604          -1.0   Capacity0516           1.0
+    x051605   Total_Cost          80.0   NodeBalance0505           1.0
+    x051605   NodeBalance1605          -1.0   Capacity0516           1.0
+    x051606   Total_Cost          80.0   NodeBalance0506           1.0
+    x051606   NodeBalance1606          -1.0   Capacity0516           1.0
+    x051607   Total_Cost          80.0   NodeBalance0507           1.0
+    x051607   NodeBalance1607          -1.0   Capacity0516           1.0
+    x051608   Total_Cost          80.0   NodeBalance0508           1.0
+    x051608   NodeBalance1608          -1.0   Capacity0516           1.0
+    x051609   Total_Cost          80.0   NodeBalance0509           1.0
+    x051609   NodeBalance1609          -1.0   Capacity0516           1.0
+    x051610   Total_Cost          80.0   NodeBalance0510           1.0
+    x051610   NodeBalance1610          -1.0   Capacity0516           1.0
+    x051611   Total_Cost          80.0   NodeBalance0511           1.0
+    x051611   NodeBalance1611          -1.0   Capacity0516           1.0
+    x051612   Total_Cost          80.0   NodeBalance0512           1.0
+    x051612   NodeBalance1612          -1.0   Capacity0516           1.0
+    x051613   Total_Cost          80.0   NodeBalance0513           1.0
+    x051613   NodeBalance1613          -1.0   Capacity0516           1.0
+    x051614   Total_Cost          80.0   NodeBalance0514           1.0
+    x051614   NodeBalance1614          -1.0   Capacity0516           1.0
+    x051615   Total_Cost          80.0   NodeBalance0515           1.0
+    x051615   NodeBalance1615          -1.0   Capacity0516           1.0
+    x051616   Total_Cost          80.0   NodeBalance0516           1.0
+    x051616   NodeBalance1616          -1.0   Capacity0516           1.0
+    x051617   Total_Cost          80.0   NodeBalance0517           1.0
+    x051617   NodeBalance1617          -1.0   Capacity0516           1.0
+    x051618   Total_Cost          80.0   NodeBalance0518           1.0
+    x051618   NodeBalance1618          -1.0   Capacity0516           1.0
+    x051619   Total_Cost          80.0   NodeBalance0519           1.0
+    x051619   NodeBalance1619          -1.0   Capacity0516           1.0
+    x051620   Total_Cost          80.0   NodeBalance0520           1.0
+    x051620   NodeBalance1620          -1.0   Capacity0516           1.0
+    x051621   Total_Cost          80.0   NodeBalance0521           1.0
+    x051621   NodeBalance1621          -1.0   Capacity0516           1.0
+    x051622   Total_Cost          80.0   NodeBalance0522           1.0
+    x051622   NodeBalance1622          -1.0   Capacity0516           1.0
+    x051623   Total_Cost          80.0   NodeBalance0523           1.0
+    x051623   NodeBalance1623          -1.0   Capacity0516           1.0
+    x051624   Total_Cost          80.0   NodeBalance0524           1.0
+    x051624   NodeBalance1624          -1.0   Capacity0516           1.0
+    x051625   Total_Cost          80.0   NodeBalance0525           1.0
+    x051625   NodeBalance1625          -1.0   Capacity0516           1.0
+    x051626   Total_Cost          80.0   NodeBalance0526           1.0
+    x051626   NodeBalance1626          -1.0   Capacity0516           1.0
+    x051627   Total_Cost          80.0   NodeBalance0527           1.0
+    x051627   NodeBalance1627          -1.0   Capacity0516           1.0
+    x051628   Total_Cost          80.0   NodeBalance0528           1.0
+    x051628   NodeBalance1628          -1.0   Capacity0516           1.0
+    x051629   Total_Cost          80.0   NodeBalance0529           1.0
+    x051629   NodeBalance1629          -1.0   Capacity0516           1.0
+    x051630   Total_Cost          80.0   NodeBalance0530           1.0
+    x051630   NodeBalance1630          -1.0   Capacity0516           1.0
+    x051631   Total_Cost          80.0   NodeBalance0531           1.0
+    x051631   NodeBalance1631          -1.0   Capacity0516           1.0
+    x051632   Total_Cost          80.0   NodeBalance0532           1.0
+    x051632   NodeBalance1632          -1.0   Capacity0516           1.0
+    x051633   Total_Cost          80.0   NodeBalance0533           1.0
+    x051633   NodeBalance1633          -1.0   Capacity0516           1.0
+    x051634   Total_Cost          80.0   NodeBalance0534           1.0
+    x051634   NodeBalance1634          -1.0   Capacity0516           1.0
+    x051635   Total_Cost          80.0   NodeBalance0535           1.0
+    x051635   NodeBalance1635          -1.0   Capacity0516           1.0
+    x051636   Total_Cost          80.0   NodeBalance0536           1.0
+    x051636   NodeBalance1636          -1.0   Capacity0516           1.0
+    x051637   Total_Cost          80.0   NodeBalance0537           1.0
+    x051637   NodeBalance1637          -1.0   Capacity0516           1.0
+    x051638   Total_Cost          80.0   NodeBalance0538           1.0
+    x051638   NodeBalance1638          -1.0   Capacity0516           1.0
+    x051639   Total_Cost          80.0   NodeBalance0539           1.0
+    x051639   NodeBalance1639          -1.0   Capacity0516           1.0
+    x051640   Total_Cost          80.0   NodeBalance0540           1.0
+    x051640   NodeBalance1640          -1.0   Capacity0516           1.0
+    x060701   Total_Cost         100.0   NodeBalance0601           1.0
+    x060701   NodeBalance0701          -1.0   Capacity0607           1.0
+    x060702   Total_Cost         100.0   NodeBalance0602           1.0
+    x060702   NodeBalance0702          -1.0   Capacity0607           1.0
+    x060703   Total_Cost         100.0   NodeBalance0603           1.0
+    x060703   NodeBalance0703          -1.0   Capacity0607           1.0
+    x060704   Total_Cost         100.0   NodeBalance0604           1.0
+    x060704   NodeBalance0704          -1.0   Capacity0607           1.0
+    x060705   Total_Cost         100.0   NodeBalance0605           1.0
+    x060705   NodeBalance0705          -1.0   Capacity0607           1.0
+    x060706   Total_Cost         100.0   NodeBalance0606           1.0
+    x060706   NodeBalance0706          -1.0   Capacity0607           1.0
+    x060707   Total_Cost         100.0   NodeBalance0607           1.0
+    x060707   NodeBalance0707          -1.0   Capacity0607           1.0
+    x060708   Total_Cost         100.0   NodeBalance0608           1.0
+    x060708   NodeBalance0708          -1.0   Capacity0607           1.0
+    x060709   Total_Cost         100.0   NodeBalance0609           1.0
+    x060709   NodeBalance0709          -1.0   Capacity0607           1.0
+    x060710   Total_Cost         100.0   NodeBalance0610           1.0
+    x060710   NodeBalance0710          -1.0   Capacity0607           1.0
+    x060711   Total_Cost         100.0   NodeBalance0611           1.0
+    x060711   NodeBalance0711          -1.0   Capacity0607           1.0
+    x060712   Total_Cost         100.0   NodeBalance0612           1.0
+    x060712   NodeBalance0712          -1.0   Capacity0607           1.0
+    x060713   Total_Cost         100.0   NodeBalance0613           1.0
+    x060713   NodeBalance0713          -1.0   Capacity0607           1.0
+    x060714   Total_Cost         100.0   NodeBalance0614           1.0
+    x060714   NodeBalance0714          -1.0   Capacity0607           1.0
+    x060715   Total_Cost         100.0   NodeBalance0615           1.0
+    x060715   NodeBalance0715          -1.0   Capacity0607           1.0
+    x060716   Total_Cost         100.0   NodeBalance0616           1.0
+    x060716   NodeBalance0716          -1.0   Capacity0607           1.0
+    x060717   Total_Cost         100.0   NodeBalance0617           1.0
+    x060717   NodeBalance0717          -1.0   Capacity0607           1.0
+    x060718   Total_Cost         100.0   NodeBalance0618           1.0
+    x060718   NodeBalance0718          -1.0   Capacity0607           1.0
+    x060719   Total_Cost         100.0   NodeBalance0619           1.0
+    x060719   NodeBalance0719          -1.0   Capacity0607           1.0
+    x060720   Total_Cost         100.0   NodeBalance0620           1.0
+    x060720   NodeBalance0720          -1.0   Capacity0607           1.0
+    x060721   Total_Cost         100.0   NodeBalance0621           1.0
+    x060721   NodeBalance0721          -1.0   Capacity0607           1.0
+    x060722   Total_Cost         100.0   NodeBalance0622           1.0
+    x060722   NodeBalance0722          -1.0   Capacity0607           1.0
+    x060723   Total_Cost         100.0   NodeBalance0623           1.0
+    x060723   NodeBalance0723          -1.0   Capacity0607           1.0
+    x060724   Total_Cost         100.0   NodeBalance0624           1.0
+    x060724   NodeBalance0724          -1.0   Capacity0607           1.0
+    x060725   Total_Cost         100.0   NodeBalance0625           1.0
+    x060725   NodeBalance0725          -1.0   Capacity0607           1.0
+    x060726   Total_Cost         100.0   NodeBalance0626           1.0
+    x060726   NodeBalance0726          -1.0   Capacity0607           1.0
+    x060727   Total_Cost         100.0   NodeBalance0627           1.0
+    x060727   NodeBalance0727          -1.0   Capacity0607           1.0
+    x060728   Total_Cost         100.0   NodeBalance0628           1.0
+    x060728   NodeBalance0728          -1.0   Capacity0607           1.0
+    x060729   Total_Cost         100.0   NodeBalance0629           1.0
+    x060729   NodeBalance0729          -1.0   Capacity0607           1.0
+    x060730   Total_Cost         100.0   NodeBalance0630           1.0
+    x060730   NodeBalance0730          -1.0   Capacity0607           1.0
+    x060731   Total_Cost         100.0   NodeBalance0631           1.0
+    x060731   NodeBalance0731          -1.0   Capacity0607           1.0
+    x060732   Total_Cost         100.0   NodeBalance0632           1.0
+    x060732   NodeBalance0732          -1.0   Capacity0607           1.0
+    x060733   Total_Cost         100.0   NodeBalance0633           1.0
+    x060733   NodeBalance0733          -1.0   Capacity0607           1.0
+    x060734   Total_Cost         100.0   NodeBalance0634           1.0
+    x060734   NodeBalance0734          -1.0   Capacity0607           1.0
+    x060735   Total_Cost         100.0   NodeBalance0635           1.0
+    x060735   NodeBalance0735          -1.0   Capacity0607           1.0
+    x060736   Total_Cost         100.0   NodeBalance0636           1.0
+    x060736   NodeBalance0736          -1.0   Capacity0607           1.0
+    x060737   Total_Cost         100.0   NodeBalance0637           1.0
+    x060737   NodeBalance0737          -1.0   Capacity0607           1.0
+    x060738   Total_Cost         100.0   NodeBalance0638           1.0
+    x060738   NodeBalance0738          -1.0   Capacity0607           1.0
+    x060739   Total_Cost         100.0   NodeBalance0639           1.0
+    x060739   NodeBalance0739          -1.0   Capacity0607           1.0
+    x060740   Total_Cost         100.0   NodeBalance0640           1.0
+    x060740   NodeBalance0740          -1.0   Capacity0607           1.0
+    x060801   Total_Cost          23.0   NodeBalance0601           1.0
+    x060801   NodeBalance0801          -1.0   Capacity0608           1.0
+    x060802   Total_Cost          23.0   NodeBalance0602           1.0
+    x060802   NodeBalance0802          -1.0   Capacity0608           1.0
+    x060803   Total_Cost          23.0   NodeBalance0603           1.0
+    x060803   NodeBalance0803          -1.0   Capacity0608           1.0
+    x060804   Total_Cost          23.0   NodeBalance0604           1.0
+    x060804   NodeBalance0804          -1.0   Capacity0608           1.0
+    x060805   Total_Cost          23.0   NodeBalance0605           1.0
+    x060805   NodeBalance0805          -1.0   Capacity0608           1.0
+    x060806   Total_Cost          23.0   NodeBalance0606           1.0
+    x060806   NodeBalance0806          -1.0   Capacity0608           1.0
+    x060807   Total_Cost          23.0   NodeBalance0607           1.0
+    x060807   NodeBalance0807          -1.0   Capacity0608           1.0
+    x060808   Total_Cost          23.0   NodeBalance0608           1.0
+    x060808   NodeBalance0808          -1.0   Capacity0608           1.0
+    x060809   Total_Cost          23.0   NodeBalance0609           1.0
+    x060809   NodeBalance0809          -1.0   Capacity0608           1.0
+    x060810   Total_Cost          23.0   NodeBalance0610           1.0
+    x060810   NodeBalance0810          -1.0   Capacity0608           1.0
+    x060811   Total_Cost          23.0   NodeBalance0611           1.0
+    x060811   NodeBalance0811          -1.0   Capacity0608           1.0
+    x060812   Total_Cost          23.0   NodeBalance0612           1.0
+    x060812   NodeBalance0812          -1.0   Capacity0608           1.0
+    x060813   Total_Cost          23.0   NodeBalance0613           1.0
+    x060813   NodeBalance0813          -1.0   Capacity0608           1.0
+    x060814   Total_Cost          23.0   NodeBalance0614           1.0
+    x060814   NodeBalance0814          -1.0   Capacity0608           1.0
+    x060815   Total_Cost          23.0   NodeBalance0615           1.0
+    x060815   NodeBalance0815          -1.0   Capacity0608           1.0
+    x060816   Total_Cost          23.0   NodeBalance0616           1.0
+    x060816   NodeBalance0816          -1.0   Capacity0608           1.0
+    x060817   Total_Cost          23.0   NodeBalance0617           1.0
+    x060817   NodeBalance0817          -1.0   Capacity0608           1.0
+    x060818   Total_Cost          23.0   NodeBalance0618           1.0
+    x060818   NodeBalance0818          -1.0   Capacity0608           1.0
+    x060819   Total_Cost          23.0   NodeBalance0619           1.0
+    x060819   NodeBalance0819          -1.0   Capacity0608           1.0
+    x060820   Total_Cost          23.0   NodeBalance0620           1.0
+    x060820   NodeBalance0820          -1.0   Capacity0608           1.0
+    x060821   Total_Cost          23.0   NodeBalance0621           1.0
+    x060821   NodeBalance0821          -1.0   Capacity0608           1.0
+    x060822   Total_Cost          23.0   NodeBalance0622           1.0
+    x060822   NodeBalance0822          -1.0   Capacity0608           1.0
+    x060823   Total_Cost          23.0   NodeBalance0623           1.0
+    x060823   NodeBalance0823          -1.0   Capacity0608           1.0
+    x060824   Total_Cost          23.0   NodeBalance0624           1.0
+    x060824   NodeBalance0824          -1.0   Capacity0608           1.0
+    x060825   Total_Cost          23.0   NodeBalance0625           1.0
+    x060825   NodeBalance0825          -1.0   Capacity0608           1.0
+    x060826   Total_Cost          23.0   NodeBalance0626           1.0
+    x060826   NodeBalance0826          -1.0   Capacity0608           1.0
+    x060827   Total_Cost          23.0   NodeBalance0627           1.0
+    x060827   NodeBalance0827          -1.0   Capacity0608           1.0
+    x060828   Total_Cost          23.0   NodeBalance0628           1.0
+    x060828   NodeBalance0828          -1.0   Capacity0608           1.0
+    x060829   Total_Cost          23.0   NodeBalance0629           1.0
+    x060829   NodeBalance0829          -1.0   Capacity0608           1.0
+    x060830   Total_Cost          23.0   NodeBalance0630           1.0
+    x060830   NodeBalance0830          -1.0   Capacity0608           1.0
+    x060831   Total_Cost          23.0   NodeBalance0631           1.0
+    x060831   NodeBalance0831          -1.0   Capacity0608           1.0
+    x060832   Total_Cost          23.0   NodeBalance0632           1.0
+    x060832   NodeBalance0832          -1.0   Capacity0608           1.0
+    x060833   Total_Cost          23.0   NodeBalance0633           1.0
+    x060833   NodeBalance0833          -1.0   Capacity0608           1.0
+    x060834   Total_Cost          23.0   NodeBalance0634           1.0
+    x060834   NodeBalance0834          -1.0   Capacity0608           1.0
+    x060835   Total_Cost          23.0   NodeBalance0635           1.0
+    x060835   NodeBalance0835          -1.0   Capacity0608           1.0
+    x060836   Total_Cost          23.0   NodeBalance0636           1.0
+    x060836   NodeBalance0836          -1.0   Capacity0608           1.0
+    x060837   Total_Cost          23.0   NodeBalance0637           1.0
+    x060837   NodeBalance0837          -1.0   Capacity0608           1.0
+    x060838   Total_Cost          23.0   NodeBalance0638           1.0
+    x060838   NodeBalance0838          -1.0   Capacity0608           1.0
+    x060839   Total_Cost          23.0   NodeBalance0639           1.0
+    x060839   NodeBalance0839          -1.0   Capacity0608           1.0
+    x060840   Total_Cost          23.0   NodeBalance0640           1.0
+    x060840   NodeBalance0840          -1.0   Capacity0608           1.0
+    x061101   Total_Cost          90.0   NodeBalance0601           1.0
+    x061101   NodeBalance1101          -1.0   Capacity0611           1.0
+    x061102   Total_Cost          90.0   NodeBalance0602           1.0
+    x061102   NodeBalance1102          -1.0   Capacity0611           1.0
+    x061103   Total_Cost          90.0   NodeBalance0603           1.0
+    x061103   NodeBalance1103          -1.0   Capacity0611           1.0
+    x061104   Total_Cost          90.0   NodeBalance0604           1.0
+    x061104   NodeBalance1104          -1.0   Capacity0611           1.0
+    x061105   Total_Cost          90.0   NodeBalance0605           1.0
+    x061105   NodeBalance1105          -1.0   Capacity0611           1.0
+    x061106   Total_Cost          90.0   NodeBalance0606           1.0
+    x061106   NodeBalance1106          -1.0   Capacity0611           1.0
+    x061107   Total_Cost          90.0   NodeBalance0607           1.0
+    x061107   NodeBalance1107          -1.0   Capacity0611           1.0
+    x061108   Total_Cost          90.0   NodeBalance0608           1.0
+    x061108   NodeBalance1108          -1.0   Capacity0611           1.0
+    x061109   Total_Cost          90.0   NodeBalance0609           1.0
+    x061109   NodeBalance1109          -1.0   Capacity0611           1.0
+    x061110   Total_Cost          90.0   NodeBalance0610           1.0
+    x061110   NodeBalance1110          -1.0   Capacity0611           1.0
+    x061111   Total_Cost          90.0   NodeBalance0611           1.0
+    x061111   NodeBalance1111          -1.0   Capacity0611           1.0
+    x061112   Total_Cost          90.0   NodeBalance0612           1.0
+    x061112   NodeBalance1112          -1.0   Capacity0611           1.0
+    x061113   Total_Cost          90.0   NodeBalance0613           1.0
+    x061113   NodeBalance1113          -1.0   Capacity0611           1.0
+    x061114   Total_Cost          90.0   NodeBalance0614           1.0
+    x061114   NodeBalance1114          -1.0   Capacity0611           1.0
+    x061115   Total_Cost          90.0   NodeBalance0615           1.0
+    x061115   NodeBalance1115          -1.0   Capacity0611           1.0
+    x061116   Total_Cost          90.0   NodeBalance0616           1.0
+    x061116   NodeBalance1116          -1.0   Capacity0611           1.0
+    x061117   Total_Cost          90.0   NodeBalance0617           1.0
+    x061117   NodeBalance1117          -1.0   Capacity0611           1.0
+    x061118   Total_Cost          90.0   NodeBalance0618           1.0
+    x061118   NodeBalance1118          -1.0   Capacity0611           1.0
+    x061119   Total_Cost          90.0   NodeBalance0619           1.0
+    x061119   NodeBalance1119          -1.0   Capacity0611           1.0
+    x061120   Total_Cost          90.0   NodeBalance0620           1.0
+    x061120   NodeBalance1120          -1.0   Capacity0611           1.0
+    x061121   Total_Cost          90.0   NodeBalance0621           1.0
+    x061121   NodeBalance1121          -1.0   Capacity0611           1.0
+    x061122   Total_Cost          90.0   NodeBalance0622           1.0
+    x061122   NodeBalance1122          -1.0   Capacity0611           1.0
+    x061123   Total_Cost          90.0   NodeBalance0623           1.0
+    x061123   NodeBalance1123          -1.0   Capacity0611           1.0
+    x061124   Total_Cost          90.0   NodeBalance0624           1.0
+    x061124   NodeBalance1124          -1.0   Capacity0611           1.0
+    x061125   Total_Cost          90.0   NodeBalance0625           1.0
+    x061125   NodeBalance1125          -1.0   Capacity0611           1.0
+    x061126   Total_Cost          90.0   NodeBalance0626           1.0
+    x061126   NodeBalance1126          -1.0   Capacity0611           1.0
+    x061127   Total_Cost          90.0   NodeBalance0627           1.0
+    x061127   NodeBalance1127          -1.0   Capacity0611           1.0
+    x061128   Total_Cost          90.0   NodeBalance0628           1.0
+    x061128   NodeBalance1128          -1.0   Capacity0611           1.0
+    x061129   Total_Cost          90.0   NodeBalance0629           1.0
+    x061129   NodeBalance1129          -1.0   Capacity0611           1.0
+    x061130   Total_Cost          90.0   NodeBalance0630           1.0
+    x061130   NodeBalance1130          -1.0   Capacity0611           1.0
+    x061131   Total_Cost          90.0   NodeBalance0631           1.0
+    x061131   NodeBalance1131          -1.0   Capacity0611           1.0
+    x061132   Total_Cost          90.0   NodeBalance0632           1.0
+    x061132   NodeBalance1132          -1.0   Capacity0611           1.0
+    x061133   Total_Cost          90.0   NodeBalance0633           1.0
+    x061133   NodeBalance1133          -1.0   Capacity0611           1.0
+    x061134   Total_Cost          90.0   NodeBalance0634           1.0
+    x061134   NodeBalance1134          -1.0   Capacity0611           1.0
+    x061135   Total_Cost          90.0   NodeBalance0635           1.0
+    x061135   NodeBalance1135          -1.0   Capacity0611           1.0
+    x061136   Total_Cost          90.0   NodeBalance0636           1.0
+    x061136   NodeBalance1136          -1.0   Capacity0611           1.0
+    x061137   Total_Cost          90.0   NodeBalance0637           1.0
+    x061137   NodeBalance1137          -1.0   Capacity0611           1.0
+    x061138   Total_Cost          90.0   NodeBalance0638           1.0
+    x061138   NodeBalance1138          -1.0   Capacity0611           1.0
+    x061139   Total_Cost          90.0   NodeBalance0639           1.0
+    x061139   NodeBalance1139          -1.0   Capacity0611           1.0
+    x061140   Total_Cost          90.0   NodeBalance0640           1.0
+    x061140   NodeBalance1140          -1.0   Capacity0611           1.0
+    x061301   Total_Cost          64.0   NodeBalance0601           1.0
+    x061301   NodeBalance1301          -1.0   Capacity0613           1.0
+    x061302   Total_Cost          64.0   NodeBalance0602           1.0
+    x061302   NodeBalance1302          -1.0   Capacity0613           1.0
+    x061303   Total_Cost          64.0   NodeBalance0603           1.0
+    x061303   NodeBalance1303          -1.0   Capacity0613           1.0
+    x061304   Total_Cost          64.0   NodeBalance0604           1.0
+    x061304   NodeBalance1304          -1.0   Capacity0613           1.0
+    x061305   Total_Cost          64.0   NodeBalance0605           1.0
+    x061305   NodeBalance1305          -1.0   Capacity0613           1.0
+    x061306   Total_Cost          64.0   NodeBalance0606           1.0
+    x061306   NodeBalance1306          -1.0   Capacity0613           1.0
+    x061307   Total_Cost          64.0   NodeBalance0607           1.0
+    x061307   NodeBalance1307          -1.0   Capacity0613           1.0
+    x061308   Total_Cost          64.0   NodeBalance0608           1.0
+    x061308   NodeBalance1308          -1.0   Capacity0613           1.0
+    x061309   Total_Cost          64.0   NodeBalance0609           1.0
+    x061309   NodeBalance1309          -1.0   Capacity0613           1.0
+    x061310   Total_Cost          64.0   NodeBalance0610           1.0
+    x061310   NodeBalance1310          -1.0   Capacity0613           1.0
+    x061311   Total_Cost          64.0   NodeBalance0611           1.0
+    x061311   NodeBalance1311          -1.0   Capacity0613           1.0
+    x061312   Total_Cost          64.0   NodeBalance0612           1.0
+    x061312   NodeBalance1312          -1.0   Capacity0613           1.0
+    x061313   Total_Cost          64.0   NodeBalance0613           1.0
+    x061313   NodeBalance1313          -1.0   Capacity0613           1.0
+    x061314   Total_Cost          64.0   NodeBalance0614           1.0
+    x061314   NodeBalance1314          -1.0   Capacity0613           1.0
+    x061315   Total_Cost          64.0   NodeBalance0615           1.0
+    x061315   NodeBalance1315          -1.0   Capacity0613           1.0
+    x061316   Total_Cost          64.0   NodeBalance0616           1.0
+    x061316   NodeBalance1316          -1.0   Capacity0613           1.0
+    x061317   Total_Cost          64.0   NodeBalance0617           1.0
+    x061317   NodeBalance1317          -1.0   Capacity0613           1.0
+    x061318   Total_Cost          64.0   NodeBalance0618           1.0
+    x061318   NodeBalance1318          -1.0   Capacity0613           1.0
+    x061319   Total_Cost          64.0   NodeBalance0619           1.0
+    x061319   NodeBalance1319          -1.0   Capacity0613           1.0
+    x061320   Total_Cost          64.0   NodeBalance0620           1.0
+    x061320   NodeBalance1320          -1.0   Capacity0613           1.0
+    x061321   Total_Cost          64.0   NodeBalance0621           1.0
+    x061321   NodeBalance1321          -1.0   Capacity0613           1.0
+    x061322   Total_Cost          64.0   NodeBalance0622           1.0
+    x061322   NodeBalance1322          -1.0   Capacity0613           1.0
+    x061323   Total_Cost          64.0   NodeBalance0623           1.0
+    x061323   NodeBalance1323          -1.0   Capacity0613           1.0
+    x061324   Total_Cost          64.0   NodeBalance0624           1.0
+    x061324   NodeBalance1324          -1.0   Capacity0613           1.0
+    x061325   Total_Cost          64.0   NodeBalance0625           1.0
+    x061325   NodeBalance1325          -1.0   Capacity0613           1.0
+    x061326   Total_Cost          64.0   NodeBalance0626           1.0
+    x061326   NodeBalance1326          -1.0   Capacity0613           1.0
+    x061327   Total_Cost          64.0   NodeBalance0627           1.0
+    x061327   NodeBalance1327          -1.0   Capacity0613           1.0
+    x061328   Total_Cost          64.0   NodeBalance0628           1.0
+    x061328   NodeBalance1328          -1.0   Capacity0613           1.0
+    x061329   Total_Cost          64.0   NodeBalance0629           1.0
+    x061329   NodeBalance1329          -1.0   Capacity0613           1.0
+    x061330   Total_Cost          64.0   NodeBalance0630           1.0
+    x061330   NodeBalance1330          -1.0   Capacity0613           1.0
+    x061331   Total_Cost          64.0   NodeBalance0631           1.0
+    x061331   NodeBalance1331          -1.0   Capacity0613           1.0
+    x061332   Total_Cost          64.0   NodeBalance0632           1.0
+    x061332   NodeBalance1332          -1.0   Capacity0613           1.0
+    x061333   Total_Cost          64.0   NodeBalance0633           1.0
+    x061333   NodeBalance1333          -1.0   Capacity0613           1.0
+    x061334   Total_Cost          64.0   NodeBalance0634           1.0
+    x061334   NodeBalance1334          -1.0   Capacity0613           1.0
+    x061335   Total_Cost          64.0   NodeBalance0635           1.0
+    x061335   NodeBalance1335          -1.0   Capacity0613           1.0
+    x061336   Total_Cost          64.0   NodeBalance0636           1.0
+    x061336   NodeBalance1336          -1.0   Capacity0613           1.0
+    x061337   Total_Cost          64.0   NodeBalance0637           1.0
+    x061337   NodeBalance1337          -1.0   Capacity0613           1.0
+    x061338   Total_Cost          64.0   NodeBalance0638           1.0
+    x061338   NodeBalance1338          -1.0   Capacity0613           1.0
+    x061339   Total_Cost          64.0   NodeBalance0639           1.0
+    x061339   NodeBalance1339          -1.0   Capacity0613           1.0
+    x061340   Total_Cost          64.0   NodeBalance0640           1.0
+    x061340   NodeBalance1340          -1.0   Capacity0613           1.0
+    x061401   Total_Cost          88.0   NodeBalance0601           1.0
+    x061401   NodeBalance1401          -1.0   Capacity0614           1.0
+    x061402   Total_Cost          88.0   NodeBalance0602           1.0
+    x061402   NodeBalance1402          -1.0   Capacity0614           1.0
+    x061403   Total_Cost          88.0   NodeBalance0603           1.0
+    x061403   NodeBalance1403          -1.0   Capacity0614           1.0
+    x061404   Total_Cost          88.0   NodeBalance0604           1.0
+    x061404   NodeBalance1404          -1.0   Capacity0614           1.0
+    x061405   Total_Cost          88.0   NodeBalance0605           1.0
+    x061405   NodeBalance1405          -1.0   Capacity0614           1.0
+    x061406   Total_Cost          88.0   NodeBalance0606           1.0
+    x061406   NodeBalance1406          -1.0   Capacity0614           1.0
+    x061407   Total_Cost          88.0   NodeBalance0607           1.0
+    x061407   NodeBalance1407          -1.0   Capacity0614           1.0
+    x061408   Total_Cost          88.0   NodeBalance0608           1.0
+    x061408   NodeBalance1408          -1.0   Capacity0614           1.0
+    x061409   Total_Cost          88.0   NodeBalance0609           1.0
+    x061409   NodeBalance1409          -1.0   Capacity0614           1.0
+    x061410   Total_Cost          88.0   NodeBalance0610           1.0
+    x061410   NodeBalance1410          -1.0   Capacity0614           1.0
+    x061411   Total_Cost          88.0   NodeBalance0611           1.0
+    x061411   NodeBalance1411          -1.0   Capacity0614           1.0
+    x061412   Total_Cost          88.0   NodeBalance0612           1.0
+    x061412   NodeBalance1412          -1.0   Capacity0614           1.0
+    x061413   Total_Cost          88.0   NodeBalance0613           1.0
+    x061413   NodeBalance1413          -1.0   Capacity0614           1.0
+    x061414   Total_Cost          88.0   NodeBalance0614           1.0
+    x061414   NodeBalance1414          -1.0   Capacity0614           1.0
+    x061415   Total_Cost          88.0   NodeBalance0615           1.0
+    x061415   NodeBalance1415          -1.0   Capacity0614           1.0
+    x061416   Total_Cost          88.0   NodeBalance0616           1.0
+    x061416   NodeBalance1416          -1.0   Capacity0614           1.0
+    x061417   Total_Cost          88.0   NodeBalance0617           1.0
+    x061417   NodeBalance1417          -1.0   Capacity0614           1.0
+    x061418   Total_Cost          88.0   NodeBalance0618           1.0
+    x061418   NodeBalance1418          -1.0   Capacity0614           1.0
+    x061419   Total_Cost          88.0   NodeBalance0619           1.0
+    x061419   NodeBalance1419          -1.0   Capacity0614           1.0
+    x061420   Total_Cost          88.0   NodeBalance0620           1.0
+    x061420   NodeBalance1420          -1.0   Capacity0614           1.0
+    x061421   Total_Cost          88.0   NodeBalance0621           1.0
+    x061421   NodeBalance1421          -1.0   Capacity0614           1.0
+    x061422   Total_Cost          88.0   NodeBalance0622           1.0
+    x061422   NodeBalance1422          -1.0   Capacity0614           1.0
+    x061423   Total_Cost          88.0   NodeBalance0623           1.0
+    x061423   NodeBalance1423          -1.0   Capacity0614           1.0
+    x061424   Total_Cost          88.0   NodeBalance0624           1.0
+    x061424   NodeBalance1424          -1.0   Capacity0614           1.0
+    x061425   Total_Cost          88.0   NodeBalance0625           1.0
+    x061425   NodeBalance1425          -1.0   Capacity0614           1.0
+    x061426   Total_Cost          88.0   NodeBalance0626           1.0
+    x061426   NodeBalance1426          -1.0   Capacity0614           1.0
+    x061427   Total_Cost          88.0   NodeBalance0627           1.0
+    x061427   NodeBalance1427          -1.0   Capacity0614           1.0
+    x061428   Total_Cost          88.0   NodeBalance0628           1.0
+    x061428   NodeBalance1428          -1.0   Capacity0614           1.0
+    x061429   Total_Cost          88.0   NodeBalance0629           1.0
+    x061429   NodeBalance1429          -1.0   Capacity0614           1.0
+    x061430   Total_Cost          88.0   NodeBalance0630           1.0
+    x061430   NodeBalance1430          -1.0   Capacity0614           1.0
+    x061431   Total_Cost          88.0   NodeBalance0631           1.0
+    x061431   NodeBalance1431          -1.0   Capacity0614           1.0
+    x061432   Total_Cost          88.0   NodeBalance0632           1.0
+    x061432   NodeBalance1432          -1.0   Capacity0614           1.0
+    x061433   Total_Cost          88.0   NodeBalance0633           1.0
+    x061433   NodeBalance1433          -1.0   Capacity0614           1.0
+    x061434   Total_Cost          88.0   NodeBalance0634           1.0
+    x061434   NodeBalance1434          -1.0   Capacity0614           1.0
+    x061435   Total_Cost          88.0   NodeBalance0635           1.0
+    x061435   NodeBalance1435          -1.0   Capacity0614           1.0
+    x061436   Total_Cost          88.0   NodeBalance0636           1.0
+    x061436   NodeBalance1436          -1.0   Capacity0614           1.0
+    x061437   Total_Cost          88.0   NodeBalance0637           1.0
+    x061437   NodeBalance1437          -1.0   Capacity0614           1.0
+    x061438   Total_Cost          88.0   NodeBalance0638           1.0
+    x061438   NodeBalance1438          -1.0   Capacity0614           1.0
+    x061439   Total_Cost          88.0   NodeBalance0639           1.0
+    x061439   NodeBalance1439          -1.0   Capacity0614           1.0
+    x061440   Total_Cost          88.0   NodeBalance0640           1.0
+    x061440   NodeBalance1440          -1.0   Capacity0614           1.0
+    x061501   Total_Cost          19.0   NodeBalance0601           1.0
+    x061501   NodeBalance1501          -1.0   Capacity0615           1.0
+    x061502   Total_Cost          19.0   NodeBalance0602           1.0
+    x061502   NodeBalance1502          -1.0   Capacity0615           1.0
+    x061503   Total_Cost          19.0   NodeBalance0603           1.0
+    x061503   NodeBalance1503          -1.0   Capacity0615           1.0
+    x061504   Total_Cost          19.0   NodeBalance0604           1.0
+    x061504   NodeBalance1504          -1.0   Capacity0615           1.0
+    x061505   Total_Cost          19.0   NodeBalance0605           1.0
+    x061505   NodeBalance1505          -1.0   Capacity0615           1.0
+    x061506   Total_Cost          19.0   NodeBalance0606           1.0
+    x061506   NodeBalance1506          -1.0   Capacity0615           1.0
+    x061507   Total_Cost          19.0   NodeBalance0607           1.0
+    x061507   NodeBalance1507          -1.0   Capacity0615           1.0
+    x061508   Total_Cost          19.0   NodeBalance0608           1.0
+    x061508   NodeBalance1508          -1.0   Capacity0615           1.0
+    x061509   Total_Cost          19.0   NodeBalance0609           1.0
+    x061509   NodeBalance1509          -1.0   Capacity0615           1.0
+    x061510   Total_Cost          19.0   NodeBalance0610           1.0
+    x061510   NodeBalance1510          -1.0   Capacity0615           1.0
+    x061511   Total_Cost          19.0   NodeBalance0611           1.0
+    x061511   NodeBalance1511          -1.0   Capacity0615           1.0
+    x061512   Total_Cost          19.0   NodeBalance0612           1.0
+    x061512   NodeBalance1512          -1.0   Capacity0615           1.0
+    x061513   Total_Cost          19.0   NodeBalance0613           1.0
+    x061513   NodeBalance1513          -1.0   Capacity0615           1.0
+    x061514   Total_Cost          19.0   NodeBalance0614           1.0
+    x061514   NodeBalance1514          -1.0   Capacity0615           1.0
+    x061515   Total_Cost          19.0   NodeBalance0615           1.0
+    x061515   NodeBalance1515          -1.0   Capacity0615           1.0
+    x061516   Total_Cost          19.0   NodeBalance0616           1.0
+    x061516   NodeBalance1516          -1.0   Capacity0615           1.0
+    x061517   Total_Cost          19.0   NodeBalance0617           1.0
+    x061517   NodeBalance1517          -1.0   Capacity0615           1.0
+    x061518   Total_Cost          19.0   NodeBalance0618           1.0
+    x061518   NodeBalance1518          -1.0   Capacity0615           1.0
+    x061519   Total_Cost          19.0   NodeBalance0619           1.0
+    x061519   NodeBalance1519          -1.0   Capacity0615           1.0
+    x061520   Total_Cost          19.0   NodeBalance0620           1.0
+    x061520   NodeBalance1520          -1.0   Capacity0615           1.0
+    x061521   Total_Cost          19.0   NodeBalance0621           1.0
+    x061521   NodeBalance1521          -1.0   Capacity0615           1.0
+    x061522   Total_Cost          19.0   NodeBalance0622           1.0
+    x061522   NodeBalance1522          -1.0   Capacity0615           1.0
+    x061523   Total_Cost          19.0   NodeBalance0623           1.0
+    x061523   NodeBalance1523          -1.0   Capacity0615           1.0
+    x061524   Total_Cost          19.0   NodeBalance0624           1.0
+    x061524   NodeBalance1524          -1.0   Capacity0615           1.0
+    x061525   Total_Cost          19.0   NodeBalance0625           1.0
+    x061525   NodeBalance1525          -1.0   Capacity0615           1.0
+    x061526   Total_Cost          19.0   NodeBalance0626           1.0
+    x061526   NodeBalance1526          -1.0   Capacity0615           1.0
+    x061527   Total_Cost          19.0   NodeBalance0627           1.0
+    x061527   NodeBalance1527          -1.0   Capacity0615           1.0
+    x061528   Total_Cost          19.0   NodeBalance0628           1.0
+    x061528   NodeBalance1528          -1.0   Capacity0615           1.0
+    x061529   Total_Cost          19.0   NodeBalance0629           1.0
+    x061529   NodeBalance1529          -1.0   Capacity0615           1.0
+    x061530   Total_Cost          19.0   NodeBalance0630           1.0
+    x061530   NodeBalance1530          -1.0   Capacity0615           1.0
+    x061531   Total_Cost          19.0   NodeBalance0631           1.0
+    x061531   NodeBalance1531          -1.0   Capacity0615           1.0
+    x061532   Total_Cost          19.0   NodeBalance0632           1.0
+    x061532   NodeBalance1532          -1.0   Capacity0615           1.0
+    x061533   Total_Cost          19.0   NodeBalance0633           1.0
+    x061533   NodeBalance1533          -1.0   Capacity0615           1.0
+    x061534   Total_Cost          19.0   NodeBalance0634           1.0
+    x061534   NodeBalance1534          -1.0   Capacity0615           1.0
+    x061535   Total_Cost          19.0   NodeBalance0635           1.0
+    x061535   NodeBalance1535          -1.0   Capacity0615           1.0
+    x061536   Total_Cost          19.0   NodeBalance0636           1.0
+    x061536   NodeBalance1536          -1.0   Capacity0615           1.0
+    x061537   Total_Cost          19.0   NodeBalance0637           1.0
+    x061537   NodeBalance1537          -1.0   Capacity0615           1.0
+    x061538   Total_Cost          19.0   NodeBalance0638           1.0
+    x061538   NodeBalance1538          -1.0   Capacity0615           1.0
+    x061539   Total_Cost          19.0   NodeBalance0639           1.0
+    x061539   NodeBalance1539          -1.0   Capacity0615           1.0
+    x061540   Total_Cost          19.0   NodeBalance0640           1.0
+    x061540   NodeBalance1540          -1.0   Capacity0615           1.0
+    x070301   Total_Cost          77.0   NodeBalance0301          -1.0
+    x070301   NodeBalance0701           1.0   Capacity0703           1.0
+    x070302   Total_Cost          77.0   NodeBalance0302          -1.0
+    x070302   NodeBalance0702           1.0   Capacity0703           1.0
+    x070303   Total_Cost          77.0   NodeBalance0303          -1.0
+    x070303   NodeBalance0703           1.0   Capacity0703           1.0
+    x070304   Total_Cost          77.0   NodeBalance0304          -1.0
+    x070304   NodeBalance0704           1.0   Capacity0703           1.0
+    x070305   Total_Cost          77.0   NodeBalance0305          -1.0
+    x070305   NodeBalance0705           1.0   Capacity0703           1.0
+    x070306   Total_Cost          77.0   NodeBalance0306          -1.0
+    x070306   NodeBalance0706           1.0   Capacity0703           1.0
+    x070307   Total_Cost          77.0   NodeBalance0307          -1.0
+    x070307   NodeBalance0707           1.0   Capacity0703           1.0
+    x070308   Total_Cost          77.0   NodeBalance0308          -1.0
+    x070308   NodeBalance0708           1.0   Capacity0703           1.0
+    x070309   Total_Cost          77.0   NodeBalance0309          -1.0
+    x070309   NodeBalance0709           1.0   Capacity0703           1.0
+    x070310   Total_Cost          77.0   NodeBalance0310          -1.0
+    x070310   NodeBalance0710           1.0   Capacity0703           1.0
+    x070311   Total_Cost          77.0   NodeBalance0311          -1.0
+    x070311   NodeBalance0711           1.0   Capacity0703           1.0
+    x070312   Total_Cost          77.0   NodeBalance0312          -1.0
+    x070312   NodeBalance0712           1.0   Capacity0703           1.0
+    x070313   Total_Cost          77.0   NodeBalance0313          -1.0
+    x070313   NodeBalance0713           1.0   Capacity0703           1.0
+    x070314   Total_Cost          77.0   NodeBalance0314          -1.0
+    x070314   NodeBalance0714           1.0   Capacity0703           1.0
+    x070315   Total_Cost          77.0   NodeBalance0315          -1.0
+    x070315   NodeBalance0715           1.0   Capacity0703           1.0
+    x070316   Total_Cost          77.0   NodeBalance0316          -1.0
+    x070316   NodeBalance0716           1.0   Capacity0703           1.0
+    x070317   Total_Cost          77.0   NodeBalance0317          -1.0
+    x070317   NodeBalance0717           1.0   Capacity0703           1.0
+    x070318   Total_Cost          77.0   NodeBalance0318          -1.0
+    x070318   NodeBalance0718           1.0   Capacity0703           1.0
+    x070319   Total_Cost          77.0   NodeBalance0319          -1.0
+    x070319   NodeBalance0719           1.0   Capacity0703           1.0
+    x070320   Total_Cost          77.0   NodeBalance0320          -1.0
+    x070320   NodeBalance0720           1.0   Capacity0703           1.0
+    x070321   Total_Cost          77.0   NodeBalance0321          -1.0
+    x070321   NodeBalance0721           1.0   Capacity0703           1.0
+    x070322   Total_Cost          77.0   NodeBalance0322          -1.0
+    x070322   NodeBalance0722           1.0   Capacity0703           1.0
+    x070323   Total_Cost          77.0   NodeBalance0323          -1.0
+    x070323   NodeBalance0723           1.0   Capacity0703           1.0
+    x070324   Total_Cost          77.0   NodeBalance0324          -1.0
+    x070324   NodeBalance0724           1.0   Capacity0703           1.0
+    x070325   Total_Cost          77.0   NodeBalance0325          -1.0
+    x070325   NodeBalance0725           1.0   Capacity0703           1.0
+    x070326   Total_Cost          77.0   NodeBalance0326          -1.0
+    x070326   NodeBalance0726           1.0   Capacity0703           1.0
+    x070327   Total_Cost          77.0   NodeBalance0327          -1.0
+    x070327   NodeBalance0727           1.0   Capacity0703           1.0
+    x070328   Total_Cost          77.0   NodeBalance0328          -1.0
+    x070328   NodeBalance0728           1.0   Capacity0703           1.0
+    x070329   Total_Cost          77.0   NodeBalance0329          -1.0
+    x070329   NodeBalance0729           1.0   Capacity0703           1.0
+    x070330   Total_Cost          77.0   NodeBalance0330          -1.0
+    x070330   NodeBalance0730           1.0   Capacity0703           1.0
+    x070331   Total_Cost          77.0   NodeBalance0331          -1.0
+    x070331   NodeBalance0731           1.0   Capacity0703           1.0
+    x070332   Total_Cost          77.0   NodeBalance0332          -1.0
+    x070332   NodeBalance0732           1.0   Capacity0703           1.0
+    x070333   Total_Cost          77.0   NodeBalance0333          -1.0
+    x070333   NodeBalance0733           1.0   Capacity0703           1.0
+    x070334   Total_Cost          77.0   NodeBalance0334          -1.0
+    x070334   NodeBalance0734           1.0   Capacity0703           1.0
+    x070335   Total_Cost          77.0   NodeBalance0335          -1.0
+    x070335   NodeBalance0735           1.0   Capacity0703           1.0
+    x070336   Total_Cost          77.0   NodeBalance0336          -1.0
+    x070336   NodeBalance0736           1.0   Capacity0703           1.0
+    x070337   Total_Cost          77.0   NodeBalance0337          -1.0
+    x070337   NodeBalance0737           1.0   Capacity0703           1.0
+    x070338   Total_Cost          77.0   NodeBalance0338          -1.0
+    x070338   NodeBalance0738           1.0   Capacity0703           1.0
+    x070339   Total_Cost          77.0   NodeBalance0339          -1.0
+    x070339   NodeBalance0739           1.0   Capacity0703           1.0
+    x070340   Total_Cost          77.0   NodeBalance0340          -1.0
+    x070340   NodeBalance0740           1.0   Capacity0703           1.0
+    x070801   Total_Cost         100.0   NodeBalance0701           1.0
+    x070801   NodeBalance0801          -1.0   Capacity0708           1.0
+    x070802   Total_Cost         100.0   NodeBalance0702           1.0
+    x070802   NodeBalance0802          -1.0   Capacity0708           1.0
+    x070803   Total_Cost         100.0   NodeBalance0703           1.0
+    x070803   NodeBalance0803          -1.0   Capacity0708           1.0
+    x070804   Total_Cost         100.0   NodeBalance0704           1.0
+    x070804   NodeBalance0804          -1.0   Capacity0708           1.0
+    x070805   Total_Cost         100.0   NodeBalance0705           1.0
+    x070805   NodeBalance0805          -1.0   Capacity0708           1.0
+    x070806   Total_Cost         100.0   NodeBalance0706           1.0
+    x070806   NodeBalance0806          -1.0   Capacity0708           1.0
+    x070807   Total_Cost         100.0   NodeBalance0707           1.0
+    x070807   NodeBalance0807          -1.0   Capacity0708           1.0
+    x070808   Total_Cost         100.0   NodeBalance0708           1.0
+    x070808   NodeBalance0808          -1.0   Capacity0708           1.0
+    x070809   Total_Cost         100.0   NodeBalance0709           1.0
+    x070809   NodeBalance0809          -1.0   Capacity0708           1.0
+    x070810   Total_Cost         100.0   NodeBalance0710           1.0
+    x070810   NodeBalance0810          -1.0   Capacity0708           1.0
+    x070811   Total_Cost         100.0   NodeBalance0711           1.0
+    x070811   NodeBalance0811          -1.0   Capacity0708           1.0
+    x070812   Total_Cost         100.0   NodeBalance0712           1.0
+    x070812   NodeBalance0812          -1.0   Capacity0708           1.0
+    x070813   Total_Cost         100.0   NodeBalance0713           1.0
+    x070813   NodeBalance0813          -1.0   Capacity0708           1.0
+    x070814   Total_Cost         100.0   NodeBalance0714           1.0
+    x070814   NodeBalance0814          -1.0   Capacity0708           1.0
+    x070815   Total_Cost         100.0   NodeBalance0715           1.0
+    x070815   NodeBalance0815          -1.0   Capacity0708           1.0
+    x070816   Total_Cost         100.0   NodeBalance0716           1.0
+    x070816   NodeBalance0816          -1.0   Capacity0708           1.0
+    x070817   Total_Cost         100.0   NodeBalance0717           1.0
+    x070817   NodeBalance0817          -1.0   Capacity0708           1.0
+    x070818   Total_Cost         100.0   NodeBalance0718           1.0
+    x070818   NodeBalance0818          -1.0   Capacity0708           1.0
+    x070819   Total_Cost         100.0   NodeBalance0719           1.0
+    x070819   NodeBalance0819          -1.0   Capacity0708           1.0
+    x070820   Total_Cost         100.0   NodeBalance0720           1.0
+    x070820   NodeBalance0820          -1.0   Capacity0708           1.0
+    x070821   Total_Cost         100.0   NodeBalance0721           1.0
+    x070821   NodeBalance0821          -1.0   Capacity0708           1.0
+    x070822   Total_Cost         100.0   NodeBalance0722           1.0
+    x070822   NodeBalance0822          -1.0   Capacity0708           1.0
+    x070823   Total_Cost         100.0   NodeBalance0723           1.0
+    x070823   NodeBalance0823          -1.0   Capacity0708           1.0
+    x070824   Total_Cost         100.0   NodeBalance0724           1.0
+    x070824   NodeBalance0824          -1.0   Capacity0708           1.0
+    x070825   Total_Cost         100.0   NodeBalance0725           1.0
+    x070825   NodeBalance0825          -1.0   Capacity0708           1.0
+    x070826   Total_Cost         100.0   NodeBalance0726           1.0
+    x070826   NodeBalance0826          -1.0   Capacity0708           1.0
+    x070827   Total_Cost         100.0   NodeBalance0727           1.0
+    x070827   NodeBalance0827          -1.0   Capacity0708           1.0
+    x070828   Total_Cost         100.0   NodeBalance0728           1.0
+    x070828   NodeBalance0828          -1.0   Capacity0708           1.0
+    x070829   Total_Cost         100.0   NodeBalance0729           1.0
+    x070829   NodeBalance0829          -1.0   Capacity0708           1.0
+    x070830   Total_Cost         100.0   NodeBalance0730           1.0
+    x070830   NodeBalance0830          -1.0   Capacity0708           1.0
+    x070831   Total_Cost         100.0   NodeBalance0731           1.0
+    x070831   NodeBalance0831          -1.0   Capacity0708           1.0
+    x070832   Total_Cost         100.0   NodeBalance0732           1.0
+    x070832   NodeBalance0832          -1.0   Capacity0708           1.0
+    x070833   Total_Cost         100.0   NodeBalance0733           1.0
+    x070833   NodeBalance0833          -1.0   Capacity0708           1.0
+    x070834   Total_Cost         100.0   NodeBalance0734           1.0
+    x070834   NodeBalance0834          -1.0   Capacity0708           1.0
+    x070835   Total_Cost         100.0   NodeBalance0735           1.0
+    x070835   NodeBalance0835          -1.0   Capacity0708           1.0
+    x070836   Total_Cost         100.0   NodeBalance0736           1.0
+    x070836   NodeBalance0836          -1.0   Capacity0708           1.0
+    x070837   Total_Cost         100.0   NodeBalance0737           1.0
+    x070837   NodeBalance0837          -1.0   Capacity0708           1.0
+    x070838   Total_Cost         100.0   NodeBalance0738           1.0
+    x070838   NodeBalance0838          -1.0   Capacity0708           1.0
+    x070839   Total_Cost         100.0   NodeBalance0739           1.0
+    x070839   NodeBalance0839          -1.0   Capacity0708           1.0
+    x070840   Total_Cost         100.0   NodeBalance0740           1.0
+    x070840   NodeBalance0840          -1.0   Capacity0708           1.0
+    x070901   Total_Cost          22.0   NodeBalance0701           1.0
+    x070901   NodeBalance0901          -1.0   Capacity0709           1.0
+    x070902   Total_Cost          22.0   NodeBalance0702           1.0
+    x070902   NodeBalance0902          -1.0   Capacity0709           1.0
+    x070903   Total_Cost          22.0   NodeBalance0703           1.0
+    x070903   NodeBalance0903          -1.0   Capacity0709           1.0
+    x070904   Total_Cost          22.0   NodeBalance0704           1.0
+    x070904   NodeBalance0904          -1.0   Capacity0709           1.0
+    x070905   Total_Cost          22.0   NodeBalance0705           1.0
+    x070905   NodeBalance0905          -1.0   Capacity0709           1.0
+    x070906   Total_Cost          22.0   NodeBalance0706           1.0
+    x070906   NodeBalance0906          -1.0   Capacity0709           1.0
+    x070907   Total_Cost          22.0   NodeBalance0707           1.0
+    x070907   NodeBalance0907          -1.0   Capacity0709           1.0
+    x070908   Total_Cost          22.0   NodeBalance0708           1.0
+    x070908   NodeBalance0908          -1.0   Capacity0709           1.0
+    x070909   Total_Cost          22.0   NodeBalance0709           1.0
+    x070909   NodeBalance0909          -1.0   Capacity0709           1.0
+    x070910   Total_Cost          22.0   NodeBalance0710           1.0
+    x070910   NodeBalance0910          -1.0   Capacity0709           1.0
+    x070911   Total_Cost          22.0   NodeBalance0711           1.0
+    x070911   NodeBalance0911          -1.0   Capacity0709           1.0
+    x070912   Total_Cost          22.0   NodeBalance0712           1.0
+    x070912   NodeBalance0912          -1.0   Capacity0709           1.0
+    x070913   Total_Cost          22.0   NodeBalance0713           1.0
+    x070913   NodeBalance0913          -1.0   Capacity0709           1.0
+    x070914   Total_Cost          22.0   NodeBalance0714           1.0
+    x070914   NodeBalance0914          -1.0   Capacity0709           1.0
+    x070915   Total_Cost          22.0   NodeBalance0715           1.0
+    x070915   NodeBalance0915          -1.0   Capacity0709           1.0
+    x070916   Total_Cost          22.0   NodeBalance0716           1.0
+    x070916   NodeBalance0916          -1.0   Capacity0709           1.0
+    x070917   Total_Cost          22.0   NodeBalance0717           1.0
+    x070917   NodeBalance0917          -1.0   Capacity0709           1.0
+    x070918   Total_Cost          22.0   NodeBalance0718           1.0
+    x070918   NodeBalance0918          -1.0   Capacity0709           1.0
+    x070919   Total_Cost          22.0   NodeBalance0719           1.0
+    x070919   NodeBalance0919          -1.0   Capacity0709           1.0
+    x070920   Total_Cost          22.0   NodeBalance0720           1.0
+    x070920   NodeBalance0920          -1.0   Capacity0709           1.0
+    x070921   Total_Cost          22.0   NodeBalance0721           1.0
+    x070921   NodeBalance0921          -1.0   Capacity0709           1.0
+    x070922   Total_Cost          22.0   NodeBalance0722           1.0
+    x070922   NodeBalance0922          -1.0   Capacity0709           1.0
+    x070923   Total_Cost          22.0   NodeBalance0723           1.0
+    x070923   NodeBalance0923          -1.0   Capacity0709           1.0
+    x070924   Total_Cost          22.0   NodeBalance0724           1.0
+    x070924   NodeBalance0924          -1.0   Capacity0709           1.0
+    x070925   Total_Cost          22.0   NodeBalance0725           1.0
+    x070925   NodeBalance0925          -1.0   Capacity0709           1.0
+    x070926   Total_Cost          22.0   NodeBalance0726           1.0
+    x070926   NodeBalance0926          -1.0   Capacity0709           1.0
+    x070927   Total_Cost          22.0   NodeBalance0727           1.0
+    x070927   NodeBalance0927          -1.0   Capacity0709           1.0
+    x070928   Total_Cost          22.0   NodeBalance0728           1.0
+    x070928   NodeBalance0928          -1.0   Capacity0709           1.0
+    x070929   Total_Cost          22.0   NodeBalance0729           1.0
+    x070929   NodeBalance0929          -1.0   Capacity0709           1.0
+    x070930   Total_Cost          22.0   NodeBalance0730           1.0
+    x070930   NodeBalance0930          -1.0   Capacity0709           1.0
+    x070931   Total_Cost          22.0   NodeBalance0731           1.0
+    x070931   NodeBalance0931          -1.0   Capacity0709           1.0
+    x070932   Total_Cost          22.0   NodeBalance0732           1.0
+    x070932   NodeBalance0932          -1.0   Capacity0709           1.0
+    x070933   Total_Cost          22.0   NodeBalance0733           1.0
+    x070933   NodeBalance0933          -1.0   Capacity0709           1.0
+    x070934   Total_Cost          22.0   NodeBalance0734           1.0
+    x070934   NodeBalance0934          -1.0   Capacity0709           1.0
+    x070935   Total_Cost          22.0   NodeBalance0735           1.0
+    x070935   NodeBalance0935          -1.0   Capacity0709           1.0
+    x070936   Total_Cost          22.0   NodeBalance0736           1.0
+    x070936   NodeBalance0936          -1.0   Capacity0709           1.0
+    x070937   Total_Cost          22.0   NodeBalance0737           1.0
+    x070937   NodeBalance0937          -1.0   Capacity0709           1.0
+    x070938   Total_Cost          22.0   NodeBalance0738           1.0
+    x070938   NodeBalance0938          -1.0   Capacity0709           1.0
+    x070939   Total_Cost          22.0   NodeBalance0739           1.0
+    x070939   NodeBalance0939          -1.0   Capacity0709           1.0
+    x070940   Total_Cost          22.0   NodeBalance0740           1.0
+    x070940   NodeBalance0940          -1.0   Capacity0709           1.0
+    x071301   Total_Cost          36.0   NodeBalance0701           1.0
+    x071301   NodeBalance1301          -1.0   Capacity0713           1.0
+    x071302   Total_Cost          36.0   NodeBalance0702           1.0
+    x071302   NodeBalance1302          -1.0   Capacity0713           1.0
+    x071303   Total_Cost          36.0   NodeBalance0703           1.0
+    x071303   NodeBalance1303          -1.0   Capacity0713           1.0
+    x071304   Total_Cost          36.0   NodeBalance0704           1.0
+    x071304   NodeBalance1304          -1.0   Capacity0713           1.0
+    x071305   Total_Cost          36.0   NodeBalance0705           1.0
+    x071305   NodeBalance1305          -1.0   Capacity0713           1.0
+    x071306   Total_Cost          36.0   NodeBalance0706           1.0
+    x071306   NodeBalance1306          -1.0   Capacity0713           1.0
+    x071307   Total_Cost          36.0   NodeBalance0707           1.0
+    x071307   NodeBalance1307          -1.0   Capacity0713           1.0
+    x071308   Total_Cost          36.0   NodeBalance0708           1.0
+    x071308   NodeBalance1308          -1.0   Capacity0713           1.0
+    x071309   Total_Cost          36.0   NodeBalance0709           1.0
+    x071309   NodeBalance1309          -1.0   Capacity0713           1.0
+    x071310   Total_Cost          36.0   NodeBalance0710           1.0
+    x071310   NodeBalance1310          -1.0   Capacity0713           1.0
+    x071311   Total_Cost          36.0   NodeBalance0711           1.0
+    x071311   NodeBalance1311          -1.0   Capacity0713           1.0
+    x071312   Total_Cost          36.0   NodeBalance0712           1.0
+    x071312   NodeBalance1312          -1.0   Capacity0713           1.0
+    x071313   Total_Cost          36.0   NodeBalance0713           1.0
+    x071313   NodeBalance1313          -1.0   Capacity0713           1.0
+    x071314   Total_Cost          36.0   NodeBalance0714           1.0
+    x071314   NodeBalance1314          -1.0   Capacity0713           1.0
+    x071315   Total_Cost          36.0   NodeBalance0715           1.0
+    x071315   NodeBalance1315          -1.0   Capacity0713           1.0
+    x071316   Total_Cost          36.0   NodeBalance0716           1.0
+    x071316   NodeBalance1316          -1.0   Capacity0713           1.0
+    x071317   Total_Cost          36.0   NodeBalance0717           1.0
+    x071317   NodeBalance1317          -1.0   Capacity0713           1.0
+    x071318   Total_Cost          36.0   NodeBalance0718           1.0
+    x071318   NodeBalance1318          -1.0   Capacity0713           1.0
+    x071319   Total_Cost          36.0   NodeBalance0719           1.0
+    x071319   NodeBalance1319          -1.0   Capacity0713           1.0
+    x071320   Total_Cost          36.0   NodeBalance0720           1.0
+    x071320   NodeBalance1320          -1.0   Capacity0713           1.0
+    x071321   Total_Cost          36.0   NodeBalance0721           1.0
+    x071321   NodeBalance1321          -1.0   Capacity0713           1.0
+    x071322   Total_Cost          36.0   NodeBalance0722           1.0
+    x071322   NodeBalance1322          -1.0   Capacity0713           1.0
+    x071323   Total_Cost          36.0   NodeBalance0723           1.0
+    x071323   NodeBalance1323          -1.0   Capacity0713           1.0
+    x071324   Total_Cost          36.0   NodeBalance0724           1.0
+    x071324   NodeBalance1324          -1.0   Capacity0713           1.0
+    x071325   Total_Cost          36.0   NodeBalance0725           1.0
+    x071325   NodeBalance1325          -1.0   Capacity0713           1.0
+    x071326   Total_Cost          36.0   NodeBalance0726           1.0
+    x071326   NodeBalance1326          -1.0   Capacity0713           1.0
+    x071327   Total_Cost          36.0   NodeBalance0727           1.0
+    x071327   NodeBalance1327          -1.0   Capacity0713           1.0
+    x071328   Total_Cost          36.0   NodeBalance0728           1.0
+    x071328   NodeBalance1328          -1.0   Capacity0713           1.0
+    x071329   Total_Cost          36.0   NodeBalance0729           1.0
+    x071329   NodeBalance1329          -1.0   Capacity0713           1.0
+    x071330   Total_Cost          36.0   NodeBalance0730           1.0
+    x071330   NodeBalance1330          -1.0   Capacity0713           1.0
+    x071331   Total_Cost          36.0   NodeBalance0731           1.0
+    x071331   NodeBalance1331          -1.0   Capacity0713           1.0
+    x071332   Total_Cost          36.0   NodeBalance0732           1.0
+    x071332   NodeBalance1332          -1.0   Capacity0713           1.0
+    x071333   Total_Cost          36.0   NodeBalance0733           1.0
+    x071333   NodeBalance1333          -1.0   Capacity0713           1.0
+    x071334   Total_Cost          36.0   NodeBalance0734           1.0
+    x071334   NodeBalance1334          -1.0   Capacity0713           1.0
+    x071335   Total_Cost          36.0   NodeBalance0735           1.0
+    x071335   NodeBalance1335          -1.0   Capacity0713           1.0
+    x071336   Total_Cost          36.0   NodeBalance0736           1.0
+    x071336   NodeBalance1336          -1.0   Capacity0713           1.0
+    x071337   Total_Cost          36.0   NodeBalance0737           1.0
+    x071337   NodeBalance1337          -1.0   Capacity0713           1.0
+    x071338   Total_Cost          36.0   NodeBalance0738           1.0
+    x071338   NodeBalance1338          -1.0   Capacity0713           1.0
+    x071339   Total_Cost          36.0   NodeBalance0739           1.0
+    x071339   NodeBalance1339          -1.0   Capacity0713           1.0
+    x071340   Total_Cost          36.0   NodeBalance0740           1.0
+    x071340   NodeBalance1340          -1.0   Capacity0713           1.0
+    x071801   Total_Cost          27.0   NodeBalance0701           1.0
+    x071801   NodeBalance1801          -1.0   Capacity0718           1.0
+    x071802   Total_Cost          27.0   NodeBalance0702           1.0
+    x071802   NodeBalance1802          -1.0   Capacity0718           1.0
+    x071803   Total_Cost          27.0   NodeBalance0703           1.0
+    x071803   NodeBalance1803          -1.0   Capacity0718           1.0
+    x071804   Total_Cost          27.0   NodeBalance0704           1.0
+    x071804   NodeBalance1804          -1.0   Capacity0718           1.0
+    x071805   Total_Cost          27.0   NodeBalance0705           1.0
+    x071805   NodeBalance1805          -1.0   Capacity0718           1.0
+    x071806   Total_Cost          27.0   NodeBalance0706           1.0
+    x071806   NodeBalance1806          -1.0   Capacity0718           1.0
+    x071807   Total_Cost          27.0   NodeBalance0707           1.0
+    x071807   NodeBalance1807          -1.0   Capacity0718           1.0
+    x071808   Total_Cost          27.0   NodeBalance0708           1.0
+    x071808   NodeBalance1808          -1.0   Capacity0718           1.0
+    x071809   Total_Cost          27.0   NodeBalance0709           1.0
+    x071809   NodeBalance1809          -1.0   Capacity0718           1.0
+    x071810   Total_Cost          27.0   NodeBalance0710           1.0
+    x071810   NodeBalance1810          -1.0   Capacity0718           1.0
+    x071811   Total_Cost          27.0   NodeBalance0711           1.0
+    x071811   NodeBalance1811          -1.0   Capacity0718           1.0
+    x071812   Total_Cost          27.0   NodeBalance0712           1.0
+    x071812   NodeBalance1812          -1.0   Capacity0718           1.0
+    x071813   Total_Cost          27.0   NodeBalance0713           1.0
+    x071813   NodeBalance1813          -1.0   Capacity0718           1.0
+    x071814   Total_Cost          27.0   NodeBalance0714           1.0
+    x071814   NodeBalance1814          -1.0   Capacity0718           1.0
+    x071815   Total_Cost          27.0   NodeBalance0715           1.0
+    x071815   NodeBalance1815          -1.0   Capacity0718           1.0
+    x071816   Total_Cost          27.0   NodeBalance0716           1.0
+    x071816   NodeBalance1816          -1.0   Capacity0718           1.0
+    x071817   Total_Cost          27.0   NodeBalance0717           1.0
+    x071817   NodeBalance1817          -1.0   Capacity0718           1.0
+    x071818   Total_Cost          27.0   NodeBalance0718           1.0
+    x071818   NodeBalance1818          -1.0   Capacity0718           1.0
+    x071819   Total_Cost          27.0   NodeBalance0719           1.0
+    x071819   NodeBalance1819          -1.0   Capacity0718           1.0
+    x071820   Total_Cost          27.0   NodeBalance0720           1.0
+    x071820   NodeBalance1820          -1.0   Capacity0718           1.0
+    x071821   Total_Cost          27.0   NodeBalance0721           1.0
+    x071821   NodeBalance1821          -1.0   Capacity0718           1.0
+    x071822   Total_Cost          27.0   NodeBalance0722           1.0
+    x071822   NodeBalance1822          -1.0   Capacity0718           1.0
+    x071823   Total_Cost          27.0   NodeBalance0723           1.0
+    x071823   NodeBalance1823          -1.0   Capacity0718           1.0
+    x071824   Total_Cost          27.0   NodeBalance0724           1.0
+    x071824   NodeBalance1824          -1.0   Capacity0718           1.0
+    x071825   Total_Cost          27.0   NodeBalance0725           1.0
+    x071825   NodeBalance1825          -1.0   Capacity0718           1.0
+    x071826   Total_Cost          27.0   NodeBalance0726           1.0
+    x071826   NodeBalance1826          -1.0   Capacity0718           1.0
+    x071827   Total_Cost          27.0   NodeBalance0727           1.0
+    x071827   NodeBalance1827          -1.0   Capacity0718           1.0
+    x071828   Total_Cost          27.0   NodeBalance0728           1.0
+    x071828   NodeBalance1828          -1.0   Capacity0718           1.0
+    x071829   Total_Cost          27.0   NodeBalance0729           1.0
+    x071829   NodeBalance1829          -1.0   Capacity0718           1.0
+    x071830   Total_Cost          27.0   NodeBalance0730           1.0
+    x071830   NodeBalance1830          -1.0   Capacity0718           1.0
+    x071831   Total_Cost          27.0   NodeBalance0731           1.0
+    x071831   NodeBalance1831          -1.0   Capacity0718           1.0
+    x071832   Total_Cost          27.0   NodeBalance0732           1.0
+    x071832   NodeBalance1832          -1.0   Capacity0718           1.0
+    x071833   Total_Cost          27.0   NodeBalance0733           1.0
+    x071833   NodeBalance1833          -1.0   Capacity0718           1.0
+    x071834   Total_Cost          27.0   NodeBalance0734           1.0
+    x071834   NodeBalance1834          -1.0   Capacity0718           1.0
+    x071835   Total_Cost          27.0   NodeBalance0735           1.0
+    x071835   NodeBalance1835          -1.0   Capacity0718           1.0
+    x071836   Total_Cost          27.0   NodeBalance0736           1.0
+    x071836   NodeBalance1836          -1.0   Capacity0718           1.0
+    x071837   Total_Cost          27.0   NodeBalance0737           1.0
+    x071837   NodeBalance1837          -1.0   Capacity0718           1.0
+    x071838   Total_Cost          27.0   NodeBalance0738           1.0
+    x071838   NodeBalance1838          -1.0   Capacity0718           1.0
+    x071839   Total_Cost          27.0   NodeBalance0739           1.0
+    x071839   NodeBalance1839          -1.0   Capacity0718           1.0
+    x071840   Total_Cost          27.0   NodeBalance0740           1.0
+    x071840   NodeBalance1840          -1.0   Capacity0718           1.0
+    x071901   Total_Cost          32.0   NodeBalance0701           1.0
+    x071901   NodeBalance1901          -1.0   Capacity0719           1.0
+    x071902   Total_Cost          32.0   NodeBalance0702           1.0
+    x071902   NodeBalance1902          -1.0   Capacity0719           1.0
+    x071903   Total_Cost          32.0   NodeBalance0703           1.0
+    x071903   NodeBalance1903          -1.0   Capacity0719           1.0
+    x071904   Total_Cost          32.0   NodeBalance0704           1.0
+    x071904   NodeBalance1904          -1.0   Capacity0719           1.0
+    x071905   Total_Cost          32.0   NodeBalance0705           1.0
+    x071905   NodeBalance1905          -1.0   Capacity0719           1.0
+    x071906   Total_Cost          32.0   NodeBalance0706           1.0
+    x071906   NodeBalance1906          -1.0   Capacity0719           1.0
+    x071907   Total_Cost          32.0   NodeBalance0707           1.0
+    x071907   NodeBalance1907          -1.0   Capacity0719           1.0
+    x071908   Total_Cost          32.0   NodeBalance0708           1.0
+    x071908   NodeBalance1908          -1.0   Capacity0719           1.0
+    x071909   Total_Cost          32.0   NodeBalance0709           1.0
+    x071909   NodeBalance1909          -1.0   Capacity0719           1.0
+    x071910   Total_Cost          32.0   NodeBalance0710           1.0
+    x071910   NodeBalance1910          -1.0   Capacity0719           1.0
+    x071911   Total_Cost          32.0   NodeBalance0711           1.0
+    x071911   NodeBalance1911          -1.0   Capacity0719           1.0
+    x071912   Total_Cost          32.0   NodeBalance0712           1.0
+    x071912   NodeBalance1912          -1.0   Capacity0719           1.0
+    x071913   Total_Cost          32.0   NodeBalance0713           1.0
+    x071913   NodeBalance1913          -1.0   Capacity0719           1.0
+    x071914   Total_Cost          32.0   NodeBalance0714           1.0
+    x071914   NodeBalance1914          -1.0   Capacity0719           1.0
+    x071915   Total_Cost          32.0   NodeBalance0715           1.0
+    x071915   NodeBalance1915          -1.0   Capacity0719           1.0
+    x071916   Total_Cost          32.0   NodeBalance0716           1.0
+    x071916   NodeBalance1916          -1.0   Capacity0719           1.0
+    x071917   Total_Cost          32.0   NodeBalance0717           1.0
+    x071917   NodeBalance1917          -1.0   Capacity0719           1.0
+    x071918   Total_Cost          32.0   NodeBalance0718           1.0
+    x071918   NodeBalance1918          -1.0   Capacity0719           1.0
+    x071919   Total_Cost          32.0   NodeBalance0719           1.0
+    x071919   NodeBalance1919          -1.0   Capacity0719           1.0
+    x071920   Total_Cost          32.0   NodeBalance0720           1.0
+    x071920   NodeBalance1920          -1.0   Capacity0719           1.0
+    x071921   Total_Cost          32.0   NodeBalance0721           1.0
+    x071921   NodeBalance1921          -1.0   Capacity0719           1.0
+    x071922   Total_Cost          32.0   NodeBalance0722           1.0
+    x071922   NodeBalance1922          -1.0   Capacity0719           1.0
+    x071923   Total_Cost          32.0   NodeBalance0723           1.0
+    x071923   NodeBalance1923          -1.0   Capacity0719           1.0
+    x071924   Total_Cost          32.0   NodeBalance0724           1.0
+    x071924   NodeBalance1924          -1.0   Capacity0719           1.0
+    x071925   Total_Cost          32.0   NodeBalance0725           1.0
+    x071925   NodeBalance1925          -1.0   Capacity0719           1.0
+    x071926   Total_Cost          32.0   NodeBalance0726           1.0
+    x071926   NodeBalance1926          -1.0   Capacity0719           1.0
+    x071927   Total_Cost          32.0   NodeBalance0727           1.0
+    x071927   NodeBalance1927          -1.0   Capacity0719           1.0
+    x071928   Total_Cost          32.0   NodeBalance0728           1.0
+    x071928   NodeBalance1928          -1.0   Capacity0719           1.0
+    x071929   Total_Cost          32.0   NodeBalance0729           1.0
+    x071929   NodeBalance1929          -1.0   Capacity0719           1.0
+    x071930   Total_Cost          32.0   NodeBalance0730           1.0
+    x071930   NodeBalance1930          -1.0   Capacity0719           1.0
+    x071931   Total_Cost          32.0   NodeBalance0731           1.0
+    x071931   NodeBalance1931          -1.0   Capacity0719           1.0
+    x071932   Total_Cost          32.0   NodeBalance0732           1.0
+    x071932   NodeBalance1932          -1.0   Capacity0719           1.0
+    x071933   Total_Cost          32.0   NodeBalance0733           1.0
+    x071933   NodeBalance1933          -1.0   Capacity0719           1.0
+    x071934   Total_Cost          32.0   NodeBalance0734           1.0
+    x071934   NodeBalance1934          -1.0   Capacity0719           1.0
+    x071935   Total_Cost          32.0   NodeBalance0735           1.0
+    x071935   NodeBalance1935          -1.0   Capacity0719           1.0
+    x071936   Total_Cost          32.0   NodeBalance0736           1.0
+    x071936   NodeBalance1936          -1.0   Capacity0719           1.0
+    x071937   Total_Cost          32.0   NodeBalance0737           1.0
+    x071937   NodeBalance1937          -1.0   Capacity0719           1.0
+    x071938   Total_Cost          32.0   NodeBalance0738           1.0
+    x071938   NodeBalance1938          -1.0   Capacity0719           1.0
+    x071939   Total_Cost          32.0   NodeBalance0739           1.0
+    x071939   NodeBalance1939          -1.0   Capacity0719           1.0
+    x071940   Total_Cost          32.0   NodeBalance0740           1.0
+    x071940   NodeBalance1940          -1.0   Capacity0719           1.0
+    x080501   Total_Cost          77.0   NodeBalance0501          -1.0
+    x080501   NodeBalance0801           1.0   Capacity0805           1.0
+    x080502   Total_Cost          77.0   NodeBalance0502          -1.0
+    x080502   NodeBalance0802           1.0   Capacity0805           1.0
+    x080503   Total_Cost          77.0   NodeBalance0503          -1.0
+    x080503   NodeBalance0803           1.0   Capacity0805           1.0
+    x080504   Total_Cost          77.0   NodeBalance0504          -1.0
+    x080504   NodeBalance0804           1.0   Capacity0805           1.0
+    x080505   Total_Cost          77.0   NodeBalance0505          -1.0
+    x080505   NodeBalance0805           1.0   Capacity0805           1.0
+    x080506   Total_Cost          77.0   NodeBalance0506          -1.0
+    x080506   NodeBalance0806           1.0   Capacity0805           1.0
+    x080507   Total_Cost          77.0   NodeBalance0507          -1.0
+    x080507   NodeBalance0807           1.0   Capacity0805           1.0
+    x080508   Total_Cost          77.0   NodeBalance0508          -1.0
+    x080508   NodeBalance0808           1.0   Capacity0805           1.0
+    x080509   Total_Cost          77.0   NodeBalance0509          -1.0
+    x080509   NodeBalance0809           1.0   Capacity0805           1.0
+    x080510   Total_Cost          77.0   NodeBalance0510          -1.0
+    x080510   NodeBalance0810           1.0   Capacity0805           1.0
+    x080511   Total_Cost          77.0   NodeBalance0511          -1.0
+    x080511   NodeBalance0811           1.0   Capacity0805           1.0
+    x080512   Total_Cost          77.0   NodeBalance0512          -1.0
+    x080512   NodeBalance0812           1.0   Capacity0805           1.0
+    x080513   Total_Cost          77.0   NodeBalance0513          -1.0
+    x080513   NodeBalance0813           1.0   Capacity0805           1.0
+    x080514   Total_Cost          77.0   NodeBalance0514          -1.0
+    x080514   NodeBalance0814           1.0   Capacity0805           1.0
+    x080515   Total_Cost          77.0   NodeBalance0515          -1.0
+    x080515   NodeBalance0815           1.0   Capacity0805           1.0
+    x080516   Total_Cost          77.0   NodeBalance0516          -1.0
+    x080516   NodeBalance0816           1.0   Capacity0805           1.0
+    x080517   Total_Cost          77.0   NodeBalance0517          -1.0
+    x080517   NodeBalance0817           1.0   Capacity0805           1.0
+    x080518   Total_Cost          77.0   NodeBalance0518          -1.0
+    x080518   NodeBalance0818           1.0   Capacity0805           1.0
+    x080519   Total_Cost          77.0   NodeBalance0519          -1.0
+    x080519   NodeBalance0819           1.0   Capacity0805           1.0
+    x080520   Total_Cost          77.0   NodeBalance0520          -1.0
+    x080520   NodeBalance0820           1.0   Capacity0805           1.0
+    x080521   Total_Cost          77.0   NodeBalance0521          -1.0
+    x080521   NodeBalance0821           1.0   Capacity0805           1.0
+    x080522   Total_Cost          77.0   NodeBalance0522          -1.0
+    x080522   NodeBalance0822           1.0   Capacity0805           1.0
+    x080523   Total_Cost          77.0   NodeBalance0523          -1.0
+    x080523   NodeBalance0823           1.0   Capacity0805           1.0
+    x080524   Total_Cost          77.0   NodeBalance0524          -1.0
+    x080524   NodeBalance0824           1.0   Capacity0805           1.0
+    x080525   Total_Cost          77.0   NodeBalance0525          -1.0
+    x080525   NodeBalance0825           1.0   Capacity0805           1.0
+    x080526   Total_Cost          77.0   NodeBalance0526          -1.0
+    x080526   NodeBalance0826           1.0   Capacity0805           1.0
+    x080527   Total_Cost          77.0   NodeBalance0527          -1.0
+    x080527   NodeBalance0827           1.0   Capacity0805           1.0
+    x080528   Total_Cost          77.0   NodeBalance0528          -1.0
+    x080528   NodeBalance0828           1.0   Capacity0805           1.0
+    x080529   Total_Cost          77.0   NodeBalance0529          -1.0
+    x080529   NodeBalance0829           1.0   Capacity0805           1.0
+    x080530   Total_Cost          77.0   NodeBalance0530          -1.0
+    x080530   NodeBalance0830           1.0   Capacity0805           1.0
+    x080531   Total_Cost          77.0   NodeBalance0531          -1.0
+    x080531   NodeBalance0831           1.0   Capacity0805           1.0
+    x080532   Total_Cost          77.0   NodeBalance0532          -1.0
+    x080532   NodeBalance0832           1.0   Capacity0805           1.0
+    x080533   Total_Cost          77.0   NodeBalance0533          -1.0
+    x080533   NodeBalance0833           1.0   Capacity0805           1.0
+    x080534   Total_Cost          77.0   NodeBalance0534          -1.0
+    x080534   NodeBalance0834           1.0   Capacity0805           1.0
+    x080535   Total_Cost          77.0   NodeBalance0535          -1.0
+    x080535   NodeBalance0835           1.0   Capacity0805           1.0
+    x080536   Total_Cost          77.0   NodeBalance0536          -1.0
+    x080536   NodeBalance0836           1.0   Capacity0805           1.0
+    x080537   Total_Cost          77.0   NodeBalance0537          -1.0
+    x080537   NodeBalance0837           1.0   Capacity0805           1.0
+    x080538   Total_Cost          77.0   NodeBalance0538          -1.0
+    x080538   NodeBalance0838           1.0   Capacity0805           1.0
+    x080539   Total_Cost          77.0   NodeBalance0539          -1.0
+    x080539   NodeBalance0839           1.0   Capacity0805           1.0
+    x080540   Total_Cost          77.0   NodeBalance0540          -1.0
+    x080540   NodeBalance0840           1.0   Capacity0805           1.0
+    x080601   Total_Cost          33.0   NodeBalance0601          -1.0
+    x080601   NodeBalance0801           1.0   Capacity0806           1.0
+    x080602   Total_Cost          33.0   NodeBalance0602          -1.0
+    x080602   NodeBalance0802           1.0   Capacity0806           1.0
+    x080603   Total_Cost          33.0   NodeBalance0603          -1.0
+    x080603   NodeBalance0803           1.0   Capacity0806           1.0
+    x080604   Total_Cost          33.0   NodeBalance0604          -1.0
+    x080604   NodeBalance0804           1.0   Capacity0806           1.0
+    x080605   Total_Cost          33.0   NodeBalance0605          -1.0
+    x080605   NodeBalance0805           1.0   Capacity0806           1.0
+    x080606   Total_Cost          33.0   NodeBalance0606          -1.0
+    x080606   NodeBalance0806           1.0   Capacity0806           1.0
+    x080607   Total_Cost          33.0   NodeBalance0607          -1.0
+    x080607   NodeBalance0807           1.0   Capacity0806           1.0
+    x080608   Total_Cost          33.0   NodeBalance0608          -1.0
+    x080608   NodeBalance0808           1.0   Capacity0806           1.0
+    x080609   Total_Cost          33.0   NodeBalance0609          -1.0
+    x080609   NodeBalance0809           1.0   Capacity0806           1.0
+    x080610   Total_Cost          33.0   NodeBalance0610          -1.0
+    x080610   NodeBalance0810           1.0   Capacity0806           1.0
+    x080611   Total_Cost          33.0   NodeBalance0611          -1.0
+    x080611   NodeBalance0811           1.0   Capacity0806           1.0
+    x080612   Total_Cost          33.0   NodeBalance0612          -1.0
+    x080612   NodeBalance0812           1.0   Capacity0806           1.0
+    x080613   Total_Cost          33.0   NodeBalance0613          -1.0
+    x080613   NodeBalance0813           1.0   Capacity0806           1.0
+    x080614   Total_Cost          33.0   NodeBalance0614          -1.0
+    x080614   NodeBalance0814           1.0   Capacity0806           1.0
+    x080615   Total_Cost          33.0   NodeBalance0615          -1.0
+    x080615   NodeBalance0815           1.0   Capacity0806           1.0
+    x080616   Total_Cost          33.0   NodeBalance0616          -1.0
+    x080616   NodeBalance0816           1.0   Capacity0806           1.0
+    x080617   Total_Cost          33.0   NodeBalance0617          -1.0
+    x080617   NodeBalance0817           1.0   Capacity0806           1.0
+    x080618   Total_Cost          33.0   NodeBalance0618          -1.0
+    x080618   NodeBalance0818           1.0   Capacity0806           1.0
+    x080619   Total_Cost          33.0   NodeBalance0619          -1.0
+    x080619   NodeBalance0819           1.0   Capacity0806           1.0
+    x080620   Total_Cost          33.0   NodeBalance0620          -1.0
+    x080620   NodeBalance0820           1.0   Capacity0806           1.0
+    x080621   Total_Cost          33.0   NodeBalance0621          -1.0
+    x080621   NodeBalance0821           1.0   Capacity0806           1.0
+    x080622   Total_Cost          33.0   NodeBalance0622          -1.0
+    x080622   NodeBalance0822           1.0   Capacity0806           1.0
+    x080623   Total_Cost          33.0   NodeBalance0623          -1.0
+    x080623   NodeBalance0823           1.0   Capacity0806           1.0
+    x080624   Total_Cost          33.0   NodeBalance0624          -1.0
+    x080624   NodeBalance0824           1.0   Capacity0806           1.0
+    x080625   Total_Cost          33.0   NodeBalance0625          -1.0
+    x080625   NodeBalance0825           1.0   Capacity0806           1.0
+    x080626   Total_Cost          33.0   NodeBalance0626          -1.0
+    x080626   NodeBalance0826           1.0   Capacity0806           1.0
+    x080627   Total_Cost          33.0   NodeBalance0627          -1.0
+    x080627   NodeBalance0827           1.0   Capacity0806           1.0
+    x080628   Total_Cost          33.0   NodeBalance0628          -1.0
+    x080628   NodeBalance0828           1.0   Capacity0806           1.0
+    x080629   Total_Cost          33.0   NodeBalance0629          -1.0
+    x080629   NodeBalance0829           1.0   Capacity0806           1.0
+    x080630   Total_Cost          33.0   NodeBalance0630          -1.0
+    x080630   NodeBalance0830           1.0   Capacity0806           1.0
+    x080631   Total_Cost          33.0   NodeBalance0631          -1.0
+    x080631   NodeBalance0831           1.0   Capacity0806           1.0
+    x080632   Total_Cost          33.0   NodeBalance0632          -1.0
+    x080632   NodeBalance0832           1.0   Capacity0806           1.0
+    x080633   Total_Cost          33.0   NodeBalance0633          -1.0
+    x080633   NodeBalance0833           1.0   Capacity0806           1.0
+    x080634   Total_Cost          33.0   NodeBalance0634          -1.0
+    x080634   NodeBalance0834           1.0   Capacity0806           1.0
+    x080635   Total_Cost          33.0   NodeBalance0635          -1.0
+    x080635   NodeBalance0835           1.0   Capacity0806           1.0
+    x080636   Total_Cost          33.0   NodeBalance0636          -1.0
+    x080636   NodeBalance0836           1.0   Capacity0806           1.0
+    x080637   Total_Cost          33.0   NodeBalance0637          -1.0
+    x080637   NodeBalance0837           1.0   Capacity0806           1.0
+    x080638   Total_Cost          33.0   NodeBalance0638          -1.0
+    x080638   NodeBalance0838           1.0   Capacity0806           1.0
+    x080639   Total_Cost          33.0   NodeBalance0639          -1.0
+    x080639   NodeBalance0839           1.0   Capacity0806           1.0
+    x080640   Total_Cost          33.0   NodeBalance0640          -1.0
+    x080640   NodeBalance0840           1.0   Capacity0806           1.0
+    x080701   Total_Cost          61.0   NodeBalance0701          -1.0
+    x080701   NodeBalance0801           1.0   Capacity0807           1.0
+    x080702   Total_Cost          61.0   NodeBalance0702          -1.0
+    x080702   NodeBalance0802           1.0   Capacity0807           1.0
+    x080703   Total_Cost          61.0   NodeBalance0703          -1.0
+    x080703   NodeBalance0803           1.0   Capacity0807           1.0
+    x080704   Total_Cost          61.0   NodeBalance0704          -1.0
+    x080704   NodeBalance0804           1.0   Capacity0807           1.0
+    x080705   Total_Cost          61.0   NodeBalance0705          -1.0
+    x080705   NodeBalance0805           1.0   Capacity0807           1.0
+    x080706   Total_Cost          61.0   NodeBalance0706          -1.0
+    x080706   NodeBalance0806           1.0   Capacity0807           1.0
+    x080707   Total_Cost          61.0   NodeBalance0707          -1.0
+    x080707   NodeBalance0807           1.0   Capacity0807           1.0
+    x080708   Total_Cost          61.0   NodeBalance0708          -1.0
+    x080708   NodeBalance0808           1.0   Capacity0807           1.0
+    x080709   Total_Cost          61.0   NodeBalance0709          -1.0
+    x080709   NodeBalance0809           1.0   Capacity0807           1.0
+    x080710   Total_Cost          61.0   NodeBalance0710          -1.0
+    x080710   NodeBalance0810           1.0   Capacity0807           1.0
+    x080711   Total_Cost          61.0   NodeBalance0711          -1.0
+    x080711   NodeBalance0811           1.0   Capacity0807           1.0
+    x080712   Total_Cost          61.0   NodeBalance0712          -1.0
+    x080712   NodeBalance0812           1.0   Capacity0807           1.0
+    x080713   Total_Cost          61.0   NodeBalance0713          -1.0
+    x080713   NodeBalance0813           1.0   Capacity0807           1.0
+    x080714   Total_Cost          61.0   NodeBalance0714          -1.0
+    x080714   NodeBalance0814           1.0   Capacity0807           1.0
+    x080715   Total_Cost          61.0   NodeBalance0715          -1.0
+    x080715   NodeBalance0815           1.0   Capacity0807           1.0
+    x080716   Total_Cost          61.0   NodeBalance0716          -1.0
+    x080716   NodeBalance0816           1.0   Capacity0807           1.0
+    x080717   Total_Cost          61.0   NodeBalance0717          -1.0
+    x080717   NodeBalance0817           1.0   Capacity0807           1.0
+    x080718   Total_Cost          61.0   NodeBalance0718          -1.0
+    x080718   NodeBalance0818           1.0   Capacity0807           1.0
+    x080719   Total_Cost          61.0   NodeBalance0719          -1.0
+    x080719   NodeBalance0819           1.0   Capacity0807           1.0
+    x080720   Total_Cost          61.0   NodeBalance0720          -1.0
+    x080720   NodeBalance0820           1.0   Capacity0807           1.0
+    x080721   Total_Cost          61.0   NodeBalance0721          -1.0
+    x080721   NodeBalance0821           1.0   Capacity0807           1.0
+    x080722   Total_Cost          61.0   NodeBalance0722          -1.0
+    x080722   NodeBalance0822           1.0   Capacity0807           1.0
+    x080723   Total_Cost          61.0   NodeBalance0723          -1.0
+    x080723   NodeBalance0823           1.0   Capacity0807           1.0
+    x080724   Total_Cost          61.0   NodeBalance0724          -1.0
+    x080724   NodeBalance0824           1.0   Capacity0807           1.0
+    x080725   Total_Cost          61.0   NodeBalance0725          -1.0
+    x080725   NodeBalance0825           1.0   Capacity0807           1.0
+    x080726   Total_Cost          61.0   NodeBalance0726          -1.0
+    x080726   NodeBalance0826           1.0   Capacity0807           1.0
+    x080727   Total_Cost          61.0   NodeBalance0727          -1.0
+    x080727   NodeBalance0827           1.0   Capacity0807           1.0
+    x080728   Total_Cost          61.0   NodeBalance0728          -1.0
+    x080728   NodeBalance0828           1.0   Capacity0807           1.0
+    x080729   Total_Cost          61.0   NodeBalance0729          -1.0
+    x080729   NodeBalance0829           1.0   Capacity0807           1.0
+    x080730   Total_Cost          61.0   NodeBalance0730          -1.0
+    x080730   NodeBalance0830           1.0   Capacity0807           1.0
+    x080731   Total_Cost          61.0   NodeBalance0731          -1.0
+    x080731   NodeBalance0831           1.0   Capacity0807           1.0
+    x080732   Total_Cost          61.0   NodeBalance0732          -1.0
+    x080732   NodeBalance0832           1.0   Capacity0807           1.0
+    x080733   Total_Cost          61.0   NodeBalance0733          -1.0
+    x080733   NodeBalance0833           1.0   Capacity0807           1.0
+    x080734   Total_Cost          61.0   NodeBalance0734          -1.0
+    x080734   NodeBalance0834           1.0   Capacity0807           1.0
+    x080735   Total_Cost          61.0   NodeBalance0735          -1.0
+    x080735   NodeBalance0835           1.0   Capacity0807           1.0
+    x080736   Total_Cost          61.0   NodeBalance0736          -1.0
+    x080736   NodeBalance0836           1.0   Capacity0807           1.0
+    x080737   Total_Cost          61.0   NodeBalance0737          -1.0
+    x080737   NodeBalance0837           1.0   Capacity0807           1.0
+    x080738   Total_Cost          61.0   NodeBalance0738          -1.0
+    x080738   NodeBalance0838           1.0   Capacity0807           1.0
+    x080739   Total_Cost          61.0   NodeBalance0739          -1.0
+    x080739   NodeBalance0839           1.0   Capacity0807           1.0
+    x080740   Total_Cost          61.0   NodeBalance0740          -1.0
+    x080740   NodeBalance0840           1.0   Capacity0807           1.0
+    x080901   Total_Cost         100.0   NodeBalance0801           1.0
+    x080901   NodeBalance0901          -1.0   Capacity0809           1.0
+    x080902   Total_Cost         100.0   NodeBalance0802           1.0
+    x080902   NodeBalance0902          -1.0   Capacity0809           1.0
+    x080903   Total_Cost         100.0   NodeBalance0803           1.0
+    x080903   NodeBalance0903          -1.0   Capacity0809           1.0
+    x080904   Total_Cost         100.0   NodeBalance0804           1.0
+    x080904   NodeBalance0904          -1.0   Capacity0809           1.0
+    x080905   Total_Cost         100.0   NodeBalance0805           1.0
+    x080905   NodeBalance0905          -1.0   Capacity0809           1.0
+    x080906   Total_Cost         100.0   NodeBalance0806           1.0
+    x080906   NodeBalance0906          -1.0   Capacity0809           1.0
+    x080907   Total_Cost         100.0   NodeBalance0807           1.0
+    x080907   NodeBalance0907          -1.0   Capacity0809           1.0
+    x080908   Total_Cost         100.0   NodeBalance0808           1.0
+    x080908   NodeBalance0908          -1.0   Capacity0809           1.0
+    x080909   Total_Cost         100.0   NodeBalance0809           1.0
+    x080909   NodeBalance0909          -1.0   Capacity0809           1.0
+    x080910   Total_Cost         100.0   NodeBalance0810           1.0
+    x080910   NodeBalance0910          -1.0   Capacity0809           1.0
+    x080911   Total_Cost         100.0   NodeBalance0811           1.0
+    x080911   NodeBalance0911          -1.0   Capacity0809           1.0
+    x080912   Total_Cost         100.0   NodeBalance0812           1.0
+    x080912   NodeBalance0912          -1.0   Capacity0809           1.0
+    x080913   Total_Cost         100.0   NodeBalance0813           1.0
+    x080913   NodeBalance0913          -1.0   Capacity0809           1.0
+    x080914   Total_Cost         100.0   NodeBalance0814           1.0
+    x080914   NodeBalance0914          -1.0   Capacity0809           1.0
+    x080915   Total_Cost         100.0   NodeBalance0815           1.0
+    x080915   NodeBalance0915          -1.0   Capacity0809           1.0
+    x080916   Total_Cost         100.0   NodeBalance0816           1.0
+    x080916   NodeBalance0916          -1.0   Capacity0809           1.0
+    x080917   Total_Cost         100.0   NodeBalance0817           1.0
+    x080917   NodeBalance0917          -1.0   Capacity0809           1.0
+    x080918   Total_Cost         100.0   NodeBalance0818           1.0
+    x080918   NodeBalance0918          -1.0   Capacity0809           1.0
+    x080919   Total_Cost         100.0   NodeBalance0819           1.0
+    x080919   NodeBalance0919          -1.0   Capacity0809           1.0
+    x080920   Total_Cost         100.0   NodeBalance0820           1.0
+    x080920   NodeBalance0920          -1.0   Capacity0809           1.0
+    x080921   Total_Cost         100.0   NodeBalance0821           1.0
+    x080921   NodeBalance0921          -1.0   Capacity0809           1.0
+    x080922   Total_Cost         100.0   NodeBalance0822           1.0
+    x080922   NodeBalance0922          -1.0   Capacity0809           1.0
+    x080923   Total_Cost         100.0   NodeBalance0823           1.0
+    x080923   NodeBalance0923          -1.0   Capacity0809           1.0
+    x080924   Total_Cost         100.0   NodeBalance0824           1.0
+    x080924   NodeBalance0924          -1.0   Capacity0809           1.0
+    x080925   Total_Cost         100.0   NodeBalance0825           1.0
+    x080925   NodeBalance0925          -1.0   Capacity0809           1.0
+    x080926   Total_Cost         100.0   NodeBalance0826           1.0
+    x080926   NodeBalance0926          -1.0   Capacity0809           1.0
+    x080927   Total_Cost         100.0   NodeBalance0827           1.0
+    x080927   NodeBalance0927          -1.0   Capacity0809           1.0
+    x080928   Total_Cost         100.0   NodeBalance0828           1.0
+    x080928   NodeBalance0928          -1.0   Capacity0809           1.0
+    x080929   Total_Cost         100.0   NodeBalance0829           1.0
+    x080929   NodeBalance0929          -1.0   Capacity0809           1.0
+    x080930   Total_Cost         100.0   NodeBalance0830           1.0
+    x080930   NodeBalance0930          -1.0   Capacity0809           1.0
+    x080931   Total_Cost         100.0   NodeBalance0831           1.0
+    x080931   NodeBalance0931          -1.0   Capacity0809           1.0
+    x080932   Total_Cost         100.0   NodeBalance0832           1.0
+    x080932   NodeBalance0932          -1.0   Capacity0809           1.0
+    x080933   Total_Cost         100.0   NodeBalance0833           1.0
+    x080933   NodeBalance0933          -1.0   Capacity0809           1.0
+    x080934   Total_Cost         100.0   NodeBalance0834           1.0
+    x080934   NodeBalance0934          -1.0   Capacity0809           1.0
+    x080935   Total_Cost         100.0   NodeBalance0835           1.0
+    x080935   NodeBalance0935          -1.0   Capacity0809           1.0
+    x080936   Total_Cost         100.0   NodeBalance0836           1.0
+    x080936   NodeBalance0936          -1.0   Capacity0809           1.0
+    x080937   Total_Cost         100.0   NodeBalance0837           1.0
+    x080937   NodeBalance0937          -1.0   Capacity0809           1.0
+    x080938   Total_Cost         100.0   NodeBalance0838           1.0
+    x080938   NodeBalance0938          -1.0   Capacity0809           1.0
+    x080939   Total_Cost         100.0   NodeBalance0839           1.0
+    x080939   NodeBalance0939          -1.0   Capacity0809           1.0
+    x080940   Total_Cost         100.0   NodeBalance0840           1.0
+    x080940   NodeBalance0940          -1.0   Capacity0809           1.0
+    x081001   Total_Cost          18.0   NodeBalance0801           1.0
+    x081001   NodeBalance1001          -1.0   Capacity0810           1.0
+    x081002   Total_Cost          18.0   NodeBalance0802           1.0
+    x081002   NodeBalance1002          -1.0   Capacity0810           1.0
+    x081003   Total_Cost          18.0   NodeBalance0803           1.0
+    x081003   NodeBalance1003          -1.0   Capacity0810           1.0
+    x081004   Total_Cost          18.0   NodeBalance0804           1.0
+    x081004   NodeBalance1004          -1.0   Capacity0810           1.0
+    x081005   Total_Cost          18.0   NodeBalance0805           1.0
+    x081005   NodeBalance1005          -1.0   Capacity0810           1.0
+    x081006   Total_Cost          18.0   NodeBalance0806           1.0
+    x081006   NodeBalance1006          -1.0   Capacity0810           1.0
+    x081007   Total_Cost          18.0   NodeBalance0807           1.0
+    x081007   NodeBalance1007          -1.0   Capacity0810           1.0
+    x081008   Total_Cost          18.0   NodeBalance0808           1.0
+    x081008   NodeBalance1008          -1.0   Capacity0810           1.0
+    x081009   Total_Cost          18.0   NodeBalance0809           1.0
+    x081009   NodeBalance1009          -1.0   Capacity0810           1.0
+    x081010   Total_Cost          18.0   NodeBalance0810           1.0
+    x081010   NodeBalance1010          -1.0   Capacity0810           1.0
+    x081011   Total_Cost          18.0   NodeBalance0811           1.0
+    x081011   NodeBalance1011          -1.0   Capacity0810           1.0
+    x081012   Total_Cost          18.0   NodeBalance0812           1.0
+    x081012   NodeBalance1012          -1.0   Capacity0810           1.0
+    x081013   Total_Cost          18.0   NodeBalance0813           1.0
+    x081013   NodeBalance1013          -1.0   Capacity0810           1.0
+    x081014   Total_Cost          18.0   NodeBalance0814           1.0
+    x081014   NodeBalance1014          -1.0   Capacity0810           1.0
+    x081015   Total_Cost          18.0   NodeBalance0815           1.0
+    x081015   NodeBalance1015          -1.0   Capacity0810           1.0
+    x081016   Total_Cost          18.0   NodeBalance0816           1.0
+    x081016   NodeBalance1016          -1.0   Capacity0810           1.0
+    x081017   Total_Cost          18.0   NodeBalance0817           1.0
+    x081017   NodeBalance1017          -1.0   Capacity0810           1.0
+    x081018   Total_Cost          18.0   NodeBalance0818           1.0
+    x081018   NodeBalance1018          -1.0   Capacity0810           1.0
+    x081019   Total_Cost          18.0   NodeBalance0819           1.0
+    x081019   NodeBalance1019          -1.0   Capacity0810           1.0
+    x081020   Total_Cost          18.0   NodeBalance0820           1.0
+    x081020   NodeBalance1020          -1.0   Capacity0810           1.0
+    x081021   Total_Cost          18.0   NodeBalance0821           1.0
+    x081021   NodeBalance1021          -1.0   Capacity0810           1.0
+    x081022   Total_Cost          18.0   NodeBalance0822           1.0
+    x081022   NodeBalance1022          -1.0   Capacity0810           1.0
+    x081023   Total_Cost          18.0   NodeBalance0823           1.0
+    x081023   NodeBalance1023          -1.0   Capacity0810           1.0
+    x081024   Total_Cost          18.0   NodeBalance0824           1.0
+    x081024   NodeBalance1024          -1.0   Capacity0810           1.0
+    x081025   Total_Cost          18.0   NodeBalance0825           1.0
+    x081025   NodeBalance1025          -1.0   Capacity0810           1.0
+    x081026   Total_Cost          18.0   NodeBalance0826           1.0
+    x081026   NodeBalance1026          -1.0   Capacity0810           1.0
+    x081027   Total_Cost          18.0   NodeBalance0827           1.0
+    x081027   NodeBalance1027          -1.0   Capacity0810           1.0
+    x081028   Total_Cost          18.0   NodeBalance0828           1.0
+    x081028   NodeBalance1028          -1.0   Capacity0810           1.0
+    x081029   Total_Cost          18.0   NodeBalance0829           1.0
+    x081029   NodeBalance1029          -1.0   Capacity0810           1.0
+    x081030   Total_Cost          18.0   NodeBalance0830           1.0
+    x081030   NodeBalance1030          -1.0   Capacity0810           1.0
+    x081031   Total_Cost          18.0   NodeBalance0831           1.0
+    x081031   NodeBalance1031          -1.0   Capacity0810           1.0
+    x081032   Total_Cost          18.0   NodeBalance0832           1.0
+    x081032   NodeBalance1032          -1.0   Capacity0810           1.0
+    x081033   Total_Cost          18.0   NodeBalance0833           1.0
+    x081033   NodeBalance1033          -1.0   Capacity0810           1.0
+    x081034   Total_Cost          18.0   NodeBalance0834           1.0
+    x081034   NodeBalance1034          -1.0   Capacity0810           1.0
+    x081035   Total_Cost          18.0   NodeBalance0835           1.0
+    x081035   NodeBalance1035          -1.0   Capacity0810           1.0
+    x081036   Total_Cost          18.0   NodeBalance0836           1.0
+    x081036   NodeBalance1036          -1.0   Capacity0810           1.0
+    x081037   Total_Cost          18.0   NodeBalance0837           1.0
+    x081037   NodeBalance1037          -1.0   Capacity0810           1.0
+    x081038   Total_Cost          18.0   NodeBalance0838           1.0
+    x081038   NodeBalance1038          -1.0   Capacity0810           1.0
+    x081039   Total_Cost          18.0   NodeBalance0839           1.0
+    x081039   NodeBalance1039          -1.0   Capacity0810           1.0
+    x081040   Total_Cost          18.0   NodeBalance0840           1.0
+    x081040   NodeBalance1040          -1.0   Capacity0810           1.0
+    x081701   Total_Cost          50.0   NodeBalance0801           1.0
+    x081701   NodeBalance1701          -1.0   Capacity0817           1.0
+    x081702   Total_Cost          50.0   NodeBalance0802           1.0
+    x081702   NodeBalance1702          -1.0   Capacity0817           1.0
+    x081703   Total_Cost          50.0   NodeBalance0803           1.0
+    x081703   NodeBalance1703          -1.0   Capacity0817           1.0
+    x081704   Total_Cost          50.0   NodeBalance0804           1.0
+    x081704   NodeBalance1704          -1.0   Capacity0817           1.0
+    x081705   Total_Cost          50.0   NodeBalance0805           1.0
+    x081705   NodeBalance1705          -1.0   Capacity0817           1.0
+    x081706   Total_Cost          50.0   NodeBalance0806           1.0
+    x081706   NodeBalance1706          -1.0   Capacity0817           1.0
+    x081707   Total_Cost          50.0   NodeBalance0807           1.0
+    x081707   NodeBalance1707          -1.0   Capacity0817           1.0
+    x081708   Total_Cost          50.0   NodeBalance0808           1.0
+    x081708   NodeBalance1708          -1.0   Capacity0817           1.0
+    x081709   Total_Cost          50.0   NodeBalance0809           1.0
+    x081709   NodeBalance1709          -1.0   Capacity0817           1.0
+    x081710   Total_Cost          50.0   NodeBalance0810           1.0
+    x081710   NodeBalance1710          -1.0   Capacity0817           1.0
+    x081711   Total_Cost          50.0   NodeBalance0811           1.0
+    x081711   NodeBalance1711          -1.0   Capacity0817           1.0
+    x081712   Total_Cost          50.0   NodeBalance0812           1.0
+    x081712   NodeBalance1712          -1.0   Capacity0817           1.0
+    x081713   Total_Cost          50.0   NodeBalance0813           1.0
+    x081713   NodeBalance1713          -1.0   Capacity0817           1.0
+    x081714   Total_Cost          50.0   NodeBalance0814           1.0
+    x081714   NodeBalance1714          -1.0   Capacity0817           1.0
+    x081715   Total_Cost          50.0   NodeBalance0815           1.0
+    x081715   NodeBalance1715          -1.0   Capacity0817           1.0
+    x081716   Total_Cost          50.0   NodeBalance0816           1.0
+    x081716   NodeBalance1716          -1.0   Capacity0817           1.0
+    x081717   Total_Cost          50.0   NodeBalance0817           1.0
+    x081717   NodeBalance1717          -1.0   Capacity0817           1.0
+    x081718   Total_Cost          50.0   NodeBalance0818           1.0
+    x081718   NodeBalance1718          -1.0   Capacity0817           1.0
+    x081719   Total_Cost          50.0   NodeBalance0819           1.0
+    x081719   NodeBalance1719          -1.0   Capacity0817           1.0
+    x081720   Total_Cost          50.0   NodeBalance0820           1.0
+    x081720   NodeBalance1720          -1.0   Capacity0817           1.0
+    x081721   Total_Cost          50.0   NodeBalance0821           1.0
+    x081721   NodeBalance1721          -1.0   Capacity0817           1.0
+    x081722   Total_Cost          50.0   NodeBalance0822           1.0
+    x081722   NodeBalance1722          -1.0   Capacity0817           1.0
+    x081723   Total_Cost          50.0   NodeBalance0823           1.0
+    x081723   NodeBalance1723          -1.0   Capacity0817           1.0
+    x081724   Total_Cost          50.0   NodeBalance0824           1.0
+    x081724   NodeBalance1724          -1.0   Capacity0817           1.0
+    x081725   Total_Cost          50.0   NodeBalance0825           1.0
+    x081725   NodeBalance1725          -1.0   Capacity0817           1.0
+    x081726   Total_Cost          50.0   NodeBalance0826           1.0
+    x081726   NodeBalance1726          -1.0   Capacity0817           1.0
+    x081727   Total_Cost          50.0   NodeBalance0827           1.0
+    x081727   NodeBalance1727          -1.0   Capacity0817           1.0
+    x081728   Total_Cost          50.0   NodeBalance0828           1.0
+    x081728   NodeBalance1728          -1.0   Capacity0817           1.0
+    x081729   Total_Cost          50.0   NodeBalance0829           1.0
+    x081729   NodeBalance1729          -1.0   Capacity0817           1.0
+    x081730   Total_Cost          50.0   NodeBalance0830           1.0
+    x081730   NodeBalance1730          -1.0   Capacity0817           1.0
+    x081731   Total_Cost          50.0   NodeBalance0831           1.0
+    x081731   NodeBalance1731          -1.0   Capacity0817           1.0
+    x081732   Total_Cost          50.0   NodeBalance0832           1.0
+    x081732   NodeBalance1732          -1.0   Capacity0817           1.0
+    x081733   Total_Cost          50.0   NodeBalance0833           1.0
+    x081733   NodeBalance1733          -1.0   Capacity0817           1.0
+    x081734   Total_Cost          50.0   NodeBalance0834           1.0
+    x081734   NodeBalance1734          -1.0   Capacity0817           1.0
+    x081735   Total_Cost          50.0   NodeBalance0835           1.0
+    x081735   NodeBalance1735          -1.0   Capacity0817           1.0
+    x081736   Total_Cost          50.0   NodeBalance0836           1.0
+    x081736   NodeBalance1736          -1.0   Capacity0817           1.0
+    x081737   Total_Cost          50.0   NodeBalance0837           1.0
+    x081737   NodeBalance1737          -1.0   Capacity0817           1.0
+    x081738   Total_Cost          50.0   NodeBalance0838           1.0
+    x081738   NodeBalance1738          -1.0   Capacity0817           1.0
+    x081739   Total_Cost          50.0   NodeBalance0839           1.0
+    x081739   NodeBalance1739          -1.0   Capacity0817           1.0
+    x081740   Total_Cost          50.0   NodeBalance0840           1.0
+    x081740   NodeBalance1740          -1.0   Capacity0817           1.0
+    x090401   Total_Cost          99.0   NodeBalance0401          -1.0
+    x090401   NodeBalance0901           1.0   Capacity0904           1.0
+    x090402   Total_Cost          99.0   NodeBalance0402          -1.0
+    x090402   NodeBalance0902           1.0   Capacity0904           1.0
+    x090403   Total_Cost          99.0   NodeBalance0403          -1.0
+    x090403   NodeBalance0903           1.0   Capacity0904           1.0
+    x090404   Total_Cost          99.0   NodeBalance0404          -1.0
+    x090404   NodeBalance0904           1.0   Capacity0904           1.0
+    x090405   Total_Cost          99.0   NodeBalance0405          -1.0
+    x090405   NodeBalance0905           1.0   Capacity0904           1.0
+    x090406   Total_Cost          99.0   NodeBalance0406          -1.0
+    x090406   NodeBalance0906           1.0   Capacity0904           1.0
+    x090407   Total_Cost          99.0   NodeBalance0407          -1.0
+    x090407   NodeBalance0907           1.0   Capacity0904           1.0
+    x090408   Total_Cost          99.0   NodeBalance0408          -1.0
+    x090408   NodeBalance0908           1.0   Capacity0904           1.0
+    x090409   Total_Cost          99.0   NodeBalance0409          -1.0
+    x090409   NodeBalance0909           1.0   Capacity0904           1.0
+    x090410   Total_Cost          99.0   NodeBalance0410          -1.0
+    x090410   NodeBalance0910           1.0   Capacity0904           1.0
+    x090411   Total_Cost          99.0   NodeBalance0411          -1.0
+    x090411   NodeBalance0911           1.0   Capacity0904           1.0
+    x090412   Total_Cost          99.0   NodeBalance0412          -1.0
+    x090412   NodeBalance0912           1.0   Capacity0904           1.0
+    x090413   Total_Cost          99.0   NodeBalance0413          -1.0
+    x090413   NodeBalance0913           1.0   Capacity0904           1.0
+    x090414   Total_Cost          99.0   NodeBalance0414          -1.0
+    x090414   NodeBalance0914           1.0   Capacity0904           1.0
+    x090415   Total_Cost          99.0   NodeBalance0415          -1.0
+    x090415   NodeBalance0915           1.0   Capacity0904           1.0
+    x090416   Total_Cost          99.0   NodeBalance0416          -1.0
+    x090416   NodeBalance0916           1.0   Capacity0904           1.0
+    x090417   Total_Cost          99.0   NodeBalance0417          -1.0
+    x090417   NodeBalance0917           1.0   Capacity0904           1.0
+    x090418   Total_Cost          99.0   NodeBalance0418          -1.0
+    x090418   NodeBalance0918           1.0   Capacity0904           1.0
+    x090419   Total_Cost          99.0   NodeBalance0419          -1.0
+    x090419   NodeBalance0919           1.0   Capacity0904           1.0
+    x090420   Total_Cost          99.0   NodeBalance0420          -1.0
+    x090420   NodeBalance0920           1.0   Capacity0904           1.0
+    x090421   Total_Cost          99.0   NodeBalance0421          -1.0
+    x090421   NodeBalance0921           1.0   Capacity0904           1.0
+    x090422   Total_Cost          99.0   NodeBalance0422          -1.0
+    x090422   NodeBalance0922           1.0   Capacity0904           1.0
+    x090423   Total_Cost          99.0   NodeBalance0423          -1.0
+    x090423   NodeBalance0923           1.0   Capacity0904           1.0
+    x090424   Total_Cost          99.0   NodeBalance0424          -1.0
+    x090424   NodeBalance0924           1.0   Capacity0904           1.0
+    x090425   Total_Cost          99.0   NodeBalance0425          -1.0
+    x090425   NodeBalance0925           1.0   Capacity0904           1.0
+    x090426   Total_Cost          99.0   NodeBalance0426          -1.0
+    x090426   NodeBalance0926           1.0   Capacity0904           1.0
+    x090427   Total_Cost          99.0   NodeBalance0427          -1.0
+    x090427   NodeBalance0927           1.0   Capacity0904           1.0
+    x090428   Total_Cost          99.0   NodeBalance0428          -1.0
+    x090428   NodeBalance0928           1.0   Capacity0904           1.0
+    x090429   Total_Cost          99.0   NodeBalance0429          -1.0
+    x090429   NodeBalance0929           1.0   Capacity0904           1.0
+    x090430   Total_Cost          99.0   NodeBalance0430          -1.0
+    x090430   NodeBalance0930           1.0   Capacity0904           1.0
+    x090431   Total_Cost          99.0   NodeBalance0431          -1.0
+    x090431   NodeBalance0931           1.0   Capacity0904           1.0
+    x090432   Total_Cost          99.0   NodeBalance0432          -1.0
+    x090432   NodeBalance0932           1.0   Capacity0904           1.0
+    x090433   Total_Cost          99.0   NodeBalance0433          -1.0
+    x090433   NodeBalance0933           1.0   Capacity0904           1.0
+    x090434   Total_Cost          99.0   NodeBalance0434          -1.0
+    x090434   NodeBalance0934           1.0   Capacity0904           1.0
+    x090435   Total_Cost          99.0   NodeBalance0435          -1.0
+    x090435   NodeBalance0935           1.0   Capacity0904           1.0
+    x090436   Total_Cost          99.0   NodeBalance0436          -1.0
+    x090436   NodeBalance0936           1.0   Capacity0904           1.0
+    x090437   Total_Cost          99.0   NodeBalance0437          -1.0
+    x090437   NodeBalance0937           1.0   Capacity0904           1.0
+    x090438   Total_Cost          99.0   NodeBalance0438          -1.0
+    x090438   NodeBalance0938           1.0   Capacity0904           1.0
+    x090439   Total_Cost          99.0   NodeBalance0439          -1.0
+    x090439   NodeBalance0939           1.0   Capacity0904           1.0
+    x090440   Total_Cost          99.0   NodeBalance0440          -1.0
+    x090440   NodeBalance0940           1.0   Capacity0904           1.0
+    x090601   Total_Cost          60.0   NodeBalance0601          -1.0
+    x090601   NodeBalance0901           1.0   Capacity0906           1.0
+    x090602   Total_Cost          60.0   NodeBalance0602          -1.0
+    x090602   NodeBalance0902           1.0   Capacity0906           1.0
+    x090603   Total_Cost          60.0   NodeBalance0603          -1.0
+    x090603   NodeBalance0903           1.0   Capacity0906           1.0
+    x090604   Total_Cost          60.0   NodeBalance0604          -1.0
+    x090604   NodeBalance0904           1.0   Capacity0906           1.0
+    x090605   Total_Cost          60.0   NodeBalance0605          -1.0
+    x090605   NodeBalance0905           1.0   Capacity0906           1.0
+    x090606   Total_Cost          60.0   NodeBalance0606          -1.0
+    x090606   NodeBalance0906           1.0   Capacity0906           1.0
+    x090607   Total_Cost          60.0   NodeBalance0607          -1.0
+    x090607   NodeBalance0907           1.0   Capacity0906           1.0
+    x090608   Total_Cost          60.0   NodeBalance0608          -1.0
+    x090608   NodeBalance0908           1.0   Capacity0906           1.0
+    x090609   Total_Cost          60.0   NodeBalance0609          -1.0
+    x090609   NodeBalance0909           1.0   Capacity0906           1.0
+    x090610   Total_Cost          60.0   NodeBalance0610          -1.0
+    x090610   NodeBalance0910           1.0   Capacity0906           1.0
+    x090611   Total_Cost          60.0   NodeBalance0611          -1.0
+    x090611   NodeBalance0911           1.0   Capacity0906           1.0
+    x090612   Total_Cost          60.0   NodeBalance0612          -1.0
+    x090612   NodeBalance0912           1.0   Capacity0906           1.0
+    x090613   Total_Cost          60.0   NodeBalance0613          -1.0
+    x090613   NodeBalance0913           1.0   Capacity0906           1.0
+    x090614   Total_Cost          60.0   NodeBalance0614          -1.0
+    x090614   NodeBalance0914           1.0   Capacity0906           1.0
+    x090615   Total_Cost          60.0   NodeBalance0615          -1.0
+    x090615   NodeBalance0915           1.0   Capacity0906           1.0
+    x090616   Total_Cost          60.0   NodeBalance0616          -1.0
+    x090616   NodeBalance0916           1.0   Capacity0906           1.0
+    x090617   Total_Cost          60.0   NodeBalance0617          -1.0
+    x090617   NodeBalance0917           1.0   Capacity0906           1.0
+    x090618   Total_Cost          60.0   NodeBalance0618          -1.0
+    x090618   NodeBalance0918           1.0   Capacity0906           1.0
+    x090619   Total_Cost          60.0   NodeBalance0619          -1.0
+    x090619   NodeBalance0919           1.0   Capacity0906           1.0
+    x090620   Total_Cost          60.0   NodeBalance0620          -1.0
+    x090620   NodeBalance0920           1.0   Capacity0906           1.0
+    x090621   Total_Cost          60.0   NodeBalance0621          -1.0
+    x090621   NodeBalance0921           1.0   Capacity0906           1.0
+    x090622   Total_Cost          60.0   NodeBalance0622          -1.0
+    x090622   NodeBalance0922           1.0   Capacity0906           1.0
+    x090623   Total_Cost          60.0   NodeBalance0623          -1.0
+    x090623   NodeBalance0923           1.0   Capacity0906           1.0
+    x090624   Total_Cost          60.0   NodeBalance0624          -1.0
+    x090624   NodeBalance0924           1.0   Capacity0906           1.0
+    x090625   Total_Cost          60.0   NodeBalance0625          -1.0
+    x090625   NodeBalance0925           1.0   Capacity0906           1.0
+    x090626   Total_Cost          60.0   NodeBalance0626          -1.0
+    x090626   NodeBalance0926           1.0   Capacity0906           1.0
+    x090627   Total_Cost          60.0   NodeBalance0627          -1.0
+    x090627   NodeBalance0927           1.0   Capacity0906           1.0
+    x090628   Total_Cost          60.0   NodeBalance0628          -1.0
+    x090628   NodeBalance0928           1.0   Capacity0906           1.0
+    x090629   Total_Cost          60.0   NodeBalance0629          -1.0
+    x090629   NodeBalance0929           1.0   Capacity0906           1.0
+    x090630   Total_Cost          60.0   NodeBalance0630          -1.0
+    x090630   NodeBalance0930           1.0   Capacity0906           1.0
+    x090631   Total_Cost          60.0   NodeBalance0631          -1.0
+    x090631   NodeBalance0931           1.0   Capacity0906           1.0
+    x090632   Total_Cost          60.0   NodeBalance0632          -1.0
+    x090632   NodeBalance0932           1.0   Capacity0906           1.0
+    x090633   Total_Cost          60.0   NodeBalance0633          -1.0
+    x090633   NodeBalance0933           1.0   Capacity0906           1.0
+    x090634   Total_Cost          60.0   NodeBalance0634          -1.0
+    x090634   NodeBalance0934           1.0   Capacity0906           1.0
+    x090635   Total_Cost          60.0   NodeBalance0635          -1.0
+    x090635   NodeBalance0935           1.0   Capacity0906           1.0
+    x090636   Total_Cost          60.0   NodeBalance0636          -1.0
+    x090636   NodeBalance0936           1.0   Capacity0906           1.0
+    x090637   Total_Cost          60.0   NodeBalance0637          -1.0
+    x090637   NodeBalance0937           1.0   Capacity0906           1.0
+    x090638   Total_Cost          60.0   NodeBalance0638          -1.0
+    x090638   NodeBalance0938           1.0   Capacity0906           1.0
+    x090639   Total_Cost          60.0   NodeBalance0639          -1.0
+    x090639   NodeBalance0939           1.0   Capacity0906           1.0
+    x090640   Total_Cost          60.0   NodeBalance0640          -1.0
+    x090640   NodeBalance0940           1.0   Capacity0906           1.0
+    x090801   Total_Cost          96.0   NodeBalance0801          -1.0
+    x090801   NodeBalance0901           1.0   Capacity0908           1.0
+    x090802   Total_Cost          96.0   NodeBalance0802          -1.0
+    x090802   NodeBalance0902           1.0   Capacity0908           1.0
+    x090803   Total_Cost          96.0   NodeBalance0803          -1.0
+    x090803   NodeBalance0903           1.0   Capacity0908           1.0
+    x090804   Total_Cost          96.0   NodeBalance0804          -1.0
+    x090804   NodeBalance0904           1.0   Capacity0908           1.0
+    x090805   Total_Cost          96.0   NodeBalance0805          -1.0
+    x090805   NodeBalance0905           1.0   Capacity0908           1.0
+    x090806   Total_Cost          96.0   NodeBalance0806          -1.0
+    x090806   NodeBalance0906           1.0   Capacity0908           1.0
+    x090807   Total_Cost          96.0   NodeBalance0807          -1.0
+    x090807   NodeBalance0907           1.0   Capacity0908           1.0
+    x090808   Total_Cost          96.0   NodeBalance0808          -1.0
+    x090808   NodeBalance0908           1.0   Capacity0908           1.0
+    x090809   Total_Cost          96.0   NodeBalance0809          -1.0
+    x090809   NodeBalance0909           1.0   Capacity0908           1.0
+    x090810   Total_Cost          96.0   NodeBalance0810          -1.0
+    x090810   NodeBalance0910           1.0   Capacity0908           1.0
+    x090811   Total_Cost          96.0   NodeBalance0811          -1.0
+    x090811   NodeBalance0911           1.0   Capacity0908           1.0
+    x090812   Total_Cost          96.0   NodeBalance0812          -1.0
+    x090812   NodeBalance0912           1.0   Capacity0908           1.0
+    x090813   Total_Cost          96.0   NodeBalance0813          -1.0
+    x090813   NodeBalance0913           1.0   Capacity0908           1.0
+    x090814   Total_Cost          96.0   NodeBalance0814          -1.0
+    x090814   NodeBalance0914           1.0   Capacity0908           1.0
+    x090815   Total_Cost          96.0   NodeBalance0815          -1.0
+    x090815   NodeBalance0915           1.0   Capacity0908           1.0
+    x090816   Total_Cost          96.0   NodeBalance0816          -1.0
+    x090816   NodeBalance0916           1.0   Capacity0908           1.0
+    x090817   Total_Cost          96.0   NodeBalance0817          -1.0
+    x090817   NodeBalance0917           1.0   Capacity0908           1.0
+    x090818   Total_Cost          96.0   NodeBalance0818          -1.0
+    x090818   NodeBalance0918           1.0   Capacity0908           1.0
+    x090819   Total_Cost          96.0   NodeBalance0819          -1.0
+    x090819   NodeBalance0919           1.0   Capacity0908           1.0
+    x090820   Total_Cost          96.0   NodeBalance0820          -1.0
+    x090820   NodeBalance0920           1.0   Capacity0908           1.0
+    x090821   Total_Cost          96.0   NodeBalance0821          -1.0
+    x090821   NodeBalance0921           1.0   Capacity0908           1.0
+    x090822   Total_Cost          96.0   NodeBalance0822          -1.0
+    x090822   NodeBalance0922           1.0   Capacity0908           1.0
+    x090823   Total_Cost          96.0   NodeBalance0823          -1.0
+    x090823   NodeBalance0923           1.0   Capacity0908           1.0
+    x090824   Total_Cost          96.0   NodeBalance0824          -1.0
+    x090824   NodeBalance0924           1.0   Capacity0908           1.0
+    x090825   Total_Cost          96.0   NodeBalance0825          -1.0
+    x090825   NodeBalance0925           1.0   Capacity0908           1.0
+    x090826   Total_Cost          96.0   NodeBalance0826          -1.0
+    x090826   NodeBalance0926           1.0   Capacity0908           1.0
+    x090827   Total_Cost          96.0   NodeBalance0827          -1.0
+    x090827   NodeBalance0927           1.0   Capacity0908           1.0
+    x090828   Total_Cost          96.0   NodeBalance0828          -1.0
+    x090828   NodeBalance0928           1.0   Capacity0908           1.0
+    x090829   Total_Cost          96.0   NodeBalance0829          -1.0
+    x090829   NodeBalance0929           1.0   Capacity0908           1.0
+    x090830   Total_Cost          96.0   NodeBalance0830          -1.0
+    x090830   NodeBalance0930           1.0   Capacity0908           1.0
+    x090831   Total_Cost          96.0   NodeBalance0831          -1.0
+    x090831   NodeBalance0931           1.0   Capacity0908           1.0
+    x090832   Total_Cost          96.0   NodeBalance0832          -1.0
+    x090832   NodeBalance0932           1.0   Capacity0908           1.0
+    x090833   Total_Cost          96.0   NodeBalance0833          -1.0
+    x090833   NodeBalance0933           1.0   Capacity0908           1.0
+    x090834   Total_Cost          96.0   NodeBalance0834          -1.0
+    x090834   NodeBalance0934           1.0   Capacity0908           1.0
+    x090835   Total_Cost          96.0   NodeBalance0835          -1.0
+    x090835   NodeBalance0935           1.0   Capacity0908           1.0
+    x090836   Total_Cost          96.0   NodeBalance0836          -1.0
+    x090836   NodeBalance0936           1.0   Capacity0908           1.0
+    x090837   Total_Cost          96.0   NodeBalance0837          -1.0
+    x090837   NodeBalance0937           1.0   Capacity0908           1.0
+    x090838   Total_Cost          96.0   NodeBalance0838          -1.0
+    x090838   NodeBalance0938           1.0   Capacity0908           1.0
+    x090839   Total_Cost          96.0   NodeBalance0839          -1.0
+    x090839   NodeBalance0939           1.0   Capacity0908           1.0
+    x090840   Total_Cost          96.0   NodeBalance0840          -1.0
+    x090840   NodeBalance0940           1.0   Capacity0908           1.0
+    x091001   Total_Cost         100.0   NodeBalance0901           1.0
+    x091001   NodeBalance1001          -1.0   Capacity0910           1.0
+    x091002   Total_Cost         100.0   NodeBalance0902           1.0
+    x091002   NodeBalance1002          -1.0   Capacity0910           1.0
+    x091003   Total_Cost         100.0   NodeBalance0903           1.0
+    x091003   NodeBalance1003          -1.0   Capacity0910           1.0
+    x091004   Total_Cost         100.0   NodeBalance0904           1.0
+    x091004   NodeBalance1004          -1.0   Capacity0910           1.0
+    x091005   Total_Cost         100.0   NodeBalance0905           1.0
+    x091005   NodeBalance1005          -1.0   Capacity0910           1.0
+    x091006   Total_Cost         100.0   NodeBalance0906           1.0
+    x091006   NodeBalance1006          -1.0   Capacity0910           1.0
+    x091007   Total_Cost         100.0   NodeBalance0907           1.0
+    x091007   NodeBalance1007          -1.0   Capacity0910           1.0
+    x091008   Total_Cost         100.0   NodeBalance0908           1.0
+    x091008   NodeBalance1008          -1.0   Capacity0910           1.0
+    x091009   Total_Cost         100.0   NodeBalance0909           1.0
+    x091009   NodeBalance1009          -1.0   Capacity0910           1.0
+    x091010   Total_Cost         100.0   NodeBalance0910           1.0
+    x091010   NodeBalance1010          -1.0   Capacity0910           1.0
+    x091011   Total_Cost         100.0   NodeBalance0911           1.0
+    x091011   NodeBalance1011          -1.0   Capacity0910           1.0
+    x091012   Total_Cost         100.0   NodeBalance0912           1.0
+    x091012   NodeBalance1012          -1.0   Capacity0910           1.0
+    x091013   Total_Cost         100.0   NodeBalance0913           1.0
+    x091013   NodeBalance1013          -1.0   Capacity0910           1.0
+    x091014   Total_Cost         100.0   NodeBalance0914           1.0
+    x091014   NodeBalance1014          -1.0   Capacity0910           1.0
+    x091015   Total_Cost         100.0   NodeBalance0915           1.0
+    x091015   NodeBalance1015          -1.0   Capacity0910           1.0
+    x091016   Total_Cost         100.0   NodeBalance0916           1.0
+    x091016   NodeBalance1016          -1.0   Capacity0910           1.0
+    x091017   Total_Cost         100.0   NodeBalance0917           1.0
+    x091017   NodeBalance1017          -1.0   Capacity0910           1.0
+    x091018   Total_Cost         100.0   NodeBalance0918           1.0
+    x091018   NodeBalance1018          -1.0   Capacity0910           1.0
+    x091019   Total_Cost         100.0   NodeBalance0919           1.0
+    x091019   NodeBalance1019          -1.0   Capacity0910           1.0
+    x091020   Total_Cost         100.0   NodeBalance0920           1.0
+    x091020   NodeBalance1020          -1.0   Capacity0910           1.0
+    x091021   Total_Cost         100.0   NodeBalance0921           1.0
+    x091021   NodeBalance1021          -1.0   Capacity0910           1.0
+    x091022   Total_Cost         100.0   NodeBalance0922           1.0
+    x091022   NodeBalance1022          -1.0   Capacity0910           1.0
+    x091023   Total_Cost         100.0   NodeBalance0923           1.0
+    x091023   NodeBalance1023          -1.0   Capacity0910           1.0
+    x091024   Total_Cost         100.0   NodeBalance0924           1.0
+    x091024   NodeBalance1024          -1.0   Capacity0910           1.0
+    x091025   Total_Cost         100.0   NodeBalance0925           1.0
+    x091025   NodeBalance1025          -1.0   Capacity0910           1.0
+    x091026   Total_Cost         100.0   NodeBalance0926           1.0
+    x091026   NodeBalance1026          -1.0   Capacity0910           1.0
+    x091027   Total_Cost         100.0   NodeBalance0927           1.0
+    x091027   NodeBalance1027          -1.0   Capacity0910           1.0
+    x091028   Total_Cost         100.0   NodeBalance0928           1.0
+    x091028   NodeBalance1028          -1.0   Capacity0910           1.0
+    x091029   Total_Cost         100.0   NodeBalance0929           1.0
+    x091029   NodeBalance1029          -1.0   Capacity0910           1.0
+    x091030   Total_Cost         100.0   NodeBalance0930           1.0
+    x091030   NodeBalance1030          -1.0   Capacity0910           1.0
+    x091031   Total_Cost         100.0   NodeBalance0931           1.0
+    x091031   NodeBalance1031          -1.0   Capacity0910           1.0
+    x091032   Total_Cost         100.0   NodeBalance0932           1.0
+    x091032   NodeBalance1032          -1.0   Capacity0910           1.0
+    x091033   Total_Cost         100.0   NodeBalance0933           1.0
+    x091033   NodeBalance1033          -1.0   Capacity0910           1.0
+    x091034   Total_Cost         100.0   NodeBalance0934           1.0
+    x091034   NodeBalance1034          -1.0   Capacity0910           1.0
+    x091035   Total_Cost         100.0   NodeBalance0935           1.0
+    x091035   NodeBalance1035          -1.0   Capacity0910           1.0
+    x091036   Total_Cost         100.0   NodeBalance0936           1.0
+    x091036   NodeBalance1036          -1.0   Capacity0910           1.0
+    x091037   Total_Cost         100.0   NodeBalance0937           1.0
+    x091037   NodeBalance1037          -1.0   Capacity0910           1.0
+    x091038   Total_Cost         100.0   NodeBalance0938           1.0
+    x091038   NodeBalance1038          -1.0   Capacity0910           1.0
+    x091039   Total_Cost         100.0   NodeBalance0939           1.0
+    x091039   NodeBalance1039          -1.0   Capacity0910           1.0
+    x091040   Total_Cost         100.0   NodeBalance0940           1.0
+    x091040   NodeBalance1040          -1.0   Capacity0910           1.0
+    x091301   Total_Cost          70.0   NodeBalance0901           1.0
+    x091301   NodeBalance1301          -1.0   Capacity0913           1.0
+    x091302   Total_Cost          70.0   NodeBalance0902           1.0
+    x091302   NodeBalance1302          -1.0   Capacity0913           1.0
+    x091303   Total_Cost          70.0   NodeBalance0903           1.0
+    x091303   NodeBalance1303          -1.0   Capacity0913           1.0
+    x091304   Total_Cost          70.0   NodeBalance0904           1.0
+    x091304   NodeBalance1304          -1.0   Capacity0913           1.0
+    x091305   Total_Cost          70.0   NodeBalance0905           1.0
+    x091305   NodeBalance1305          -1.0   Capacity0913           1.0
+    x091306   Total_Cost          70.0   NodeBalance0906           1.0
+    x091306   NodeBalance1306          -1.0   Capacity0913           1.0
+    x091307   Total_Cost          70.0   NodeBalance0907           1.0
+    x091307   NodeBalance1307          -1.0   Capacity0913           1.0
+    x091308   Total_Cost          70.0   NodeBalance0908           1.0
+    x091308   NodeBalance1308          -1.0   Capacity0913           1.0
+    x091309   Total_Cost          70.0   NodeBalance0909           1.0
+    x091309   NodeBalance1309          -1.0   Capacity0913           1.0
+    x091310   Total_Cost          70.0   NodeBalance0910           1.0
+    x091310   NodeBalance1310          -1.0   Capacity0913           1.0
+    x091311   Total_Cost          70.0   NodeBalance0911           1.0
+    x091311   NodeBalance1311          -1.0   Capacity0913           1.0
+    x091312   Total_Cost          70.0   NodeBalance0912           1.0
+    x091312   NodeBalance1312          -1.0   Capacity0913           1.0
+    x091313   Total_Cost          70.0   NodeBalance0913           1.0
+    x091313   NodeBalance1313          -1.0   Capacity0913           1.0
+    x091314   Total_Cost          70.0   NodeBalance0914           1.0
+    x091314   NodeBalance1314          -1.0   Capacity0913           1.0
+    x091315   Total_Cost          70.0   NodeBalance0915           1.0
+    x091315   NodeBalance1315          -1.0   Capacity0913           1.0
+    x091316   Total_Cost          70.0   NodeBalance0916           1.0
+    x091316   NodeBalance1316          -1.0   Capacity0913           1.0
+    x091317   Total_Cost          70.0   NodeBalance0917           1.0
+    x091317   NodeBalance1317          -1.0   Capacity0913           1.0
+    x091318   Total_Cost          70.0   NodeBalance0918           1.0
+    x091318   NodeBalance1318          -1.0   Capacity0913           1.0
+    x091319   Total_Cost          70.0   NodeBalance0919           1.0
+    x091319   NodeBalance1319          -1.0   Capacity0913           1.0
+    x091320   Total_Cost          70.0   NodeBalance0920           1.0
+    x091320   NodeBalance1320          -1.0   Capacity0913           1.0
+    x091321   Total_Cost          70.0   NodeBalance0921           1.0
+    x091321   NodeBalance1321          -1.0   Capacity0913           1.0
+    x091322   Total_Cost          70.0   NodeBalance0922           1.0
+    x091322   NodeBalance1322          -1.0   Capacity0913           1.0
+    x091323   Total_Cost          70.0   NodeBalance0923           1.0
+    x091323   NodeBalance1323          -1.0   Capacity0913           1.0
+    x091324   Total_Cost          70.0   NodeBalance0924           1.0
+    x091324   NodeBalance1324          -1.0   Capacity0913           1.0
+    x091325   Total_Cost          70.0   NodeBalance0925           1.0
+    x091325   NodeBalance1325          -1.0   Capacity0913           1.0
+    x091326   Total_Cost          70.0   NodeBalance0926           1.0
+    x091326   NodeBalance1326          -1.0   Capacity0913           1.0
+    x091327   Total_Cost          70.0   NodeBalance0927           1.0
+    x091327   NodeBalance1327          -1.0   Capacity0913           1.0
+    x091328   Total_Cost          70.0   NodeBalance0928           1.0
+    x091328   NodeBalance1328          -1.0   Capacity0913           1.0
+    x091329   Total_Cost          70.0   NodeBalance0929           1.0
+    x091329   NodeBalance1329          -1.0   Capacity0913           1.0
+    x091330   Total_Cost          70.0   NodeBalance0930           1.0
+    x091330   NodeBalance1330          -1.0   Capacity0913           1.0
+    x091331   Total_Cost          70.0   NodeBalance0931           1.0
+    x091331   NodeBalance1331          -1.0   Capacity0913           1.0
+    x091332   Total_Cost          70.0   NodeBalance0932           1.0
+    x091332   NodeBalance1332          -1.0   Capacity0913           1.0
+    x091333   Total_Cost          70.0   NodeBalance0933           1.0
+    x091333   NodeBalance1333          -1.0   Capacity0913           1.0
+    x091334   Total_Cost          70.0   NodeBalance0934           1.0
+    x091334   NodeBalance1334          -1.0   Capacity0913           1.0
+    x091335   Total_Cost          70.0   NodeBalance0935           1.0
+    x091335   NodeBalance1335          -1.0   Capacity0913           1.0
+    x091336   Total_Cost          70.0   NodeBalance0936           1.0
+    x091336   NodeBalance1336          -1.0   Capacity0913           1.0
+    x091337   Total_Cost          70.0   NodeBalance0937           1.0
+    x091337   NodeBalance1337          -1.0   Capacity0913           1.0
+    x091338   Total_Cost          70.0   NodeBalance0938           1.0
+    x091338   NodeBalance1338          -1.0   Capacity0913           1.0
+    x091339   Total_Cost          70.0   NodeBalance0939           1.0
+    x091339   NodeBalance1339          -1.0   Capacity0913           1.0
+    x091340   Total_Cost          70.0   NodeBalance0940           1.0
+    x091340   NodeBalance1340          -1.0   Capacity0913           1.0
+    x091601   Total_Cost          95.0   NodeBalance0901           1.0
+    x091601   NodeBalance1601          -1.0   Capacity0916           1.0
+    x091602   Total_Cost          95.0   NodeBalance0902           1.0
+    x091602   NodeBalance1602          -1.0   Capacity0916           1.0
+    x091603   Total_Cost          95.0   NodeBalance0903           1.0
+    x091603   NodeBalance1603          -1.0   Capacity0916           1.0
+    x091604   Total_Cost          95.0   NodeBalance0904           1.0
+    x091604   NodeBalance1604          -1.0   Capacity0916           1.0
+    x091605   Total_Cost          95.0   NodeBalance0905           1.0
+    x091605   NodeBalance1605          -1.0   Capacity0916           1.0
+    x091606   Total_Cost          95.0   NodeBalance0906           1.0
+    x091606   NodeBalance1606          -1.0   Capacity0916           1.0
+    x091607   Total_Cost          95.0   NodeBalance0907           1.0
+    x091607   NodeBalance1607          -1.0   Capacity0916           1.0
+    x091608   Total_Cost          95.0   NodeBalance0908           1.0
+    x091608   NodeBalance1608          -1.0   Capacity0916           1.0
+    x091609   Total_Cost          95.0   NodeBalance0909           1.0
+    x091609   NodeBalance1609          -1.0   Capacity0916           1.0
+    x091610   Total_Cost          95.0   NodeBalance0910           1.0
+    x091610   NodeBalance1610          -1.0   Capacity0916           1.0
+    x091611   Total_Cost          95.0   NodeBalance0911           1.0
+    x091611   NodeBalance1611          -1.0   Capacity0916           1.0
+    x091612   Total_Cost          95.0   NodeBalance0912           1.0
+    x091612   NodeBalance1612          -1.0   Capacity0916           1.0
+    x091613   Total_Cost          95.0   NodeBalance0913           1.0
+    x091613   NodeBalance1613          -1.0   Capacity0916           1.0
+    x091614   Total_Cost          95.0   NodeBalance0914           1.0
+    x091614   NodeBalance1614          -1.0   Capacity0916           1.0
+    x091615   Total_Cost          95.0   NodeBalance0915           1.0
+    x091615   NodeBalance1615          -1.0   Capacity0916           1.0
+    x091616   Total_Cost          95.0   NodeBalance0916           1.0
+    x091616   NodeBalance1616          -1.0   Capacity0916           1.0
+    x091617   Total_Cost          95.0   NodeBalance0917           1.0
+    x091617   NodeBalance1617          -1.0   Capacity0916           1.0
+    x091618   Total_Cost          95.0   NodeBalance0918           1.0
+    x091618   NodeBalance1618          -1.0   Capacity0916           1.0
+    x091619   Total_Cost          95.0   NodeBalance0919           1.0
+    x091619   NodeBalance1619          -1.0   Capacity0916           1.0
+    x091620   Total_Cost          95.0   NodeBalance0920           1.0
+    x091620   NodeBalance1620          -1.0   Capacity0916           1.0
+    x091621   Total_Cost          95.0   NodeBalance0921           1.0
+    x091621   NodeBalance1621          -1.0   Capacity0916           1.0
+    x091622   Total_Cost          95.0   NodeBalance0922           1.0
+    x091622   NodeBalance1622          -1.0   Capacity0916           1.0
+    x091623   Total_Cost          95.0   NodeBalance0923           1.0
+    x091623   NodeBalance1623          -1.0   Capacity0916           1.0
+    x091624   Total_Cost          95.0   NodeBalance0924           1.0
+    x091624   NodeBalance1624          -1.0   Capacity0916           1.0
+    x091625   Total_Cost          95.0   NodeBalance0925           1.0
+    x091625   NodeBalance1625          -1.0   Capacity0916           1.0
+    x091626   Total_Cost          95.0   NodeBalance0926           1.0
+    x091626   NodeBalance1626          -1.0   Capacity0916           1.0
+    x091627   Total_Cost          95.0   NodeBalance0927           1.0
+    x091627   NodeBalance1627          -1.0   Capacity0916           1.0
+    x091628   Total_Cost          95.0   NodeBalance0928           1.0
+    x091628   NodeBalance1628          -1.0   Capacity0916           1.0
+    x091629   Total_Cost          95.0   NodeBalance0929           1.0
+    x091629   NodeBalance1629          -1.0   Capacity0916           1.0
+    x091630   Total_Cost          95.0   NodeBalance0930           1.0
+    x091630   NodeBalance1630          -1.0   Capacity0916           1.0
+    x091631   Total_Cost          95.0   NodeBalance0931           1.0
+    x091631   NodeBalance1631          -1.0   Capacity0916           1.0
+    x091632   Total_Cost          95.0   NodeBalance0932           1.0
+    x091632   NodeBalance1632          -1.0   Capacity0916           1.0
+    x091633   Total_Cost          95.0   NodeBalance0933           1.0
+    x091633   NodeBalance1633          -1.0   Capacity0916           1.0
+    x091634   Total_Cost          95.0   NodeBalance0934           1.0
+    x091634   NodeBalance1634          -1.0   Capacity0916           1.0
+    x091635   Total_Cost          95.0   NodeBalance0935           1.0
+    x091635   NodeBalance1635          -1.0   Capacity0916           1.0
+    x091636   Total_Cost          95.0   NodeBalance0936           1.0
+    x091636   NodeBalance1636          -1.0   Capacity0916           1.0
+    x091637   Total_Cost          95.0   NodeBalance0937           1.0
+    x091637   NodeBalance1637          -1.0   Capacity0916           1.0
+    x091638   Total_Cost          95.0   NodeBalance0938           1.0
+    x091638   NodeBalance1638          -1.0   Capacity0916           1.0
+    x091639   Total_Cost          95.0   NodeBalance0939           1.0
+    x091639   NodeBalance1639          -1.0   Capacity0916           1.0
+    x091640   Total_Cost          95.0   NodeBalance0940           1.0
+    x091640   NodeBalance1640          -1.0   Capacity0916           1.0
+    x091701   Total_Cost          45.0   NodeBalance0901           1.0
+    x091701   NodeBalance1701          -1.0   Capacity0917           1.0
+    x091702   Total_Cost          45.0   NodeBalance0902           1.0
+    x091702   NodeBalance1702          -1.0   Capacity0917           1.0
+    x091703   Total_Cost          45.0   NodeBalance0903           1.0
+    x091703   NodeBalance1703          -1.0   Capacity0917           1.0
+    x091704   Total_Cost          45.0   NodeBalance0904           1.0
+    x091704   NodeBalance1704          -1.0   Capacity0917           1.0
+    x091705   Total_Cost          45.0   NodeBalance0905           1.0
+    x091705   NodeBalance1705          -1.0   Capacity0917           1.0
+    x091706   Total_Cost          45.0   NodeBalance0906           1.0
+    x091706   NodeBalance1706          -1.0   Capacity0917           1.0
+    x091707   Total_Cost          45.0   NodeBalance0907           1.0
+    x091707   NodeBalance1707          -1.0   Capacity0917           1.0
+    x091708   Total_Cost          45.0   NodeBalance0908           1.0
+    x091708   NodeBalance1708          -1.0   Capacity0917           1.0
+    x091709   Total_Cost          45.0   NodeBalance0909           1.0
+    x091709   NodeBalance1709          -1.0   Capacity0917           1.0
+    x091710   Total_Cost          45.0   NodeBalance0910           1.0
+    x091710   NodeBalance1710          -1.0   Capacity0917           1.0
+    x091711   Total_Cost          45.0   NodeBalance0911           1.0
+    x091711   NodeBalance1711          -1.0   Capacity0917           1.0
+    x091712   Total_Cost          45.0   NodeBalance0912           1.0
+    x091712   NodeBalance1712          -1.0   Capacity0917           1.0
+    x091713   Total_Cost          45.0   NodeBalance0913           1.0
+    x091713   NodeBalance1713          -1.0   Capacity0917           1.0
+    x091714   Total_Cost          45.0   NodeBalance0914           1.0
+    x091714   NodeBalance1714          -1.0   Capacity0917           1.0
+    x091715   Total_Cost          45.0   NodeBalance0915           1.0
+    x091715   NodeBalance1715          -1.0   Capacity0917           1.0
+    x091716   Total_Cost          45.0   NodeBalance0916           1.0
+    x091716   NodeBalance1716          -1.0   Capacity0917           1.0
+    x091717   Total_Cost          45.0   NodeBalance0917           1.0
+    x091717   NodeBalance1717          -1.0   Capacity0917           1.0
+    x091718   Total_Cost          45.0   NodeBalance0918           1.0
+    x091718   NodeBalance1718          -1.0   Capacity0917           1.0
+    x091719   Total_Cost          45.0   NodeBalance0919           1.0
+    x091719   NodeBalance1719          -1.0   Capacity0917           1.0
+    x091720   Total_Cost          45.0   NodeBalance0920           1.0
+    x091720   NodeBalance1720          -1.0   Capacity0917           1.0
+    x091721   Total_Cost          45.0   NodeBalance0921           1.0
+    x091721   NodeBalance1721          -1.0   Capacity0917           1.0
+    x091722   Total_Cost          45.0   NodeBalance0922           1.0
+    x091722   NodeBalance1722          -1.0   Capacity0917           1.0
+    x091723   Total_Cost          45.0   NodeBalance0923           1.0
+    x091723   NodeBalance1723          -1.0   Capacity0917           1.0
+    x091724   Total_Cost          45.0   NodeBalance0924           1.0
+    x091724   NodeBalance1724          -1.0   Capacity0917           1.0
+    x091725   Total_Cost          45.0   NodeBalance0925           1.0
+    x091725   NodeBalance1725          -1.0   Capacity0917           1.0
+    x091726   Total_Cost          45.0   NodeBalance0926           1.0
+    x091726   NodeBalance1726          -1.0   Capacity0917           1.0
+    x091727   Total_Cost          45.0   NodeBalance0927           1.0
+    x091727   NodeBalance1727          -1.0   Capacity0917           1.0
+    x091728   Total_Cost          45.0   NodeBalance0928           1.0
+    x091728   NodeBalance1728          -1.0   Capacity0917           1.0
+    x091729   Total_Cost          45.0   NodeBalance0929           1.0
+    x091729   NodeBalance1729          -1.0   Capacity0917           1.0
+    x091730   Total_Cost          45.0   NodeBalance0930           1.0
+    x091730   NodeBalance1730          -1.0   Capacity0917           1.0
+    x091731   Total_Cost          45.0   NodeBalance0931           1.0
+    x091731   NodeBalance1731          -1.0   Capacity0917           1.0
+    x091732   Total_Cost          45.0   NodeBalance0932           1.0
+    x091732   NodeBalance1732          -1.0   Capacity0917           1.0
+    x091733   Total_Cost          45.0   NodeBalance0933           1.0
+    x091733   NodeBalance1733          -1.0   Capacity0917           1.0
+    x091734   Total_Cost          45.0   NodeBalance0934           1.0
+    x091734   NodeBalance1734          -1.0   Capacity0917           1.0
+    x091735   Total_Cost          45.0   NodeBalance0935           1.0
+    x091735   NodeBalance1735          -1.0   Capacity0917           1.0
+    x091736   Total_Cost          45.0   NodeBalance0936           1.0
+    x091736   NodeBalance1736          -1.0   Capacity0917           1.0
+    x091737   Total_Cost          45.0   NodeBalance0937           1.0
+    x091737   NodeBalance1737          -1.0   Capacity0917           1.0
+    x091738   Total_Cost          45.0   NodeBalance0938           1.0
+    x091738   NodeBalance1738          -1.0   Capacity0917           1.0
+    x091739   Total_Cost          45.0   NodeBalance0939           1.0
+    x091739   NodeBalance1739          -1.0   Capacity0917           1.0
+    x091740   Total_Cost          45.0   NodeBalance0940           1.0
+    x091740   NodeBalance1740          -1.0   Capacity0917           1.0
+    x101101   Total_Cost         100.0   NodeBalance1001           1.0
+    x101101   NodeBalance1101          -1.0   Capacity1011           1.0
+    x101102   Total_Cost         100.0   NodeBalance1002           1.0
+    x101102   NodeBalance1102          -1.0   Capacity1011           1.0
+    x101103   Total_Cost         100.0   NodeBalance1003           1.0
+    x101103   NodeBalance1103          -1.0   Capacity1011           1.0
+    x101104   Total_Cost         100.0   NodeBalance1004           1.0
+    x101104   NodeBalance1104          -1.0   Capacity1011           1.0
+    x101105   Total_Cost         100.0   NodeBalance1005           1.0
+    x101105   NodeBalance1105          -1.0   Capacity1011           1.0
+    x101106   Total_Cost         100.0   NodeBalance1006           1.0
+    x101106   NodeBalance1106          -1.0   Capacity1011           1.0
+    x101107   Total_Cost         100.0   NodeBalance1007           1.0
+    x101107   NodeBalance1107          -1.0   Capacity1011           1.0
+    x101108   Total_Cost         100.0   NodeBalance1008           1.0
+    x101108   NodeBalance1108          -1.0   Capacity1011           1.0
+    x101109   Total_Cost         100.0   NodeBalance1009           1.0
+    x101109   NodeBalance1109          -1.0   Capacity1011           1.0
+    x101110   Total_Cost         100.0   NodeBalance1010           1.0
+    x101110   NodeBalance1110          -1.0   Capacity1011           1.0
+    x101111   Total_Cost         100.0   NodeBalance1011           1.0
+    x101111   NodeBalance1111          -1.0   Capacity1011           1.0
+    x101112   Total_Cost         100.0   NodeBalance1012           1.0
+    x101112   NodeBalance1112          -1.0   Capacity1011           1.0
+    x101113   Total_Cost         100.0   NodeBalance1013           1.0
+    x101113   NodeBalance1113          -1.0   Capacity1011           1.0
+    x101114   Total_Cost         100.0   NodeBalance1014           1.0
+    x101114   NodeBalance1114          -1.0   Capacity1011           1.0
+    x101115   Total_Cost         100.0   NodeBalance1015           1.0
+    x101115   NodeBalance1115          -1.0   Capacity1011           1.0
+    x101116   Total_Cost         100.0   NodeBalance1016           1.0
+    x101116   NodeBalance1116          -1.0   Capacity1011           1.0
+    x101117   Total_Cost         100.0   NodeBalance1017           1.0
+    x101117   NodeBalance1117          -1.0   Capacity1011           1.0
+    x101118   Total_Cost         100.0   NodeBalance1018           1.0
+    x101118   NodeBalance1118          -1.0   Capacity1011           1.0
+    x101119   Total_Cost         100.0   NodeBalance1019           1.0
+    x101119   NodeBalance1119          -1.0   Capacity1011           1.0
+    x101120   Total_Cost         100.0   NodeBalance1020           1.0
+    x101120   NodeBalance1120          -1.0   Capacity1011           1.0
+    x101121   Total_Cost         100.0   NodeBalance1021           1.0
+    x101121   NodeBalance1121          -1.0   Capacity1011           1.0
+    x101122   Total_Cost         100.0   NodeBalance1022           1.0
+    x101122   NodeBalance1122          -1.0   Capacity1011           1.0
+    x101123   Total_Cost         100.0   NodeBalance1023           1.0
+    x101123   NodeBalance1123          -1.0   Capacity1011           1.0
+    x101124   Total_Cost         100.0   NodeBalance1024           1.0
+    x101124   NodeBalance1124          -1.0   Capacity1011           1.0
+    x101125   Total_Cost         100.0   NodeBalance1025           1.0
+    x101125   NodeBalance1125          -1.0   Capacity1011           1.0
+    x101126   Total_Cost         100.0   NodeBalance1026           1.0
+    x101126   NodeBalance1126          -1.0   Capacity1011           1.0
+    x101127   Total_Cost         100.0   NodeBalance1027           1.0
+    x101127   NodeBalance1127          -1.0   Capacity1011           1.0
+    x101128   Total_Cost         100.0   NodeBalance1028           1.0
+    x101128   NodeBalance1128          -1.0   Capacity1011           1.0
+    x101129   Total_Cost         100.0   NodeBalance1029           1.0
+    x101129   NodeBalance1129          -1.0   Capacity1011           1.0
+    x101130   Total_Cost         100.0   NodeBalance1030           1.0
+    x101130   NodeBalance1130          -1.0   Capacity1011           1.0
+    x101131   Total_Cost         100.0   NodeBalance1031           1.0
+    x101131   NodeBalance1131          -1.0   Capacity1011           1.0
+    x101132   Total_Cost         100.0   NodeBalance1032           1.0
+    x101132   NodeBalance1132          -1.0   Capacity1011           1.0
+    x101133   Total_Cost         100.0   NodeBalance1033           1.0
+    x101133   NodeBalance1133          -1.0   Capacity1011           1.0
+    x101134   Total_Cost         100.0   NodeBalance1034           1.0
+    x101134   NodeBalance1134          -1.0   Capacity1011           1.0
+    x101135   Total_Cost         100.0   NodeBalance1035           1.0
+    x101135   NodeBalance1135          -1.0   Capacity1011           1.0
+    x101136   Total_Cost         100.0   NodeBalance1036           1.0
+    x101136   NodeBalance1136          -1.0   Capacity1011           1.0
+    x101137   Total_Cost         100.0   NodeBalance1037           1.0
+    x101137   NodeBalance1137          -1.0   Capacity1011           1.0
+    x101138   Total_Cost         100.0   NodeBalance1038           1.0
+    x101138   NodeBalance1138          -1.0   Capacity1011           1.0
+    x101139   Total_Cost         100.0   NodeBalance1039           1.0
+    x101139   NodeBalance1139          -1.0   Capacity1011           1.0
+    x101140   Total_Cost         100.0   NodeBalance1040           1.0
+    x101140   NodeBalance1140          -1.0   Capacity1011           1.0
+    x101201   Total_Cost          14.0   NodeBalance1001           1.0
+    x101201   NodeBalance1201          -1.0   Capacity1012           1.0
+    x101202   Total_Cost          14.0   NodeBalance1002           1.0
+    x101202   NodeBalance1202          -1.0   Capacity1012           1.0
+    x101203   Total_Cost          14.0   NodeBalance1003           1.0
+    x101203   NodeBalance1203          -1.0   Capacity1012           1.0
+    x101204   Total_Cost          14.0   NodeBalance1004           1.0
+    x101204   NodeBalance1204          -1.0   Capacity1012           1.0
+    x101205   Total_Cost          14.0   NodeBalance1005           1.0
+    x101205   NodeBalance1205          -1.0   Capacity1012           1.0
+    x101206   Total_Cost          14.0   NodeBalance1006           1.0
+    x101206   NodeBalance1206          -1.0   Capacity1012           1.0
+    x101207   Total_Cost          14.0   NodeBalance1007           1.0
+    x101207   NodeBalance1207          -1.0   Capacity1012           1.0
+    x101208   Total_Cost          14.0   NodeBalance1008           1.0
+    x101208   NodeBalance1208          -1.0   Capacity1012           1.0
+    x101209   Total_Cost          14.0   NodeBalance1009           1.0
+    x101209   NodeBalance1209          -1.0   Capacity1012           1.0
+    x101210   Total_Cost          14.0   NodeBalance1010           1.0
+    x101210   NodeBalance1210          -1.0   Capacity1012           1.0
+    x101211   Total_Cost          14.0   NodeBalance1011           1.0
+    x101211   NodeBalance1211          -1.0   Capacity1012           1.0
+    x101212   Total_Cost          14.0   NodeBalance1012           1.0
+    x101212   NodeBalance1212          -1.0   Capacity1012           1.0
+    x101213   Total_Cost          14.0   NodeBalance1013           1.0
+    x101213   NodeBalance1213          -1.0   Capacity1012           1.0
+    x101214   Total_Cost          14.0   NodeBalance1014           1.0
+    x101214   NodeBalance1214          -1.0   Capacity1012           1.0
+    x101215   Total_Cost          14.0   NodeBalance1015           1.0
+    x101215   NodeBalance1215          -1.0   Capacity1012           1.0
+    x101216   Total_Cost          14.0   NodeBalance1016           1.0
+    x101216   NodeBalance1216          -1.0   Capacity1012           1.0
+    x101217   Total_Cost          14.0   NodeBalance1017           1.0
+    x101217   NodeBalance1217          -1.0   Capacity1012           1.0
+    x101218   Total_Cost          14.0   NodeBalance1018           1.0
+    x101218   NodeBalance1218          -1.0   Capacity1012           1.0
+    x101219   Total_Cost          14.0   NodeBalance1019           1.0
+    x101219   NodeBalance1219          -1.0   Capacity1012           1.0
+    x101220   Total_Cost          14.0   NodeBalance1020           1.0
+    x101220   NodeBalance1220          -1.0   Capacity1012           1.0
+    x101221   Total_Cost          14.0   NodeBalance1021           1.0
+    x101221   NodeBalance1221          -1.0   Capacity1012           1.0
+    x101222   Total_Cost          14.0   NodeBalance1022           1.0
+    x101222   NodeBalance1222          -1.0   Capacity1012           1.0
+    x101223   Total_Cost          14.0   NodeBalance1023           1.0
+    x101223   NodeBalance1223          -1.0   Capacity1012           1.0
+    x101224   Total_Cost          14.0   NodeBalance1024           1.0
+    x101224   NodeBalance1224          -1.0   Capacity1012           1.0
+    x101225   Total_Cost          14.0   NodeBalance1025           1.0
+    x101225   NodeBalance1225          -1.0   Capacity1012           1.0
+    x101226   Total_Cost          14.0   NodeBalance1026           1.0
+    x101226   NodeBalance1226          -1.0   Capacity1012           1.0
+    x101227   Total_Cost          14.0   NodeBalance1027           1.0
+    x101227   NodeBalance1227          -1.0   Capacity1012           1.0
+    x101228   Total_Cost          14.0   NodeBalance1028           1.0
+    x101228   NodeBalance1228          -1.0   Capacity1012           1.0
+    x101229   Total_Cost          14.0   NodeBalance1029           1.0
+    x101229   NodeBalance1229          -1.0   Capacity1012           1.0
+    x101230   Total_Cost          14.0   NodeBalance1030           1.0
+    x101230   NodeBalance1230          -1.0   Capacity1012           1.0
+    x101231   Total_Cost          14.0   NodeBalance1031           1.0
+    x101231   NodeBalance1231          -1.0   Capacity1012           1.0
+    x101232   Total_Cost          14.0   NodeBalance1032           1.0
+    x101232   NodeBalance1232          -1.0   Capacity1012           1.0
+    x101233   Total_Cost          14.0   NodeBalance1033           1.0
+    x101233   NodeBalance1233          -1.0   Capacity1012           1.0
+    x101234   Total_Cost          14.0   NodeBalance1034           1.0
+    x101234   NodeBalance1234          -1.0   Capacity1012           1.0
+    x101235   Total_Cost          14.0   NodeBalance1035           1.0
+    x101235   NodeBalance1235          -1.0   Capacity1012           1.0
+    x101236   Total_Cost          14.0   NodeBalance1036           1.0
+    x101236   NodeBalance1236          -1.0   Capacity1012           1.0
+    x101237   Total_Cost          14.0   NodeBalance1037           1.0
+    x101237   NodeBalance1237          -1.0   Capacity1012           1.0
+    x101238   Total_Cost          14.0   NodeBalance1038           1.0
+    x101238   NodeBalance1238          -1.0   Capacity1012           1.0
+    x101239   Total_Cost          14.0   NodeBalance1039           1.0
+    x101239   NodeBalance1239          -1.0   Capacity1012           1.0
+    x101240   Total_Cost          14.0   NodeBalance1040           1.0
+    x101240   NodeBalance1240          -1.0   Capacity1012           1.0
+    x101601   Total_Cost          44.0   NodeBalance1001           1.0
+    x101601   NodeBalance1601          -1.0   Capacity1016           1.0
+    x101602   Total_Cost          44.0   NodeBalance1002           1.0
+    x101602   NodeBalance1602          -1.0   Capacity1016           1.0
+    x101603   Total_Cost          44.0   NodeBalance1003           1.0
+    x101603   NodeBalance1603          -1.0   Capacity1016           1.0
+    x101604   Total_Cost          44.0   NodeBalance1004           1.0
+    x101604   NodeBalance1604          -1.0   Capacity1016           1.0
+    x101605   Total_Cost          44.0   NodeBalance1005           1.0
+    x101605   NodeBalance1605          -1.0   Capacity1016           1.0
+    x101606   Total_Cost          44.0   NodeBalance1006           1.0
+    x101606   NodeBalance1606          -1.0   Capacity1016           1.0
+    x101607   Total_Cost          44.0   NodeBalance1007           1.0
+    x101607   NodeBalance1607          -1.0   Capacity1016           1.0
+    x101608   Total_Cost          44.0   NodeBalance1008           1.0
+    x101608   NodeBalance1608          -1.0   Capacity1016           1.0
+    x101609   Total_Cost          44.0   NodeBalance1009           1.0
+    x101609   NodeBalance1609          -1.0   Capacity1016           1.0
+    x101610   Total_Cost          44.0   NodeBalance1010           1.0
+    x101610   NodeBalance1610          -1.0   Capacity1016           1.0
+    x101611   Total_Cost          44.0   NodeBalance1011           1.0
+    x101611   NodeBalance1611          -1.0   Capacity1016           1.0
+    x101612   Total_Cost          44.0   NodeBalance1012           1.0
+    x101612   NodeBalance1612          -1.0   Capacity1016           1.0
+    x101613   Total_Cost          44.0   NodeBalance1013           1.0
+    x101613   NodeBalance1613          -1.0   Capacity1016           1.0
+    x101614   Total_Cost          44.0   NodeBalance1014           1.0
+    x101614   NodeBalance1614          -1.0   Capacity1016           1.0
+    x101615   Total_Cost          44.0   NodeBalance1015           1.0
+    x101615   NodeBalance1615          -1.0   Capacity1016           1.0
+    x101616   Total_Cost          44.0   NodeBalance1016           1.0
+    x101616   NodeBalance1616          -1.0   Capacity1016           1.0
+    x101617   Total_Cost          44.0   NodeBalance1017           1.0
+    x101617   NodeBalance1617          -1.0   Capacity1016           1.0
+    x101618   Total_Cost          44.0   NodeBalance1018           1.0
+    x101618   NodeBalance1618          -1.0   Capacity1016           1.0
+    x101619   Total_Cost          44.0   NodeBalance1019           1.0
+    x101619   NodeBalance1619          -1.0   Capacity1016           1.0
+    x101620   Total_Cost          44.0   NodeBalance1020           1.0
+    x101620   NodeBalance1620          -1.0   Capacity1016           1.0
+    x101621   Total_Cost          44.0   NodeBalance1021           1.0
+    x101621   NodeBalance1621          -1.0   Capacity1016           1.0
+    x101622   Total_Cost          44.0   NodeBalance1022           1.0
+    x101622   NodeBalance1622          -1.0   Capacity1016           1.0
+    x101623   Total_Cost          44.0   NodeBalance1023           1.0
+    x101623   NodeBalance1623          -1.0   Capacity1016           1.0
+    x101624   Total_Cost          44.0   NodeBalance1024           1.0
+    x101624   NodeBalance1624          -1.0   Capacity1016           1.0
+    x101625   Total_Cost          44.0   NodeBalance1025           1.0
+    x101625   NodeBalance1625          -1.0   Capacity1016           1.0
+    x101626   Total_Cost          44.0   NodeBalance1026           1.0
+    x101626   NodeBalance1626          -1.0   Capacity1016           1.0
+    x101627   Total_Cost          44.0   NodeBalance1027           1.0
+    x101627   NodeBalance1627          -1.0   Capacity1016           1.0
+    x101628   Total_Cost          44.0   NodeBalance1028           1.0
+    x101628   NodeBalance1628          -1.0   Capacity1016           1.0
+    x101629   Total_Cost          44.0   NodeBalance1029           1.0
+    x101629   NodeBalance1629          -1.0   Capacity1016           1.0
+    x101630   Total_Cost          44.0   NodeBalance1030           1.0
+    x101630   NodeBalance1630          -1.0   Capacity1016           1.0
+    x101631   Total_Cost          44.0   NodeBalance1031           1.0
+    x101631   NodeBalance1631          -1.0   Capacity1016           1.0
+    x101632   Total_Cost          44.0   NodeBalance1032           1.0
+    x101632   NodeBalance1632          -1.0   Capacity1016           1.0
+    x101633   Total_Cost          44.0   NodeBalance1033           1.0
+    x101633   NodeBalance1633          -1.0   Capacity1016           1.0
+    x101634   Total_Cost          44.0   NodeBalance1034           1.0
+    x101634   NodeBalance1634          -1.0   Capacity1016           1.0
+    x101635   Total_Cost          44.0   NodeBalance1035           1.0
+    x101635   NodeBalance1635          -1.0   Capacity1016           1.0
+    x101636   Total_Cost          44.0   NodeBalance1036           1.0
+    x101636   NodeBalance1636          -1.0   Capacity1016           1.0
+    x101637   Total_Cost          44.0   NodeBalance1037           1.0
+    x101637   NodeBalance1637          -1.0   Capacity1016           1.0
+    x101638   Total_Cost          44.0   NodeBalance1038           1.0
+    x101638   NodeBalance1638          -1.0   Capacity1016           1.0
+    x101639   Total_Cost          44.0   NodeBalance1039           1.0
+    x101639   NodeBalance1639          -1.0   Capacity1016           1.0
+    x101640   Total_Cost          44.0   NodeBalance1040           1.0
+    x101640   NodeBalance1640          -1.0   Capacity1016           1.0
+    x110701   Total_Cost          54.0   NodeBalance0701          -1.0
+    x110701   NodeBalance1101           1.0   Capacity1107           1.0
+    x110702   Total_Cost          54.0   NodeBalance0702          -1.0
+    x110702   NodeBalance1102           1.0   Capacity1107           1.0
+    x110703   Total_Cost          54.0   NodeBalance0703          -1.0
+    x110703   NodeBalance1103           1.0   Capacity1107           1.0
+    x110704   Total_Cost          54.0   NodeBalance0704          -1.0
+    x110704   NodeBalance1104           1.0   Capacity1107           1.0
+    x110705   Total_Cost          54.0   NodeBalance0705          -1.0
+    x110705   NodeBalance1105           1.0   Capacity1107           1.0
+    x110706   Total_Cost          54.0   NodeBalance0706          -1.0
+    x110706   NodeBalance1106           1.0   Capacity1107           1.0
+    x110707   Total_Cost          54.0   NodeBalance0707          -1.0
+    x110707   NodeBalance1107           1.0   Capacity1107           1.0
+    x110708   Total_Cost          54.0   NodeBalance0708          -1.0
+    x110708   NodeBalance1108           1.0   Capacity1107           1.0
+    x110709   Total_Cost          54.0   NodeBalance0709          -1.0
+    x110709   NodeBalance1109           1.0   Capacity1107           1.0
+    x110710   Total_Cost          54.0   NodeBalance0710          -1.0
+    x110710   NodeBalance1110           1.0   Capacity1107           1.0
+    x110711   Total_Cost          54.0   NodeBalance0711          -1.0
+    x110711   NodeBalance1111           1.0   Capacity1107           1.0
+    x110712   Total_Cost          54.0   NodeBalance0712          -1.0
+    x110712   NodeBalance1112           1.0   Capacity1107           1.0
+    x110713   Total_Cost          54.0   NodeBalance0713          -1.0
+    x110713   NodeBalance1113           1.0   Capacity1107           1.0
+    x110714   Total_Cost          54.0   NodeBalance0714          -1.0
+    x110714   NodeBalance1114           1.0   Capacity1107           1.0
+    x110715   Total_Cost          54.0   NodeBalance0715          -1.0
+    x110715   NodeBalance1115           1.0   Capacity1107           1.0
+    x110716   Total_Cost          54.0   NodeBalance0716          -1.0
+    x110716   NodeBalance1116           1.0   Capacity1107           1.0
+    x110717   Total_Cost          54.0   NodeBalance0717          -1.0
+    x110717   NodeBalance1117           1.0   Capacity1107           1.0
+    x110718   Total_Cost          54.0   NodeBalance0718          -1.0
+    x110718   NodeBalance1118           1.0   Capacity1107           1.0
+    x110719   Total_Cost          54.0   NodeBalance0719          -1.0
+    x110719   NodeBalance1119           1.0   Capacity1107           1.0
+    x110720   Total_Cost          54.0   NodeBalance0720          -1.0
+    x110720   NodeBalance1120           1.0   Capacity1107           1.0
+    x110721   Total_Cost          54.0   NodeBalance0721          -1.0
+    x110721   NodeBalance1121           1.0   Capacity1107           1.0
+    x110722   Total_Cost          54.0   NodeBalance0722          -1.0
+    x110722   NodeBalance1122           1.0   Capacity1107           1.0
+    x110723   Total_Cost          54.0   NodeBalance0723          -1.0
+    x110723   NodeBalance1123           1.0   Capacity1107           1.0
+    x110724   Total_Cost          54.0   NodeBalance0724          -1.0
+    x110724   NodeBalance1124           1.0   Capacity1107           1.0
+    x110725   Total_Cost          54.0   NodeBalance0725          -1.0
+    x110725   NodeBalance1125           1.0   Capacity1107           1.0
+    x110726   Total_Cost          54.0   NodeBalance0726          -1.0
+    x110726   NodeBalance1126           1.0   Capacity1107           1.0
+    x110727   Total_Cost          54.0   NodeBalance0727          -1.0
+    x110727   NodeBalance1127           1.0   Capacity1107           1.0
+    x110728   Total_Cost          54.0   NodeBalance0728          -1.0
+    x110728   NodeBalance1128           1.0   Capacity1107           1.0
+    x110729   Total_Cost          54.0   NodeBalance0729          -1.0
+    x110729   NodeBalance1129           1.0   Capacity1107           1.0
+    x110730   Total_Cost          54.0   NodeBalance0730          -1.0
+    x110730   NodeBalance1130           1.0   Capacity1107           1.0
+    x110731   Total_Cost          54.0   NodeBalance0731          -1.0
+    x110731   NodeBalance1131           1.0   Capacity1107           1.0
+    x110732   Total_Cost          54.0   NodeBalance0732          -1.0
+    x110732   NodeBalance1132           1.0   Capacity1107           1.0
+    x110733   Total_Cost          54.0   NodeBalance0733          -1.0
+    x110733   NodeBalance1133           1.0   Capacity1107           1.0
+    x110734   Total_Cost          54.0   NodeBalance0734          -1.0
+    x110734   NodeBalance1134           1.0   Capacity1107           1.0
+    x110735   Total_Cost          54.0   NodeBalance0735          -1.0
+    x110735   NodeBalance1135           1.0   Capacity1107           1.0
+    x110736   Total_Cost          54.0   NodeBalance0736          -1.0
+    x110736   NodeBalance1136           1.0   Capacity1107           1.0
+    x110737   Total_Cost          54.0   NodeBalance0737          -1.0
+    x110737   NodeBalance1137           1.0   Capacity1107           1.0
+    x110738   Total_Cost          54.0   NodeBalance0738          -1.0
+    x110738   NodeBalance1138           1.0   Capacity1107           1.0
+    x110739   Total_Cost          54.0   NodeBalance0739          -1.0
+    x110739   NodeBalance1139           1.0   Capacity1107           1.0
+    x110740   Total_Cost          54.0   NodeBalance0740          -1.0
+    x110740   NodeBalance1140           1.0   Capacity1107           1.0
+    x111201   Total_Cost         100.0   NodeBalance1101           1.0
+    x111201   NodeBalance1201          -1.0   Capacity1112           1.0
+    x111202   Total_Cost         100.0   NodeBalance1102           1.0
+    x111202   NodeBalance1202          -1.0   Capacity1112           1.0
+    x111203   Total_Cost         100.0   NodeBalance1103           1.0
+    x111203   NodeBalance1203          -1.0   Capacity1112           1.0
+    x111204   Total_Cost         100.0   NodeBalance1104           1.0
+    x111204   NodeBalance1204          -1.0   Capacity1112           1.0
+    x111205   Total_Cost         100.0   NodeBalance1105           1.0
+    x111205   NodeBalance1205          -1.0   Capacity1112           1.0
+    x111206   Total_Cost         100.0   NodeBalance1106           1.0
+    x111206   NodeBalance1206          -1.0   Capacity1112           1.0
+    x111207   Total_Cost         100.0   NodeBalance1107           1.0
+    x111207   NodeBalance1207          -1.0   Capacity1112           1.0
+    x111208   Total_Cost         100.0   NodeBalance1108           1.0
+    x111208   NodeBalance1208          -1.0   Capacity1112           1.0
+    x111209   Total_Cost         100.0   NodeBalance1109           1.0
+    x111209   NodeBalance1209          -1.0   Capacity1112           1.0
+    x111210   Total_Cost         100.0   NodeBalance1110           1.0
+    x111210   NodeBalance1210          -1.0   Capacity1112           1.0
+    x111211   Total_Cost         100.0   NodeBalance1111           1.0
+    x111211   NodeBalance1211          -1.0   Capacity1112           1.0
+    x111212   Total_Cost         100.0   NodeBalance1112           1.0
+    x111212   NodeBalance1212          -1.0   Capacity1112           1.0
+    x111213   Total_Cost         100.0   NodeBalance1113           1.0
+    x111213   NodeBalance1213          -1.0   Capacity1112           1.0
+    x111214   Total_Cost         100.0   NodeBalance1114           1.0
+    x111214   NodeBalance1214          -1.0   Capacity1112           1.0
+    x111215   Total_Cost         100.0   NodeBalance1115           1.0
+    x111215   NodeBalance1215          -1.0   Capacity1112           1.0
+    x111216   Total_Cost         100.0   NodeBalance1116           1.0
+    x111216   NodeBalance1216          -1.0   Capacity1112           1.0
+    x111217   Total_Cost         100.0   NodeBalance1117           1.0
+    x111217   NodeBalance1217          -1.0   Capacity1112           1.0
+    x111218   Total_Cost         100.0   NodeBalance1118           1.0
+    x111218   NodeBalance1218          -1.0   Capacity1112           1.0
+    x111219   Total_Cost         100.0   NodeBalance1119           1.0
+    x111219   NodeBalance1219          -1.0   Capacity1112           1.0
+    x111220   Total_Cost         100.0   NodeBalance1120           1.0
+    x111220   NodeBalance1220          -1.0   Capacity1112           1.0
+    x111221   Total_Cost         100.0   NodeBalance1121           1.0
+    x111221   NodeBalance1221          -1.0   Capacity1112           1.0
+    x111222   Total_Cost         100.0   NodeBalance1122           1.0
+    x111222   NodeBalance1222          -1.0   Capacity1112           1.0
+    x111223   Total_Cost         100.0   NodeBalance1123           1.0
+    x111223   NodeBalance1223          -1.0   Capacity1112           1.0
+    x111224   Total_Cost         100.0   NodeBalance1124           1.0
+    x111224   NodeBalance1224          -1.0   Capacity1112           1.0
+    x111225   Total_Cost         100.0   NodeBalance1125           1.0
+    x111225   NodeBalance1225          -1.0   Capacity1112           1.0
+    x111226   Total_Cost         100.0   NodeBalance1126           1.0
+    x111226   NodeBalance1226          -1.0   Capacity1112           1.0
+    x111227   Total_Cost         100.0   NodeBalance1127           1.0
+    x111227   NodeBalance1227          -1.0   Capacity1112           1.0
+    x111228   Total_Cost         100.0   NodeBalance1128           1.0
+    x111228   NodeBalance1228          -1.0   Capacity1112           1.0
+    x111229   Total_Cost         100.0   NodeBalance1129           1.0
+    x111229   NodeBalance1229          -1.0   Capacity1112           1.0
+    x111230   Total_Cost         100.0   NodeBalance1130           1.0
+    x111230   NodeBalance1230          -1.0   Capacity1112           1.0
+    x111231   Total_Cost         100.0   NodeBalance1131           1.0
+    x111231   NodeBalance1231          -1.0   Capacity1112           1.0
+    x111232   Total_Cost         100.0   NodeBalance1132           1.0
+    x111232   NodeBalance1232          -1.0   Capacity1112           1.0
+    x111233   Total_Cost         100.0   NodeBalance1133           1.0
+    x111233   NodeBalance1233          -1.0   Capacity1112           1.0
+    x111234   Total_Cost         100.0   NodeBalance1134           1.0
+    x111234   NodeBalance1234          -1.0   Capacity1112           1.0
+    x111235   Total_Cost         100.0   NodeBalance1135           1.0
+    x111235   NodeBalance1235          -1.0   Capacity1112           1.0
+    x111236   Total_Cost         100.0   NodeBalance1136           1.0
+    x111236   NodeBalance1236          -1.0   Capacity1112           1.0
+    x111237   Total_Cost         100.0   NodeBalance1137           1.0
+    x111237   NodeBalance1237          -1.0   Capacity1112           1.0
+    x111238   Total_Cost         100.0   NodeBalance1138           1.0
+    x111238   NodeBalance1238          -1.0   Capacity1112           1.0
+    x111239   Total_Cost         100.0   NodeBalance1139           1.0
+    x111239   NodeBalance1239          -1.0   Capacity1112           1.0
+    x111240   Total_Cost         100.0   NodeBalance1140           1.0
+    x111240   NodeBalance1240          -1.0   Capacity1112           1.0
+    x111501   Total_Cost          68.0   NodeBalance1101           1.0
+    x111501   NodeBalance1501          -1.0   Capacity1115           1.0
+    x111502   Total_Cost          68.0   NodeBalance1102           1.0
+    x111502   NodeBalance1502          -1.0   Capacity1115           1.0
+    x111503   Total_Cost          68.0   NodeBalance1103           1.0
+    x111503   NodeBalance1503          -1.0   Capacity1115           1.0
+    x111504   Total_Cost          68.0   NodeBalance1104           1.0
+    x111504   NodeBalance1504          -1.0   Capacity1115           1.0
+    x111505   Total_Cost          68.0   NodeBalance1105           1.0
+    x111505   NodeBalance1505          -1.0   Capacity1115           1.0
+    x111506   Total_Cost          68.0   NodeBalance1106           1.0
+    x111506   NodeBalance1506          -1.0   Capacity1115           1.0
+    x111507   Total_Cost          68.0   NodeBalance1107           1.0
+    x111507   NodeBalance1507          -1.0   Capacity1115           1.0
+    x111508   Total_Cost          68.0   NodeBalance1108           1.0
+    x111508   NodeBalance1508          -1.0   Capacity1115           1.0
+    x111509   Total_Cost          68.0   NodeBalance1109           1.0
+    x111509   NodeBalance1509          -1.0   Capacity1115           1.0
+    x111510   Total_Cost          68.0   NodeBalance1110           1.0
+    x111510   NodeBalance1510          -1.0   Capacity1115           1.0
+    x111511   Total_Cost          68.0   NodeBalance1111           1.0
+    x111511   NodeBalance1511          -1.0   Capacity1115           1.0
+    x111512   Total_Cost          68.0   NodeBalance1112           1.0
+    x111512   NodeBalance1512          -1.0   Capacity1115           1.0
+    x111513   Total_Cost          68.0   NodeBalance1113           1.0
+    x111513   NodeBalance1513          -1.0   Capacity1115           1.0
+    x111514   Total_Cost          68.0   NodeBalance1114           1.0
+    x111514   NodeBalance1514          -1.0   Capacity1115           1.0
+    x111515   Total_Cost          68.0   NodeBalance1115           1.0
+    x111515   NodeBalance1515          -1.0   Capacity1115           1.0
+    x111516   Total_Cost          68.0   NodeBalance1116           1.0
+    x111516   NodeBalance1516          -1.0   Capacity1115           1.0
+    x111517   Total_Cost          68.0   NodeBalance1117           1.0
+    x111517   NodeBalance1517          -1.0   Capacity1115           1.0
+    x111518   Total_Cost          68.0   NodeBalance1118           1.0
+    x111518   NodeBalance1518          -1.0   Capacity1115           1.0
+    x111519   Total_Cost          68.0   NodeBalance1119           1.0
+    x111519   NodeBalance1519          -1.0   Capacity1115           1.0
+    x111520   Total_Cost          68.0   NodeBalance1120           1.0
+    x111520   NodeBalance1520          -1.0   Capacity1115           1.0
+    x111521   Total_Cost          68.0   NodeBalance1121           1.0
+    x111521   NodeBalance1521          -1.0   Capacity1115           1.0
+    x111522   Total_Cost          68.0   NodeBalance1122           1.0
+    x111522   NodeBalance1522          -1.0   Capacity1115           1.0
+    x111523   Total_Cost          68.0   NodeBalance1123           1.0
+    x111523   NodeBalance1523          -1.0   Capacity1115           1.0
+    x111524   Total_Cost          68.0   NodeBalance1124           1.0
+    x111524   NodeBalance1524          -1.0   Capacity1115           1.0
+    x111525   Total_Cost          68.0   NodeBalance1125           1.0
+    x111525   NodeBalance1525          -1.0   Capacity1115           1.0
+    x111526   Total_Cost          68.0   NodeBalance1126           1.0
+    x111526   NodeBalance1526          -1.0   Capacity1115           1.0
+    x111527   Total_Cost          68.0   NodeBalance1127           1.0
+    x111527   NodeBalance1527          -1.0   Capacity1115           1.0
+    x111528   Total_Cost          68.0   NodeBalance1128           1.0
+    x111528   NodeBalance1528          -1.0   Capacity1115           1.0
+    x111529   Total_Cost          68.0   NodeBalance1129           1.0
+    x111529   NodeBalance1529          -1.0   Capacity1115           1.0
+    x111530   Total_Cost          68.0   NodeBalance1130           1.0
+    x111530   NodeBalance1530          -1.0   Capacity1115           1.0
+    x111531   Total_Cost          68.0   NodeBalance1131           1.0
+    x111531   NodeBalance1531          -1.0   Capacity1115           1.0
+    x111532   Total_Cost          68.0   NodeBalance1132           1.0
+    x111532   NodeBalance1532          -1.0   Capacity1115           1.0
+    x111533   Total_Cost          68.0   NodeBalance1133           1.0
+    x111533   NodeBalance1533          -1.0   Capacity1115           1.0
+    x111534   Total_Cost          68.0   NodeBalance1134           1.0
+    x111534   NodeBalance1534          -1.0   Capacity1115           1.0
+    x111535   Total_Cost          68.0   NodeBalance1135           1.0
+    x111535   NodeBalance1535          -1.0   Capacity1115           1.0
+    x111536   Total_Cost          68.0   NodeBalance1136           1.0
+    x111536   NodeBalance1536          -1.0   Capacity1115           1.0
+    x111537   Total_Cost          68.0   NodeBalance1137           1.0
+    x111537   NodeBalance1537          -1.0   Capacity1115           1.0
+    x111538   Total_Cost          68.0   NodeBalance1138           1.0
+    x111538   NodeBalance1538          -1.0   Capacity1115           1.0
+    x111539   Total_Cost          68.0   NodeBalance1139           1.0
+    x111539   NodeBalance1539          -1.0   Capacity1115           1.0
+    x111540   Total_Cost          68.0   NodeBalance1140           1.0
+    x111540   NodeBalance1540          -1.0   Capacity1115           1.0
+    x112001   Total_Cost          38.0   NodeBalance1101           1.0
+    x112001   NodeBalance2001          -1.0   Capacity1120           1.0
+    x112002   Total_Cost          38.0   NodeBalance1102           1.0
+    x112002   NodeBalance2002          -1.0   Capacity1120           1.0
+    x112003   Total_Cost          38.0   NodeBalance1103           1.0
+    x112003   NodeBalance2003          -1.0   Capacity1120           1.0
+    x112004   Total_Cost          38.0   NodeBalance1104           1.0
+    x112004   NodeBalance2004          -1.0   Capacity1120           1.0
+    x112005   Total_Cost          38.0   NodeBalance1105           1.0
+    x112005   NodeBalance2005          -1.0   Capacity1120           1.0
+    x112006   Total_Cost          38.0   NodeBalance1106           1.0
+    x112006   NodeBalance2006          -1.0   Capacity1120           1.0
+    x112007   Total_Cost          38.0   NodeBalance1107           1.0
+    x112007   NodeBalance2007          -1.0   Capacity1120           1.0
+    x112008   Total_Cost          38.0   NodeBalance1108           1.0
+    x112008   NodeBalance2008          -1.0   Capacity1120           1.0
+    x112009   Total_Cost          38.0   NodeBalance1109           1.0
+    x112009   NodeBalance2009          -1.0   Capacity1120           1.0
+    x112010   Total_Cost          38.0   NodeBalance1110           1.0
+    x112010   NodeBalance2010          -1.0   Capacity1120           1.0
+    x112011   Total_Cost          38.0   NodeBalance1111           1.0
+    x112011   NodeBalance2011          -1.0   Capacity1120           1.0
+    x112012   Total_Cost          38.0   NodeBalance1112           1.0
+    x112012   NodeBalance2012          -1.0   Capacity1120           1.0
+    x112013   Total_Cost          38.0   NodeBalance1113           1.0
+    x112013   NodeBalance2013          -1.0   Capacity1120           1.0
+    x112014   Total_Cost          38.0   NodeBalance1114           1.0
+    x112014   NodeBalance2014          -1.0   Capacity1120           1.0
+    x112015   Total_Cost          38.0   NodeBalance1115           1.0
+    x112015   NodeBalance2015          -1.0   Capacity1120           1.0
+    x112016   Total_Cost          38.0   NodeBalance1116           1.0
+    x112016   NodeBalance2016          -1.0   Capacity1120           1.0
+    x112017   Total_Cost          38.0   NodeBalance1117           1.0
+    x112017   NodeBalance2017          -1.0   Capacity1120           1.0
+    x112018   Total_Cost          38.0   NodeBalance1118           1.0
+    x112018   NodeBalance2018          -1.0   Capacity1120           1.0
+    x112019   Total_Cost          38.0   NodeBalance1119           1.0
+    x112019   NodeBalance2019          -1.0   Capacity1120           1.0
+    x112020   Total_Cost          38.0   NodeBalance1120           1.0
+    x112020   NodeBalance2020          -1.0   Capacity1120           1.0
+    x112021   Total_Cost          38.0   NodeBalance1121           1.0
+    x112021   NodeBalance2021          -1.0   Capacity1120           1.0
+    x112022   Total_Cost          38.0   NodeBalance1122           1.0
+    x112022   NodeBalance2022          -1.0   Capacity1120           1.0
+    x112023   Total_Cost          38.0   NodeBalance1123           1.0
+    x112023   NodeBalance2023          -1.0   Capacity1120           1.0
+    x112024   Total_Cost          38.0   NodeBalance1124           1.0
+    x112024   NodeBalance2024          -1.0   Capacity1120           1.0
+    x112025   Total_Cost          38.0   NodeBalance1125           1.0
+    x112025   NodeBalance2025          -1.0   Capacity1120           1.0
+    x112026   Total_Cost          38.0   NodeBalance1126           1.0
+    x112026   NodeBalance2026          -1.0   Capacity1120           1.0
+    x112027   Total_Cost          38.0   NodeBalance1127           1.0
+    x112027   NodeBalance2027          -1.0   Capacity1120           1.0
+    x112028   Total_Cost          38.0   NodeBalance1128           1.0
+    x112028   NodeBalance2028          -1.0   Capacity1120           1.0
+    x112029   Total_Cost          38.0   NodeBalance1129           1.0
+    x112029   NodeBalance2029          -1.0   Capacity1120           1.0
+    x112030   Total_Cost          38.0   NodeBalance1130           1.0
+    x112030   NodeBalance2030          -1.0   Capacity1120           1.0
+    x112031   Total_Cost          38.0   NodeBalance1131           1.0
+    x112031   NodeBalance2031          -1.0   Capacity1120           1.0
+    x112032   Total_Cost          38.0   NodeBalance1132           1.0
+    x112032   NodeBalance2032          -1.0   Capacity1120           1.0
+    x112033   Total_Cost          38.0   NodeBalance1133           1.0
+    x112033   NodeBalance2033          -1.0   Capacity1120           1.0
+    x112034   Total_Cost          38.0   NodeBalance1134           1.0
+    x112034   NodeBalance2034          -1.0   Capacity1120           1.0
+    x112035   Total_Cost          38.0   NodeBalance1135           1.0
+    x112035   NodeBalance2035          -1.0   Capacity1120           1.0
+    x112036   Total_Cost          38.0   NodeBalance1136           1.0
+    x112036   NodeBalance2036          -1.0   Capacity1120           1.0
+    x112037   Total_Cost          38.0   NodeBalance1137           1.0
+    x112037   NodeBalance2037          -1.0   Capacity1120           1.0
+    x112038   Total_Cost          38.0   NodeBalance1138           1.0
+    x112038   NodeBalance2038          -1.0   Capacity1120           1.0
+    x112039   Total_Cost          38.0   NodeBalance1139           1.0
+    x112039   NodeBalance2039          -1.0   Capacity1120           1.0
+    x112040   Total_Cost          38.0   NodeBalance1140           1.0
+    x112040   NodeBalance2040          -1.0   Capacity1120           1.0
+    x120301   Total_Cost          88.0   NodeBalance0301          -1.0
+    x120301   NodeBalance1201           1.0   Capacity1203           1.0
+    x120302   Total_Cost          88.0   NodeBalance0302          -1.0
+    x120302   NodeBalance1202           1.0   Capacity1203           1.0
+    x120303   Total_Cost          88.0   NodeBalance0303          -1.0
+    x120303   NodeBalance1203           1.0   Capacity1203           1.0
+    x120304   Total_Cost          88.0   NodeBalance0304          -1.0
+    x120304   NodeBalance1204           1.0   Capacity1203           1.0
+    x120305   Total_Cost          88.0   NodeBalance0305          -1.0
+    x120305   NodeBalance1205           1.0   Capacity1203           1.0
+    x120306   Total_Cost          88.0   NodeBalance0306          -1.0
+    x120306   NodeBalance1206           1.0   Capacity1203           1.0
+    x120307   Total_Cost          88.0   NodeBalance0307          -1.0
+    x120307   NodeBalance1207           1.0   Capacity1203           1.0
+    x120308   Total_Cost          88.0   NodeBalance0308          -1.0
+    x120308   NodeBalance1208           1.0   Capacity1203           1.0
+    x120309   Total_Cost          88.0   NodeBalance0309          -1.0
+    x120309   NodeBalance1209           1.0   Capacity1203           1.0
+    x120310   Total_Cost          88.0   NodeBalance0310          -1.0
+    x120310   NodeBalance1210           1.0   Capacity1203           1.0
+    x120311   Total_Cost          88.0   NodeBalance0311          -1.0
+    x120311   NodeBalance1211           1.0   Capacity1203           1.0
+    x120312   Total_Cost          88.0   NodeBalance0312          -1.0
+    x120312   NodeBalance1212           1.0   Capacity1203           1.0
+    x120313   Total_Cost          88.0   NodeBalance0313          -1.0
+    x120313   NodeBalance1213           1.0   Capacity1203           1.0
+    x120314   Total_Cost          88.0   NodeBalance0314          -1.0
+    x120314   NodeBalance1214           1.0   Capacity1203           1.0
+    x120315   Total_Cost          88.0   NodeBalance0315          -1.0
+    x120315   NodeBalance1215           1.0   Capacity1203           1.0
+    x120316   Total_Cost          88.0   NodeBalance0316          -1.0
+    x120316   NodeBalance1216           1.0   Capacity1203           1.0
+    x120317   Total_Cost          88.0   NodeBalance0317          -1.0
+    x120317   NodeBalance1217           1.0   Capacity1203           1.0
+    x120318   Total_Cost          88.0   NodeBalance0318          -1.0
+    x120318   NodeBalance1218           1.0   Capacity1203           1.0
+    x120319   Total_Cost          88.0   NodeBalance0319          -1.0
+    x120319   NodeBalance1219           1.0   Capacity1203           1.0
+    x120320   Total_Cost          88.0   NodeBalance0320          -1.0
+    x120320   NodeBalance1220           1.0   Capacity1203           1.0
+    x120321   Total_Cost          88.0   NodeBalance0321          -1.0
+    x120321   NodeBalance1221           1.0   Capacity1203           1.0
+    x120322   Total_Cost          88.0   NodeBalance0322          -1.0
+    x120322   NodeBalance1222           1.0   Capacity1203           1.0
+    x120323   Total_Cost          88.0   NodeBalance0323          -1.0
+    x120323   NodeBalance1223           1.0   Capacity1203           1.0
+    x120324   Total_Cost          88.0   NodeBalance0324          -1.0
+    x120324   NodeBalance1224           1.0   Capacity1203           1.0
+    x120325   Total_Cost          88.0   NodeBalance0325          -1.0
+    x120325   NodeBalance1225           1.0   Capacity1203           1.0
+    x120326   Total_Cost          88.0   NodeBalance0326          -1.0
+    x120326   NodeBalance1226           1.0   Capacity1203           1.0
+    x120327   Total_Cost          88.0   NodeBalance0327          -1.0
+    x120327   NodeBalance1227           1.0   Capacity1203           1.0
+    x120328   Total_Cost          88.0   NodeBalance0328          -1.0
+    x120328   NodeBalance1228           1.0   Capacity1203           1.0
+    x120329   Total_Cost          88.0   NodeBalance0329          -1.0
+    x120329   NodeBalance1229           1.0   Capacity1203           1.0
+    x120330   Total_Cost          88.0   NodeBalance0330          -1.0
+    x120330   NodeBalance1230           1.0   Capacity1203           1.0
+    x120331   Total_Cost          88.0   NodeBalance0331          -1.0
+    x120331   NodeBalance1231           1.0   Capacity1203           1.0
+    x120332   Total_Cost          88.0   NodeBalance0332          -1.0
+    x120332   NodeBalance1232           1.0   Capacity1203           1.0
+    x120333   Total_Cost          88.0   NodeBalance0333          -1.0
+    x120333   NodeBalance1233           1.0   Capacity1203           1.0
+    x120334   Total_Cost          88.0   NodeBalance0334          -1.0
+    x120334   NodeBalance1234           1.0   Capacity1203           1.0
+    x120335   Total_Cost          88.0   NodeBalance0335          -1.0
+    x120335   NodeBalance1235           1.0   Capacity1203           1.0
+    x120336   Total_Cost          88.0   NodeBalance0336          -1.0
+    x120336   NodeBalance1236           1.0   Capacity1203           1.0
+    x120337   Total_Cost          88.0   NodeBalance0337          -1.0
+    x120337   NodeBalance1237           1.0   Capacity1203           1.0
+    x120338   Total_Cost          88.0   NodeBalance0338          -1.0
+    x120338   NodeBalance1238           1.0   Capacity1203           1.0
+    x120339   Total_Cost          88.0   NodeBalance0339          -1.0
+    x120339   NodeBalance1239           1.0   Capacity1203           1.0
+    x120340   Total_Cost          88.0   NodeBalance0340          -1.0
+    x120340   NodeBalance1240           1.0   Capacity1203           1.0
+    x120401   Total_Cost          16.0   NodeBalance0401          -1.0
+    x120401   NodeBalance1201           1.0   Capacity1204           1.0
+    x120402   Total_Cost          16.0   NodeBalance0402          -1.0
+    x120402   NodeBalance1202           1.0   Capacity1204           1.0
+    x120403   Total_Cost          16.0   NodeBalance0403          -1.0
+    x120403   NodeBalance1203           1.0   Capacity1204           1.0
+    x120404   Total_Cost          16.0   NodeBalance0404          -1.0
+    x120404   NodeBalance1204           1.0   Capacity1204           1.0
+    x120405   Total_Cost          16.0   NodeBalance0405          -1.0
+    x120405   NodeBalance1205           1.0   Capacity1204           1.0
+    x120406   Total_Cost          16.0   NodeBalance0406          -1.0
+    x120406   NodeBalance1206           1.0   Capacity1204           1.0
+    x120407   Total_Cost          16.0   NodeBalance0407          -1.0
+    x120407   NodeBalance1207           1.0   Capacity1204           1.0
+    x120408   Total_Cost          16.0   NodeBalance0408          -1.0
+    x120408   NodeBalance1208           1.0   Capacity1204           1.0
+    x120409   Total_Cost          16.0   NodeBalance0409          -1.0
+    x120409   NodeBalance1209           1.0   Capacity1204           1.0
+    x120410   Total_Cost          16.0   NodeBalance0410          -1.0
+    x120410   NodeBalance1210           1.0   Capacity1204           1.0
+    x120411   Total_Cost          16.0   NodeBalance0411          -1.0
+    x120411   NodeBalance1211           1.0   Capacity1204           1.0
+    x120412   Total_Cost          16.0   NodeBalance0412          -1.0
+    x120412   NodeBalance1212           1.0   Capacity1204           1.0
+    x120413   Total_Cost          16.0   NodeBalance0413          -1.0
+    x120413   NodeBalance1213           1.0   Capacity1204           1.0
+    x120414   Total_Cost          16.0   NodeBalance0414          -1.0
+    x120414   NodeBalance1214           1.0   Capacity1204           1.0
+    x120415   Total_Cost          16.0   NodeBalance0415          -1.0
+    x120415   NodeBalance1215           1.0   Capacity1204           1.0
+    x120416   Total_Cost          16.0   NodeBalance0416          -1.0
+    x120416   NodeBalance1216           1.0   Capacity1204           1.0
+    x120417   Total_Cost          16.0   NodeBalance0417          -1.0
+    x120417   NodeBalance1217           1.0   Capacity1204           1.0
+    x120418   Total_Cost          16.0   NodeBalance0418          -1.0
+    x120418   NodeBalance1218           1.0   Capacity1204           1.0
+    x120419   Total_Cost          16.0   NodeBalance0419          -1.0
+    x120419   NodeBalance1219           1.0   Capacity1204           1.0
+    x120420   Total_Cost          16.0   NodeBalance0420          -1.0
+    x120420   NodeBalance1220           1.0   Capacity1204           1.0
+    x120421   Total_Cost          16.0   NodeBalance0421          -1.0
+    x120421   NodeBalance1221           1.0   Capacity1204           1.0
+    x120422   Total_Cost          16.0   NodeBalance0422          -1.0
+    x120422   NodeBalance1222           1.0   Capacity1204           1.0
+    x120423   Total_Cost          16.0   NodeBalance0423          -1.0
+    x120423   NodeBalance1223           1.0   Capacity1204           1.0
+    x120424   Total_Cost          16.0   NodeBalance0424          -1.0
+    x120424   NodeBalance1224           1.0   Capacity1204           1.0
+    x120425   Total_Cost          16.0   NodeBalance0425          -1.0
+    x120425   NodeBalance1225           1.0   Capacity1204           1.0
+    x120426   Total_Cost          16.0   NodeBalance0426          -1.0
+    x120426   NodeBalance1226           1.0   Capacity1204           1.0
+    x120427   Total_Cost          16.0   NodeBalance0427          -1.0
+    x120427   NodeBalance1227           1.0   Capacity1204           1.0
+    x120428   Total_Cost          16.0   NodeBalance0428          -1.0
+    x120428   NodeBalance1228           1.0   Capacity1204           1.0
+    x120429   Total_Cost          16.0   NodeBalance0429          -1.0
+    x120429   NodeBalance1229           1.0   Capacity1204           1.0
+    x120430   Total_Cost          16.0   NodeBalance0430          -1.0
+    x120430   NodeBalance1230           1.0   Capacity1204           1.0
+    x120431   Total_Cost          16.0   NodeBalance0431          -1.0
+    x120431   NodeBalance1231           1.0   Capacity1204           1.0
+    x120432   Total_Cost          16.0   NodeBalance0432          -1.0
+    x120432   NodeBalance1232           1.0   Capacity1204           1.0
+    x120433   Total_Cost          16.0   NodeBalance0433          -1.0
+    x120433   NodeBalance1233           1.0   Capacity1204           1.0
+    x120434   Total_Cost          16.0   NodeBalance0434          -1.0
+    x120434   NodeBalance1234           1.0   Capacity1204           1.0
+    x120435   Total_Cost          16.0   NodeBalance0435          -1.0
+    x120435   NodeBalance1235           1.0   Capacity1204           1.0
+    x120436   Total_Cost          16.0   NodeBalance0436          -1.0
+    x120436   NodeBalance1236           1.0   Capacity1204           1.0
+    x120437   Total_Cost          16.0   NodeBalance0437          -1.0
+    x120437   NodeBalance1237           1.0   Capacity1204           1.0
+    x120438   Total_Cost          16.0   NodeBalance0438          -1.0
+    x120438   NodeBalance1238           1.0   Capacity1204           1.0
+    x120439   Total_Cost          16.0   NodeBalance0439          -1.0
+    x120439   NodeBalance1239           1.0   Capacity1204           1.0
+    x120440   Total_Cost          16.0   NodeBalance0440          -1.0
+    x120440   NodeBalance1240           1.0   Capacity1204           1.0
+    x121001   Total_Cost          70.0   NodeBalance1001          -1.0
+    x121001   NodeBalance1201           1.0   Capacity1210           1.0
+    x121002   Total_Cost          70.0   NodeBalance1002          -1.0
+    x121002   NodeBalance1202           1.0   Capacity1210           1.0
+    x121003   Total_Cost          70.0   NodeBalance1003          -1.0
+    x121003   NodeBalance1203           1.0   Capacity1210           1.0
+    x121004   Total_Cost          70.0   NodeBalance1004          -1.0
+    x121004   NodeBalance1204           1.0   Capacity1210           1.0
+    x121005   Total_Cost          70.0   NodeBalance1005          -1.0
+    x121005   NodeBalance1205           1.0   Capacity1210           1.0
+    x121006   Total_Cost          70.0   NodeBalance1006          -1.0
+    x121006   NodeBalance1206           1.0   Capacity1210           1.0
+    x121007   Total_Cost          70.0   NodeBalance1007          -1.0
+    x121007   NodeBalance1207           1.0   Capacity1210           1.0
+    x121008   Total_Cost          70.0   NodeBalance1008          -1.0
+    x121008   NodeBalance1208           1.0   Capacity1210           1.0
+    x121009   Total_Cost          70.0   NodeBalance1009          -1.0
+    x121009   NodeBalance1209           1.0   Capacity1210           1.0
+    x121010   Total_Cost          70.0   NodeBalance1010          -1.0
+    x121010   NodeBalance1210           1.0   Capacity1210           1.0
+    x121011   Total_Cost          70.0   NodeBalance1011          -1.0
+    x121011   NodeBalance1211           1.0   Capacity1210           1.0
+    x121012   Total_Cost          70.0   NodeBalance1012          -1.0
+    x121012   NodeBalance1212           1.0   Capacity1210           1.0
+    x121013   Total_Cost          70.0   NodeBalance1013          -1.0
+    x121013   NodeBalance1213           1.0   Capacity1210           1.0
+    x121014   Total_Cost          70.0   NodeBalance1014          -1.0
+    x121014   NodeBalance1214           1.0   Capacity1210           1.0
+    x121015   Total_Cost          70.0   NodeBalance1015          -1.0
+    x121015   NodeBalance1215           1.0   Capacity1210           1.0
+    x121016   Total_Cost          70.0   NodeBalance1016          -1.0
+    x121016   NodeBalance1216           1.0   Capacity1210           1.0
+    x121017   Total_Cost          70.0   NodeBalance1017          -1.0
+    x121017   NodeBalance1217           1.0   Capacity1210           1.0
+    x121018   Total_Cost          70.0   NodeBalance1018          -1.0
+    x121018   NodeBalance1218           1.0   Capacity1210           1.0
+    x121019   Total_Cost          70.0   NodeBalance1019          -1.0
+    x121019   NodeBalance1219           1.0   Capacity1210           1.0
+    x121020   Total_Cost          70.0   NodeBalance1020          -1.0
+    x121020   NodeBalance1220           1.0   Capacity1210           1.0
+    x121021   Total_Cost          70.0   NodeBalance1021          -1.0
+    x121021   NodeBalance1221           1.0   Capacity1210           1.0
+    x121022   Total_Cost          70.0   NodeBalance1022          -1.0
+    x121022   NodeBalance1222           1.0   Capacity1210           1.0
+    x121023   Total_Cost          70.0   NodeBalance1023          -1.0
+    x121023   NodeBalance1223           1.0   Capacity1210           1.0
+    x121024   Total_Cost          70.0   NodeBalance1024          -1.0
+    x121024   NodeBalance1224           1.0   Capacity1210           1.0
+    x121025   Total_Cost          70.0   NodeBalance1025          -1.0
+    x121025   NodeBalance1225           1.0   Capacity1210           1.0
+    x121026   Total_Cost          70.0   NodeBalance1026          -1.0
+    x121026   NodeBalance1226           1.0   Capacity1210           1.0
+    x121027   Total_Cost          70.0   NodeBalance1027          -1.0
+    x121027   NodeBalance1227           1.0   Capacity1210           1.0
+    x121028   Total_Cost          70.0   NodeBalance1028          -1.0
+    x121028   NodeBalance1228           1.0   Capacity1210           1.0
+    x121029   Total_Cost          70.0   NodeBalance1029          -1.0
+    x121029   NodeBalance1229           1.0   Capacity1210           1.0
+    x121030   Total_Cost          70.0   NodeBalance1030          -1.0
+    x121030   NodeBalance1230           1.0   Capacity1210           1.0
+    x121031   Total_Cost          70.0   NodeBalance1031          -1.0
+    x121031   NodeBalance1231           1.0   Capacity1210           1.0
+    x121032   Total_Cost          70.0   NodeBalance1032          -1.0
+    x121032   NodeBalance1232           1.0   Capacity1210           1.0
+    x121033   Total_Cost          70.0   NodeBalance1033          -1.0
+    x121033   NodeBalance1233           1.0   Capacity1210           1.0
+    x121034   Total_Cost          70.0   NodeBalance1034          -1.0
+    x121034   NodeBalance1234           1.0   Capacity1210           1.0
+    x121035   Total_Cost          70.0   NodeBalance1035          -1.0
+    x121035   NodeBalance1235           1.0   Capacity1210           1.0
+    x121036   Total_Cost          70.0   NodeBalance1036          -1.0
+    x121036   NodeBalance1236           1.0   Capacity1210           1.0
+    x121037   Total_Cost          70.0   NodeBalance1037          -1.0
+    x121037   NodeBalance1237           1.0   Capacity1210           1.0
+    x121038   Total_Cost          70.0   NodeBalance1038          -1.0
+    x121038   NodeBalance1238           1.0   Capacity1210           1.0
+    x121039   Total_Cost          70.0   NodeBalance1039          -1.0
+    x121039   NodeBalance1239           1.0   Capacity1210           1.0
+    x121040   Total_Cost          70.0   NodeBalance1040          -1.0
+    x121040   NodeBalance1240           1.0   Capacity1210           1.0
+    x121301   Total_Cost         100.0   NodeBalance1201           1.0
+    x121301   NodeBalance1301          -1.0   Capacity1213           1.0
+    x121302   Total_Cost         100.0   NodeBalance1202           1.0
+    x121302   NodeBalance1302          -1.0   Capacity1213           1.0
+    x121303   Total_Cost         100.0   NodeBalance1203           1.0
+    x121303   NodeBalance1303          -1.0   Capacity1213           1.0
+    x121304   Total_Cost         100.0   NodeBalance1204           1.0
+    x121304   NodeBalance1304          -1.0   Capacity1213           1.0
+    x121305   Total_Cost         100.0   NodeBalance1205           1.0
+    x121305   NodeBalance1305          -1.0   Capacity1213           1.0
+    x121306   Total_Cost         100.0   NodeBalance1206           1.0
+    x121306   NodeBalance1306          -1.0   Capacity1213           1.0
+    x121307   Total_Cost         100.0   NodeBalance1207           1.0
+    x121307   NodeBalance1307          -1.0   Capacity1213           1.0
+    x121308   Total_Cost         100.0   NodeBalance1208           1.0
+    x121308   NodeBalance1308          -1.0   Capacity1213           1.0
+    x121309   Total_Cost         100.0   NodeBalance1209           1.0
+    x121309   NodeBalance1309          -1.0   Capacity1213           1.0
+    x121310   Total_Cost         100.0   NodeBalance1210           1.0
+    x121310   NodeBalance1310          -1.0   Capacity1213           1.0
+    x121311   Total_Cost         100.0   NodeBalance1211           1.0
+    x121311   NodeBalance1311          -1.0   Capacity1213           1.0
+    x121312   Total_Cost         100.0   NodeBalance1212           1.0
+    x121312   NodeBalance1312          -1.0   Capacity1213           1.0
+    x121313   Total_Cost         100.0   NodeBalance1213           1.0
+    x121313   NodeBalance1313          -1.0   Capacity1213           1.0
+    x121314   Total_Cost         100.0   NodeBalance1214           1.0
+    x121314   NodeBalance1314          -1.0   Capacity1213           1.0
+    x121315   Total_Cost         100.0   NodeBalance1215           1.0
+    x121315   NodeBalance1315          -1.0   Capacity1213           1.0
+    x121316   Total_Cost         100.0   NodeBalance1216           1.0
+    x121316   NodeBalance1316          -1.0   Capacity1213           1.0
+    x121317   Total_Cost         100.0   NodeBalance1217           1.0
+    x121317   NodeBalance1317          -1.0   Capacity1213           1.0
+    x121318   Total_Cost         100.0   NodeBalance1218           1.0
+    x121318   NodeBalance1318          -1.0   Capacity1213           1.0
+    x121319   Total_Cost         100.0   NodeBalance1219           1.0
+    x121319   NodeBalance1319          -1.0   Capacity1213           1.0
+    x121320   Total_Cost         100.0   NodeBalance1220           1.0
+    x121320   NodeBalance1320          -1.0   Capacity1213           1.0
+    x121321   Total_Cost         100.0   NodeBalance1221           1.0
+    x121321   NodeBalance1321          -1.0   Capacity1213           1.0
+    x121322   Total_Cost         100.0   NodeBalance1222           1.0
+    x121322   NodeBalance1322          -1.0   Capacity1213           1.0
+    x121323   Total_Cost         100.0   NodeBalance1223           1.0
+    x121323   NodeBalance1323          -1.0   Capacity1213           1.0
+    x121324   Total_Cost         100.0   NodeBalance1224           1.0
+    x121324   NodeBalance1324          -1.0   Capacity1213           1.0
+    x121325   Total_Cost         100.0   NodeBalance1225           1.0
+    x121325   NodeBalance1325          -1.0   Capacity1213           1.0
+    x121326   Total_Cost         100.0   NodeBalance1226           1.0
+    x121326   NodeBalance1326          -1.0   Capacity1213           1.0
+    x121327   Total_Cost         100.0   NodeBalance1227           1.0
+    x121327   NodeBalance1327          -1.0   Capacity1213           1.0
+    x121328   Total_Cost         100.0   NodeBalance1228           1.0
+    x121328   NodeBalance1328          -1.0   Capacity1213           1.0
+    x121329   Total_Cost         100.0   NodeBalance1229           1.0
+    x121329   NodeBalance1329          -1.0   Capacity1213           1.0
+    x121330   Total_Cost         100.0   NodeBalance1230           1.0
+    x121330   NodeBalance1330          -1.0   Capacity1213           1.0
+    x121331   Total_Cost         100.0   NodeBalance1231           1.0
+    x121331   NodeBalance1331          -1.0   Capacity1213           1.0
+    x121332   Total_Cost         100.0   NodeBalance1232           1.0
+    x121332   NodeBalance1332          -1.0   Capacity1213           1.0
+    x121333   Total_Cost         100.0   NodeBalance1233           1.0
+    x121333   NodeBalance1333          -1.0   Capacity1213           1.0
+    x121334   Total_Cost         100.0   NodeBalance1234           1.0
+    x121334   NodeBalance1334          -1.0   Capacity1213           1.0
+    x121335   Total_Cost         100.0   NodeBalance1235           1.0
+    x121335   NodeBalance1335          -1.0   Capacity1213           1.0
+    x121336   Total_Cost         100.0   NodeBalance1236           1.0
+    x121336   NodeBalance1336          -1.0   Capacity1213           1.0
+    x121337   Total_Cost         100.0   NodeBalance1237           1.0
+    x121337   NodeBalance1337          -1.0   Capacity1213           1.0
+    x121338   Total_Cost         100.0   NodeBalance1238           1.0
+    x121338   NodeBalance1338          -1.0   Capacity1213           1.0
+    x121339   Total_Cost         100.0   NodeBalance1239           1.0
+    x121339   NodeBalance1339          -1.0   Capacity1213           1.0
+    x121340   Total_Cost         100.0   NodeBalance1240           1.0
+    x121340   NodeBalance1340          -1.0   Capacity1213           1.0
+    x121501   Total_Cost          83.0   NodeBalance1201           1.0
+    x121501   NodeBalance1501          -1.0   Capacity1215           1.0
+    x121502   Total_Cost          83.0   NodeBalance1202           1.0
+    x121502   NodeBalance1502          -1.0   Capacity1215           1.0
+    x121503   Total_Cost          83.0   NodeBalance1203           1.0
+    x121503   NodeBalance1503          -1.0   Capacity1215           1.0
+    x121504   Total_Cost          83.0   NodeBalance1204           1.0
+    x121504   NodeBalance1504          -1.0   Capacity1215           1.0
+    x121505   Total_Cost          83.0   NodeBalance1205           1.0
+    x121505   NodeBalance1505          -1.0   Capacity1215           1.0
+    x121506   Total_Cost          83.0   NodeBalance1206           1.0
+    x121506   NodeBalance1506          -1.0   Capacity1215           1.0
+    x121507   Total_Cost          83.0   NodeBalance1207           1.0
+    x121507   NodeBalance1507          -1.0   Capacity1215           1.0
+    x121508   Total_Cost          83.0   NodeBalance1208           1.0
+    x121508   NodeBalance1508          -1.0   Capacity1215           1.0
+    x121509   Total_Cost          83.0   NodeBalance1209           1.0
+    x121509   NodeBalance1509          -1.0   Capacity1215           1.0
+    x121510   Total_Cost          83.0   NodeBalance1210           1.0
+    x121510   NodeBalance1510          -1.0   Capacity1215           1.0
+    x121511   Total_Cost          83.0   NodeBalance1211           1.0
+    x121511   NodeBalance1511          -1.0   Capacity1215           1.0
+    x121512   Total_Cost          83.0   NodeBalance1212           1.0
+    x121512   NodeBalance1512          -1.0   Capacity1215           1.0
+    x121513   Total_Cost          83.0   NodeBalance1213           1.0
+    x121513   NodeBalance1513          -1.0   Capacity1215           1.0
+    x121514   Total_Cost          83.0   NodeBalance1214           1.0
+    x121514   NodeBalance1514          -1.0   Capacity1215           1.0
+    x121515   Total_Cost          83.0   NodeBalance1215           1.0
+    x121515   NodeBalance1515          -1.0   Capacity1215           1.0
+    x121516   Total_Cost          83.0   NodeBalance1216           1.0
+    x121516   NodeBalance1516          -1.0   Capacity1215           1.0
+    x121517   Total_Cost          83.0   NodeBalance1217           1.0
+    x121517   NodeBalance1517          -1.0   Capacity1215           1.0
+    x121518   Total_Cost          83.0   NodeBalance1218           1.0
+    x121518   NodeBalance1518          -1.0   Capacity1215           1.0
+    x121519   Total_Cost          83.0   NodeBalance1219           1.0
+    x121519   NodeBalance1519          -1.0   Capacity1215           1.0
+    x121520   Total_Cost          83.0   NodeBalance1220           1.0
+    x121520   NodeBalance1520          -1.0   Capacity1215           1.0
+    x121521   Total_Cost          83.0   NodeBalance1221           1.0
+    x121521   NodeBalance1521          -1.0   Capacity1215           1.0
+    x121522   Total_Cost          83.0   NodeBalance1222           1.0
+    x121522   NodeBalance1522          -1.0   Capacity1215           1.0
+    x121523   Total_Cost          83.0   NodeBalance1223           1.0
+    x121523   NodeBalance1523          -1.0   Capacity1215           1.0
+    x121524   Total_Cost          83.0   NodeBalance1224           1.0
+    x121524   NodeBalance1524          -1.0   Capacity1215           1.0
+    x121525   Total_Cost          83.0   NodeBalance1225           1.0
+    x121525   NodeBalance1525          -1.0   Capacity1215           1.0
+    x121526   Total_Cost          83.0   NodeBalance1226           1.0
+    x121526   NodeBalance1526          -1.0   Capacity1215           1.0
+    x121527   Total_Cost          83.0   NodeBalance1227           1.0
+    x121527   NodeBalance1527          -1.0   Capacity1215           1.0
+    x121528   Total_Cost          83.0   NodeBalance1228           1.0
+    x121528   NodeBalance1528          -1.0   Capacity1215           1.0
+    x121529   Total_Cost          83.0   NodeBalance1229           1.0
+    x121529   NodeBalance1529          -1.0   Capacity1215           1.0
+    x121530   Total_Cost          83.0   NodeBalance1230           1.0
+    x121530   NodeBalance1530          -1.0   Capacity1215           1.0
+    x121531   Total_Cost          83.0   NodeBalance1231           1.0
+    x121531   NodeBalance1531          -1.0   Capacity1215           1.0
+    x121532   Total_Cost          83.0   NodeBalance1232           1.0
+    x121532   NodeBalance1532          -1.0   Capacity1215           1.0
+    x121533   Total_Cost          83.0   NodeBalance1233           1.0
+    x121533   NodeBalance1533          -1.0   Capacity1215           1.0
+    x121534   Total_Cost          83.0   NodeBalance1234           1.0
+    x121534   NodeBalance1534          -1.0   Capacity1215           1.0
+    x121535   Total_Cost          83.0   NodeBalance1235           1.0
+    x121535   NodeBalance1535          -1.0   Capacity1215           1.0
+    x121536   Total_Cost          83.0   NodeBalance1236           1.0
+    x121536   NodeBalance1536          -1.0   Capacity1215           1.0
+    x121537   Total_Cost          83.0   NodeBalance1237           1.0
+    x121537   NodeBalance1537          -1.0   Capacity1215           1.0
+    x121538   Total_Cost          83.0   NodeBalance1238           1.0
+    x121538   NodeBalance1538          -1.0   Capacity1215           1.0
+    x121539   Total_Cost          83.0   NodeBalance1239           1.0
+    x121539   NodeBalance1539          -1.0   Capacity1215           1.0
+    x121540   Total_Cost          83.0   NodeBalance1240           1.0
+    x121540   NodeBalance1540          -1.0   Capacity1215           1.0
+    x121701   Total_Cost          68.0   NodeBalance1201           1.0
+    x121701   NodeBalance1701          -1.0   Capacity1217           1.0
+    x121702   Total_Cost          68.0   NodeBalance1202           1.0
+    x121702   NodeBalance1702          -1.0   Capacity1217           1.0
+    x121703   Total_Cost          68.0   NodeBalance1203           1.0
+    x121703   NodeBalance1703          -1.0   Capacity1217           1.0
+    x121704   Total_Cost          68.0   NodeBalance1204           1.0
+    x121704   NodeBalance1704          -1.0   Capacity1217           1.0
+    x121705   Total_Cost          68.0   NodeBalance1205           1.0
+    x121705   NodeBalance1705          -1.0   Capacity1217           1.0
+    x121706   Total_Cost          68.0   NodeBalance1206           1.0
+    x121706   NodeBalance1706          -1.0   Capacity1217           1.0
+    x121707   Total_Cost          68.0   NodeBalance1207           1.0
+    x121707   NodeBalance1707          -1.0   Capacity1217           1.0
+    x121708   Total_Cost          68.0   NodeBalance1208           1.0
+    x121708   NodeBalance1708          -1.0   Capacity1217           1.0
+    x121709   Total_Cost          68.0   NodeBalance1209           1.0
+    x121709   NodeBalance1709          -1.0   Capacity1217           1.0
+    x121710   Total_Cost          68.0   NodeBalance1210           1.0
+    x121710   NodeBalance1710          -1.0   Capacity1217           1.0
+    x121711   Total_Cost          68.0   NodeBalance1211           1.0
+    x121711   NodeBalance1711          -1.0   Capacity1217           1.0
+    x121712   Total_Cost          68.0   NodeBalance1212           1.0
+    x121712   NodeBalance1712          -1.0   Capacity1217           1.0
+    x121713   Total_Cost          68.0   NodeBalance1213           1.0
+    x121713   NodeBalance1713          -1.0   Capacity1217           1.0
+    x121714   Total_Cost          68.0   NodeBalance1214           1.0
+    x121714   NodeBalance1714          -1.0   Capacity1217           1.0
+    x121715   Total_Cost          68.0   NodeBalance1215           1.0
+    x121715   NodeBalance1715          -1.0   Capacity1217           1.0
+    x121716   Total_Cost          68.0   NodeBalance1216           1.0
+    x121716   NodeBalance1716          -1.0   Capacity1217           1.0
+    x121717   Total_Cost          68.0   NodeBalance1217           1.0
+    x121717   NodeBalance1717          -1.0   Capacity1217           1.0
+    x121718   Total_Cost          68.0   NodeBalance1218           1.0
+    x121718   NodeBalance1718          -1.0   Capacity1217           1.0
+    x121719   Total_Cost          68.0   NodeBalance1219           1.0
+    x121719   NodeBalance1719          -1.0   Capacity1217           1.0
+    x121720   Total_Cost          68.0   NodeBalance1220           1.0
+    x121720   NodeBalance1720          -1.0   Capacity1217           1.0
+    x121721   Total_Cost          68.0   NodeBalance1221           1.0
+    x121721   NodeBalance1721          -1.0   Capacity1217           1.0
+    x121722   Total_Cost          68.0   NodeBalance1222           1.0
+    x121722   NodeBalance1722          -1.0   Capacity1217           1.0
+    x121723   Total_Cost          68.0   NodeBalance1223           1.0
+    x121723   NodeBalance1723          -1.0   Capacity1217           1.0
+    x121724   Total_Cost          68.0   NodeBalance1224           1.0
+    x121724   NodeBalance1724          -1.0   Capacity1217           1.0
+    x121725   Total_Cost          68.0   NodeBalance1225           1.0
+    x121725   NodeBalance1725          -1.0   Capacity1217           1.0
+    x121726   Total_Cost          68.0   NodeBalance1226           1.0
+    x121726   NodeBalance1726          -1.0   Capacity1217           1.0
+    x121727   Total_Cost          68.0   NodeBalance1227           1.0
+    x121727   NodeBalance1727          -1.0   Capacity1217           1.0
+    x121728   Total_Cost          68.0   NodeBalance1228           1.0
+    x121728   NodeBalance1728          -1.0   Capacity1217           1.0
+    x121729   Total_Cost          68.0   NodeBalance1229           1.0
+    x121729   NodeBalance1729          -1.0   Capacity1217           1.0
+    x121730   Total_Cost          68.0   NodeBalance1230           1.0
+    x121730   NodeBalance1730          -1.0   Capacity1217           1.0
+    x121731   Total_Cost          68.0   NodeBalance1231           1.0
+    x121731   NodeBalance1731          -1.0   Capacity1217           1.0
+    x121732   Total_Cost          68.0   NodeBalance1232           1.0
+    x121732   NodeBalance1732          -1.0   Capacity1217           1.0
+    x121733   Total_Cost          68.0   NodeBalance1233           1.0
+    x121733   NodeBalance1733          -1.0   Capacity1217           1.0
+    x121734   Total_Cost          68.0   NodeBalance1234           1.0
+    x121734   NodeBalance1734          -1.0   Capacity1217           1.0
+    x121735   Total_Cost          68.0   NodeBalance1235           1.0
+    x121735   NodeBalance1735          -1.0   Capacity1217           1.0
+    x121736   Total_Cost          68.0   NodeBalance1236           1.0
+    x121736   NodeBalance1736          -1.0   Capacity1217           1.0
+    x121737   Total_Cost          68.0   NodeBalance1237           1.0
+    x121737   NodeBalance1737          -1.0   Capacity1217           1.0
+    x121738   Total_Cost          68.0   NodeBalance1238           1.0
+    x121738   NodeBalance1738          -1.0   Capacity1217           1.0
+    x121739   Total_Cost          68.0   NodeBalance1239           1.0
+    x121739   NodeBalance1739          -1.0   Capacity1217           1.0
+    x121740   Total_Cost          68.0   NodeBalance1240           1.0
+    x121740   NodeBalance1740          -1.0   Capacity1217           1.0
+    x121801   Total_Cost          50.0   NodeBalance1201           1.0
+    x121801   NodeBalance1801          -1.0   Capacity1218           1.0
+    x121802   Total_Cost          50.0   NodeBalance1202           1.0
+    x121802   NodeBalance1802          -1.0   Capacity1218           1.0
+    x121803   Total_Cost          50.0   NodeBalance1203           1.0
+    x121803   NodeBalance1803          -1.0   Capacity1218           1.0
+    x121804   Total_Cost          50.0   NodeBalance1204           1.0
+    x121804   NodeBalance1804          -1.0   Capacity1218           1.0
+    x121805   Total_Cost          50.0   NodeBalance1205           1.0
+    x121805   NodeBalance1805          -1.0   Capacity1218           1.0
+    x121806   Total_Cost          50.0   NodeBalance1206           1.0
+    x121806   NodeBalance1806          -1.0   Capacity1218           1.0
+    x121807   Total_Cost          50.0   NodeBalance1207           1.0
+    x121807   NodeBalance1807          -1.0   Capacity1218           1.0
+    x121808   Total_Cost          50.0   NodeBalance1208           1.0
+    x121808   NodeBalance1808          -1.0   Capacity1218           1.0
+    x121809   Total_Cost          50.0   NodeBalance1209           1.0
+    x121809   NodeBalance1809          -1.0   Capacity1218           1.0
+    x121810   Total_Cost          50.0   NodeBalance1210           1.0
+    x121810   NodeBalance1810          -1.0   Capacity1218           1.0
+    x121811   Total_Cost          50.0   NodeBalance1211           1.0
+    x121811   NodeBalance1811          -1.0   Capacity1218           1.0
+    x121812   Total_Cost          50.0   NodeBalance1212           1.0
+    x121812   NodeBalance1812          -1.0   Capacity1218           1.0
+    x121813   Total_Cost          50.0   NodeBalance1213           1.0
+    x121813   NodeBalance1813          -1.0   Capacity1218           1.0
+    x121814   Total_Cost          50.0   NodeBalance1214           1.0
+    x121814   NodeBalance1814          -1.0   Capacity1218           1.0
+    x121815   Total_Cost          50.0   NodeBalance1215           1.0
+    x121815   NodeBalance1815          -1.0   Capacity1218           1.0
+    x121816   Total_Cost          50.0   NodeBalance1216           1.0
+    x121816   NodeBalance1816          -1.0   Capacity1218           1.0
+    x121817   Total_Cost          50.0   NodeBalance1217           1.0
+    x121817   NodeBalance1817          -1.0   Capacity1218           1.0
+    x121818   Total_Cost          50.0   NodeBalance1218           1.0
+    x121818   NodeBalance1818          -1.0   Capacity1218           1.0
+    x121819   Total_Cost          50.0   NodeBalance1219           1.0
+    x121819   NodeBalance1819          -1.0   Capacity1218           1.0
+    x121820   Total_Cost          50.0   NodeBalance1220           1.0
+    x121820   NodeBalance1820          -1.0   Capacity1218           1.0
+    x121821   Total_Cost          50.0   NodeBalance1221           1.0
+    x121821   NodeBalance1821          -1.0   Capacity1218           1.0
+    x121822   Total_Cost          50.0   NodeBalance1222           1.0
+    x121822   NodeBalance1822          -1.0   Capacity1218           1.0
+    x121823   Total_Cost          50.0   NodeBalance1223           1.0
+    x121823   NodeBalance1823          -1.0   Capacity1218           1.0
+    x121824   Total_Cost          50.0   NodeBalance1224           1.0
+    x121824   NodeBalance1824          -1.0   Capacity1218           1.0
+    x121825   Total_Cost          50.0   NodeBalance1225           1.0
+    x121825   NodeBalance1825          -1.0   Capacity1218           1.0
+    x121826   Total_Cost          50.0   NodeBalance1226           1.0
+    x121826   NodeBalance1826          -1.0   Capacity1218           1.0
+    x121827   Total_Cost          50.0   NodeBalance1227           1.0
+    x121827   NodeBalance1827          -1.0   Capacity1218           1.0
+    x121828   Total_Cost          50.0   NodeBalance1228           1.0
+    x121828   NodeBalance1828          -1.0   Capacity1218           1.0
+    x121829   Total_Cost          50.0   NodeBalance1229           1.0
+    x121829   NodeBalance1829          -1.0   Capacity1218           1.0
+    x121830   Total_Cost          50.0   NodeBalance1230           1.0
+    x121830   NodeBalance1830          -1.0   Capacity1218           1.0
+    x121831   Total_Cost          50.0   NodeBalance1231           1.0
+    x121831   NodeBalance1831          -1.0   Capacity1218           1.0
+    x121832   Total_Cost          50.0   NodeBalance1232           1.0
+    x121832   NodeBalance1832          -1.0   Capacity1218           1.0
+    x121833   Total_Cost          50.0   NodeBalance1233           1.0
+    x121833   NodeBalance1833          -1.0   Capacity1218           1.0
+    x121834   Total_Cost          50.0   NodeBalance1234           1.0
+    x121834   NodeBalance1834          -1.0   Capacity1218           1.0
+    x121835   Total_Cost          50.0   NodeBalance1235           1.0
+    x121835   NodeBalance1835          -1.0   Capacity1218           1.0
+    x121836   Total_Cost          50.0   NodeBalance1236           1.0
+    x121836   NodeBalance1836          -1.0   Capacity1218           1.0
+    x121837   Total_Cost          50.0   NodeBalance1237           1.0
+    x121837   NodeBalance1837          -1.0   Capacity1218           1.0
+    x121838   Total_Cost          50.0   NodeBalance1238           1.0
+    x121838   NodeBalance1838          -1.0   Capacity1218           1.0
+    x121839   Total_Cost          50.0   NodeBalance1239           1.0
+    x121839   NodeBalance1839          -1.0   Capacity1218           1.0
+    x121840   Total_Cost          50.0   NodeBalance1240           1.0
+    x121840   NodeBalance1840          -1.0   Capacity1218           1.0
+    x122001   Total_Cost          63.0   NodeBalance1201           1.0
+    x122001   NodeBalance2001          -1.0   Capacity1220           1.0
+    x122002   Total_Cost          63.0   NodeBalance1202           1.0
+    x122002   NodeBalance2002          -1.0   Capacity1220           1.0
+    x122003   Total_Cost          63.0   NodeBalance1203           1.0
+    x122003   NodeBalance2003          -1.0   Capacity1220           1.0
+    x122004   Total_Cost          63.0   NodeBalance1204           1.0
+    x122004   NodeBalance2004          -1.0   Capacity1220           1.0
+    x122005   Total_Cost          63.0   NodeBalance1205           1.0
+    x122005   NodeBalance2005          -1.0   Capacity1220           1.0
+    x122006   Total_Cost          63.0   NodeBalance1206           1.0
+    x122006   NodeBalance2006          -1.0   Capacity1220           1.0
+    x122007   Total_Cost          63.0   NodeBalance1207           1.0
+    x122007   NodeBalance2007          -1.0   Capacity1220           1.0
+    x122008   Total_Cost          63.0   NodeBalance1208           1.0
+    x122008   NodeBalance2008          -1.0   Capacity1220           1.0
+    x122009   Total_Cost          63.0   NodeBalance1209           1.0
+    x122009   NodeBalance2009          -1.0   Capacity1220           1.0
+    x122010   Total_Cost          63.0   NodeBalance1210           1.0
+    x122010   NodeBalance2010          -1.0   Capacity1220           1.0
+    x122011   Total_Cost          63.0   NodeBalance1211           1.0
+    x122011   NodeBalance2011          -1.0   Capacity1220           1.0
+    x122012   Total_Cost          63.0   NodeBalance1212           1.0
+    x122012   NodeBalance2012          -1.0   Capacity1220           1.0
+    x122013   Total_Cost          63.0   NodeBalance1213           1.0
+    x122013   NodeBalance2013          -1.0   Capacity1220           1.0
+    x122014   Total_Cost          63.0   NodeBalance1214           1.0
+    x122014   NodeBalance2014          -1.0   Capacity1220           1.0
+    x122015   Total_Cost          63.0   NodeBalance1215           1.0
+    x122015   NodeBalance2015          -1.0   Capacity1220           1.0
+    x122016   Total_Cost          63.0   NodeBalance1216           1.0
+    x122016   NodeBalance2016          -1.0   Capacity1220           1.0
+    x122017   Total_Cost          63.0   NodeBalance1217           1.0
+    x122017   NodeBalance2017          -1.0   Capacity1220           1.0
+    x122018   Total_Cost          63.0   NodeBalance1218           1.0
+    x122018   NodeBalance2018          -1.0   Capacity1220           1.0
+    x122019   Total_Cost          63.0   NodeBalance1219           1.0
+    x122019   NodeBalance2019          -1.0   Capacity1220           1.0
+    x122020   Total_Cost          63.0   NodeBalance1220           1.0
+    x122020   NodeBalance2020          -1.0   Capacity1220           1.0
+    x122021   Total_Cost          63.0   NodeBalance1221           1.0
+    x122021   NodeBalance2021          -1.0   Capacity1220           1.0
+    x122022   Total_Cost          63.0   NodeBalance1222           1.0
+    x122022   NodeBalance2022          -1.0   Capacity1220           1.0
+    x122023   Total_Cost          63.0   NodeBalance1223           1.0
+    x122023   NodeBalance2023          -1.0   Capacity1220           1.0
+    x122024   Total_Cost          63.0   NodeBalance1224           1.0
+    x122024   NodeBalance2024          -1.0   Capacity1220           1.0
+    x122025   Total_Cost          63.0   NodeBalance1225           1.0
+    x122025   NodeBalance2025          -1.0   Capacity1220           1.0
+    x122026   Total_Cost          63.0   NodeBalance1226           1.0
+    x122026   NodeBalance2026          -1.0   Capacity1220           1.0
+    x122027   Total_Cost          63.0   NodeBalance1227           1.0
+    x122027   NodeBalance2027          -1.0   Capacity1220           1.0
+    x122028   Total_Cost          63.0   NodeBalance1228           1.0
+    x122028   NodeBalance2028          -1.0   Capacity1220           1.0
+    x122029   Total_Cost          63.0   NodeBalance1229           1.0
+    x122029   NodeBalance2029          -1.0   Capacity1220           1.0
+    x122030   Total_Cost          63.0   NodeBalance1230           1.0
+    x122030   NodeBalance2030          -1.0   Capacity1220           1.0
+    x122031   Total_Cost          63.0   NodeBalance1231           1.0
+    x122031   NodeBalance2031          -1.0   Capacity1220           1.0
+    x122032   Total_Cost          63.0   NodeBalance1232           1.0
+    x122032   NodeBalance2032          -1.0   Capacity1220           1.0
+    x122033   Total_Cost          63.0   NodeBalance1233           1.0
+    x122033   NodeBalance2033          -1.0   Capacity1220           1.0
+    x122034   Total_Cost          63.0   NodeBalance1234           1.0
+    x122034   NodeBalance2034          -1.0   Capacity1220           1.0
+    x122035   Total_Cost          63.0   NodeBalance1235           1.0
+    x122035   NodeBalance2035          -1.0   Capacity1220           1.0
+    x122036   Total_Cost          63.0   NodeBalance1236           1.0
+    x122036   NodeBalance2036          -1.0   Capacity1220           1.0
+    x122037   Total_Cost          63.0   NodeBalance1237           1.0
+    x122037   NodeBalance2037          -1.0   Capacity1220           1.0
+    x122038   Total_Cost          63.0   NodeBalance1238           1.0
+    x122038   NodeBalance2038          -1.0   Capacity1220           1.0
+    x122039   Total_Cost          63.0   NodeBalance1239           1.0
+    x122039   NodeBalance2039          -1.0   Capacity1220           1.0
+    x122040   Total_Cost          63.0   NodeBalance1240           1.0
+    x122040   NodeBalance2040          -1.0   Capacity1220           1.0
+    x131401   Total_Cost         100.0   NodeBalance1301           1.0
+    x131401   NodeBalance1401          -1.0   Capacity1314           1.0
+    x131402   Total_Cost         100.0   NodeBalance1302           1.0
+    x131402   NodeBalance1402          -1.0   Capacity1314           1.0
+    x131403   Total_Cost         100.0   NodeBalance1303           1.0
+    x131403   NodeBalance1403          -1.0   Capacity1314           1.0
+    x131404   Total_Cost         100.0   NodeBalance1304           1.0
+    x131404   NodeBalance1404          -1.0   Capacity1314           1.0
+    x131405   Total_Cost         100.0   NodeBalance1305           1.0
+    x131405   NodeBalance1405          -1.0   Capacity1314           1.0
+    x131406   Total_Cost         100.0   NodeBalance1306           1.0
+    x131406   NodeBalance1406          -1.0   Capacity1314           1.0
+    x131407   Total_Cost         100.0   NodeBalance1307           1.0
+    x131407   NodeBalance1407          -1.0   Capacity1314           1.0
+    x131408   Total_Cost         100.0   NodeBalance1308           1.0
+    x131408   NodeBalance1408          -1.0   Capacity1314           1.0
+    x131409   Total_Cost         100.0   NodeBalance1309           1.0
+    x131409   NodeBalance1409          -1.0   Capacity1314           1.0
+    x131410   Total_Cost         100.0   NodeBalance1310           1.0
+    x131410   NodeBalance1410          -1.0   Capacity1314           1.0
+    x131411   Total_Cost         100.0   NodeBalance1311           1.0
+    x131411   NodeBalance1411          -1.0   Capacity1314           1.0
+    x131412   Total_Cost         100.0   NodeBalance1312           1.0
+    x131412   NodeBalance1412          -1.0   Capacity1314           1.0
+    x131413   Total_Cost         100.0   NodeBalance1313           1.0
+    x131413   NodeBalance1413          -1.0   Capacity1314           1.0
+    x131414   Total_Cost         100.0   NodeBalance1314           1.0
+    x131414   NodeBalance1414          -1.0   Capacity1314           1.0
+    x131415   Total_Cost         100.0   NodeBalance1315           1.0
+    x131415   NodeBalance1415          -1.0   Capacity1314           1.0
+    x131416   Total_Cost         100.0   NodeBalance1316           1.0
+    x131416   NodeBalance1416          -1.0   Capacity1314           1.0
+    x131417   Total_Cost         100.0   NodeBalance1317           1.0
+    x131417   NodeBalance1417          -1.0   Capacity1314           1.0
+    x131418   Total_Cost         100.0   NodeBalance1318           1.0
+    x131418   NodeBalance1418          -1.0   Capacity1314           1.0
+    x131419   Total_Cost         100.0   NodeBalance1319           1.0
+    x131419   NodeBalance1419          -1.0   Capacity1314           1.0
+    x131420   Total_Cost         100.0   NodeBalance1320           1.0
+    x131420   NodeBalance1420          -1.0   Capacity1314           1.0
+    x131421   Total_Cost         100.0   NodeBalance1321           1.0
+    x131421   NodeBalance1421          -1.0   Capacity1314           1.0
+    x131422   Total_Cost         100.0   NodeBalance1322           1.0
+    x131422   NodeBalance1422          -1.0   Capacity1314           1.0
+    x131423   Total_Cost         100.0   NodeBalance1323           1.0
+    x131423   NodeBalance1423          -1.0   Capacity1314           1.0
+    x131424   Total_Cost         100.0   NodeBalance1324           1.0
+    x131424   NodeBalance1424          -1.0   Capacity1314           1.0
+    x131425   Total_Cost         100.0   NodeBalance1325           1.0
+    x131425   NodeBalance1425          -1.0   Capacity1314           1.0
+    x131426   Total_Cost         100.0   NodeBalance1326           1.0
+    x131426   NodeBalance1426          -1.0   Capacity1314           1.0
+    x131427   Total_Cost         100.0   NodeBalance1327           1.0
+    x131427   NodeBalance1427          -1.0   Capacity1314           1.0
+    x131428   Total_Cost         100.0   NodeBalance1328           1.0
+    x131428   NodeBalance1428          -1.0   Capacity1314           1.0
+    x131429   Total_Cost         100.0   NodeBalance1329           1.0
+    x131429   NodeBalance1429          -1.0   Capacity1314           1.0
+    x131430   Total_Cost         100.0   NodeBalance1330           1.0
+    x131430   NodeBalance1430          -1.0   Capacity1314           1.0
+    x131431   Total_Cost         100.0   NodeBalance1331           1.0
+    x131431   NodeBalance1431          -1.0   Capacity1314           1.0
+    x131432   Total_Cost         100.0   NodeBalance1332           1.0
+    x131432   NodeBalance1432          -1.0   Capacity1314           1.0
+    x131433   Total_Cost         100.0   NodeBalance1333           1.0
+    x131433   NodeBalance1433          -1.0   Capacity1314           1.0
+    x131434   Total_Cost         100.0   NodeBalance1334           1.0
+    x131434   NodeBalance1434          -1.0   Capacity1314           1.0
+    x131435   Total_Cost         100.0   NodeBalance1335           1.0
+    x131435   NodeBalance1435          -1.0   Capacity1314           1.0
+    x131436   Total_Cost         100.0   NodeBalance1336           1.0
+    x131436   NodeBalance1436          -1.0   Capacity1314           1.0
+    x131437   Total_Cost         100.0   NodeBalance1337           1.0
+    x131437   NodeBalance1437          -1.0   Capacity1314           1.0
+    x131438   Total_Cost         100.0   NodeBalance1338           1.0
+    x131438   NodeBalance1438          -1.0   Capacity1314           1.0
+    x131439   Total_Cost         100.0   NodeBalance1339           1.0
+    x131439   NodeBalance1439          -1.0   Capacity1314           1.0
+    x131440   Total_Cost         100.0   NodeBalance1340           1.0
+    x131440   NodeBalance1440          -1.0   Capacity1314           1.0
+    x131601   Total_Cost          78.0   NodeBalance1301           1.0
+    x131601   NodeBalance1601          -1.0   Capacity1316           1.0
+    x131602   Total_Cost          78.0   NodeBalance1302           1.0
+    x131602   NodeBalance1602          -1.0   Capacity1316           1.0
+    x131603   Total_Cost          78.0   NodeBalance1303           1.0
+    x131603   NodeBalance1603          -1.0   Capacity1316           1.0
+    x131604   Total_Cost          78.0   NodeBalance1304           1.0
+    x131604   NodeBalance1604          -1.0   Capacity1316           1.0
+    x131605   Total_Cost          78.0   NodeBalance1305           1.0
+    x131605   NodeBalance1605          -1.0   Capacity1316           1.0
+    x131606   Total_Cost          78.0   NodeBalance1306           1.0
+    x131606   NodeBalance1606          -1.0   Capacity1316           1.0
+    x131607   Total_Cost          78.0   NodeBalance1307           1.0
+    x131607   NodeBalance1607          -1.0   Capacity1316           1.0
+    x131608   Total_Cost          78.0   NodeBalance1308           1.0
+    x131608   NodeBalance1608          -1.0   Capacity1316           1.0
+    x131609   Total_Cost          78.0   NodeBalance1309           1.0
+    x131609   NodeBalance1609          -1.0   Capacity1316           1.0
+    x131610   Total_Cost          78.0   NodeBalance1310           1.0
+    x131610   NodeBalance1610          -1.0   Capacity1316           1.0
+    x131611   Total_Cost          78.0   NodeBalance1311           1.0
+    x131611   NodeBalance1611          -1.0   Capacity1316           1.0
+    x131612   Total_Cost          78.0   NodeBalance1312           1.0
+    x131612   NodeBalance1612          -1.0   Capacity1316           1.0
+    x131613   Total_Cost          78.0   NodeBalance1313           1.0
+    x131613   NodeBalance1613          -1.0   Capacity1316           1.0
+    x131614   Total_Cost          78.0   NodeBalance1314           1.0
+    x131614   NodeBalance1614          -1.0   Capacity1316           1.0
+    x131615   Total_Cost          78.0   NodeBalance1315           1.0
+    x131615   NodeBalance1615          -1.0   Capacity1316           1.0
+    x131616   Total_Cost          78.0   NodeBalance1316           1.0
+    x131616   NodeBalance1616          -1.0   Capacity1316           1.0
+    x131617   Total_Cost          78.0   NodeBalance1317           1.0
+    x131617   NodeBalance1617          -1.0   Capacity1316           1.0
+    x131618   Total_Cost          78.0   NodeBalance1318           1.0
+    x131618   NodeBalance1618          -1.0   Capacity1316           1.0
+    x131619   Total_Cost          78.0   NodeBalance1319           1.0
+    x131619   NodeBalance1619          -1.0   Capacity1316           1.0
+    x131620   Total_Cost          78.0   NodeBalance1320           1.0
+    x131620   NodeBalance1620          -1.0   Capacity1316           1.0
+    x131621   Total_Cost          78.0   NodeBalance1321           1.0
+    x131621   NodeBalance1621          -1.0   Capacity1316           1.0
+    x131622   Total_Cost          78.0   NodeBalance1322           1.0
+    x131622   NodeBalance1622          -1.0   Capacity1316           1.0
+    x131623   Total_Cost          78.0   NodeBalance1323           1.0
+    x131623   NodeBalance1623          -1.0   Capacity1316           1.0
+    x131624   Total_Cost          78.0   NodeBalance1324           1.0
+    x131624   NodeBalance1624          -1.0   Capacity1316           1.0
+    x131625   Total_Cost          78.0   NodeBalance1325           1.0
+    x131625   NodeBalance1625          -1.0   Capacity1316           1.0
+    x131626   Total_Cost          78.0   NodeBalance1326           1.0
+    x131626   NodeBalance1626          -1.0   Capacity1316           1.0
+    x131627   Total_Cost          78.0   NodeBalance1327           1.0
+    x131627   NodeBalance1627          -1.0   Capacity1316           1.0
+    x131628   Total_Cost          78.0   NodeBalance1328           1.0
+    x131628   NodeBalance1628          -1.0   Capacity1316           1.0
+    x131629   Total_Cost          78.0   NodeBalance1329           1.0
+    x131629   NodeBalance1629          -1.0   Capacity1316           1.0
+    x131630   Total_Cost          78.0   NodeBalance1330           1.0
+    x131630   NodeBalance1630          -1.0   Capacity1316           1.0
+    x131631   Total_Cost          78.0   NodeBalance1331           1.0
+    x131631   NodeBalance1631          -1.0   Capacity1316           1.0
+    x131632   Total_Cost          78.0   NodeBalance1332           1.0
+    x131632   NodeBalance1632          -1.0   Capacity1316           1.0
+    x131633   Total_Cost          78.0   NodeBalance1333           1.0
+    x131633   NodeBalance1633          -1.0   Capacity1316           1.0
+    x131634   Total_Cost          78.0   NodeBalance1334           1.0
+    x131634   NodeBalance1634          -1.0   Capacity1316           1.0
+    x131635   Total_Cost          78.0   NodeBalance1335           1.0
+    x131635   NodeBalance1635          -1.0   Capacity1316           1.0
+    x131636   Total_Cost          78.0   NodeBalance1336           1.0
+    x131636   NodeBalance1636          -1.0   Capacity1316           1.0
+    x131637   Total_Cost          78.0   NodeBalance1337           1.0
+    x131637   NodeBalance1637          -1.0   Capacity1316           1.0
+    x131638   Total_Cost          78.0   NodeBalance1338           1.0
+    x131638   NodeBalance1638          -1.0   Capacity1316           1.0
+    x131639   Total_Cost          78.0   NodeBalance1339           1.0
+    x131639   NodeBalance1639          -1.0   Capacity1316           1.0
+    x131640   Total_Cost          78.0   NodeBalance1340           1.0
+    x131640   NodeBalance1640          -1.0   Capacity1316           1.0
+    x131901   Total_Cost          14.0   NodeBalance1301           1.0
+    x131901   NodeBalance1901          -1.0   Capacity1319           1.0
+    x131902   Total_Cost          14.0   NodeBalance1302           1.0
+    x131902   NodeBalance1902          -1.0   Capacity1319           1.0
+    x131903   Total_Cost          14.0   NodeBalance1303           1.0
+    x131903   NodeBalance1903          -1.0   Capacity1319           1.0
+    x131904   Total_Cost          14.0   NodeBalance1304           1.0
+    x131904   NodeBalance1904          -1.0   Capacity1319           1.0
+    x131905   Total_Cost          14.0   NodeBalance1305           1.0
+    x131905   NodeBalance1905          -1.0   Capacity1319           1.0
+    x131906   Total_Cost          14.0   NodeBalance1306           1.0
+    x131906   NodeBalance1906          -1.0   Capacity1319           1.0
+    x131907   Total_Cost          14.0   NodeBalance1307           1.0
+    x131907   NodeBalance1907          -1.0   Capacity1319           1.0
+    x131908   Total_Cost          14.0   NodeBalance1308           1.0
+    x131908   NodeBalance1908          -1.0   Capacity1319           1.0
+    x131909   Total_Cost          14.0   NodeBalance1309           1.0
+    x131909   NodeBalance1909          -1.0   Capacity1319           1.0
+    x131910   Total_Cost          14.0   NodeBalance1310           1.0
+    x131910   NodeBalance1910          -1.0   Capacity1319           1.0
+    x131911   Total_Cost          14.0   NodeBalance1311           1.0
+    x131911   NodeBalance1911          -1.0   Capacity1319           1.0
+    x131912   Total_Cost          14.0   NodeBalance1312           1.0
+    x131912   NodeBalance1912          -1.0   Capacity1319           1.0
+    x131913   Total_Cost          14.0   NodeBalance1313           1.0
+    x131913   NodeBalance1913          -1.0   Capacity1319           1.0
+    x131914   Total_Cost          14.0   NodeBalance1314           1.0
+    x131914   NodeBalance1914          -1.0   Capacity1319           1.0
+    x131915   Total_Cost          14.0   NodeBalance1315           1.0
+    x131915   NodeBalance1915          -1.0   Capacity1319           1.0
+    x131916   Total_Cost          14.0   NodeBalance1316           1.0
+    x131916   NodeBalance1916          -1.0   Capacity1319           1.0
+    x131917   Total_Cost          14.0   NodeBalance1317           1.0
+    x131917   NodeBalance1917          -1.0   Capacity1319           1.0
+    x131918   Total_Cost          14.0   NodeBalance1318           1.0
+    x131918   NodeBalance1918          -1.0   Capacity1319           1.0
+    x131919   Total_Cost          14.0   NodeBalance1319           1.0
+    x131919   NodeBalance1919          -1.0   Capacity1319           1.0
+    x131920   Total_Cost          14.0   NodeBalance1320           1.0
+    x131920   NodeBalance1920          -1.0   Capacity1319           1.0
+    x131921   Total_Cost          14.0   NodeBalance1321           1.0
+    x131921   NodeBalance1921          -1.0   Capacity1319           1.0
+    x131922   Total_Cost          14.0   NodeBalance1322           1.0
+    x131922   NodeBalance1922          -1.0   Capacity1319           1.0
+    x131923   Total_Cost          14.0   NodeBalance1323           1.0
+    x131923   NodeBalance1923          -1.0   Capacity1319           1.0
+    x131924   Total_Cost          14.0   NodeBalance1324           1.0
+    x131924   NodeBalance1924          -1.0   Capacity1319           1.0
+    x131925   Total_Cost          14.0   NodeBalance1325           1.0
+    x131925   NodeBalance1925          -1.0   Capacity1319           1.0
+    x131926   Total_Cost          14.0   NodeBalance1326           1.0
+    x131926   NodeBalance1926          -1.0   Capacity1319           1.0
+    x131927   Total_Cost          14.0   NodeBalance1327           1.0
+    x131927   NodeBalance1927          -1.0   Capacity1319           1.0
+    x131928   Total_Cost          14.0   NodeBalance1328           1.0
+    x131928   NodeBalance1928          -1.0   Capacity1319           1.0
+    x131929   Total_Cost          14.0   NodeBalance1329           1.0
+    x131929   NodeBalance1929          -1.0   Capacity1319           1.0
+    x131930   Total_Cost          14.0   NodeBalance1330           1.0
+    x131930   NodeBalance1930          -1.0   Capacity1319           1.0
+    x131931   Total_Cost          14.0   NodeBalance1331           1.0
+    x131931   NodeBalance1931          -1.0   Capacity1319           1.0
+    x131932   Total_Cost          14.0   NodeBalance1332           1.0
+    x131932   NodeBalance1932          -1.0   Capacity1319           1.0
+    x131933   Total_Cost          14.0   NodeBalance1333           1.0
+    x131933   NodeBalance1933          -1.0   Capacity1319           1.0
+    x131934   Total_Cost          14.0   NodeBalance1334           1.0
+    x131934   NodeBalance1934          -1.0   Capacity1319           1.0
+    x131935   Total_Cost          14.0   NodeBalance1335           1.0
+    x131935   NodeBalance1935          -1.0   Capacity1319           1.0
+    x131936   Total_Cost          14.0   NodeBalance1336           1.0
+    x131936   NodeBalance1936          -1.0   Capacity1319           1.0
+    x131937   Total_Cost          14.0   NodeBalance1337           1.0
+    x131937   NodeBalance1937          -1.0   Capacity1319           1.0
+    x131938   Total_Cost          14.0   NodeBalance1338           1.0
+    x131938   NodeBalance1938          -1.0   Capacity1319           1.0
+    x131939   Total_Cost          14.0   NodeBalance1339           1.0
+    x131939   NodeBalance1939          -1.0   Capacity1319           1.0
+    x131940   Total_Cost          14.0   NodeBalance1340           1.0
+    x131940   NodeBalance1940          -1.0   Capacity1319           1.0
+    x132001   Total_Cost          20.0   NodeBalance1301           1.0
+    x132001   NodeBalance2001          -1.0   Capacity1320           1.0
+    x132002   Total_Cost          20.0   NodeBalance1302           1.0
+    x132002   NodeBalance2002          -1.0   Capacity1320           1.0
+    x132003   Total_Cost          20.0   NodeBalance1303           1.0
+    x132003   NodeBalance2003          -1.0   Capacity1320           1.0
+    x132004   Total_Cost          20.0   NodeBalance1304           1.0
+    x132004   NodeBalance2004          -1.0   Capacity1320           1.0
+    x132005   Total_Cost          20.0   NodeBalance1305           1.0
+    x132005   NodeBalance2005          -1.0   Capacity1320           1.0
+    x132006   Total_Cost          20.0   NodeBalance1306           1.0
+    x132006   NodeBalance2006          -1.0   Capacity1320           1.0
+    x132007   Total_Cost          20.0   NodeBalance1307           1.0
+    x132007   NodeBalance2007          -1.0   Capacity1320           1.0
+    x132008   Total_Cost          20.0   NodeBalance1308           1.0
+    x132008   NodeBalance2008          -1.0   Capacity1320           1.0
+    x132009   Total_Cost          20.0   NodeBalance1309           1.0
+    x132009   NodeBalance2009          -1.0   Capacity1320           1.0
+    x132010   Total_Cost          20.0   NodeBalance1310           1.0
+    x132010   NodeBalance2010          -1.0   Capacity1320           1.0
+    x132011   Total_Cost          20.0   NodeBalance1311           1.0
+    x132011   NodeBalance2011          -1.0   Capacity1320           1.0
+    x132012   Total_Cost          20.0   NodeBalance1312           1.0
+    x132012   NodeBalance2012          -1.0   Capacity1320           1.0
+    x132013   Total_Cost          20.0   NodeBalance1313           1.0
+    x132013   NodeBalance2013          -1.0   Capacity1320           1.0
+    x132014   Total_Cost          20.0   NodeBalance1314           1.0
+    x132014   NodeBalance2014          -1.0   Capacity1320           1.0
+    x132015   Total_Cost          20.0   NodeBalance1315           1.0
+    x132015   NodeBalance2015          -1.0   Capacity1320           1.0
+    x132016   Total_Cost          20.0   NodeBalance1316           1.0
+    x132016   NodeBalance2016          -1.0   Capacity1320           1.0
+    x132017   Total_Cost          20.0   NodeBalance1317           1.0
+    x132017   NodeBalance2017          -1.0   Capacity1320           1.0
+    x132018   Total_Cost          20.0   NodeBalance1318           1.0
+    x132018   NodeBalance2018          -1.0   Capacity1320           1.0
+    x132019   Total_Cost          20.0   NodeBalance1319           1.0
+    x132019   NodeBalance2019          -1.0   Capacity1320           1.0
+    x132020   Total_Cost          20.0   NodeBalance1320           1.0
+    x132020   NodeBalance2020          -1.0   Capacity1320           1.0
+    x132021   Total_Cost          20.0   NodeBalance1321           1.0
+    x132021   NodeBalance2021          -1.0   Capacity1320           1.0
+    x132022   Total_Cost          20.0   NodeBalance1322           1.0
+    x132022   NodeBalance2022          -1.0   Capacity1320           1.0
+    x132023   Total_Cost          20.0   NodeBalance1323           1.0
+    x132023   NodeBalance2023          -1.0   Capacity1320           1.0
+    x132024   Total_Cost          20.0   NodeBalance1324           1.0
+    x132024   NodeBalance2024          -1.0   Capacity1320           1.0
+    x132025   Total_Cost          20.0   NodeBalance1325           1.0
+    x132025   NodeBalance2025          -1.0   Capacity1320           1.0
+    x132026   Total_Cost          20.0   NodeBalance1326           1.0
+    x132026   NodeBalance2026          -1.0   Capacity1320           1.0
+    x132027   Total_Cost          20.0   NodeBalance1327           1.0
+    x132027   NodeBalance2027          -1.0   Capacity1320           1.0
+    x132028   Total_Cost          20.0   NodeBalance1328           1.0
+    x132028   NodeBalance2028          -1.0   Capacity1320           1.0
+    x132029   Total_Cost          20.0   NodeBalance1329           1.0
+    x132029   NodeBalance2029          -1.0   Capacity1320           1.0
+    x132030   Total_Cost          20.0   NodeBalance1330           1.0
+    x132030   NodeBalance2030          -1.0   Capacity1320           1.0
+    x132031   Total_Cost          20.0   NodeBalance1331           1.0
+    x132031   NodeBalance2031          -1.0   Capacity1320           1.0
+    x132032   Total_Cost          20.0   NodeBalance1332           1.0
+    x132032   NodeBalance2032          -1.0   Capacity1320           1.0
+    x132033   Total_Cost          20.0   NodeBalance1333           1.0
+    x132033   NodeBalance2033          -1.0   Capacity1320           1.0
+    x132034   Total_Cost          20.0   NodeBalance1334           1.0
+    x132034   NodeBalance2034          -1.0   Capacity1320           1.0
+    x132035   Total_Cost          20.0   NodeBalance1335           1.0
+    x132035   NodeBalance2035          -1.0   Capacity1320           1.0
+    x132036   Total_Cost          20.0   NodeBalance1336           1.0
+    x132036   NodeBalance2036          -1.0   Capacity1320           1.0
+    x132037   Total_Cost          20.0   NodeBalance1337           1.0
+    x132037   NodeBalance2037          -1.0   Capacity1320           1.0
+    x132038   Total_Cost          20.0   NodeBalance1338           1.0
+    x132038   NodeBalance2038          -1.0   Capacity1320           1.0
+    x132039   Total_Cost          20.0   NodeBalance1339           1.0
+    x132039   NodeBalance2039          -1.0   Capacity1320           1.0
+    x132040   Total_Cost          20.0   NodeBalance1340           1.0
+    x132040   NodeBalance2040          -1.0   Capacity1320           1.0
+    x140301   Total_Cost          34.0   NodeBalance0301          -1.0
+    x140301   NodeBalance1401           1.0   Capacity1403           1.0
+    x140302   Total_Cost          34.0   NodeBalance0302          -1.0
+    x140302   NodeBalance1402           1.0   Capacity1403           1.0
+    x140303   Total_Cost          34.0   NodeBalance0303          -1.0
+    x140303   NodeBalance1403           1.0   Capacity1403           1.0
+    x140304   Total_Cost          34.0   NodeBalance0304          -1.0
+    x140304   NodeBalance1404           1.0   Capacity1403           1.0
+    x140305   Total_Cost          34.0   NodeBalance0305          -1.0
+    x140305   NodeBalance1405           1.0   Capacity1403           1.0
+    x140306   Total_Cost          34.0   NodeBalance0306          -1.0
+    x140306   NodeBalance1406           1.0   Capacity1403           1.0
+    x140307   Total_Cost          34.0   NodeBalance0307          -1.0
+    x140307   NodeBalance1407           1.0   Capacity1403           1.0
+    x140308   Total_Cost          34.0   NodeBalance0308          -1.0
+    x140308   NodeBalance1408           1.0   Capacity1403           1.0
+    x140309   Total_Cost          34.0   NodeBalance0309          -1.0
+    x140309   NodeBalance1409           1.0   Capacity1403           1.0
+    x140310   Total_Cost          34.0   NodeBalance0310          -1.0
+    x140310   NodeBalance1410           1.0   Capacity1403           1.0
+    x140311   Total_Cost          34.0   NodeBalance0311          -1.0
+    x140311   NodeBalance1411           1.0   Capacity1403           1.0
+    x140312   Total_Cost          34.0   NodeBalance0312          -1.0
+    x140312   NodeBalance1412           1.0   Capacity1403           1.0
+    x140313   Total_Cost          34.0   NodeBalance0313          -1.0
+    x140313   NodeBalance1413           1.0   Capacity1403           1.0
+    x140314   Total_Cost          34.0   NodeBalance0314          -1.0
+    x140314   NodeBalance1414           1.0   Capacity1403           1.0
+    x140315   Total_Cost          34.0   NodeBalance0315          -1.0
+    x140315   NodeBalance1415           1.0   Capacity1403           1.0
+    x140316   Total_Cost          34.0   NodeBalance0316          -1.0
+    x140316   NodeBalance1416           1.0   Capacity1403           1.0
+    x140317   Total_Cost          34.0   NodeBalance0317          -1.0
+    x140317   NodeBalance1417           1.0   Capacity1403           1.0
+    x140318   Total_Cost          34.0   NodeBalance0318          -1.0
+    x140318   NodeBalance1418           1.0   Capacity1403           1.0
+    x140319   Total_Cost          34.0   NodeBalance0319          -1.0
+    x140319   NodeBalance1419           1.0   Capacity1403           1.0
+    x140320   Total_Cost          34.0   NodeBalance0320          -1.0
+    x140320   NodeBalance1420           1.0   Capacity1403           1.0
+    x140321   Total_Cost          34.0   NodeBalance0321          -1.0
+    x140321   NodeBalance1421           1.0   Capacity1403           1.0
+    x140322   Total_Cost          34.0   NodeBalance0322          -1.0
+    x140322   NodeBalance1422           1.0   Capacity1403           1.0
+    x140323   Total_Cost          34.0   NodeBalance0323          -1.0
+    x140323   NodeBalance1423           1.0   Capacity1403           1.0
+    x140324   Total_Cost          34.0   NodeBalance0324          -1.0
+    x140324   NodeBalance1424           1.0   Capacity1403           1.0
+    x140325   Total_Cost          34.0   NodeBalance0325          -1.0
+    x140325   NodeBalance1425           1.0   Capacity1403           1.0
+    x140326   Total_Cost          34.0   NodeBalance0326          -1.0
+    x140326   NodeBalance1426           1.0   Capacity1403           1.0
+    x140327   Total_Cost          34.0   NodeBalance0327          -1.0
+    x140327   NodeBalance1427           1.0   Capacity1403           1.0
+    x140328   Total_Cost          34.0   NodeBalance0328          -1.0
+    x140328   NodeBalance1428           1.0   Capacity1403           1.0
+    x140329   Total_Cost          34.0   NodeBalance0329          -1.0
+    x140329   NodeBalance1429           1.0   Capacity1403           1.0
+    x140330   Total_Cost          34.0   NodeBalance0330          -1.0
+    x140330   NodeBalance1430           1.0   Capacity1403           1.0
+    x140331   Total_Cost          34.0   NodeBalance0331          -1.0
+    x140331   NodeBalance1431           1.0   Capacity1403           1.0
+    x140332   Total_Cost          34.0   NodeBalance0332          -1.0
+    x140332   NodeBalance1432           1.0   Capacity1403           1.0
+    x140333   Total_Cost          34.0   NodeBalance0333          -1.0
+    x140333   NodeBalance1433           1.0   Capacity1403           1.0
+    x140334   Total_Cost          34.0   NodeBalance0334          -1.0
+    x140334   NodeBalance1434           1.0   Capacity1403           1.0
+    x140335   Total_Cost          34.0   NodeBalance0335          -1.0
+    x140335   NodeBalance1435           1.0   Capacity1403           1.0
+    x140336   Total_Cost          34.0   NodeBalance0336          -1.0
+    x140336   NodeBalance1436           1.0   Capacity1403           1.0
+    x140337   Total_Cost          34.0   NodeBalance0337          -1.0
+    x140337   NodeBalance1437           1.0   Capacity1403           1.0
+    x140338   Total_Cost          34.0   NodeBalance0338          -1.0
+    x140338   NodeBalance1438           1.0   Capacity1403           1.0
+    x140339   Total_Cost          34.0   NodeBalance0339          -1.0
+    x140339   NodeBalance1439           1.0   Capacity1403           1.0
+    x140340   Total_Cost          34.0   NodeBalance0340          -1.0
+    x140340   NodeBalance1440           1.0   Capacity1403           1.0
+    x140401   Total_Cost          79.0   NodeBalance0401          -1.0
+    x140401   NodeBalance1401           1.0   Capacity1404           1.0
+    x140402   Total_Cost          79.0   NodeBalance0402          -1.0
+    x140402   NodeBalance1402           1.0   Capacity1404           1.0
+    x140403   Total_Cost          79.0   NodeBalance0403          -1.0
+    x140403   NodeBalance1403           1.0   Capacity1404           1.0
+    x140404   Total_Cost          79.0   NodeBalance0404          -1.0
+    x140404   NodeBalance1404           1.0   Capacity1404           1.0
+    x140405   Total_Cost          79.0   NodeBalance0405          -1.0
+    x140405   NodeBalance1405           1.0   Capacity1404           1.0
+    x140406   Total_Cost          79.0   NodeBalance0406          -1.0
+    x140406   NodeBalance1406           1.0   Capacity1404           1.0
+    x140407   Total_Cost          79.0   NodeBalance0407          -1.0
+    x140407   NodeBalance1407           1.0   Capacity1404           1.0
+    x140408   Total_Cost          79.0   NodeBalance0408          -1.0
+    x140408   NodeBalance1408           1.0   Capacity1404           1.0
+    x140409   Total_Cost          79.0   NodeBalance0409          -1.0
+    x140409   NodeBalance1409           1.0   Capacity1404           1.0
+    x140410   Total_Cost          79.0   NodeBalance0410          -1.0
+    x140410   NodeBalance1410           1.0   Capacity1404           1.0
+    x140411   Total_Cost          79.0   NodeBalance0411          -1.0
+    x140411   NodeBalance1411           1.0   Capacity1404           1.0
+    x140412   Total_Cost          79.0   NodeBalance0412          -1.0
+    x140412   NodeBalance1412           1.0   Capacity1404           1.0
+    x140413   Total_Cost          79.0   NodeBalance0413          -1.0
+    x140413   NodeBalance1413           1.0   Capacity1404           1.0
+    x140414   Total_Cost          79.0   NodeBalance0414          -1.0
+    x140414   NodeBalance1414           1.0   Capacity1404           1.0
+    x140415   Total_Cost          79.0   NodeBalance0415          -1.0
+    x140415   NodeBalance1415           1.0   Capacity1404           1.0
+    x140416   Total_Cost          79.0   NodeBalance0416          -1.0
+    x140416   NodeBalance1416           1.0   Capacity1404           1.0
+    x140417   Total_Cost          79.0   NodeBalance0417          -1.0
+    x140417   NodeBalance1417           1.0   Capacity1404           1.0
+    x140418   Total_Cost          79.0   NodeBalance0418          -1.0
+    x140418   NodeBalance1418           1.0   Capacity1404           1.0
+    x140419   Total_Cost          79.0   NodeBalance0419          -1.0
+    x140419   NodeBalance1419           1.0   Capacity1404           1.0
+    x140420   Total_Cost          79.0   NodeBalance0420          -1.0
+    x140420   NodeBalance1420           1.0   Capacity1404           1.0
+    x140421   Total_Cost          79.0   NodeBalance0421          -1.0
+    x140421   NodeBalance1421           1.0   Capacity1404           1.0
+    x140422   Total_Cost          79.0   NodeBalance0422          -1.0
+    x140422   NodeBalance1422           1.0   Capacity1404           1.0
+    x140423   Total_Cost          79.0   NodeBalance0423          -1.0
+    x140423   NodeBalance1423           1.0   Capacity1404           1.0
+    x140424   Total_Cost          79.0   NodeBalance0424          -1.0
+    x140424   NodeBalance1424           1.0   Capacity1404           1.0
+    x140425   Total_Cost          79.0   NodeBalance0425          -1.0
+    x140425   NodeBalance1425           1.0   Capacity1404           1.0
+    x140426   Total_Cost          79.0   NodeBalance0426          -1.0
+    x140426   NodeBalance1426           1.0   Capacity1404           1.0
+    x140427   Total_Cost          79.0   NodeBalance0427          -1.0
+    x140427   NodeBalance1427           1.0   Capacity1404           1.0
+    x140428   Total_Cost          79.0   NodeBalance0428          -1.0
+    x140428   NodeBalance1428           1.0   Capacity1404           1.0
+    x140429   Total_Cost          79.0   NodeBalance0429          -1.0
+    x140429   NodeBalance1429           1.0   Capacity1404           1.0
+    x140430   Total_Cost          79.0   NodeBalance0430          -1.0
+    x140430   NodeBalance1430           1.0   Capacity1404           1.0
+    x140431   Total_Cost          79.0   NodeBalance0431          -1.0
+    x140431   NodeBalance1431           1.0   Capacity1404           1.0
+    x140432   Total_Cost          79.0   NodeBalance0432          -1.0
+    x140432   NodeBalance1432           1.0   Capacity1404           1.0
+    x140433   Total_Cost          79.0   NodeBalance0433          -1.0
+    x140433   NodeBalance1433           1.0   Capacity1404           1.0
+    x140434   Total_Cost          79.0   NodeBalance0434          -1.0
+    x140434   NodeBalance1434           1.0   Capacity1404           1.0
+    x140435   Total_Cost          79.0   NodeBalance0435          -1.0
+    x140435   NodeBalance1435           1.0   Capacity1404           1.0
+    x140436   Total_Cost          79.0   NodeBalance0436          -1.0
+    x140436   NodeBalance1436           1.0   Capacity1404           1.0
+    x140437   Total_Cost          79.0   NodeBalance0437          -1.0
+    x140437   NodeBalance1437           1.0   Capacity1404           1.0
+    x140438   Total_Cost          79.0   NodeBalance0438          -1.0
+    x140438   NodeBalance1438           1.0   Capacity1404           1.0
+    x140439   Total_Cost          79.0   NodeBalance0439          -1.0
+    x140439   NodeBalance1439           1.0   Capacity1404           1.0
+    x140440   Total_Cost          79.0   NodeBalance0440          -1.0
+    x140440   NodeBalance1440           1.0   Capacity1404           1.0
+    x140501   Total_Cost          19.0   NodeBalance0501          -1.0
+    x140501   NodeBalance1401           1.0   Capacity1405           1.0
+    x140502   Total_Cost          19.0   NodeBalance0502          -1.0
+    x140502   NodeBalance1402           1.0   Capacity1405           1.0
+    x140503   Total_Cost          19.0   NodeBalance0503          -1.0
+    x140503   NodeBalance1403           1.0   Capacity1405           1.0
+    x140504   Total_Cost          19.0   NodeBalance0504          -1.0
+    x140504   NodeBalance1404           1.0   Capacity1405           1.0
+    x140505   Total_Cost          19.0   NodeBalance0505          -1.0
+    x140505   NodeBalance1405           1.0   Capacity1405           1.0
+    x140506   Total_Cost          19.0   NodeBalance0506          -1.0
+    x140506   NodeBalance1406           1.0   Capacity1405           1.0
+    x140507   Total_Cost          19.0   NodeBalance0507          -1.0
+    x140507   NodeBalance1407           1.0   Capacity1405           1.0
+    x140508   Total_Cost          19.0   NodeBalance0508          -1.0
+    x140508   NodeBalance1408           1.0   Capacity1405           1.0
+    x140509   Total_Cost          19.0   NodeBalance0509          -1.0
+    x140509   NodeBalance1409           1.0   Capacity1405           1.0
+    x140510   Total_Cost          19.0   NodeBalance0510          -1.0
+    x140510   NodeBalance1410           1.0   Capacity1405           1.0
+    x140511   Total_Cost          19.0   NodeBalance0511          -1.0
+    x140511   NodeBalance1411           1.0   Capacity1405           1.0
+    x140512   Total_Cost          19.0   NodeBalance0512          -1.0
+    x140512   NodeBalance1412           1.0   Capacity1405           1.0
+    x140513   Total_Cost          19.0   NodeBalance0513          -1.0
+    x140513   NodeBalance1413           1.0   Capacity1405           1.0
+    x140514   Total_Cost          19.0   NodeBalance0514          -1.0
+    x140514   NodeBalance1414           1.0   Capacity1405           1.0
+    x140515   Total_Cost          19.0   NodeBalance0515          -1.0
+    x140515   NodeBalance1415           1.0   Capacity1405           1.0
+    x140516   Total_Cost          19.0   NodeBalance0516          -1.0
+    x140516   NodeBalance1416           1.0   Capacity1405           1.0
+    x140517   Total_Cost          19.0   NodeBalance0517          -1.0
+    x140517   NodeBalance1417           1.0   Capacity1405           1.0
+    x140518   Total_Cost          19.0   NodeBalance0518          -1.0
+    x140518   NodeBalance1418           1.0   Capacity1405           1.0
+    x140519   Total_Cost          19.0   NodeBalance0519          -1.0
+    x140519   NodeBalance1419           1.0   Capacity1405           1.0
+    x140520   Total_Cost          19.0   NodeBalance0520          -1.0
+    x140520   NodeBalance1420           1.0   Capacity1405           1.0
+    x140521   Total_Cost          19.0   NodeBalance0521          -1.0
+    x140521   NodeBalance1421           1.0   Capacity1405           1.0
+    x140522   Total_Cost          19.0   NodeBalance0522          -1.0
+    x140522   NodeBalance1422           1.0   Capacity1405           1.0
+    x140523   Total_Cost          19.0   NodeBalance0523          -1.0
+    x140523   NodeBalance1423           1.0   Capacity1405           1.0
+    x140524   Total_Cost          19.0   NodeBalance0524          -1.0
+    x140524   NodeBalance1424           1.0   Capacity1405           1.0
+    x140525   Total_Cost          19.0   NodeBalance0525          -1.0
+    x140525   NodeBalance1425           1.0   Capacity1405           1.0
+    x140526   Total_Cost          19.0   NodeBalance0526          -1.0
+    x140526   NodeBalance1426           1.0   Capacity1405           1.0
+    x140527   Total_Cost          19.0   NodeBalance0527          -1.0
+    x140527   NodeBalance1427           1.0   Capacity1405           1.0
+    x140528   Total_Cost          19.0   NodeBalance0528          -1.0
+    x140528   NodeBalance1428           1.0   Capacity1405           1.0
+    x140529   Total_Cost          19.0   NodeBalance0529          -1.0
+    x140529   NodeBalance1429           1.0   Capacity1405           1.0
+    x140530   Total_Cost          19.0   NodeBalance0530          -1.0
+    x140530   NodeBalance1430           1.0   Capacity1405           1.0
+    x140531   Total_Cost          19.0   NodeBalance0531          -1.0
+    x140531   NodeBalance1431           1.0   Capacity1405           1.0
+    x140532   Total_Cost          19.0   NodeBalance0532          -1.0
+    x140532   NodeBalance1432           1.0   Capacity1405           1.0
+    x140533   Total_Cost          19.0   NodeBalance0533          -1.0
+    x140533   NodeBalance1433           1.0   Capacity1405           1.0
+    x140534   Total_Cost          19.0   NodeBalance0534          -1.0
+    x140534   NodeBalance1434           1.0   Capacity1405           1.0
+    x140535   Total_Cost          19.0   NodeBalance0535          -1.0
+    x140535   NodeBalance1435           1.0   Capacity1405           1.0
+    x140536   Total_Cost          19.0   NodeBalance0536          -1.0
+    x140536   NodeBalance1436           1.0   Capacity1405           1.0
+    x140537   Total_Cost          19.0   NodeBalance0537          -1.0
+    x140537   NodeBalance1437           1.0   Capacity1405           1.0
+    x140538   Total_Cost          19.0   NodeBalance0538          -1.0
+    x140538   NodeBalance1438           1.0   Capacity1405           1.0
+    x140539   Total_Cost          19.0   NodeBalance0539          -1.0
+    x140539   NodeBalance1439           1.0   Capacity1405           1.0
+    x140540   Total_Cost          19.0   NodeBalance0540          -1.0
+    x140540   NodeBalance1440           1.0   Capacity1405           1.0
+    x141001   Total_Cost          28.0   NodeBalance1001          -1.0
+    x141001   NodeBalance1401           1.0   Capacity1410           1.0
+    x141002   Total_Cost          28.0   NodeBalance1002          -1.0
+    x141002   NodeBalance1402           1.0   Capacity1410           1.0
+    x141003   Total_Cost          28.0   NodeBalance1003          -1.0
+    x141003   NodeBalance1403           1.0   Capacity1410           1.0
+    x141004   Total_Cost          28.0   NodeBalance1004          -1.0
+    x141004   NodeBalance1404           1.0   Capacity1410           1.0
+    x141005   Total_Cost          28.0   NodeBalance1005          -1.0
+    x141005   NodeBalance1405           1.0   Capacity1410           1.0
+    x141006   Total_Cost          28.0   NodeBalance1006          -1.0
+    x141006   NodeBalance1406           1.0   Capacity1410           1.0
+    x141007   Total_Cost          28.0   NodeBalance1007          -1.0
+    x141007   NodeBalance1407           1.0   Capacity1410           1.0
+    x141008   Total_Cost          28.0   NodeBalance1008          -1.0
+    x141008   NodeBalance1408           1.0   Capacity1410           1.0
+    x141009   Total_Cost          28.0   NodeBalance1009          -1.0
+    x141009   NodeBalance1409           1.0   Capacity1410           1.0
+    x141010   Total_Cost          28.0   NodeBalance1010          -1.0
+    x141010   NodeBalance1410           1.0   Capacity1410           1.0
+    x141011   Total_Cost          28.0   NodeBalance1011          -1.0
+    x141011   NodeBalance1411           1.0   Capacity1410           1.0
+    x141012   Total_Cost          28.0   NodeBalance1012          -1.0
+    x141012   NodeBalance1412           1.0   Capacity1410           1.0
+    x141013   Total_Cost          28.0   NodeBalance1013          -1.0
+    x141013   NodeBalance1413           1.0   Capacity1410           1.0
+    x141014   Total_Cost          28.0   NodeBalance1014          -1.0
+    x141014   NodeBalance1414           1.0   Capacity1410           1.0
+    x141015   Total_Cost          28.0   NodeBalance1015          -1.0
+    x141015   NodeBalance1415           1.0   Capacity1410           1.0
+    x141016   Total_Cost          28.0   NodeBalance1016          -1.0
+    x141016   NodeBalance1416           1.0   Capacity1410           1.0
+    x141017   Total_Cost          28.0   NodeBalance1017          -1.0
+    x141017   NodeBalance1417           1.0   Capacity1410           1.0
+    x141018   Total_Cost          28.0   NodeBalance1018          -1.0
+    x141018   NodeBalance1418           1.0   Capacity1410           1.0
+    x141019   Total_Cost          28.0   NodeBalance1019          -1.0
+    x141019   NodeBalance1419           1.0   Capacity1410           1.0
+    x141020   Total_Cost          28.0   NodeBalance1020          -1.0
+    x141020   NodeBalance1420           1.0   Capacity1410           1.0
+    x141021   Total_Cost          28.0   NodeBalance1021          -1.0
+    x141021   NodeBalance1421           1.0   Capacity1410           1.0
+    x141022   Total_Cost          28.0   NodeBalance1022          -1.0
+    x141022   NodeBalance1422           1.0   Capacity1410           1.0
+    x141023   Total_Cost          28.0   NodeBalance1023          -1.0
+    x141023   NodeBalance1423           1.0   Capacity1410           1.0
+    x141024   Total_Cost          28.0   NodeBalance1024          -1.0
+    x141024   NodeBalance1424           1.0   Capacity1410           1.0
+    x141025   Total_Cost          28.0   NodeBalance1025          -1.0
+    x141025   NodeBalance1425           1.0   Capacity1410           1.0
+    x141026   Total_Cost          28.0   NodeBalance1026          -1.0
+    x141026   NodeBalance1426           1.0   Capacity1410           1.0
+    x141027   Total_Cost          28.0   NodeBalance1027          -1.0
+    x141027   NodeBalance1427           1.0   Capacity1410           1.0
+    x141028   Total_Cost          28.0   NodeBalance1028          -1.0
+    x141028   NodeBalance1428           1.0   Capacity1410           1.0
+    x141029   Total_Cost          28.0   NodeBalance1029          -1.0
+    x141029   NodeBalance1429           1.0   Capacity1410           1.0
+    x141030   Total_Cost          28.0   NodeBalance1030          -1.0
+    x141030   NodeBalance1430           1.0   Capacity1410           1.0
+    x141031   Total_Cost          28.0   NodeBalance1031          -1.0
+    x141031   NodeBalance1431           1.0   Capacity1410           1.0
+    x141032   Total_Cost          28.0   NodeBalance1032          -1.0
+    x141032   NodeBalance1432           1.0   Capacity1410           1.0
+    x141033   Total_Cost          28.0   NodeBalance1033          -1.0
+    x141033   NodeBalance1433           1.0   Capacity1410           1.0
+    x141034   Total_Cost          28.0   NodeBalance1034          -1.0
+    x141034   NodeBalance1434           1.0   Capacity1410           1.0
+    x141035   Total_Cost          28.0   NodeBalance1035          -1.0
+    x141035   NodeBalance1435           1.0   Capacity1410           1.0
+    x141036   Total_Cost          28.0   NodeBalance1036          -1.0
+    x141036   NodeBalance1436           1.0   Capacity1410           1.0
+    x141037   Total_Cost          28.0   NodeBalance1037          -1.0
+    x141037   NodeBalance1437           1.0   Capacity1410           1.0
+    x141038   Total_Cost          28.0   NodeBalance1038          -1.0
+    x141038   NodeBalance1438           1.0   Capacity1410           1.0
+    x141039   Total_Cost          28.0   NodeBalance1039          -1.0
+    x141039   NodeBalance1439           1.0   Capacity1410           1.0
+    x141040   Total_Cost          28.0   NodeBalance1040          -1.0
+    x141040   NodeBalance1440           1.0   Capacity1410           1.0
+    x141501   Total_Cost         100.0   NodeBalance1401           1.0
+    x141501   NodeBalance1501          -1.0   Capacity1415           1.0
+    x141502   Total_Cost         100.0   NodeBalance1402           1.0
+    x141502   NodeBalance1502          -1.0   Capacity1415           1.0
+    x141503   Total_Cost         100.0   NodeBalance1403           1.0
+    x141503   NodeBalance1503          -1.0   Capacity1415           1.0
+    x141504   Total_Cost         100.0   NodeBalance1404           1.0
+    x141504   NodeBalance1504          -1.0   Capacity1415           1.0
+    x141505   Total_Cost         100.0   NodeBalance1405           1.0
+    x141505   NodeBalance1505          -1.0   Capacity1415           1.0
+    x141506   Total_Cost         100.0   NodeBalance1406           1.0
+    x141506   NodeBalance1506          -1.0   Capacity1415           1.0
+    x141507   Total_Cost         100.0   NodeBalance1407           1.0
+    x141507   NodeBalance1507          -1.0   Capacity1415           1.0
+    x141508   Total_Cost         100.0   NodeBalance1408           1.0
+    x141508   NodeBalance1508          -1.0   Capacity1415           1.0
+    x141509   Total_Cost         100.0   NodeBalance1409           1.0
+    x141509   NodeBalance1509          -1.0   Capacity1415           1.0
+    x141510   Total_Cost         100.0   NodeBalance1410           1.0
+    x141510   NodeBalance1510          -1.0   Capacity1415           1.0
+    x141511   Total_Cost         100.0   NodeBalance1411           1.0
+    x141511   NodeBalance1511          -1.0   Capacity1415           1.0
+    x141512   Total_Cost         100.0   NodeBalance1412           1.0
+    x141512   NodeBalance1512          -1.0   Capacity1415           1.0
+    x141513   Total_Cost         100.0   NodeBalance1413           1.0
+    x141513   NodeBalance1513          -1.0   Capacity1415           1.0
+    x141514   Total_Cost         100.0   NodeBalance1414           1.0
+    x141514   NodeBalance1514          -1.0   Capacity1415           1.0
+    x141515   Total_Cost         100.0   NodeBalance1415           1.0
+    x141515   NodeBalance1515          -1.0   Capacity1415           1.0
+    x141516   Total_Cost         100.0   NodeBalance1416           1.0
+    x141516   NodeBalance1516          -1.0   Capacity1415           1.0
+    x141517   Total_Cost         100.0   NodeBalance1417           1.0
+    x141517   NodeBalance1517          -1.0   Capacity1415           1.0
+    x141518   Total_Cost         100.0   NodeBalance1418           1.0
+    x141518   NodeBalance1518          -1.0   Capacity1415           1.0
+    x141519   Total_Cost         100.0   NodeBalance1419           1.0
+    x141519   NodeBalance1519          -1.0   Capacity1415           1.0
+    x141520   Total_Cost         100.0   NodeBalance1420           1.0
+    x141520   NodeBalance1520          -1.0   Capacity1415           1.0
+    x141521   Total_Cost         100.0   NodeBalance1421           1.0
+    x141521   NodeBalance1521          -1.0   Capacity1415           1.0
+    x141522   Total_Cost         100.0   NodeBalance1422           1.0
+    x141522   NodeBalance1522          -1.0   Capacity1415           1.0
+    x141523   Total_Cost         100.0   NodeBalance1423           1.0
+    x141523   NodeBalance1523          -1.0   Capacity1415           1.0
+    x141524   Total_Cost         100.0   NodeBalance1424           1.0
+    x141524   NodeBalance1524          -1.0   Capacity1415           1.0
+    x141525   Total_Cost         100.0   NodeBalance1425           1.0
+    x141525   NodeBalance1525          -1.0   Capacity1415           1.0
+    x141526   Total_Cost         100.0   NodeBalance1426           1.0
+    x141526   NodeBalance1526          -1.0   Capacity1415           1.0
+    x141527   Total_Cost         100.0   NodeBalance1427           1.0
+    x141527   NodeBalance1527          -1.0   Capacity1415           1.0
+    x141528   Total_Cost         100.0   NodeBalance1428           1.0
+    x141528   NodeBalance1528          -1.0   Capacity1415           1.0
+    x141529   Total_Cost         100.0   NodeBalance1429           1.0
+    x141529   NodeBalance1529          -1.0   Capacity1415           1.0
+    x141530   Total_Cost         100.0   NodeBalance1430           1.0
+    x141530   NodeBalance1530          -1.0   Capacity1415           1.0
+    x141531   Total_Cost         100.0   NodeBalance1431           1.0
+    x141531   NodeBalance1531          -1.0   Capacity1415           1.0
+    x141532   Total_Cost         100.0   NodeBalance1432           1.0
+    x141532   NodeBalance1532          -1.0   Capacity1415           1.0
+    x141533   Total_Cost         100.0   NodeBalance1433           1.0
+    x141533   NodeBalance1533          -1.0   Capacity1415           1.0
+    x141534   Total_Cost         100.0   NodeBalance1434           1.0
+    x141534   NodeBalance1534          -1.0   Capacity1415           1.0
+    x141535   Total_Cost         100.0   NodeBalance1435           1.0
+    x141535   NodeBalance1535          -1.0   Capacity1415           1.0
+    x141536   Total_Cost         100.0   NodeBalance1436           1.0
+    x141536   NodeBalance1536          -1.0   Capacity1415           1.0
+    x141537   Total_Cost         100.0   NodeBalance1437           1.0
+    x141537   NodeBalance1537          -1.0   Capacity1415           1.0
+    x141538   Total_Cost         100.0   NodeBalance1438           1.0
+    x141538   NodeBalance1538          -1.0   Capacity1415           1.0
+    x141539   Total_Cost         100.0   NodeBalance1439           1.0
+    x141539   NodeBalance1539          -1.0   Capacity1415           1.0
+    x141540   Total_Cost         100.0   NodeBalance1440           1.0
+    x141540   NodeBalance1540          -1.0   Capacity1415           1.0
+    x141601   Total_Cost          82.0   NodeBalance1401           1.0
+    x141601   NodeBalance1601          -1.0   Capacity1416           1.0
+    x141602   Total_Cost          82.0   NodeBalance1402           1.0
+    x141602   NodeBalance1602          -1.0   Capacity1416           1.0
+    x141603   Total_Cost          82.0   NodeBalance1403           1.0
+    x141603   NodeBalance1603          -1.0   Capacity1416           1.0
+    x141604   Total_Cost          82.0   NodeBalance1404           1.0
+    x141604   NodeBalance1604          -1.0   Capacity1416           1.0
+    x141605   Total_Cost          82.0   NodeBalance1405           1.0
+    x141605   NodeBalance1605          -1.0   Capacity1416           1.0
+    x141606   Total_Cost          82.0   NodeBalance1406           1.0
+    x141606   NodeBalance1606          -1.0   Capacity1416           1.0
+    x141607   Total_Cost          82.0   NodeBalance1407           1.0
+    x141607   NodeBalance1607          -1.0   Capacity1416           1.0
+    x141608   Total_Cost          82.0   NodeBalance1408           1.0
+    x141608   NodeBalance1608          -1.0   Capacity1416           1.0
+    x141609   Total_Cost          82.0   NodeBalance1409           1.0
+    x141609   NodeBalance1609          -1.0   Capacity1416           1.0
+    x141610   Total_Cost          82.0   NodeBalance1410           1.0
+    x141610   NodeBalance1610          -1.0   Capacity1416           1.0
+    x141611   Total_Cost          82.0   NodeBalance1411           1.0
+    x141611   NodeBalance1611          -1.0   Capacity1416           1.0
+    x141612   Total_Cost          82.0   NodeBalance1412           1.0
+    x141612   NodeBalance1612          -1.0   Capacity1416           1.0
+    x141613   Total_Cost          82.0   NodeBalance1413           1.0
+    x141613   NodeBalance1613          -1.0   Capacity1416           1.0
+    x141614   Total_Cost          82.0   NodeBalance1414           1.0
+    x141614   NodeBalance1614          -1.0   Capacity1416           1.0
+    x141615   Total_Cost          82.0   NodeBalance1415           1.0
+    x141615   NodeBalance1615          -1.0   Capacity1416           1.0
+    x141616   Total_Cost          82.0   NodeBalance1416           1.0
+    x141616   NodeBalance1616          -1.0   Capacity1416           1.0
+    x141617   Total_Cost          82.0   NodeBalance1417           1.0
+    x141617   NodeBalance1617          -1.0   Capacity1416           1.0
+    x141618   Total_Cost          82.0   NodeBalance1418           1.0
+    x141618   NodeBalance1618          -1.0   Capacity1416           1.0
+    x141619   Total_Cost          82.0   NodeBalance1419           1.0
+    x141619   NodeBalance1619          -1.0   Capacity1416           1.0
+    x141620   Total_Cost          82.0   NodeBalance1420           1.0
+    x141620   NodeBalance1620          -1.0   Capacity1416           1.0
+    x141621   Total_Cost          82.0   NodeBalance1421           1.0
+    x141621   NodeBalance1621          -1.0   Capacity1416           1.0
+    x141622   Total_Cost          82.0   NodeBalance1422           1.0
+    x141622   NodeBalance1622          -1.0   Capacity1416           1.0
+    x141623   Total_Cost          82.0   NodeBalance1423           1.0
+    x141623   NodeBalance1623          -1.0   Capacity1416           1.0
+    x141624   Total_Cost          82.0   NodeBalance1424           1.0
+    x141624   NodeBalance1624          -1.0   Capacity1416           1.0
+    x141625   Total_Cost          82.0   NodeBalance1425           1.0
+    x141625   NodeBalance1625          -1.0   Capacity1416           1.0
+    x141626   Total_Cost          82.0   NodeBalance1426           1.0
+    x141626   NodeBalance1626          -1.0   Capacity1416           1.0
+    x141627   Total_Cost          82.0   NodeBalance1427           1.0
+    x141627   NodeBalance1627          -1.0   Capacity1416           1.0
+    x141628   Total_Cost          82.0   NodeBalance1428           1.0
+    x141628   NodeBalance1628          -1.0   Capacity1416           1.0
+    x141629   Total_Cost          82.0   NodeBalance1429           1.0
+    x141629   NodeBalance1629          -1.0   Capacity1416           1.0
+    x141630   Total_Cost          82.0   NodeBalance1430           1.0
+    x141630   NodeBalance1630          -1.0   Capacity1416           1.0
+    x141631   Total_Cost          82.0   NodeBalance1431           1.0
+    x141631   NodeBalance1631          -1.0   Capacity1416           1.0
+    x141632   Total_Cost          82.0   NodeBalance1432           1.0
+    x141632   NodeBalance1632          -1.0   Capacity1416           1.0
+    x141633   Total_Cost          82.0   NodeBalance1433           1.0
+    x141633   NodeBalance1633          -1.0   Capacity1416           1.0
+    x141634   Total_Cost          82.0   NodeBalance1434           1.0
+    x141634   NodeBalance1634          -1.0   Capacity1416           1.0
+    x141635   Total_Cost          82.0   NodeBalance1435           1.0
+    x141635   NodeBalance1635          -1.0   Capacity1416           1.0
+    x141636   Total_Cost          82.0   NodeBalance1436           1.0
+    x141636   NodeBalance1636          -1.0   Capacity1416           1.0
+    x141637   Total_Cost          82.0   NodeBalance1437           1.0
+    x141637   NodeBalance1637          -1.0   Capacity1416           1.0
+    x141638   Total_Cost          82.0   NodeBalance1438           1.0
+    x141638   NodeBalance1638          -1.0   Capacity1416           1.0
+    x141639   Total_Cost          82.0   NodeBalance1439           1.0
+    x141639   NodeBalance1639          -1.0   Capacity1416           1.0
+    x141640   Total_Cost          82.0   NodeBalance1440           1.0
+    x141640   NodeBalance1640          -1.0   Capacity1416           1.0
+    x142001   Total_Cost          45.0   NodeBalance1401           1.0
+    x142001   NodeBalance2001          -1.0   Capacity1420           1.0
+    x142002   Total_Cost          45.0   NodeBalance1402           1.0
+    x142002   NodeBalance2002          -1.0   Capacity1420           1.0
+    x142003   Total_Cost          45.0   NodeBalance1403           1.0
+    x142003   NodeBalance2003          -1.0   Capacity1420           1.0
+    x142004   Total_Cost          45.0   NodeBalance1404           1.0
+    x142004   NodeBalance2004          -1.0   Capacity1420           1.0
+    x142005   Total_Cost          45.0   NodeBalance1405           1.0
+    x142005   NodeBalance2005          -1.0   Capacity1420           1.0
+    x142006   Total_Cost          45.0   NodeBalance1406           1.0
+    x142006   NodeBalance2006          -1.0   Capacity1420           1.0
+    x142007   Total_Cost          45.0   NodeBalance1407           1.0
+    x142007   NodeBalance2007          -1.0   Capacity1420           1.0
+    x142008   Total_Cost          45.0   NodeBalance1408           1.0
+    x142008   NodeBalance2008          -1.0   Capacity1420           1.0
+    x142009   Total_Cost          45.0   NodeBalance1409           1.0
+    x142009   NodeBalance2009          -1.0   Capacity1420           1.0
+    x142010   Total_Cost          45.0   NodeBalance1410           1.0
+    x142010   NodeBalance2010          -1.0   Capacity1420           1.0
+    x142011   Total_Cost          45.0   NodeBalance1411           1.0
+    x142011   NodeBalance2011          -1.0   Capacity1420           1.0
+    x142012   Total_Cost          45.0   NodeBalance1412           1.0
+    x142012   NodeBalance2012          -1.0   Capacity1420           1.0
+    x142013   Total_Cost          45.0   NodeBalance1413           1.0
+    x142013   NodeBalance2013          -1.0   Capacity1420           1.0
+    x142014   Total_Cost          45.0   NodeBalance1414           1.0
+    x142014   NodeBalance2014          -1.0   Capacity1420           1.0
+    x142015   Total_Cost          45.0   NodeBalance1415           1.0
+    x142015   NodeBalance2015          -1.0   Capacity1420           1.0
+    x142016   Total_Cost          45.0   NodeBalance1416           1.0
+    x142016   NodeBalance2016          -1.0   Capacity1420           1.0
+    x142017   Total_Cost          45.0   NodeBalance1417           1.0
+    x142017   NodeBalance2017          -1.0   Capacity1420           1.0
+    x142018   Total_Cost          45.0   NodeBalance1418           1.0
+    x142018   NodeBalance2018          -1.0   Capacity1420           1.0
+    x142019   Total_Cost          45.0   NodeBalance1419           1.0
+    x142019   NodeBalance2019          -1.0   Capacity1420           1.0
+    x142020   Total_Cost          45.0   NodeBalance1420           1.0
+    x142020   NodeBalance2020          -1.0   Capacity1420           1.0
+    x142021   Total_Cost          45.0   NodeBalance1421           1.0
+    x142021   NodeBalance2021          -1.0   Capacity1420           1.0
+    x142022   Total_Cost          45.0   NodeBalance1422           1.0
+    x142022   NodeBalance2022          -1.0   Capacity1420           1.0
+    x142023   Total_Cost          45.0   NodeBalance1423           1.0
+    x142023   NodeBalance2023          -1.0   Capacity1420           1.0
+    x142024   Total_Cost          45.0   NodeBalance1424           1.0
+    x142024   NodeBalance2024          -1.0   Capacity1420           1.0
+    x142025   Total_Cost          45.0   NodeBalance1425           1.0
+    x142025   NodeBalance2025          -1.0   Capacity1420           1.0
+    x142026   Total_Cost          45.0   NodeBalance1426           1.0
+    x142026   NodeBalance2026          -1.0   Capacity1420           1.0
+    x142027   Total_Cost          45.0   NodeBalance1427           1.0
+    x142027   NodeBalance2027          -1.0   Capacity1420           1.0
+    x142028   Total_Cost          45.0   NodeBalance1428           1.0
+    x142028   NodeBalance2028          -1.0   Capacity1420           1.0
+    x142029   Total_Cost          45.0   NodeBalance1429           1.0
+    x142029   NodeBalance2029          -1.0   Capacity1420           1.0
+    x142030   Total_Cost          45.0   NodeBalance1430           1.0
+    x142030   NodeBalance2030          -1.0   Capacity1420           1.0
+    x142031   Total_Cost          45.0   NodeBalance1431           1.0
+    x142031   NodeBalance2031          -1.0   Capacity1420           1.0
+    x142032   Total_Cost          45.0   NodeBalance1432           1.0
+    x142032   NodeBalance2032          -1.0   Capacity1420           1.0
+    x142033   Total_Cost          45.0   NodeBalance1433           1.0
+    x142033   NodeBalance2033          -1.0   Capacity1420           1.0
+    x142034   Total_Cost          45.0   NodeBalance1434           1.0
+    x142034   NodeBalance2034          -1.0   Capacity1420           1.0
+    x142035   Total_Cost          45.0   NodeBalance1435           1.0
+    x142035   NodeBalance2035          -1.0   Capacity1420           1.0
+    x142036   Total_Cost          45.0   NodeBalance1436           1.0
+    x142036   NodeBalance2036          -1.0   Capacity1420           1.0
+    x142037   Total_Cost          45.0   NodeBalance1437           1.0
+    x142037   NodeBalance2037          -1.0   Capacity1420           1.0
+    x142038   Total_Cost          45.0   NodeBalance1438           1.0
+    x142038   NodeBalance2038          -1.0   Capacity1420           1.0
+    x142039   Total_Cost          45.0   NodeBalance1439           1.0
+    x142039   NodeBalance2039          -1.0   Capacity1420           1.0
+    x142040   Total_Cost          45.0   NodeBalance1440           1.0
+    x142040   NodeBalance2040          -1.0   Capacity1420           1.0
+    x150201   Total_Cost          52.0   NodeBalance0201          -1.0
+    x150201   NodeBalance1501           1.0   Capacity1502           1.0
+    x150202   Total_Cost          52.0   NodeBalance0202          -1.0
+    x150202   NodeBalance1502           1.0   Capacity1502           1.0
+    x150203   Total_Cost          52.0   NodeBalance0203          -1.0
+    x150203   NodeBalance1503           1.0   Capacity1502           1.0
+    x150204   Total_Cost          52.0   NodeBalance0204          -1.0
+    x150204   NodeBalance1504           1.0   Capacity1502           1.0
+    x150205   Total_Cost          52.0   NodeBalance0205          -1.0
+    x150205   NodeBalance1505           1.0   Capacity1502           1.0
+    x150206   Total_Cost          52.0   NodeBalance0206          -1.0
+    x150206   NodeBalance1506           1.0   Capacity1502           1.0
+    x150207   Total_Cost          52.0   NodeBalance0207          -1.0
+    x150207   NodeBalance1507           1.0   Capacity1502           1.0
+    x150208   Total_Cost          52.0   NodeBalance0208          -1.0
+    x150208   NodeBalance1508           1.0   Capacity1502           1.0
+    x150209   Total_Cost          52.0   NodeBalance0209          -1.0
+    x150209   NodeBalance1509           1.0   Capacity1502           1.0
+    x150210   Total_Cost          52.0   NodeBalance0210          -1.0
+    x150210   NodeBalance1510           1.0   Capacity1502           1.0
+    x150211   Total_Cost          52.0   NodeBalance0211          -1.0
+    x150211   NodeBalance1511           1.0   Capacity1502           1.0
+    x150212   Total_Cost          52.0   NodeBalance0212          -1.0
+    x150212   NodeBalance1512           1.0   Capacity1502           1.0
+    x150213   Total_Cost          52.0   NodeBalance0213          -1.0
+    x150213   NodeBalance1513           1.0   Capacity1502           1.0
+    x150214   Total_Cost          52.0   NodeBalance0214          -1.0
+    x150214   NodeBalance1514           1.0   Capacity1502           1.0
+    x150215   Total_Cost          52.0   NodeBalance0215          -1.0
+    x150215   NodeBalance1515           1.0   Capacity1502           1.0
+    x150216   Total_Cost          52.0   NodeBalance0216          -1.0
+    x150216   NodeBalance1516           1.0   Capacity1502           1.0
+    x150217   Total_Cost          52.0   NodeBalance0217          -1.0
+    x150217   NodeBalance1517           1.0   Capacity1502           1.0
+    x150218   Total_Cost          52.0   NodeBalance0218          -1.0
+    x150218   NodeBalance1518           1.0   Capacity1502           1.0
+    x150219   Total_Cost          52.0   NodeBalance0219          -1.0
+    x150219   NodeBalance1519           1.0   Capacity1502           1.0
+    x150220   Total_Cost          52.0   NodeBalance0220          -1.0
+    x150220   NodeBalance1520           1.0   Capacity1502           1.0
+    x150221   Total_Cost          52.0   NodeBalance0221          -1.0
+    x150221   NodeBalance1521           1.0   Capacity1502           1.0
+    x150222   Total_Cost          52.0   NodeBalance0222          -1.0
+    x150222   NodeBalance1522           1.0   Capacity1502           1.0
+    x150223   Total_Cost          52.0   NodeBalance0223          -1.0
+    x150223   NodeBalance1523           1.0   Capacity1502           1.0
+    x150224   Total_Cost          52.0   NodeBalance0224          -1.0
+    x150224   NodeBalance1524           1.0   Capacity1502           1.0
+    x150225   Total_Cost          52.0   NodeBalance0225          -1.0
+    x150225   NodeBalance1525           1.0   Capacity1502           1.0
+    x150226   Total_Cost          52.0   NodeBalance0226          -1.0
+    x150226   NodeBalance1526           1.0   Capacity1502           1.0
+    x150227   Total_Cost          52.0   NodeBalance0227          -1.0
+    x150227   NodeBalance1527           1.0   Capacity1502           1.0
+    x150228   Total_Cost          52.0   NodeBalance0228          -1.0
+    x150228   NodeBalance1528           1.0   Capacity1502           1.0
+    x150229   Total_Cost          52.0   NodeBalance0229          -1.0
+    x150229   NodeBalance1529           1.0   Capacity1502           1.0
+    x150230   Total_Cost          52.0   NodeBalance0230          -1.0
+    x150230   NodeBalance1530           1.0   Capacity1502           1.0
+    x150231   Total_Cost          52.0   NodeBalance0231          -1.0
+    x150231   NodeBalance1531           1.0   Capacity1502           1.0
+    x150232   Total_Cost          52.0   NodeBalance0232          -1.0
+    x150232   NodeBalance1532           1.0   Capacity1502           1.0
+    x150233   Total_Cost          52.0   NodeBalance0233          -1.0
+    x150233   NodeBalance1533           1.0   Capacity1502           1.0
+    x150234   Total_Cost          52.0   NodeBalance0234          -1.0
+    x150234   NodeBalance1534           1.0   Capacity1502           1.0
+    x150235   Total_Cost          52.0   NodeBalance0235          -1.0
+    x150235   NodeBalance1535           1.0   Capacity1502           1.0
+    x150236   Total_Cost          52.0   NodeBalance0236          -1.0
+    x150236   NodeBalance1536           1.0   Capacity1502           1.0
+    x150237   Total_Cost          52.0   NodeBalance0237          -1.0
+    x150237   NodeBalance1537           1.0   Capacity1502           1.0
+    x150238   Total_Cost          52.0   NodeBalance0238          -1.0
+    x150238   NodeBalance1538           1.0   Capacity1502           1.0
+    x150239   Total_Cost          52.0   NodeBalance0239          -1.0
+    x150239   NodeBalance1539           1.0   Capacity1502           1.0
+    x150240   Total_Cost          52.0   NodeBalance0240          -1.0
+    x150240   NodeBalance1540           1.0   Capacity1502           1.0
+    x150401   Total_Cost          64.0   NodeBalance0401          -1.0
+    x150401   NodeBalance1501           1.0   Capacity1504           1.0
+    x150402   Total_Cost          64.0   NodeBalance0402          -1.0
+    x150402   NodeBalance1502           1.0   Capacity1504           1.0
+    x150403   Total_Cost          64.0   NodeBalance0403          -1.0
+    x150403   NodeBalance1503           1.0   Capacity1504           1.0
+    x150404   Total_Cost          64.0   NodeBalance0404          -1.0
+    x150404   NodeBalance1504           1.0   Capacity1504           1.0
+    x150405   Total_Cost          64.0   NodeBalance0405          -1.0
+    x150405   NodeBalance1505           1.0   Capacity1504           1.0
+    x150406   Total_Cost          64.0   NodeBalance0406          -1.0
+    x150406   NodeBalance1506           1.0   Capacity1504           1.0
+    x150407   Total_Cost          64.0   NodeBalance0407          -1.0
+    x150407   NodeBalance1507           1.0   Capacity1504           1.0
+    x150408   Total_Cost          64.0   NodeBalance0408          -1.0
+    x150408   NodeBalance1508           1.0   Capacity1504           1.0
+    x150409   Total_Cost          64.0   NodeBalance0409          -1.0
+    x150409   NodeBalance1509           1.0   Capacity1504           1.0
+    x150410   Total_Cost          64.0   NodeBalance0410          -1.0
+    x150410   NodeBalance1510           1.0   Capacity1504           1.0
+    x150411   Total_Cost          64.0   NodeBalance0411          -1.0
+    x150411   NodeBalance1511           1.0   Capacity1504           1.0
+    x150412   Total_Cost          64.0   NodeBalance0412          -1.0
+    x150412   NodeBalance1512           1.0   Capacity1504           1.0
+    x150413   Total_Cost          64.0   NodeBalance0413          -1.0
+    x150413   NodeBalance1513           1.0   Capacity1504           1.0
+    x150414   Total_Cost          64.0   NodeBalance0414          -1.0
+    x150414   NodeBalance1514           1.0   Capacity1504           1.0
+    x150415   Total_Cost          64.0   NodeBalance0415          -1.0
+    x150415   NodeBalance1515           1.0   Capacity1504           1.0
+    x150416   Total_Cost          64.0   NodeBalance0416          -1.0
+    x150416   NodeBalance1516           1.0   Capacity1504           1.0
+    x150417   Total_Cost          64.0   NodeBalance0417          -1.0
+    x150417   NodeBalance1517           1.0   Capacity1504           1.0
+    x150418   Total_Cost          64.0   NodeBalance0418          -1.0
+    x150418   NodeBalance1518           1.0   Capacity1504           1.0
+    x150419   Total_Cost          64.0   NodeBalance0419          -1.0
+    x150419   NodeBalance1519           1.0   Capacity1504           1.0
+    x150420   Total_Cost          64.0   NodeBalance0420          -1.0
+    x150420   NodeBalance1520           1.0   Capacity1504           1.0
+    x150421   Total_Cost          64.0   NodeBalance0421          -1.0
+    x150421   NodeBalance1521           1.0   Capacity1504           1.0
+    x150422   Total_Cost          64.0   NodeBalance0422          -1.0
+    x150422   NodeBalance1522           1.0   Capacity1504           1.0
+    x150423   Total_Cost          64.0   NodeBalance0423          -1.0
+    x150423   NodeBalance1523           1.0   Capacity1504           1.0
+    x150424   Total_Cost          64.0   NodeBalance0424          -1.0
+    x150424   NodeBalance1524           1.0   Capacity1504           1.0
+    x150425   Total_Cost          64.0   NodeBalance0425          -1.0
+    x150425   NodeBalance1525           1.0   Capacity1504           1.0
+    x150426   Total_Cost          64.0   NodeBalance0426          -1.0
+    x150426   NodeBalance1526           1.0   Capacity1504           1.0
+    x150427   Total_Cost          64.0   NodeBalance0427          -1.0
+    x150427   NodeBalance1527           1.0   Capacity1504           1.0
+    x150428   Total_Cost          64.0   NodeBalance0428          -1.0
+    x150428   NodeBalance1528           1.0   Capacity1504           1.0
+    x150429   Total_Cost          64.0   NodeBalance0429          -1.0
+    x150429   NodeBalance1529           1.0   Capacity1504           1.0
+    x150430   Total_Cost          64.0   NodeBalance0430          -1.0
+    x150430   NodeBalance1530           1.0   Capacity1504           1.0
+    x150431   Total_Cost          64.0   NodeBalance0431          -1.0
+    x150431   NodeBalance1531           1.0   Capacity1504           1.0
+    x150432   Total_Cost          64.0   NodeBalance0432          -1.0
+    x150432   NodeBalance1532           1.0   Capacity1504           1.0
+    x150433   Total_Cost          64.0   NodeBalance0433          -1.0
+    x150433   NodeBalance1533           1.0   Capacity1504           1.0
+    x150434   Total_Cost          64.0   NodeBalance0434          -1.0
+    x150434   NodeBalance1534           1.0   Capacity1504           1.0
+    x150435   Total_Cost          64.0   NodeBalance0435          -1.0
+    x150435   NodeBalance1535           1.0   Capacity1504           1.0
+    x150436   Total_Cost          64.0   NodeBalance0436          -1.0
+    x150436   NodeBalance1536           1.0   Capacity1504           1.0
+    x150437   Total_Cost          64.0   NodeBalance0437          -1.0
+    x150437   NodeBalance1537           1.0   Capacity1504           1.0
+    x150438   Total_Cost          64.0   NodeBalance0438          -1.0
+    x150438   NodeBalance1538           1.0   Capacity1504           1.0
+    x150439   Total_Cost          64.0   NodeBalance0439          -1.0
+    x150439   NodeBalance1539           1.0   Capacity1504           1.0
+    x150440   Total_Cost          64.0   NodeBalance0440          -1.0
+    x150440   NodeBalance1540           1.0   Capacity1504           1.0
+    x151201   Total_Cost          93.0   NodeBalance1201          -1.0
+    x151201   NodeBalance1501           1.0   Capacity1512           1.0
+    x151202   Total_Cost          93.0   NodeBalance1202          -1.0
+    x151202   NodeBalance1502           1.0   Capacity1512           1.0
+    x151203   Total_Cost          93.0   NodeBalance1203          -1.0
+    x151203   NodeBalance1503           1.0   Capacity1512           1.0
+    x151204   Total_Cost          93.0   NodeBalance1204          -1.0
+    x151204   NodeBalance1504           1.0   Capacity1512           1.0
+    x151205   Total_Cost          93.0   NodeBalance1205          -1.0
+    x151205   NodeBalance1505           1.0   Capacity1512           1.0
+    x151206   Total_Cost          93.0   NodeBalance1206          -1.0
+    x151206   NodeBalance1506           1.0   Capacity1512           1.0
+    x151207   Total_Cost          93.0   NodeBalance1207          -1.0
+    x151207   NodeBalance1507           1.0   Capacity1512           1.0
+    x151208   Total_Cost          93.0   NodeBalance1208          -1.0
+    x151208   NodeBalance1508           1.0   Capacity1512           1.0
+    x151209   Total_Cost          93.0   NodeBalance1209          -1.0
+    x151209   NodeBalance1509           1.0   Capacity1512           1.0
+    x151210   Total_Cost          93.0   NodeBalance1210          -1.0
+    x151210   NodeBalance1510           1.0   Capacity1512           1.0
+    x151211   Total_Cost          93.0   NodeBalance1211          -1.0
+    x151211   NodeBalance1511           1.0   Capacity1512           1.0
+    x151212   Total_Cost          93.0   NodeBalance1212          -1.0
+    x151212   NodeBalance1512           1.0   Capacity1512           1.0
+    x151213   Total_Cost          93.0   NodeBalance1213          -1.0
+    x151213   NodeBalance1513           1.0   Capacity1512           1.0
+    x151214   Total_Cost          93.0   NodeBalance1214          -1.0
+    x151214   NodeBalance1514           1.0   Capacity1512           1.0
+    x151215   Total_Cost          93.0   NodeBalance1215          -1.0
+    x151215   NodeBalance1515           1.0   Capacity1512           1.0
+    x151216   Total_Cost          93.0   NodeBalance1216          -1.0
+    x151216   NodeBalance1516           1.0   Capacity1512           1.0
+    x151217   Total_Cost          93.0   NodeBalance1217          -1.0
+    x151217   NodeBalance1517           1.0   Capacity1512           1.0
+    x151218   Total_Cost          93.0   NodeBalance1218          -1.0
+    x151218   NodeBalance1518           1.0   Capacity1512           1.0
+    x151219   Total_Cost          93.0   NodeBalance1219          -1.0
+    x151219   NodeBalance1519           1.0   Capacity1512           1.0
+    x151220   Total_Cost          93.0   NodeBalance1220          -1.0
+    x151220   NodeBalance1520           1.0   Capacity1512           1.0
+    x151221   Total_Cost          93.0   NodeBalance1221          -1.0
+    x151221   NodeBalance1521           1.0   Capacity1512           1.0
+    x151222   Total_Cost          93.0   NodeBalance1222          -1.0
+    x151222   NodeBalance1522           1.0   Capacity1512           1.0
+    x151223   Total_Cost          93.0   NodeBalance1223          -1.0
+    x151223   NodeBalance1523           1.0   Capacity1512           1.0
+    x151224   Total_Cost          93.0   NodeBalance1224          -1.0
+    x151224   NodeBalance1524           1.0   Capacity1512           1.0
+    x151225   Total_Cost          93.0   NodeBalance1225          -1.0
+    x151225   NodeBalance1525           1.0   Capacity1512           1.0
+    x151226   Total_Cost          93.0   NodeBalance1226          -1.0
+    x151226   NodeBalance1526           1.0   Capacity1512           1.0
+    x151227   Total_Cost          93.0   NodeBalance1227          -1.0
+    x151227   NodeBalance1527           1.0   Capacity1512           1.0
+    x151228   Total_Cost          93.0   NodeBalance1228          -1.0
+    x151228   NodeBalance1528           1.0   Capacity1512           1.0
+    x151229   Total_Cost          93.0   NodeBalance1229          -1.0
+    x151229   NodeBalance1529           1.0   Capacity1512           1.0
+    x151230   Total_Cost          93.0   NodeBalance1230          -1.0
+    x151230   NodeBalance1530           1.0   Capacity1512           1.0
+    x151231   Total_Cost          93.0   NodeBalance1231          -1.0
+    x151231   NodeBalance1531           1.0   Capacity1512           1.0
+    x151232   Total_Cost          93.0   NodeBalance1232          -1.0
+    x151232   NodeBalance1532           1.0   Capacity1512           1.0
+    x151233   Total_Cost          93.0   NodeBalance1233          -1.0
+    x151233   NodeBalance1533           1.0   Capacity1512           1.0
+    x151234   Total_Cost          93.0   NodeBalance1234          -1.0
+    x151234   NodeBalance1534           1.0   Capacity1512           1.0
+    x151235   Total_Cost          93.0   NodeBalance1235          -1.0
+    x151235   NodeBalance1535           1.0   Capacity1512           1.0
+    x151236   Total_Cost          93.0   NodeBalance1236          -1.0
+    x151236   NodeBalance1536           1.0   Capacity1512           1.0
+    x151237   Total_Cost          93.0   NodeBalance1237          -1.0
+    x151237   NodeBalance1537           1.0   Capacity1512           1.0
+    x151238   Total_Cost          93.0   NodeBalance1238          -1.0
+    x151238   NodeBalance1538           1.0   Capacity1512           1.0
+    x151239   Total_Cost          93.0   NodeBalance1239          -1.0
+    x151239   NodeBalance1539           1.0   Capacity1512           1.0
+    x151240   Total_Cost          93.0   NodeBalance1240          -1.0
+    x151240   NodeBalance1540           1.0   Capacity1512           1.0
+    x151401   Total_Cost          95.0   NodeBalance1401          -1.0
+    x151401   NodeBalance1501           1.0   Capacity1514           1.0
+    x151402   Total_Cost          95.0   NodeBalance1402          -1.0
+    x151402   NodeBalance1502           1.0   Capacity1514           1.0
+    x151403   Total_Cost          95.0   NodeBalance1403          -1.0
+    x151403   NodeBalance1503           1.0   Capacity1514           1.0
+    x151404   Total_Cost          95.0   NodeBalance1404          -1.0
+    x151404   NodeBalance1504           1.0   Capacity1514           1.0
+    x151405   Total_Cost          95.0   NodeBalance1405          -1.0
+    x151405   NodeBalance1505           1.0   Capacity1514           1.0
+    x151406   Total_Cost          95.0   NodeBalance1406          -1.0
+    x151406   NodeBalance1506           1.0   Capacity1514           1.0
+    x151407   Total_Cost          95.0   NodeBalance1407          -1.0
+    x151407   NodeBalance1507           1.0   Capacity1514           1.0
+    x151408   Total_Cost          95.0   NodeBalance1408          -1.0
+    x151408   NodeBalance1508           1.0   Capacity1514           1.0
+    x151409   Total_Cost          95.0   NodeBalance1409          -1.0
+    x151409   NodeBalance1509           1.0   Capacity1514           1.0
+    x151410   Total_Cost          95.0   NodeBalance1410          -1.0
+    x151410   NodeBalance1510           1.0   Capacity1514           1.0
+    x151411   Total_Cost          95.0   NodeBalance1411          -1.0
+    x151411   NodeBalance1511           1.0   Capacity1514           1.0
+    x151412   Total_Cost          95.0   NodeBalance1412          -1.0
+    x151412   NodeBalance1512           1.0   Capacity1514           1.0
+    x151413   Total_Cost          95.0   NodeBalance1413          -1.0
+    x151413   NodeBalance1513           1.0   Capacity1514           1.0
+    x151414   Total_Cost          95.0   NodeBalance1414          -1.0
+    x151414   NodeBalance1514           1.0   Capacity1514           1.0
+    x151415   Total_Cost          95.0   NodeBalance1415          -1.0
+    x151415   NodeBalance1515           1.0   Capacity1514           1.0
+    x151416   Total_Cost          95.0   NodeBalance1416          -1.0
+    x151416   NodeBalance1516           1.0   Capacity1514           1.0
+    x151417   Total_Cost          95.0   NodeBalance1417          -1.0
+    x151417   NodeBalance1517           1.0   Capacity1514           1.0
+    x151418   Total_Cost          95.0   NodeBalance1418          -1.0
+    x151418   NodeBalance1518           1.0   Capacity1514           1.0
+    x151419   Total_Cost          95.0   NodeBalance1419          -1.0
+    x151419   NodeBalance1519           1.0   Capacity1514           1.0
+    x151420   Total_Cost          95.0   NodeBalance1420          -1.0
+    x151420   NodeBalance1520           1.0   Capacity1514           1.0
+    x151421   Total_Cost          95.0   NodeBalance1421          -1.0
+    x151421   NodeBalance1521           1.0   Capacity1514           1.0
+    x151422   Total_Cost          95.0   NodeBalance1422          -1.0
+    x151422   NodeBalance1522           1.0   Capacity1514           1.0
+    x151423   Total_Cost          95.0   NodeBalance1423          -1.0
+    x151423   NodeBalance1523           1.0   Capacity1514           1.0
+    x151424   Total_Cost          95.0   NodeBalance1424          -1.0
+    x151424   NodeBalance1524           1.0   Capacity1514           1.0
+    x151425   Total_Cost          95.0   NodeBalance1425          -1.0
+    x151425   NodeBalance1525           1.0   Capacity1514           1.0
+    x151426   Total_Cost          95.0   NodeBalance1426          -1.0
+    x151426   NodeBalance1526           1.0   Capacity1514           1.0
+    x151427   Total_Cost          95.0   NodeBalance1427          -1.0
+    x151427   NodeBalance1527           1.0   Capacity1514           1.0
+    x151428   Total_Cost          95.0   NodeBalance1428          -1.0
+    x151428   NodeBalance1528           1.0   Capacity1514           1.0
+    x151429   Total_Cost          95.0   NodeBalance1429          -1.0
+    x151429   NodeBalance1529           1.0   Capacity1514           1.0
+    x151430   Total_Cost          95.0   NodeBalance1430          -1.0
+    x151430   NodeBalance1530           1.0   Capacity1514           1.0
+    x151431   Total_Cost          95.0   NodeBalance1431          -1.0
+    x151431   NodeBalance1531           1.0   Capacity1514           1.0
+    x151432   Total_Cost          95.0   NodeBalance1432          -1.0
+    x151432   NodeBalance1532           1.0   Capacity1514           1.0
+    x151433   Total_Cost          95.0   NodeBalance1433          -1.0
+    x151433   NodeBalance1533           1.0   Capacity1514           1.0
+    x151434   Total_Cost          95.0   NodeBalance1434          -1.0
+    x151434   NodeBalance1534           1.0   Capacity1514           1.0
+    x151435   Total_Cost          95.0   NodeBalance1435          -1.0
+    x151435   NodeBalance1535           1.0   Capacity1514           1.0
+    x151436   Total_Cost          95.0   NodeBalance1436          -1.0
+    x151436   NodeBalance1536           1.0   Capacity1514           1.0
+    x151437   Total_Cost          95.0   NodeBalance1437          -1.0
+    x151437   NodeBalance1537           1.0   Capacity1514           1.0
+    x151438   Total_Cost          95.0   NodeBalance1438          -1.0
+    x151438   NodeBalance1538           1.0   Capacity1514           1.0
+    x151439   Total_Cost          95.0   NodeBalance1439          -1.0
+    x151439   NodeBalance1539           1.0   Capacity1514           1.0
+    x151440   Total_Cost          95.0   NodeBalance1440          -1.0
+    x151440   NodeBalance1540           1.0   Capacity1514           1.0
+    x151601   Total_Cost         100.0   NodeBalance1501           1.0
+    x151601   NodeBalance1601          -1.0   Capacity1516           1.0
+    x151602   Total_Cost         100.0   NodeBalance1502           1.0
+    x151602   NodeBalance1602          -1.0   Capacity1516           1.0
+    x151603   Total_Cost         100.0   NodeBalance1503           1.0
+    x151603   NodeBalance1603          -1.0   Capacity1516           1.0
+    x151604   Total_Cost         100.0   NodeBalance1504           1.0
+    x151604   NodeBalance1604          -1.0   Capacity1516           1.0
+    x151605   Total_Cost         100.0   NodeBalance1505           1.0
+    x151605   NodeBalance1605          -1.0   Capacity1516           1.0
+    x151606   Total_Cost         100.0   NodeBalance1506           1.0
+    x151606   NodeBalance1606          -1.0   Capacity1516           1.0
+    x151607   Total_Cost         100.0   NodeBalance1507           1.0
+    x151607   NodeBalance1607          -1.0   Capacity1516           1.0
+    x151608   Total_Cost         100.0   NodeBalance1508           1.0
+    x151608   NodeBalance1608          -1.0   Capacity1516           1.0
+    x151609   Total_Cost         100.0   NodeBalance1509           1.0
+    x151609   NodeBalance1609          -1.0   Capacity1516           1.0
+    x151610   Total_Cost         100.0   NodeBalance1510           1.0
+    x151610   NodeBalance1610          -1.0   Capacity1516           1.0
+    x151611   Total_Cost         100.0   NodeBalance1511           1.0
+    x151611   NodeBalance1611          -1.0   Capacity1516           1.0
+    x151612   Total_Cost         100.0   NodeBalance1512           1.0
+    x151612   NodeBalance1612          -1.0   Capacity1516           1.0
+    x151613   Total_Cost         100.0   NodeBalance1513           1.0
+    x151613   NodeBalance1613          -1.0   Capacity1516           1.0
+    x151614   Total_Cost         100.0   NodeBalance1514           1.0
+    x151614   NodeBalance1614          -1.0   Capacity1516           1.0
+    x151615   Total_Cost         100.0   NodeBalance1515           1.0
+    x151615   NodeBalance1615          -1.0   Capacity1516           1.0
+    x151616   Total_Cost         100.0   NodeBalance1516           1.0
+    x151616   NodeBalance1616          -1.0   Capacity1516           1.0
+    x151617   Total_Cost         100.0   NodeBalance1517           1.0
+    x151617   NodeBalance1617          -1.0   Capacity1516           1.0
+    x151618   Total_Cost         100.0   NodeBalance1518           1.0
+    x151618   NodeBalance1618          -1.0   Capacity1516           1.0
+    x151619   Total_Cost         100.0   NodeBalance1519           1.0
+    x151619   NodeBalance1619          -1.0   Capacity1516           1.0
+    x151620   Total_Cost         100.0   NodeBalance1520           1.0
+    x151620   NodeBalance1620          -1.0   Capacity1516           1.0
+    x151621   Total_Cost         100.0   NodeBalance1521           1.0
+    x151621   NodeBalance1621          -1.0   Capacity1516           1.0
+    x151622   Total_Cost         100.0   NodeBalance1522           1.0
+    x151622   NodeBalance1622          -1.0   Capacity1516           1.0
+    x151623   Total_Cost         100.0   NodeBalance1523           1.0
+    x151623   NodeBalance1623          -1.0   Capacity1516           1.0
+    x151624   Total_Cost         100.0   NodeBalance1524           1.0
+    x151624   NodeBalance1624          -1.0   Capacity1516           1.0
+    x151625   Total_Cost         100.0   NodeBalance1525           1.0
+    x151625   NodeBalance1625          -1.0   Capacity1516           1.0
+    x151626   Total_Cost         100.0   NodeBalance1526           1.0
+    x151626   NodeBalance1626          -1.0   Capacity1516           1.0
+    x151627   Total_Cost         100.0   NodeBalance1527           1.0
+    x151627   NodeBalance1627          -1.0   Capacity1516           1.0
+    x151628   Total_Cost         100.0   NodeBalance1528           1.0
+    x151628   NodeBalance1628          -1.0   Capacity1516           1.0
+    x151629   Total_Cost         100.0   NodeBalance1529           1.0
+    x151629   NodeBalance1629          -1.0   Capacity1516           1.0
+    x151630   Total_Cost         100.0   NodeBalance1530           1.0
+    x151630   NodeBalance1630          -1.0   Capacity1516           1.0
+    x151631   Total_Cost         100.0   NodeBalance1531           1.0
+    x151631   NodeBalance1631          -1.0   Capacity1516           1.0
+    x151632   Total_Cost         100.0   NodeBalance1532           1.0
+    x151632   NodeBalance1632          -1.0   Capacity1516           1.0
+    x151633   Total_Cost         100.0   NodeBalance1533           1.0
+    x151633   NodeBalance1633          -1.0   Capacity1516           1.0
+    x151634   Total_Cost         100.0   NodeBalance1534           1.0
+    x151634   NodeBalance1634          -1.0   Capacity1516           1.0
+    x151635   Total_Cost         100.0   NodeBalance1535           1.0
+    x151635   NodeBalance1635          -1.0   Capacity1516           1.0
+    x151636   Total_Cost         100.0   NodeBalance1536           1.0
+    x151636   NodeBalance1636          -1.0   Capacity1516           1.0
+    x151637   Total_Cost         100.0   NodeBalance1537           1.0
+    x151637   NodeBalance1637          -1.0   Capacity1516           1.0
+    x151638   Total_Cost         100.0   NodeBalance1538           1.0
+    x151638   NodeBalance1638          -1.0   Capacity1516           1.0
+    x151639   Total_Cost         100.0   NodeBalance1539           1.0
+    x151639   NodeBalance1639          -1.0   Capacity1516           1.0
+    x151640   Total_Cost         100.0   NodeBalance1540           1.0
+    x151640   NodeBalance1640          -1.0   Capacity1516           1.0
+    x151701   Total_Cost          33.0   NodeBalance1501           1.0
+    x151701   NodeBalance1701          -1.0   Capacity1517           1.0
+    x151702   Total_Cost          33.0   NodeBalance1502           1.0
+    x151702   NodeBalance1702          -1.0   Capacity1517           1.0
+    x151703   Total_Cost          33.0   NodeBalance1503           1.0
+    x151703   NodeBalance1703          -1.0   Capacity1517           1.0
+    x151704   Total_Cost          33.0   NodeBalance1504           1.0
+    x151704   NodeBalance1704          -1.0   Capacity1517           1.0
+    x151705   Total_Cost          33.0   NodeBalance1505           1.0
+    x151705   NodeBalance1705          -1.0   Capacity1517           1.0
+    x151706   Total_Cost          33.0   NodeBalance1506           1.0
+    x151706   NodeBalance1706          -1.0   Capacity1517           1.0
+    x151707   Total_Cost          33.0   NodeBalance1507           1.0
+    x151707   NodeBalance1707          -1.0   Capacity1517           1.0
+    x151708   Total_Cost          33.0   NodeBalance1508           1.0
+    x151708   NodeBalance1708          -1.0   Capacity1517           1.0
+    x151709   Total_Cost          33.0   NodeBalance1509           1.0
+    x151709   NodeBalance1709          -1.0   Capacity1517           1.0
+    x151710   Total_Cost          33.0   NodeBalance1510           1.0
+    x151710   NodeBalance1710          -1.0   Capacity1517           1.0
+    x151711   Total_Cost          33.0   NodeBalance1511           1.0
+    x151711   NodeBalance1711          -1.0   Capacity1517           1.0
+    x151712   Total_Cost          33.0   NodeBalance1512           1.0
+    x151712   NodeBalance1712          -1.0   Capacity1517           1.0
+    x151713   Total_Cost          33.0   NodeBalance1513           1.0
+    x151713   NodeBalance1713          -1.0   Capacity1517           1.0
+    x151714   Total_Cost          33.0   NodeBalance1514           1.0
+    x151714   NodeBalance1714          -1.0   Capacity1517           1.0
+    x151715   Total_Cost          33.0   NodeBalance1515           1.0
+    x151715   NodeBalance1715          -1.0   Capacity1517           1.0
+    x151716   Total_Cost          33.0   NodeBalance1516           1.0
+    x151716   NodeBalance1716          -1.0   Capacity1517           1.0
+    x151717   Total_Cost          33.0   NodeBalance1517           1.0
+    x151717   NodeBalance1717          -1.0   Capacity1517           1.0
+    x151718   Total_Cost          33.0   NodeBalance1518           1.0
+    x151718   NodeBalance1718          -1.0   Capacity1517           1.0
+    x151719   Total_Cost          33.0   NodeBalance1519           1.0
+    x151719   NodeBalance1719          -1.0   Capacity1517           1.0
+    x151720   Total_Cost          33.0   NodeBalance1520           1.0
+    x151720   NodeBalance1720          -1.0   Capacity1517           1.0
+    x151721   Total_Cost          33.0   NodeBalance1521           1.0
+    x151721   NodeBalance1721          -1.0   Capacity1517           1.0
+    x151722   Total_Cost          33.0   NodeBalance1522           1.0
+    x151722   NodeBalance1722          -1.0   Capacity1517           1.0
+    x151723   Total_Cost          33.0   NodeBalance1523           1.0
+    x151723   NodeBalance1723          -1.0   Capacity1517           1.0
+    x151724   Total_Cost          33.0   NodeBalance1524           1.0
+    x151724   NodeBalance1724          -1.0   Capacity1517           1.0
+    x151725   Total_Cost          33.0   NodeBalance1525           1.0
+    x151725   NodeBalance1725          -1.0   Capacity1517           1.0
+    x151726   Total_Cost          33.0   NodeBalance1526           1.0
+    x151726   NodeBalance1726          -1.0   Capacity1517           1.0
+    x151727   Total_Cost          33.0   NodeBalance1527           1.0
+    x151727   NodeBalance1727          -1.0   Capacity1517           1.0
+    x151728   Total_Cost          33.0   NodeBalance1528           1.0
+    x151728   NodeBalance1728          -1.0   Capacity1517           1.0
+    x151729   Total_Cost          33.0   NodeBalance1529           1.0
+    x151729   NodeBalance1729          -1.0   Capacity1517           1.0
+    x151730   Total_Cost          33.0   NodeBalance1530           1.0
+    x151730   NodeBalance1730          -1.0   Capacity1517           1.0
+    x151731   Total_Cost          33.0   NodeBalance1531           1.0
+    x151731   NodeBalance1731          -1.0   Capacity1517           1.0
+    x151732   Total_Cost          33.0   NodeBalance1532           1.0
+    x151732   NodeBalance1732          -1.0   Capacity1517           1.0
+    x151733   Total_Cost          33.0   NodeBalance1533           1.0
+    x151733   NodeBalance1733          -1.0   Capacity1517           1.0
+    x151734   Total_Cost          33.0   NodeBalance1534           1.0
+    x151734   NodeBalance1734          -1.0   Capacity1517           1.0
+    x151735   Total_Cost          33.0   NodeBalance1535           1.0
+    x151735   NodeBalance1735          -1.0   Capacity1517           1.0
+    x151736   Total_Cost          33.0   NodeBalance1536           1.0
+    x151736   NodeBalance1736          -1.0   Capacity1517           1.0
+    x151737   Total_Cost          33.0   NodeBalance1537           1.0
+    x151737   NodeBalance1737          -1.0   Capacity1517           1.0
+    x151738   Total_Cost          33.0   NodeBalance1538           1.0
+    x151738   NodeBalance1738          -1.0   Capacity1517           1.0
+    x151739   Total_Cost          33.0   NodeBalance1539           1.0
+    x151739   NodeBalance1739          -1.0   Capacity1517           1.0
+    x151740   Total_Cost          33.0   NodeBalance1540           1.0
+    x151740   NodeBalance1740          -1.0   Capacity1517           1.0
+    x160101   Total_Cost          64.0   NodeBalance0101          -1.0
+    x160101   NodeBalance1601           1.0   Capacity1601           1.0
+    x160102   Total_Cost          64.0   NodeBalance0102          -1.0
+    x160102   NodeBalance1602           1.0   Capacity1601           1.0
+    x160103   Total_Cost          64.0   NodeBalance0103          -1.0
+    x160103   NodeBalance1603           1.0   Capacity1601           1.0
+    x160104   Total_Cost          64.0   NodeBalance0104          -1.0
+    x160104   NodeBalance1604           1.0   Capacity1601           1.0
+    x160105   Total_Cost          64.0   NodeBalance0105          -1.0
+    x160105   NodeBalance1605           1.0   Capacity1601           1.0
+    x160106   Total_Cost          64.0   NodeBalance0106          -1.0
+    x160106   NodeBalance1606           1.0   Capacity1601           1.0
+    x160107   Total_Cost          64.0   NodeBalance0107          -1.0
+    x160107   NodeBalance1607           1.0   Capacity1601           1.0
+    x160108   Total_Cost          64.0   NodeBalance0108          -1.0
+    x160108   NodeBalance1608           1.0   Capacity1601           1.0
+    x160109   Total_Cost          64.0   NodeBalance0109          -1.0
+    x160109   NodeBalance1609           1.0   Capacity1601           1.0
+    x160110   Total_Cost          64.0   NodeBalance0110          -1.0
+    x160110   NodeBalance1610           1.0   Capacity1601           1.0
+    x160111   Total_Cost          64.0   NodeBalance0111          -1.0
+    x160111   NodeBalance1611           1.0   Capacity1601           1.0
+    x160112   Total_Cost          64.0   NodeBalance0112          -1.0
+    x160112   NodeBalance1612           1.0   Capacity1601           1.0
+    x160113   Total_Cost          64.0   NodeBalance0113          -1.0
+    x160113   NodeBalance1613           1.0   Capacity1601           1.0
+    x160114   Total_Cost          64.0   NodeBalance0114          -1.0
+    x160114   NodeBalance1614           1.0   Capacity1601           1.0
+    x160115   Total_Cost          64.0   NodeBalance0115          -1.0
+    x160115   NodeBalance1615           1.0   Capacity1601           1.0
+    x160116   Total_Cost          64.0   NodeBalance0116          -1.0
+    x160116   NodeBalance1616           1.0   Capacity1601           1.0
+    x160117   Total_Cost          64.0   NodeBalance0117          -1.0
+    x160117   NodeBalance1617           1.0   Capacity1601           1.0
+    x160118   Total_Cost          64.0   NodeBalance0118          -1.0
+    x160118   NodeBalance1618           1.0   Capacity1601           1.0
+    x160119   Total_Cost          64.0   NodeBalance0119          -1.0
+    x160119   NodeBalance1619           1.0   Capacity1601           1.0
+    x160120   Total_Cost          64.0   NodeBalance0120          -1.0
+    x160120   NodeBalance1620           1.0   Capacity1601           1.0
+    x160121   Total_Cost          64.0   NodeBalance0121          -1.0
+    x160121   NodeBalance1621           1.0   Capacity1601           1.0
+    x160122   Total_Cost          64.0   NodeBalance0122          -1.0
+    x160122   NodeBalance1622           1.0   Capacity1601           1.0
+    x160123   Total_Cost          64.0   NodeBalance0123          -1.0
+    x160123   NodeBalance1623           1.0   Capacity1601           1.0
+    x160124   Total_Cost          64.0   NodeBalance0124          -1.0
+    x160124   NodeBalance1624           1.0   Capacity1601           1.0
+    x160125   Total_Cost          64.0   NodeBalance0125          -1.0
+    x160125   NodeBalance1625           1.0   Capacity1601           1.0
+    x160126   Total_Cost          64.0   NodeBalance0126          -1.0
+    x160126   NodeBalance1626           1.0   Capacity1601           1.0
+    x160127   Total_Cost          64.0   NodeBalance0127          -1.0
+    x160127   NodeBalance1627           1.0   Capacity1601           1.0
+    x160128   Total_Cost          64.0   NodeBalance0128          -1.0
+    x160128   NodeBalance1628           1.0   Capacity1601           1.0
+    x160129   Total_Cost          64.0   NodeBalance0129          -1.0
+    x160129   NodeBalance1629           1.0   Capacity1601           1.0
+    x160130   Total_Cost          64.0   NodeBalance0130          -1.0
+    x160130   NodeBalance1630           1.0   Capacity1601           1.0
+    x160131   Total_Cost          64.0   NodeBalance0131          -1.0
+    x160131   NodeBalance1631           1.0   Capacity1601           1.0
+    x160132   Total_Cost          64.0   NodeBalance0132          -1.0
+    x160132   NodeBalance1632           1.0   Capacity1601           1.0
+    x160133   Total_Cost          64.0   NodeBalance0133          -1.0
+    x160133   NodeBalance1633           1.0   Capacity1601           1.0
+    x160134   Total_Cost          64.0   NodeBalance0134          -1.0
+    x160134   NodeBalance1634           1.0   Capacity1601           1.0
+    x160135   Total_Cost          64.0   NodeBalance0135          -1.0
+    x160135   NodeBalance1635           1.0   Capacity1601           1.0
+    x160136   Total_Cost          64.0   NodeBalance0136          -1.0
+    x160136   NodeBalance1636           1.0   Capacity1601           1.0
+    x160137   Total_Cost          64.0   NodeBalance0137          -1.0
+    x160137   NodeBalance1637           1.0   Capacity1601           1.0
+    x160138   Total_Cost          64.0   NodeBalance0138          -1.0
+    x160138   NodeBalance1638           1.0   Capacity1601           1.0
+    x160139   Total_Cost          64.0   NodeBalance0139          -1.0
+    x160139   NodeBalance1639           1.0   Capacity1601           1.0
+    x160140   Total_Cost          64.0   NodeBalance0140          -1.0
+    x160140   NodeBalance1640           1.0   Capacity1601           1.0
+    x160501   Total_Cost          41.0   NodeBalance0501          -1.0
+    x160501   NodeBalance1601           1.0   Capacity1605           1.0
+    x160502   Total_Cost          41.0   NodeBalance0502          -1.0
+    x160502   NodeBalance1602           1.0   Capacity1605           1.0
+    x160503   Total_Cost          41.0   NodeBalance0503          -1.0
+    x160503   NodeBalance1603           1.0   Capacity1605           1.0
+    x160504   Total_Cost          41.0   NodeBalance0504          -1.0
+    x160504   NodeBalance1604           1.0   Capacity1605           1.0
+    x160505   Total_Cost          41.0   NodeBalance0505          -1.0
+    x160505   NodeBalance1605           1.0   Capacity1605           1.0
+    x160506   Total_Cost          41.0   NodeBalance0506          -1.0
+    x160506   NodeBalance1606           1.0   Capacity1605           1.0
+    x160507   Total_Cost          41.0   NodeBalance0507          -1.0
+    x160507   NodeBalance1607           1.0   Capacity1605           1.0
+    x160508   Total_Cost          41.0   NodeBalance0508          -1.0
+    x160508   NodeBalance1608           1.0   Capacity1605           1.0
+    x160509   Total_Cost          41.0   NodeBalance0509          -1.0
+    x160509   NodeBalance1609           1.0   Capacity1605           1.0
+    x160510   Total_Cost          41.0   NodeBalance0510          -1.0
+    x160510   NodeBalance1610           1.0   Capacity1605           1.0
+    x160511   Total_Cost          41.0   NodeBalance0511          -1.0
+    x160511   NodeBalance1611           1.0   Capacity1605           1.0
+    x160512   Total_Cost          41.0   NodeBalance0512          -1.0
+    x160512   NodeBalance1612           1.0   Capacity1605           1.0
+    x160513   Total_Cost          41.0   NodeBalance0513          -1.0
+    x160513   NodeBalance1613           1.0   Capacity1605           1.0
+    x160514   Total_Cost          41.0   NodeBalance0514          -1.0
+    x160514   NodeBalance1614           1.0   Capacity1605           1.0
+    x160515   Total_Cost          41.0   NodeBalance0515          -1.0
+    x160515   NodeBalance1615           1.0   Capacity1605           1.0
+    x160516   Total_Cost          41.0   NodeBalance0516          -1.0
+    x160516   NodeBalance1616           1.0   Capacity1605           1.0
+    x160517   Total_Cost          41.0   NodeBalance0517          -1.0
+    x160517   NodeBalance1617           1.0   Capacity1605           1.0
+    x160518   Total_Cost          41.0   NodeBalance0518          -1.0
+    x160518   NodeBalance1618           1.0   Capacity1605           1.0
+    x160519   Total_Cost          41.0   NodeBalance0519          -1.0
+    x160519   NodeBalance1619           1.0   Capacity1605           1.0
+    x160520   Total_Cost          41.0   NodeBalance0520          -1.0
+    x160520   NodeBalance1620           1.0   Capacity1605           1.0
+    x160521   Total_Cost          41.0   NodeBalance0521          -1.0
+    x160521   NodeBalance1621           1.0   Capacity1605           1.0
+    x160522   Total_Cost          41.0   NodeBalance0522          -1.0
+    x160522   NodeBalance1622           1.0   Capacity1605           1.0
+    x160523   Total_Cost          41.0   NodeBalance0523          -1.0
+    x160523   NodeBalance1623           1.0   Capacity1605           1.0
+    x160524   Total_Cost          41.0   NodeBalance0524          -1.0
+    x160524   NodeBalance1624           1.0   Capacity1605           1.0
+    x160525   Total_Cost          41.0   NodeBalance0525          -1.0
+    x160525   NodeBalance1625           1.0   Capacity1605           1.0
+    x160526   Total_Cost          41.0   NodeBalance0526          -1.0
+    x160526   NodeBalance1626           1.0   Capacity1605           1.0
+    x160527   Total_Cost          41.0   NodeBalance0527          -1.0
+    x160527   NodeBalance1627           1.0   Capacity1605           1.0
+    x160528   Total_Cost          41.0   NodeBalance0528          -1.0
+    x160528   NodeBalance1628           1.0   Capacity1605           1.0
+    x160529   Total_Cost          41.0   NodeBalance0529          -1.0
+    x160529   NodeBalance1629           1.0   Capacity1605           1.0
+    x160530   Total_Cost          41.0   NodeBalance0530          -1.0
+    x160530   NodeBalance1630           1.0   Capacity1605           1.0
+    x160531   Total_Cost          41.0   NodeBalance0531          -1.0
+    x160531   NodeBalance1631           1.0   Capacity1605           1.0
+    x160532   Total_Cost          41.0   NodeBalance0532          -1.0
+    x160532   NodeBalance1632           1.0   Capacity1605           1.0
+    x160533   Total_Cost          41.0   NodeBalance0533          -1.0
+    x160533   NodeBalance1633           1.0   Capacity1605           1.0
+    x160534   Total_Cost          41.0   NodeBalance0534          -1.0
+    x160534   NodeBalance1634           1.0   Capacity1605           1.0
+    x160535   Total_Cost          41.0   NodeBalance0535          -1.0
+    x160535   NodeBalance1635           1.0   Capacity1605           1.0
+    x160536   Total_Cost          41.0   NodeBalance0536          -1.0
+    x160536   NodeBalance1636           1.0   Capacity1605           1.0
+    x160537   Total_Cost          41.0   NodeBalance0537          -1.0
+    x160537   NodeBalance1637           1.0   Capacity1605           1.0
+    x160538   Total_Cost          41.0   NodeBalance0538          -1.0
+    x160538   NodeBalance1638           1.0   Capacity1605           1.0
+    x160539   Total_Cost          41.0   NodeBalance0539          -1.0
+    x160539   NodeBalance1639           1.0   Capacity1605           1.0
+    x160540   Total_Cost          41.0   NodeBalance0540          -1.0
+    x160540   NodeBalance1640           1.0   Capacity1605           1.0
+    x160601   Total_Cost          82.0   NodeBalance0601          -1.0
+    x160601   NodeBalance1601           1.0   Capacity1606           1.0
+    x160602   Total_Cost          82.0   NodeBalance0602          -1.0
+    x160602   NodeBalance1602           1.0   Capacity1606           1.0
+    x160603   Total_Cost          82.0   NodeBalance0603          -1.0
+    x160603   NodeBalance1603           1.0   Capacity1606           1.0
+    x160604   Total_Cost          82.0   NodeBalance0604          -1.0
+    x160604   NodeBalance1604           1.0   Capacity1606           1.0
+    x160605   Total_Cost          82.0   NodeBalance0605          -1.0
+    x160605   NodeBalance1605           1.0   Capacity1606           1.0
+    x160606   Total_Cost          82.0   NodeBalance0606          -1.0
+    x160606   NodeBalance1606           1.0   Capacity1606           1.0
+    x160607   Total_Cost          82.0   NodeBalance0607          -1.0
+    x160607   NodeBalance1607           1.0   Capacity1606           1.0
+    x160608   Total_Cost          82.0   NodeBalance0608          -1.0
+    x160608   NodeBalance1608           1.0   Capacity1606           1.0
+    x160609   Total_Cost          82.0   NodeBalance0609          -1.0
+    x160609   NodeBalance1609           1.0   Capacity1606           1.0
+    x160610   Total_Cost          82.0   NodeBalance0610          -1.0
+    x160610   NodeBalance1610           1.0   Capacity1606           1.0
+    x160611   Total_Cost          82.0   NodeBalance0611          -1.0
+    x160611   NodeBalance1611           1.0   Capacity1606           1.0
+    x160612   Total_Cost          82.0   NodeBalance0612          -1.0
+    x160612   NodeBalance1612           1.0   Capacity1606           1.0
+    x160613   Total_Cost          82.0   NodeBalance0613          -1.0
+    x160613   NodeBalance1613           1.0   Capacity1606           1.0
+    x160614   Total_Cost          82.0   NodeBalance0614          -1.0
+    x160614   NodeBalance1614           1.0   Capacity1606           1.0
+    x160615   Total_Cost          82.0   NodeBalance0615          -1.0
+    x160615   NodeBalance1615           1.0   Capacity1606           1.0
+    x160616   Total_Cost          82.0   NodeBalance0616          -1.0
+    x160616   NodeBalance1616           1.0   Capacity1606           1.0
+    x160617   Total_Cost          82.0   NodeBalance0617          -1.0
+    x160617   NodeBalance1617           1.0   Capacity1606           1.0
+    x160618   Total_Cost          82.0   NodeBalance0618          -1.0
+    x160618   NodeBalance1618           1.0   Capacity1606           1.0
+    x160619   Total_Cost          82.0   NodeBalance0619          -1.0
+    x160619   NodeBalance1619           1.0   Capacity1606           1.0
+    x160620   Total_Cost          82.0   NodeBalance0620          -1.0
+    x160620   NodeBalance1620           1.0   Capacity1606           1.0
+    x160621   Total_Cost          82.0   NodeBalance0621          -1.0
+    x160621   NodeBalance1621           1.0   Capacity1606           1.0
+    x160622   Total_Cost          82.0   NodeBalance0622          -1.0
+    x160622   NodeBalance1622           1.0   Capacity1606           1.0
+    x160623   Total_Cost          82.0   NodeBalance0623          -1.0
+    x160623   NodeBalance1623           1.0   Capacity1606           1.0
+    x160624   Total_Cost          82.0   NodeBalance0624          -1.0
+    x160624   NodeBalance1624           1.0   Capacity1606           1.0
+    x160625   Total_Cost          82.0   NodeBalance0625          -1.0
+    x160625   NodeBalance1625           1.0   Capacity1606           1.0
+    x160626   Total_Cost          82.0   NodeBalance0626          -1.0
+    x160626   NodeBalance1626           1.0   Capacity1606           1.0
+    x160627   Total_Cost          82.0   NodeBalance0627          -1.0
+    x160627   NodeBalance1627           1.0   Capacity1606           1.0
+    x160628   Total_Cost          82.0   NodeBalance0628          -1.0
+    x160628   NodeBalance1628           1.0   Capacity1606           1.0
+    x160629   Total_Cost          82.0   NodeBalance0629          -1.0
+    x160629   NodeBalance1629           1.0   Capacity1606           1.0
+    x160630   Total_Cost          82.0   NodeBalance0630          -1.0
+    x160630   NodeBalance1630           1.0   Capacity1606           1.0
+    x160631   Total_Cost          82.0   NodeBalance0631          -1.0
+    x160631   NodeBalance1631           1.0   Capacity1606           1.0
+    x160632   Total_Cost          82.0   NodeBalance0632          -1.0
+    x160632   NodeBalance1632           1.0   Capacity1606           1.0
+    x160633   Total_Cost          82.0   NodeBalance0633          -1.0
+    x160633   NodeBalance1633           1.0   Capacity1606           1.0
+    x160634   Total_Cost          82.0   NodeBalance0634          -1.0
+    x160634   NodeBalance1634           1.0   Capacity1606           1.0
+    x160635   Total_Cost          82.0   NodeBalance0635          -1.0
+    x160635   NodeBalance1635           1.0   Capacity1606           1.0
+    x160636   Total_Cost          82.0   NodeBalance0636          -1.0
+    x160636   NodeBalance1636           1.0   Capacity1606           1.0
+    x160637   Total_Cost          82.0   NodeBalance0637          -1.0
+    x160637   NodeBalance1637           1.0   Capacity1606           1.0
+    x160638   Total_Cost          82.0   NodeBalance0638          -1.0
+    x160638   NodeBalance1638           1.0   Capacity1606           1.0
+    x160639   Total_Cost          82.0   NodeBalance0639          -1.0
+    x160639   NodeBalance1639           1.0   Capacity1606           1.0
+    x160640   Total_Cost          82.0   NodeBalance0640          -1.0
+    x160640   NodeBalance1640           1.0   Capacity1606           1.0
+    x160701   Total_Cost          11.0   NodeBalance0701          -1.0
+    x160701   NodeBalance1601           1.0   Capacity1607           1.0
+    x160702   Total_Cost          11.0   NodeBalance0702          -1.0
+    x160702   NodeBalance1602           1.0   Capacity1607           1.0
+    x160703   Total_Cost          11.0   NodeBalance0703          -1.0
+    x160703   NodeBalance1603           1.0   Capacity1607           1.0
+    x160704   Total_Cost          11.0   NodeBalance0704          -1.0
+    x160704   NodeBalance1604           1.0   Capacity1607           1.0
+    x160705   Total_Cost          11.0   NodeBalance0705          -1.0
+    x160705   NodeBalance1605           1.0   Capacity1607           1.0
+    x160706   Total_Cost          11.0   NodeBalance0706          -1.0
+    x160706   NodeBalance1606           1.0   Capacity1607           1.0
+    x160707   Total_Cost          11.0   NodeBalance0707          -1.0
+    x160707   NodeBalance1607           1.0   Capacity1607           1.0
+    x160708   Total_Cost          11.0   NodeBalance0708          -1.0
+    x160708   NodeBalance1608           1.0   Capacity1607           1.0
+    x160709   Total_Cost          11.0   NodeBalance0709          -1.0
+    x160709   NodeBalance1609           1.0   Capacity1607           1.0
+    x160710   Total_Cost          11.0   NodeBalance0710          -1.0
+    x160710   NodeBalance1610           1.0   Capacity1607           1.0
+    x160711   Total_Cost          11.0   NodeBalance0711          -1.0
+    x160711   NodeBalance1611           1.0   Capacity1607           1.0
+    x160712   Total_Cost          11.0   NodeBalance0712          -1.0
+    x160712   NodeBalance1612           1.0   Capacity1607           1.0
+    x160713   Total_Cost          11.0   NodeBalance0713          -1.0
+    x160713   NodeBalance1613           1.0   Capacity1607           1.0
+    x160714   Total_Cost          11.0   NodeBalance0714          -1.0
+    x160714   NodeBalance1614           1.0   Capacity1607           1.0
+    x160715   Total_Cost          11.0   NodeBalance0715          -1.0
+    x160715   NodeBalance1615           1.0   Capacity1607           1.0
+    x160716   Total_Cost          11.0   NodeBalance0716          -1.0
+    x160716   NodeBalance1616           1.0   Capacity1607           1.0
+    x160717   Total_Cost          11.0   NodeBalance0717          -1.0
+    x160717   NodeBalance1617           1.0   Capacity1607           1.0
+    x160718   Total_Cost          11.0   NodeBalance0718          -1.0
+    x160718   NodeBalance1618           1.0   Capacity1607           1.0
+    x160719   Total_Cost          11.0   NodeBalance0719          -1.0
+    x160719   NodeBalance1619           1.0   Capacity1607           1.0
+    x160720   Total_Cost          11.0   NodeBalance0720          -1.0
+    x160720   NodeBalance1620           1.0   Capacity1607           1.0
+    x160721   Total_Cost          11.0   NodeBalance0721          -1.0
+    x160721   NodeBalance1621           1.0   Capacity1607           1.0
+    x160722   Total_Cost          11.0   NodeBalance0722          -1.0
+    x160722   NodeBalance1622           1.0   Capacity1607           1.0
+    x160723   Total_Cost          11.0   NodeBalance0723          -1.0
+    x160723   NodeBalance1623           1.0   Capacity1607           1.0
+    x160724   Total_Cost          11.0   NodeBalance0724          -1.0
+    x160724   NodeBalance1624           1.0   Capacity1607           1.0
+    x160725   Total_Cost          11.0   NodeBalance0725          -1.0
+    x160725   NodeBalance1625           1.0   Capacity1607           1.0
+    x160726   Total_Cost          11.0   NodeBalance0726          -1.0
+    x160726   NodeBalance1626           1.0   Capacity1607           1.0
+    x160727   Total_Cost          11.0   NodeBalance0727          -1.0
+    x160727   NodeBalance1627           1.0   Capacity1607           1.0
+    x160728   Total_Cost          11.0   NodeBalance0728          -1.0
+    x160728   NodeBalance1628           1.0   Capacity1607           1.0
+    x160729   Total_Cost          11.0   NodeBalance0729          -1.0
+    x160729   NodeBalance1629           1.0   Capacity1607           1.0
+    x160730   Total_Cost          11.0   NodeBalance0730          -1.0
+    x160730   NodeBalance1630           1.0   Capacity1607           1.0
+    x160731   Total_Cost          11.0   NodeBalance0731          -1.0
+    x160731   NodeBalance1631           1.0   Capacity1607           1.0
+    x160732   Total_Cost          11.0   NodeBalance0732          -1.0
+    x160732   NodeBalance1632           1.0   Capacity1607           1.0
+    x160733   Total_Cost          11.0   NodeBalance0733          -1.0
+    x160733   NodeBalance1633           1.0   Capacity1607           1.0
+    x160734   Total_Cost          11.0   NodeBalance0734          -1.0
+    x160734   NodeBalance1634           1.0   Capacity1607           1.0
+    x160735   Total_Cost          11.0   NodeBalance0735          -1.0
+    x160735   NodeBalance1635           1.0   Capacity1607           1.0
+    x160736   Total_Cost          11.0   NodeBalance0736          -1.0
+    x160736   NodeBalance1636           1.0   Capacity1607           1.0
+    x160737   Total_Cost          11.0   NodeBalance0737          -1.0
+    x160737   NodeBalance1637           1.0   Capacity1607           1.0
+    x160738   Total_Cost          11.0   NodeBalance0738          -1.0
+    x160738   NodeBalance1638           1.0   Capacity1607           1.0
+    x160739   Total_Cost          11.0   NodeBalance0739          -1.0
+    x160739   NodeBalance1639           1.0   Capacity1607           1.0
+    x160740   Total_Cost          11.0   NodeBalance0740          -1.0
+    x160740   NodeBalance1640           1.0   Capacity1607           1.0
+    x160901   Total_Cost          96.0   NodeBalance0901          -1.0
+    x160901   NodeBalance1601           1.0   Capacity1609           1.0
+    x160902   Total_Cost          96.0   NodeBalance0902          -1.0
+    x160902   NodeBalance1602           1.0   Capacity1609           1.0
+    x160903   Total_Cost          96.0   NodeBalance0903          -1.0
+    x160903   NodeBalance1603           1.0   Capacity1609           1.0
+    x160904   Total_Cost          96.0   NodeBalance0904          -1.0
+    x160904   NodeBalance1604           1.0   Capacity1609           1.0
+    x160905   Total_Cost          96.0   NodeBalance0905          -1.0
+    x160905   NodeBalance1605           1.0   Capacity1609           1.0
+    x160906   Total_Cost          96.0   NodeBalance0906          -1.0
+    x160906   NodeBalance1606           1.0   Capacity1609           1.0
+    x160907   Total_Cost          96.0   NodeBalance0907          -1.0
+    x160907   NodeBalance1607           1.0   Capacity1609           1.0
+    x160908   Total_Cost          96.0   NodeBalance0908          -1.0
+    x160908   NodeBalance1608           1.0   Capacity1609           1.0
+    x160909   Total_Cost          96.0   NodeBalance0909          -1.0
+    x160909   NodeBalance1609           1.0   Capacity1609           1.0
+    x160910   Total_Cost          96.0   NodeBalance0910          -1.0
+    x160910   NodeBalance1610           1.0   Capacity1609           1.0
+    x160911   Total_Cost          96.0   NodeBalance0911          -1.0
+    x160911   NodeBalance1611           1.0   Capacity1609           1.0
+    x160912   Total_Cost          96.0   NodeBalance0912          -1.0
+    x160912   NodeBalance1612           1.0   Capacity1609           1.0
+    x160913   Total_Cost          96.0   NodeBalance0913          -1.0
+    x160913   NodeBalance1613           1.0   Capacity1609           1.0
+    x160914   Total_Cost          96.0   NodeBalance0914          -1.0
+    x160914   NodeBalance1614           1.0   Capacity1609           1.0
+    x160915   Total_Cost          96.0   NodeBalance0915          -1.0
+    x160915   NodeBalance1615           1.0   Capacity1609           1.0
+    x160916   Total_Cost          96.0   NodeBalance0916          -1.0
+    x160916   NodeBalance1616           1.0   Capacity1609           1.0
+    x160917   Total_Cost          96.0   NodeBalance0917          -1.0
+    x160917   NodeBalance1617           1.0   Capacity1609           1.0
+    x160918   Total_Cost          96.0   NodeBalance0918          -1.0
+    x160918   NodeBalance1618           1.0   Capacity1609           1.0
+    x160919   Total_Cost          96.0   NodeBalance0919          -1.0
+    x160919   NodeBalance1619           1.0   Capacity1609           1.0
+    x160920   Total_Cost          96.0   NodeBalance0920          -1.0
+    x160920   NodeBalance1620           1.0   Capacity1609           1.0
+    x160921   Total_Cost          96.0   NodeBalance0921          -1.0
+    x160921   NodeBalance1621           1.0   Capacity1609           1.0
+    x160922   Total_Cost          96.0   NodeBalance0922          -1.0
+    x160922   NodeBalance1622           1.0   Capacity1609           1.0
+    x160923   Total_Cost          96.0   NodeBalance0923          -1.0
+    x160923   NodeBalance1623           1.0   Capacity1609           1.0
+    x160924   Total_Cost          96.0   NodeBalance0924          -1.0
+    x160924   NodeBalance1624           1.0   Capacity1609           1.0
+    x160925   Total_Cost          96.0   NodeBalance0925          -1.0
+    x160925   NodeBalance1625           1.0   Capacity1609           1.0
+    x160926   Total_Cost          96.0   NodeBalance0926          -1.0
+    x160926   NodeBalance1626           1.0   Capacity1609           1.0
+    x160927   Total_Cost          96.0   NodeBalance0927          -1.0
+    x160927   NodeBalance1627           1.0   Capacity1609           1.0
+    x160928   Total_Cost          96.0   NodeBalance0928          -1.0
+    x160928   NodeBalance1628           1.0   Capacity1609           1.0
+    x160929   Total_Cost          96.0   NodeBalance0929          -1.0
+    x160929   NodeBalance1629           1.0   Capacity1609           1.0
+    x160930   Total_Cost          96.0   NodeBalance0930          -1.0
+    x160930   NodeBalance1630           1.0   Capacity1609           1.0
+    x160931   Total_Cost          96.0   NodeBalance0931          -1.0
+    x160931   NodeBalance1631           1.0   Capacity1609           1.0
+    x160932   Total_Cost          96.0   NodeBalance0932          -1.0
+    x160932   NodeBalance1632           1.0   Capacity1609           1.0
+    x160933   Total_Cost          96.0   NodeBalance0933          -1.0
+    x160933   NodeBalance1633           1.0   Capacity1609           1.0
+    x160934   Total_Cost          96.0   NodeBalance0934          -1.0
+    x160934   NodeBalance1634           1.0   Capacity1609           1.0
+    x160935   Total_Cost          96.0   NodeBalance0935          -1.0
+    x160935   NodeBalance1635           1.0   Capacity1609           1.0
+    x160936   Total_Cost          96.0   NodeBalance0936          -1.0
+    x160936   NodeBalance1636           1.0   Capacity1609           1.0
+    x160937   Total_Cost          96.0   NodeBalance0937          -1.0
+    x160937   NodeBalance1637           1.0   Capacity1609           1.0
+    x160938   Total_Cost          96.0   NodeBalance0938          -1.0
+    x160938   NodeBalance1638           1.0   Capacity1609           1.0
+    x160939   Total_Cost          96.0   NodeBalance0939          -1.0
+    x160939   NodeBalance1639           1.0   Capacity1609           1.0
+    x160940   Total_Cost          96.0   NodeBalance0940          -1.0
+    x160940   NodeBalance1640           1.0   Capacity1609           1.0
+    x161101   Total_Cost          94.0   NodeBalance1101          -1.0
+    x161101   NodeBalance1601           1.0   Capacity1611           1.0
+    x161102   Total_Cost          94.0   NodeBalance1102          -1.0
+    x161102   NodeBalance1602           1.0   Capacity1611           1.0
+    x161103   Total_Cost          94.0   NodeBalance1103          -1.0
+    x161103   NodeBalance1603           1.0   Capacity1611           1.0
+    x161104   Total_Cost          94.0   NodeBalance1104          -1.0
+    x161104   NodeBalance1604           1.0   Capacity1611           1.0
+    x161105   Total_Cost          94.0   NodeBalance1105          -1.0
+    x161105   NodeBalance1605           1.0   Capacity1611           1.0
+    x161106   Total_Cost          94.0   NodeBalance1106          -1.0
+    x161106   NodeBalance1606           1.0   Capacity1611           1.0
+    x161107   Total_Cost          94.0   NodeBalance1107          -1.0
+    x161107   NodeBalance1607           1.0   Capacity1611           1.0
+    x161108   Total_Cost          94.0   NodeBalance1108          -1.0
+    x161108   NodeBalance1608           1.0   Capacity1611           1.0
+    x161109   Total_Cost          94.0   NodeBalance1109          -1.0
+    x161109   NodeBalance1609           1.0   Capacity1611           1.0
+    x161110   Total_Cost          94.0   NodeBalance1110          -1.0
+    x161110   NodeBalance1610           1.0   Capacity1611           1.0
+    x161111   Total_Cost          94.0   NodeBalance1111          -1.0
+    x161111   NodeBalance1611           1.0   Capacity1611           1.0
+    x161112   Total_Cost          94.0   NodeBalance1112          -1.0
+    x161112   NodeBalance1612           1.0   Capacity1611           1.0
+    x161113   Total_Cost          94.0   NodeBalance1113          -1.0
+    x161113   NodeBalance1613           1.0   Capacity1611           1.0
+    x161114   Total_Cost          94.0   NodeBalance1114          -1.0
+    x161114   NodeBalance1614           1.0   Capacity1611           1.0
+    x161115   Total_Cost          94.0   NodeBalance1115          -1.0
+    x161115   NodeBalance1615           1.0   Capacity1611           1.0
+    x161116   Total_Cost          94.0   NodeBalance1116          -1.0
+    x161116   NodeBalance1616           1.0   Capacity1611           1.0
+    x161117   Total_Cost          94.0   NodeBalance1117          -1.0
+    x161117   NodeBalance1617           1.0   Capacity1611           1.0
+    x161118   Total_Cost          94.0   NodeBalance1118          -1.0
+    x161118   NodeBalance1618           1.0   Capacity1611           1.0
+    x161119   Total_Cost          94.0   NodeBalance1119          -1.0
+    x161119   NodeBalance1619           1.0   Capacity1611           1.0
+    x161120   Total_Cost          94.0   NodeBalance1120          -1.0
+    x161120   NodeBalance1620           1.0   Capacity1611           1.0
+    x161121   Total_Cost          94.0   NodeBalance1121          -1.0
+    x161121   NodeBalance1621           1.0   Capacity1611           1.0
+    x161122   Total_Cost          94.0   NodeBalance1122          -1.0
+    x161122   NodeBalance1622           1.0   Capacity1611           1.0
+    x161123   Total_Cost          94.0   NodeBalance1123          -1.0
+    x161123   NodeBalance1623           1.0   Capacity1611           1.0
+    x161124   Total_Cost          94.0   NodeBalance1124          -1.0
+    x161124   NodeBalance1624           1.0   Capacity1611           1.0
+    x161125   Total_Cost          94.0   NodeBalance1125          -1.0
+    x161125   NodeBalance1625           1.0   Capacity1611           1.0
+    x161126   Total_Cost          94.0   NodeBalance1126          -1.0
+    x161126   NodeBalance1626           1.0   Capacity1611           1.0
+    x161127   Total_Cost          94.0   NodeBalance1127          -1.0
+    x161127   NodeBalance1627           1.0   Capacity1611           1.0
+    x161128   Total_Cost          94.0   NodeBalance1128          -1.0
+    x161128   NodeBalance1628           1.0   Capacity1611           1.0
+    x161129   Total_Cost          94.0   NodeBalance1129          -1.0
+    x161129   NodeBalance1629           1.0   Capacity1611           1.0
+    x161130   Total_Cost          94.0   NodeBalance1130          -1.0
+    x161130   NodeBalance1630           1.0   Capacity1611           1.0
+    x161131   Total_Cost          94.0   NodeBalance1131          -1.0
+    x161131   NodeBalance1631           1.0   Capacity1611           1.0
+    x161132   Total_Cost          94.0   NodeBalance1132          -1.0
+    x161132   NodeBalance1632           1.0   Capacity1611           1.0
+    x161133   Total_Cost          94.0   NodeBalance1133          -1.0
+    x161133   NodeBalance1633           1.0   Capacity1611           1.0
+    x161134   Total_Cost          94.0   NodeBalance1134          -1.0
+    x161134   NodeBalance1634           1.0   Capacity1611           1.0
+    x161135   Total_Cost          94.0   NodeBalance1135          -1.0
+    x161135   NodeBalance1635           1.0   Capacity1611           1.0
+    x161136   Total_Cost          94.0   NodeBalance1136          -1.0
+    x161136   NodeBalance1636           1.0   Capacity1611           1.0
+    x161137   Total_Cost          94.0   NodeBalance1137          -1.0
+    x161137   NodeBalance1637           1.0   Capacity1611           1.0
+    x161138   Total_Cost          94.0   NodeBalance1138          -1.0
+    x161138   NodeBalance1638           1.0   Capacity1611           1.0
+    x161139   Total_Cost          94.0   NodeBalance1139          -1.0
+    x161139   NodeBalance1639           1.0   Capacity1611           1.0
+    x161140   Total_Cost          94.0   NodeBalance1140          -1.0
+    x161140   NodeBalance1640           1.0   Capacity1611           1.0
+    x161401   Total_Cost          40.0   NodeBalance1401          -1.0
+    x161401   NodeBalance1601           1.0   Capacity1614           1.0
+    x161402   Total_Cost          40.0   NodeBalance1402          -1.0
+    x161402   NodeBalance1602           1.0   Capacity1614           1.0
+    x161403   Total_Cost          40.0   NodeBalance1403          -1.0
+    x161403   NodeBalance1603           1.0   Capacity1614           1.0
+    x161404   Total_Cost          40.0   NodeBalance1404          -1.0
+    x161404   NodeBalance1604           1.0   Capacity1614           1.0
+    x161405   Total_Cost          40.0   NodeBalance1405          -1.0
+    x161405   NodeBalance1605           1.0   Capacity1614           1.0
+    x161406   Total_Cost          40.0   NodeBalance1406          -1.0
+    x161406   NodeBalance1606           1.0   Capacity1614           1.0
+    x161407   Total_Cost          40.0   NodeBalance1407          -1.0
+    x161407   NodeBalance1607           1.0   Capacity1614           1.0
+    x161408   Total_Cost          40.0   NodeBalance1408          -1.0
+    x161408   NodeBalance1608           1.0   Capacity1614           1.0
+    x161409   Total_Cost          40.0   NodeBalance1409          -1.0
+    x161409   NodeBalance1609           1.0   Capacity1614           1.0
+    x161410   Total_Cost          40.0   NodeBalance1410          -1.0
+    x161410   NodeBalance1610           1.0   Capacity1614           1.0
+    x161411   Total_Cost          40.0   NodeBalance1411          -1.0
+    x161411   NodeBalance1611           1.0   Capacity1614           1.0
+    x161412   Total_Cost          40.0   NodeBalance1412          -1.0
+    x161412   NodeBalance1612           1.0   Capacity1614           1.0
+    x161413   Total_Cost          40.0   NodeBalance1413          -1.0
+    x161413   NodeBalance1613           1.0   Capacity1614           1.0
+    x161414   Total_Cost          40.0   NodeBalance1414          -1.0
+    x161414   NodeBalance1614           1.0   Capacity1614           1.0
+    x161415   Total_Cost          40.0   NodeBalance1415          -1.0
+    x161415   NodeBalance1615           1.0   Capacity1614           1.0
+    x161416   Total_Cost          40.0   NodeBalance1416          -1.0
+    x161416   NodeBalance1616           1.0   Capacity1614           1.0
+    x161417   Total_Cost          40.0   NodeBalance1417          -1.0
+    x161417   NodeBalance1617           1.0   Capacity1614           1.0
+    x161418   Total_Cost          40.0   NodeBalance1418          -1.0
+    x161418   NodeBalance1618           1.0   Capacity1614           1.0
+    x161419   Total_Cost          40.0   NodeBalance1419          -1.0
+    x161419   NodeBalance1619           1.0   Capacity1614           1.0
+    x161420   Total_Cost          40.0   NodeBalance1420          -1.0
+    x161420   NodeBalance1620           1.0   Capacity1614           1.0
+    x161421   Total_Cost          40.0   NodeBalance1421          -1.0
+    x161421   NodeBalance1621           1.0   Capacity1614           1.0
+    x161422   Total_Cost          40.0   NodeBalance1422          -1.0
+    x161422   NodeBalance1622           1.0   Capacity1614           1.0
+    x161423   Total_Cost          40.0   NodeBalance1423          -1.0
+    x161423   NodeBalance1623           1.0   Capacity1614           1.0
+    x161424   Total_Cost          40.0   NodeBalance1424          -1.0
+    x161424   NodeBalance1624           1.0   Capacity1614           1.0
+    x161425   Total_Cost          40.0   NodeBalance1425          -1.0
+    x161425   NodeBalance1625           1.0   Capacity1614           1.0
+    x161426   Total_Cost          40.0   NodeBalance1426          -1.0
+    x161426   NodeBalance1626           1.0   Capacity1614           1.0
+    x161427   Total_Cost          40.0   NodeBalance1427          -1.0
+    x161427   NodeBalance1627           1.0   Capacity1614           1.0
+    x161428   Total_Cost          40.0   NodeBalance1428          -1.0
+    x161428   NodeBalance1628           1.0   Capacity1614           1.0
+    x161429   Total_Cost          40.0   NodeBalance1429          -1.0
+    x161429   NodeBalance1629           1.0   Capacity1614           1.0
+    x161430   Total_Cost          40.0   NodeBalance1430          -1.0
+    x161430   NodeBalance1630           1.0   Capacity1614           1.0
+    x161431   Total_Cost          40.0   NodeBalance1431          -1.0
+    x161431   NodeBalance1631           1.0   Capacity1614           1.0
+    x161432   Total_Cost          40.0   NodeBalance1432          -1.0
+    x161432   NodeBalance1632           1.0   Capacity1614           1.0
+    x161433   Total_Cost          40.0   NodeBalance1433          -1.0
+    x161433   NodeBalance1633           1.0   Capacity1614           1.0
+    x161434   Total_Cost          40.0   NodeBalance1434          -1.0
+    x161434   NodeBalance1634           1.0   Capacity1614           1.0
+    x161435   Total_Cost          40.0   NodeBalance1435          -1.0
+    x161435   NodeBalance1635           1.0   Capacity1614           1.0
+    x161436   Total_Cost          40.0   NodeBalance1436          -1.0
+    x161436   NodeBalance1636           1.0   Capacity1614           1.0
+    x161437   Total_Cost          40.0   NodeBalance1437          -1.0
+    x161437   NodeBalance1637           1.0   Capacity1614           1.0
+    x161438   Total_Cost          40.0   NodeBalance1438          -1.0
+    x161438   NodeBalance1638           1.0   Capacity1614           1.0
+    x161439   Total_Cost          40.0   NodeBalance1439          -1.0
+    x161439   NodeBalance1639           1.0   Capacity1614           1.0
+    x161440   Total_Cost          40.0   NodeBalance1440          -1.0
+    x161440   NodeBalance1640           1.0   Capacity1614           1.0
+    x161701   Total_Cost         100.0   NodeBalance1601           1.0
+    x161701   NodeBalance1701          -1.0   Capacity1617           1.0
+    x161702   Total_Cost         100.0   NodeBalance1602           1.0
+    x161702   NodeBalance1702          -1.0   Capacity1617           1.0
+    x161703   Total_Cost         100.0   NodeBalance1603           1.0
+    x161703   NodeBalance1703          -1.0   Capacity1617           1.0
+    x161704   Total_Cost         100.0   NodeBalance1604           1.0
+    x161704   NodeBalance1704          -1.0   Capacity1617           1.0
+    x161705   Total_Cost         100.0   NodeBalance1605           1.0
+    x161705   NodeBalance1705          -1.0   Capacity1617           1.0
+    x161706   Total_Cost         100.0   NodeBalance1606           1.0
+    x161706   NodeBalance1706          -1.0   Capacity1617           1.0
+    x161707   Total_Cost         100.0   NodeBalance1607           1.0
+    x161707   NodeBalance1707          -1.0   Capacity1617           1.0
+    x161708   Total_Cost         100.0   NodeBalance1608           1.0
+    x161708   NodeBalance1708          -1.0   Capacity1617           1.0
+    x161709   Total_Cost         100.0   NodeBalance1609           1.0
+    x161709   NodeBalance1709          -1.0   Capacity1617           1.0
+    x161710   Total_Cost         100.0   NodeBalance1610           1.0
+    x161710   NodeBalance1710          -1.0   Capacity1617           1.0
+    x161711   Total_Cost         100.0   NodeBalance1611           1.0
+    x161711   NodeBalance1711          -1.0   Capacity1617           1.0
+    x161712   Total_Cost         100.0   NodeBalance1612           1.0
+    x161712   NodeBalance1712          -1.0   Capacity1617           1.0
+    x161713   Total_Cost         100.0   NodeBalance1613           1.0
+    x161713   NodeBalance1713          -1.0   Capacity1617           1.0
+    x161714   Total_Cost         100.0   NodeBalance1614           1.0
+    x161714   NodeBalance1714          -1.0   Capacity1617           1.0
+    x161715   Total_Cost         100.0   NodeBalance1615           1.0
+    x161715   NodeBalance1715          -1.0   Capacity1617           1.0
+    x161716   Total_Cost         100.0   NodeBalance1616           1.0
+    x161716   NodeBalance1716          -1.0   Capacity1617           1.0
+    x161717   Total_Cost         100.0   NodeBalance1617           1.0
+    x161717   NodeBalance1717          -1.0   Capacity1617           1.0
+    x161718   Total_Cost         100.0   NodeBalance1618           1.0
+    x161718   NodeBalance1718          -1.0   Capacity1617           1.0
+    x161719   Total_Cost         100.0   NodeBalance1619           1.0
+    x161719   NodeBalance1719          -1.0   Capacity1617           1.0
+    x161720   Total_Cost         100.0   NodeBalance1620           1.0
+    x161720   NodeBalance1720          -1.0   Capacity1617           1.0
+    x161721   Total_Cost         100.0   NodeBalance1621           1.0
+    x161721   NodeBalance1721          -1.0   Capacity1617           1.0
+    x161722   Total_Cost         100.0   NodeBalance1622           1.0
+    x161722   NodeBalance1722          -1.0   Capacity1617           1.0
+    x161723   Total_Cost         100.0   NodeBalance1623           1.0
+    x161723   NodeBalance1723          -1.0   Capacity1617           1.0
+    x161724   Total_Cost         100.0   NodeBalance1624           1.0
+    x161724   NodeBalance1724          -1.0   Capacity1617           1.0
+    x161725   Total_Cost         100.0   NodeBalance1625           1.0
+    x161725   NodeBalance1725          -1.0   Capacity1617           1.0
+    x161726   Total_Cost         100.0   NodeBalance1626           1.0
+    x161726   NodeBalance1726          -1.0   Capacity1617           1.0
+    x161727   Total_Cost         100.0   NodeBalance1627           1.0
+    x161727   NodeBalance1727          -1.0   Capacity1617           1.0
+    x161728   Total_Cost         100.0   NodeBalance1628           1.0
+    x161728   NodeBalance1728          -1.0   Capacity1617           1.0
+    x161729   Total_Cost         100.0   NodeBalance1629           1.0
+    x161729   NodeBalance1729          -1.0   Capacity1617           1.0
+    x161730   Total_Cost         100.0   NodeBalance1630           1.0
+    x161730   NodeBalance1730          -1.0   Capacity1617           1.0
+    x161731   Total_Cost         100.0   NodeBalance1631           1.0
+    x161731   NodeBalance1731          -1.0   Capacity1617           1.0
+    x161732   Total_Cost         100.0   NodeBalance1632           1.0
+    x161732   NodeBalance1732          -1.0   Capacity1617           1.0
+    x161733   Total_Cost         100.0   NodeBalance1633           1.0
+    x161733   NodeBalance1733          -1.0   Capacity1617           1.0
+    x161734   Total_Cost         100.0   NodeBalance1634           1.0
+    x161734   NodeBalance1734          -1.0   Capacity1617           1.0
+    x161735   Total_Cost         100.0   NodeBalance1635           1.0
+    x161735   NodeBalance1735          -1.0   Capacity1617           1.0
+    x161736   Total_Cost         100.0   NodeBalance1636           1.0
+    x161736   NodeBalance1736          -1.0   Capacity1617           1.0
+    x161737   Total_Cost         100.0   NodeBalance1637           1.0
+    x161737   NodeBalance1737          -1.0   Capacity1617           1.0
+    x161738   Total_Cost         100.0   NodeBalance1638           1.0
+    x161738   NodeBalance1738          -1.0   Capacity1617           1.0
+    x161739   Total_Cost         100.0   NodeBalance1639           1.0
+    x161739   NodeBalance1739          -1.0   Capacity1617           1.0
+    x161740   Total_Cost         100.0   NodeBalance1640           1.0
+    x161740   NodeBalance1740          -1.0   Capacity1617           1.0
+    x161901   Total_Cost          74.0   NodeBalance1601           1.0
+    x161901   NodeBalance1901          -1.0   Capacity1619           1.0
+    x161902   Total_Cost          74.0   NodeBalance1602           1.0
+    x161902   NodeBalance1902          -1.0   Capacity1619           1.0
+    x161903   Total_Cost          74.0   NodeBalance1603           1.0
+    x161903   NodeBalance1903          -1.0   Capacity1619           1.0
+    x161904   Total_Cost          74.0   NodeBalance1604           1.0
+    x161904   NodeBalance1904          -1.0   Capacity1619           1.0
+    x161905   Total_Cost          74.0   NodeBalance1605           1.0
+    x161905   NodeBalance1905          -1.0   Capacity1619           1.0
+    x161906   Total_Cost          74.0   NodeBalance1606           1.0
+    x161906   NodeBalance1906          -1.0   Capacity1619           1.0
+    x161907   Total_Cost          74.0   NodeBalance1607           1.0
+    x161907   NodeBalance1907          -1.0   Capacity1619           1.0
+    x161908   Total_Cost          74.0   NodeBalance1608           1.0
+    x161908   NodeBalance1908          -1.0   Capacity1619           1.0
+    x161909   Total_Cost          74.0   NodeBalance1609           1.0
+    x161909   NodeBalance1909          -1.0   Capacity1619           1.0
+    x161910   Total_Cost          74.0   NodeBalance1610           1.0
+    x161910   NodeBalance1910          -1.0   Capacity1619           1.0
+    x161911   Total_Cost          74.0   NodeBalance1611           1.0
+    x161911   NodeBalance1911          -1.0   Capacity1619           1.0
+    x161912   Total_Cost          74.0   NodeBalance1612           1.0
+    x161912   NodeBalance1912          -1.0   Capacity1619           1.0
+    x161913   Total_Cost          74.0   NodeBalance1613           1.0
+    x161913   NodeBalance1913          -1.0   Capacity1619           1.0
+    x161914   Total_Cost          74.0   NodeBalance1614           1.0
+    x161914   NodeBalance1914          -1.0   Capacity1619           1.0
+    x161915   Total_Cost          74.0   NodeBalance1615           1.0
+    x161915   NodeBalance1915          -1.0   Capacity1619           1.0
+    x161916   Total_Cost          74.0   NodeBalance1616           1.0
+    x161916   NodeBalance1916          -1.0   Capacity1619           1.0
+    x161917   Total_Cost          74.0   NodeBalance1617           1.0
+    x161917   NodeBalance1917          -1.0   Capacity1619           1.0
+    x161918   Total_Cost          74.0   NodeBalance1618           1.0
+    x161918   NodeBalance1918          -1.0   Capacity1619           1.0
+    x161919   Total_Cost          74.0   NodeBalance1619           1.0
+    x161919   NodeBalance1919          -1.0   Capacity1619           1.0
+    x161920   Total_Cost          74.0   NodeBalance1620           1.0
+    x161920   NodeBalance1920          -1.0   Capacity1619           1.0
+    x161921   Total_Cost          74.0   NodeBalance1621           1.0
+    x161921   NodeBalance1921          -1.0   Capacity1619           1.0
+    x161922   Total_Cost          74.0   NodeBalance1622           1.0
+    x161922   NodeBalance1922          -1.0   Capacity1619           1.0
+    x161923   Total_Cost          74.0   NodeBalance1623           1.0
+    x161923   NodeBalance1923          -1.0   Capacity1619           1.0
+    x161924   Total_Cost          74.0   NodeBalance1624           1.0
+    x161924   NodeBalance1924          -1.0   Capacity1619           1.0
+    x161925   Total_Cost          74.0   NodeBalance1625           1.0
+    x161925   NodeBalance1925          -1.0   Capacity1619           1.0
+    x161926   Total_Cost          74.0   NodeBalance1626           1.0
+    x161926   NodeBalance1926          -1.0   Capacity1619           1.0
+    x161927   Total_Cost          74.0   NodeBalance1627           1.0
+    x161927   NodeBalance1927          -1.0   Capacity1619           1.0
+    x161928   Total_Cost          74.0   NodeBalance1628           1.0
+    x161928   NodeBalance1928          -1.0   Capacity1619           1.0
+    x161929   Total_Cost          74.0   NodeBalance1629           1.0
+    x161929   NodeBalance1929          -1.0   Capacity1619           1.0
+    x161930   Total_Cost          74.0   NodeBalance1630           1.0
+    x161930   NodeBalance1930          -1.0   Capacity1619           1.0
+    x161931   Total_Cost          74.0   NodeBalance1631           1.0
+    x161931   NodeBalance1931          -1.0   Capacity1619           1.0
+    x161932   Total_Cost          74.0   NodeBalance1632           1.0
+    x161932   NodeBalance1932          -1.0   Capacity1619           1.0
+    x161933   Total_Cost          74.0   NodeBalance1633           1.0
+    x161933   NodeBalance1933          -1.0   Capacity1619           1.0
+    x161934   Total_Cost          74.0   NodeBalance1634           1.0
+    x161934   NodeBalance1934          -1.0   Capacity1619           1.0
+    x161935   Total_Cost          74.0   NodeBalance1635           1.0
+    x161935   NodeBalance1935          -1.0   Capacity1619           1.0
+    x161936   Total_Cost          74.0   NodeBalance1636           1.0
+    x161936   NodeBalance1936          -1.0   Capacity1619           1.0
+    x161937   Total_Cost          74.0   NodeBalance1637           1.0
+    x161937   NodeBalance1937          -1.0   Capacity1619           1.0
+    x161938   Total_Cost          74.0   NodeBalance1638           1.0
+    x161938   NodeBalance1938          -1.0   Capacity1619           1.0
+    x161939   Total_Cost          74.0   NodeBalance1639           1.0
+    x161939   NodeBalance1939          -1.0   Capacity1619           1.0
+    x161940   Total_Cost          74.0   NodeBalance1640           1.0
+    x161940   NodeBalance1940          -1.0   Capacity1619           1.0
+    x170501   Total_Cost          10.0   NodeBalance0501          -1.0
+    x170501   NodeBalance1701           1.0   Capacity1705           1.0
+    x170502   Total_Cost          10.0   NodeBalance0502          -1.0
+    x170502   NodeBalance1702           1.0   Capacity1705           1.0
+    x170503   Total_Cost          10.0   NodeBalance0503          -1.0
+    x170503   NodeBalance1703           1.0   Capacity1705           1.0
+    x170504   Total_Cost          10.0   NodeBalance0504          -1.0
+    x170504   NodeBalance1704           1.0   Capacity1705           1.0
+    x170505   Total_Cost          10.0   NodeBalance0505          -1.0
+    x170505   NodeBalance1705           1.0   Capacity1705           1.0
+    x170506   Total_Cost          10.0   NodeBalance0506          -1.0
+    x170506   NodeBalance1706           1.0   Capacity1705           1.0
+    x170507   Total_Cost          10.0   NodeBalance0507          -1.0
+    x170507   NodeBalance1707           1.0   Capacity1705           1.0
+    x170508   Total_Cost          10.0   NodeBalance0508          -1.0
+    x170508   NodeBalance1708           1.0   Capacity1705           1.0
+    x170509   Total_Cost          10.0   NodeBalance0509          -1.0
+    x170509   NodeBalance1709           1.0   Capacity1705           1.0
+    x170510   Total_Cost          10.0   NodeBalance0510          -1.0
+    x170510   NodeBalance1710           1.0   Capacity1705           1.0
+    x170511   Total_Cost          10.0   NodeBalance0511          -1.0
+    x170511   NodeBalance1711           1.0   Capacity1705           1.0
+    x170512   Total_Cost          10.0   NodeBalance0512          -1.0
+    x170512   NodeBalance1712           1.0   Capacity1705           1.0
+    x170513   Total_Cost          10.0   NodeBalance0513          -1.0
+    x170513   NodeBalance1713           1.0   Capacity1705           1.0
+    x170514   Total_Cost          10.0   NodeBalance0514          -1.0
+    x170514   NodeBalance1714           1.0   Capacity1705           1.0
+    x170515   Total_Cost          10.0   NodeBalance0515          -1.0
+    x170515   NodeBalance1715           1.0   Capacity1705           1.0
+    x170516   Total_Cost          10.0   NodeBalance0516          -1.0
+    x170516   NodeBalance1716           1.0   Capacity1705           1.0
+    x170517   Total_Cost          10.0   NodeBalance0517          -1.0
+    x170517   NodeBalance1717           1.0   Capacity1705           1.0
+    x170518   Total_Cost          10.0   NodeBalance0518          -1.0
+    x170518   NodeBalance1718           1.0   Capacity1705           1.0
+    x170519   Total_Cost          10.0   NodeBalance0519          -1.0
+    x170519   NodeBalance1719           1.0   Capacity1705           1.0
+    x170520   Total_Cost          10.0   NodeBalance0520          -1.0
+    x170520   NodeBalance1720           1.0   Capacity1705           1.0
+    x170521   Total_Cost          10.0   NodeBalance0521          -1.0
+    x170521   NodeBalance1721           1.0   Capacity1705           1.0
+    x170522   Total_Cost          10.0   NodeBalance0522          -1.0
+    x170522   NodeBalance1722           1.0   Capacity1705           1.0
+    x170523   Total_Cost          10.0   NodeBalance0523          -1.0
+    x170523   NodeBalance1723           1.0   Capacity1705           1.0
+    x170524   Total_Cost          10.0   NodeBalance0524          -1.0
+    x170524   NodeBalance1724           1.0   Capacity1705           1.0
+    x170525   Total_Cost          10.0   NodeBalance0525          -1.0
+    x170525   NodeBalance1725           1.0   Capacity1705           1.0
+    x170526   Total_Cost          10.0   NodeBalance0526          -1.0
+    x170526   NodeBalance1726           1.0   Capacity1705           1.0
+    x170527   Total_Cost          10.0   NodeBalance0527          -1.0
+    x170527   NodeBalance1727           1.0   Capacity1705           1.0
+    x170528   Total_Cost          10.0   NodeBalance0528          -1.0
+    x170528   NodeBalance1728           1.0   Capacity1705           1.0
+    x170529   Total_Cost          10.0   NodeBalance0529          -1.0
+    x170529   NodeBalance1729           1.0   Capacity1705           1.0
+    x170530   Total_Cost          10.0   NodeBalance0530          -1.0
+    x170530   NodeBalance1730           1.0   Capacity1705           1.0
+    x170531   Total_Cost          10.0   NodeBalance0531          -1.0
+    x170531   NodeBalance1731           1.0   Capacity1705           1.0
+    x170532   Total_Cost          10.0   NodeBalance0532          -1.0
+    x170532   NodeBalance1732           1.0   Capacity1705           1.0
+    x170533   Total_Cost          10.0   NodeBalance0533          -1.0
+    x170533   NodeBalance1733           1.0   Capacity1705           1.0
+    x170534   Total_Cost          10.0   NodeBalance0534          -1.0
+    x170534   NodeBalance1734           1.0   Capacity1705           1.0
+    x170535   Total_Cost          10.0   NodeBalance0535          -1.0
+    x170535   NodeBalance1735           1.0   Capacity1705           1.0
+    x170536   Total_Cost          10.0   NodeBalance0536          -1.0
+    x170536   NodeBalance1736           1.0   Capacity1705           1.0
+    x170537   Total_Cost          10.0   NodeBalance0537          -1.0
+    x170537   NodeBalance1737           1.0   Capacity1705           1.0
+    x170538   Total_Cost          10.0   NodeBalance0538          -1.0
+    x170538   NodeBalance1738           1.0   Capacity1705           1.0
+    x170539   Total_Cost          10.0   NodeBalance0539          -1.0
+    x170539   NodeBalance1739           1.0   Capacity1705           1.0
+    x170540   Total_Cost          10.0   NodeBalance0540          -1.0
+    x170540   NodeBalance1740           1.0   Capacity1705           1.0
+    x171201   Total_Cost          85.0   NodeBalance1201          -1.0
+    x171201   NodeBalance1701           1.0   Capacity1712           1.0
+    x171202   Total_Cost          85.0   NodeBalance1202          -1.0
+    x171202   NodeBalance1702           1.0   Capacity1712           1.0
+    x171203   Total_Cost          85.0   NodeBalance1203          -1.0
+    x171203   NodeBalance1703           1.0   Capacity1712           1.0
+    x171204   Total_Cost          85.0   NodeBalance1204          -1.0
+    x171204   NodeBalance1704           1.0   Capacity1712           1.0
+    x171205   Total_Cost          85.0   NodeBalance1205          -1.0
+    x171205   NodeBalance1705           1.0   Capacity1712           1.0
+    x171206   Total_Cost          85.0   NodeBalance1206          -1.0
+    x171206   NodeBalance1706           1.0   Capacity1712           1.0
+    x171207   Total_Cost          85.0   NodeBalance1207          -1.0
+    x171207   NodeBalance1707           1.0   Capacity1712           1.0
+    x171208   Total_Cost          85.0   NodeBalance1208          -1.0
+    x171208   NodeBalance1708           1.0   Capacity1712           1.0
+    x171209   Total_Cost          85.0   NodeBalance1209          -1.0
+    x171209   NodeBalance1709           1.0   Capacity1712           1.0
+    x171210   Total_Cost          85.0   NodeBalance1210          -1.0
+    x171210   NodeBalance1710           1.0   Capacity1712           1.0
+    x171211   Total_Cost          85.0   NodeBalance1211          -1.0
+    x171211   NodeBalance1711           1.0   Capacity1712           1.0
+    x171212   Total_Cost          85.0   NodeBalance1212          -1.0
+    x171212   NodeBalance1712           1.0   Capacity1712           1.0
+    x171213   Total_Cost          85.0   NodeBalance1213          -1.0
+    x171213   NodeBalance1713           1.0   Capacity1712           1.0
+    x171214   Total_Cost          85.0   NodeBalance1214          -1.0
+    x171214   NodeBalance1714           1.0   Capacity1712           1.0
+    x171215   Total_Cost          85.0   NodeBalance1215          -1.0
+    x171215   NodeBalance1715           1.0   Capacity1712           1.0
+    x171216   Total_Cost          85.0   NodeBalance1216          -1.0
+    x171216   NodeBalance1716           1.0   Capacity1712           1.0
+    x171217   Total_Cost          85.0   NodeBalance1217          -1.0
+    x171217   NodeBalance1717           1.0   Capacity1712           1.0
+    x171218   Total_Cost          85.0   NodeBalance1218          -1.0
+    x171218   NodeBalance1718           1.0   Capacity1712           1.0
+    x171219   Total_Cost          85.0   NodeBalance1219          -1.0
+    x171219   NodeBalance1719           1.0   Capacity1712           1.0
+    x171220   Total_Cost          85.0   NodeBalance1220          -1.0
+    x171220   NodeBalance1720           1.0   Capacity1712           1.0
+    x171221   Total_Cost          85.0   NodeBalance1221          -1.0
+    x171221   NodeBalance1721           1.0   Capacity1712           1.0
+    x171222   Total_Cost          85.0   NodeBalance1222          -1.0
+    x171222   NodeBalance1722           1.0   Capacity1712           1.0
+    x171223   Total_Cost          85.0   NodeBalance1223          -1.0
+    x171223   NodeBalance1723           1.0   Capacity1712           1.0
+    x171224   Total_Cost          85.0   NodeBalance1224          -1.0
+    x171224   NodeBalance1724           1.0   Capacity1712           1.0
+    x171225   Total_Cost          85.0   NodeBalance1225          -1.0
+    x171225   NodeBalance1725           1.0   Capacity1712           1.0
+    x171226   Total_Cost          85.0   NodeBalance1226          -1.0
+    x171226   NodeBalance1726           1.0   Capacity1712           1.0
+    x171227   Total_Cost          85.0   NodeBalance1227          -1.0
+    x171227   NodeBalance1727           1.0   Capacity1712           1.0
+    x171228   Total_Cost          85.0   NodeBalance1228          -1.0
+    x171228   NodeBalance1728           1.0   Capacity1712           1.0
+    x171229   Total_Cost          85.0   NodeBalance1229          -1.0
+    x171229   NodeBalance1729           1.0   Capacity1712           1.0
+    x171230   Total_Cost          85.0   NodeBalance1230          -1.0
+    x171230   NodeBalance1730           1.0   Capacity1712           1.0
+    x171231   Total_Cost          85.0   NodeBalance1231          -1.0
+    x171231   NodeBalance1731           1.0   Capacity1712           1.0
+    x171232   Total_Cost          85.0   NodeBalance1232          -1.0
+    x171232   NodeBalance1732           1.0   Capacity1712           1.0
+    x171233   Total_Cost          85.0   NodeBalance1233          -1.0
+    x171233   NodeBalance1733           1.0   Capacity1712           1.0
+    x171234   Total_Cost          85.0   NodeBalance1234          -1.0
+    x171234   NodeBalance1734           1.0   Capacity1712           1.0
+    x171235   Total_Cost          85.0   NodeBalance1235          -1.0
+    x171235   NodeBalance1735           1.0   Capacity1712           1.0
+    x171236   Total_Cost          85.0   NodeBalance1236          -1.0
+    x171236   NodeBalance1736           1.0   Capacity1712           1.0
+    x171237   Total_Cost          85.0   NodeBalance1237          -1.0
+    x171237   NodeBalance1737           1.0   Capacity1712           1.0
+    x171238   Total_Cost          85.0   NodeBalance1238          -1.0
+    x171238   NodeBalance1738           1.0   Capacity1712           1.0
+    x171239   Total_Cost          85.0   NodeBalance1239          -1.0
+    x171239   NodeBalance1739           1.0   Capacity1712           1.0
+    x171240   Total_Cost          85.0   NodeBalance1240          -1.0
+    x171240   NodeBalance1740           1.0   Capacity1712           1.0
+    x171401   Total_Cost          93.0   NodeBalance1401          -1.0
+    x171401   NodeBalance1701           1.0   Capacity1714           1.0
+    x171402   Total_Cost          93.0   NodeBalance1402          -1.0
+    x171402   NodeBalance1702           1.0   Capacity1714           1.0
+    x171403   Total_Cost          93.0   NodeBalance1403          -1.0
+    x171403   NodeBalance1703           1.0   Capacity1714           1.0
+    x171404   Total_Cost          93.0   NodeBalance1404          -1.0
+    x171404   NodeBalance1704           1.0   Capacity1714           1.0
+    x171405   Total_Cost          93.0   NodeBalance1405          -1.0
+    x171405   NodeBalance1705           1.0   Capacity1714           1.0
+    x171406   Total_Cost          93.0   NodeBalance1406          -1.0
+    x171406   NodeBalance1706           1.0   Capacity1714           1.0
+    x171407   Total_Cost          93.0   NodeBalance1407          -1.0
+    x171407   NodeBalance1707           1.0   Capacity1714           1.0
+    x171408   Total_Cost          93.0   NodeBalance1408          -1.0
+    x171408   NodeBalance1708           1.0   Capacity1714           1.0
+    x171409   Total_Cost          93.0   NodeBalance1409          -1.0
+    x171409   NodeBalance1709           1.0   Capacity1714           1.0
+    x171410   Total_Cost          93.0   NodeBalance1410          -1.0
+    x171410   NodeBalance1710           1.0   Capacity1714           1.0
+    x171411   Total_Cost          93.0   NodeBalance1411          -1.0
+    x171411   NodeBalance1711           1.0   Capacity1714           1.0
+    x171412   Total_Cost          93.0   NodeBalance1412          -1.0
+    x171412   NodeBalance1712           1.0   Capacity1714           1.0
+    x171413   Total_Cost          93.0   NodeBalance1413          -1.0
+    x171413   NodeBalance1713           1.0   Capacity1714           1.0
+    x171414   Total_Cost          93.0   NodeBalance1414          -1.0
+    x171414   NodeBalance1714           1.0   Capacity1714           1.0
+    x171415   Total_Cost          93.0   NodeBalance1415          -1.0
+    x171415   NodeBalance1715           1.0   Capacity1714           1.0
+    x171416   Total_Cost          93.0   NodeBalance1416          -1.0
+    x171416   NodeBalance1716           1.0   Capacity1714           1.0
+    x171417   Total_Cost          93.0   NodeBalance1417          -1.0
+    x171417   NodeBalance1717           1.0   Capacity1714           1.0
+    x171418   Total_Cost          93.0   NodeBalance1418          -1.0
+    x171418   NodeBalance1718           1.0   Capacity1714           1.0
+    x171419   Total_Cost          93.0   NodeBalance1419          -1.0
+    x171419   NodeBalance1719           1.0   Capacity1714           1.0
+    x171420   Total_Cost          93.0   NodeBalance1420          -1.0
+    x171420   NodeBalance1720           1.0   Capacity1714           1.0
+    x171421   Total_Cost          93.0   NodeBalance1421          -1.0
+    x171421   NodeBalance1721           1.0   Capacity1714           1.0
+    x171422   Total_Cost          93.0   NodeBalance1422          -1.0
+    x171422   NodeBalance1722           1.0   Capacity1714           1.0
+    x171423   Total_Cost          93.0   NodeBalance1423          -1.0
+    x171423   NodeBalance1723           1.0   Capacity1714           1.0
+    x171424   Total_Cost          93.0   NodeBalance1424          -1.0
+    x171424   NodeBalance1724           1.0   Capacity1714           1.0
+    x171425   Total_Cost          93.0   NodeBalance1425          -1.0
+    x171425   NodeBalance1725           1.0   Capacity1714           1.0
+    x171426   Total_Cost          93.0   NodeBalance1426          -1.0
+    x171426   NodeBalance1726           1.0   Capacity1714           1.0
+    x171427   Total_Cost          93.0   NodeBalance1427          -1.0
+    x171427   NodeBalance1727           1.0   Capacity1714           1.0
+    x171428   Total_Cost          93.0   NodeBalance1428          -1.0
+    x171428   NodeBalance1728           1.0   Capacity1714           1.0
+    x171429   Total_Cost          93.0   NodeBalance1429          -1.0
+    x171429   NodeBalance1729           1.0   Capacity1714           1.0
+    x171430   Total_Cost          93.0   NodeBalance1430          -1.0
+    x171430   NodeBalance1730           1.0   Capacity1714           1.0
+    x171431   Total_Cost          93.0   NodeBalance1431          -1.0
+    x171431   NodeBalance1731           1.0   Capacity1714           1.0
+    x171432   Total_Cost          93.0   NodeBalance1432          -1.0
+    x171432   NodeBalance1732           1.0   Capacity1714           1.0
+    x171433   Total_Cost          93.0   NodeBalance1433          -1.0
+    x171433   NodeBalance1733           1.0   Capacity1714           1.0
+    x171434   Total_Cost          93.0   NodeBalance1434          -1.0
+    x171434   NodeBalance1734           1.0   Capacity1714           1.0
+    x171435   Total_Cost          93.0   NodeBalance1435          -1.0
+    x171435   NodeBalance1735           1.0   Capacity1714           1.0
+    x171436   Total_Cost          93.0   NodeBalance1436          -1.0
+    x171436   NodeBalance1736           1.0   Capacity1714           1.0
+    x171437   Total_Cost          93.0   NodeBalance1437          -1.0
+    x171437   NodeBalance1737           1.0   Capacity1714           1.0
+    x171438   Total_Cost          93.0   NodeBalance1438          -1.0
+    x171438   NodeBalance1738           1.0   Capacity1714           1.0
+    x171439   Total_Cost          93.0   NodeBalance1439          -1.0
+    x171439   NodeBalance1739           1.0   Capacity1714           1.0
+    x171440   Total_Cost          93.0   NodeBalance1440          -1.0
+    x171440   NodeBalance1740           1.0   Capacity1714           1.0
+    x171801   Total_Cost         100.0   NodeBalance1701           1.0
+    x171801   NodeBalance1801          -1.0   Capacity1718           1.0
+    x171802   Total_Cost         100.0   NodeBalance1702           1.0
+    x171802   NodeBalance1802          -1.0   Capacity1718           1.0
+    x171803   Total_Cost         100.0   NodeBalance1703           1.0
+    x171803   NodeBalance1803          -1.0   Capacity1718           1.0
+    x171804   Total_Cost         100.0   NodeBalance1704           1.0
+    x171804   NodeBalance1804          -1.0   Capacity1718           1.0
+    x171805   Total_Cost         100.0   NodeBalance1705           1.0
+    x171805   NodeBalance1805          -1.0   Capacity1718           1.0
+    x171806   Total_Cost         100.0   NodeBalance1706           1.0
+    x171806   NodeBalance1806          -1.0   Capacity1718           1.0
+    x171807   Total_Cost         100.0   NodeBalance1707           1.0
+    x171807   NodeBalance1807          -1.0   Capacity1718           1.0
+    x171808   Total_Cost         100.0   NodeBalance1708           1.0
+    x171808   NodeBalance1808          -1.0   Capacity1718           1.0
+    x171809   Total_Cost         100.0   NodeBalance1709           1.0
+    x171809   NodeBalance1809          -1.0   Capacity1718           1.0
+    x171810   Total_Cost         100.0   NodeBalance1710           1.0
+    x171810   NodeBalance1810          -1.0   Capacity1718           1.0
+    x171811   Total_Cost         100.0   NodeBalance1711           1.0
+    x171811   NodeBalance1811          -1.0   Capacity1718           1.0
+    x171812   Total_Cost         100.0   NodeBalance1712           1.0
+    x171812   NodeBalance1812          -1.0   Capacity1718           1.0
+    x171813   Total_Cost         100.0   NodeBalance1713           1.0
+    x171813   NodeBalance1813          -1.0   Capacity1718           1.0
+    x171814   Total_Cost         100.0   NodeBalance1714           1.0
+    x171814   NodeBalance1814          -1.0   Capacity1718           1.0
+    x171815   Total_Cost         100.0   NodeBalance1715           1.0
+    x171815   NodeBalance1815          -1.0   Capacity1718           1.0
+    x171816   Total_Cost         100.0   NodeBalance1716           1.0
+    x171816   NodeBalance1816          -1.0   Capacity1718           1.0
+    x171817   Total_Cost         100.0   NodeBalance1717           1.0
+    x171817   NodeBalance1817          -1.0   Capacity1718           1.0
+    x171818   Total_Cost         100.0   NodeBalance1718           1.0
+    x171818   NodeBalance1818          -1.0   Capacity1718           1.0
+    x171819   Total_Cost         100.0   NodeBalance1719           1.0
+    x171819   NodeBalance1819          -1.0   Capacity1718           1.0
+    x171820   Total_Cost         100.0   NodeBalance1720           1.0
+    x171820   NodeBalance1820          -1.0   Capacity1718           1.0
+    x171821   Total_Cost         100.0   NodeBalance1721           1.0
+    x171821   NodeBalance1821          -1.0   Capacity1718           1.0
+    x171822   Total_Cost         100.0   NodeBalance1722           1.0
+    x171822   NodeBalance1822          -1.0   Capacity1718           1.0
+    x171823   Total_Cost         100.0   NodeBalance1723           1.0
+    x171823   NodeBalance1823          -1.0   Capacity1718           1.0
+    x171824   Total_Cost         100.0   NodeBalance1724           1.0
+    x171824   NodeBalance1824          -1.0   Capacity1718           1.0
+    x171825   Total_Cost         100.0   NodeBalance1725           1.0
+    x171825   NodeBalance1825          -1.0   Capacity1718           1.0
+    x171826   Total_Cost         100.0   NodeBalance1726           1.0
+    x171826   NodeBalance1826          -1.0   Capacity1718           1.0
+    x171827   Total_Cost         100.0   NodeBalance1727           1.0
+    x171827   NodeBalance1827          -1.0   Capacity1718           1.0
+    x171828   Total_Cost         100.0   NodeBalance1728           1.0
+    x171828   NodeBalance1828          -1.0   Capacity1718           1.0
+    x171829   Total_Cost         100.0   NodeBalance1729           1.0
+    x171829   NodeBalance1829          -1.0   Capacity1718           1.0
+    x171830   Total_Cost         100.0   NodeBalance1730           1.0
+    x171830   NodeBalance1830          -1.0   Capacity1718           1.0
+    x171831   Total_Cost         100.0   NodeBalance1731           1.0
+    x171831   NodeBalance1831          -1.0   Capacity1718           1.0
+    x171832   Total_Cost         100.0   NodeBalance1732           1.0
+    x171832   NodeBalance1832          -1.0   Capacity1718           1.0
+    x171833   Total_Cost         100.0   NodeBalance1733           1.0
+    x171833   NodeBalance1833          -1.0   Capacity1718           1.0
+    x171834   Total_Cost         100.0   NodeBalance1734           1.0
+    x171834   NodeBalance1834          -1.0   Capacity1718           1.0
+    x171835   Total_Cost         100.0   NodeBalance1735           1.0
+    x171835   NodeBalance1835          -1.0   Capacity1718           1.0
+    x171836   Total_Cost         100.0   NodeBalance1736           1.0
+    x171836   NodeBalance1836          -1.0   Capacity1718           1.0
+    x171837   Total_Cost         100.0   NodeBalance1737           1.0
+    x171837   NodeBalance1837          -1.0   Capacity1718           1.0
+    x171838   Total_Cost         100.0   NodeBalance1738           1.0
+    x171838   NodeBalance1838          -1.0   Capacity1718           1.0
+    x171839   Total_Cost         100.0   NodeBalance1739           1.0
+    x171839   NodeBalance1839          -1.0   Capacity1718           1.0
+    x171840   Total_Cost         100.0   NodeBalance1740           1.0
+    x171840   NodeBalance1840          -1.0   Capacity1718           1.0
+    x180101   Total_Cost          22.0   NodeBalance0101          -1.0
+    x180101   NodeBalance1801           1.0   Capacity1801           1.0
+    x180102   Total_Cost          22.0   NodeBalance0102          -1.0
+    x180102   NodeBalance1802           1.0   Capacity1801           1.0
+    x180103   Total_Cost          22.0   NodeBalance0103          -1.0
+    x180103   NodeBalance1803           1.0   Capacity1801           1.0
+    x180104   Total_Cost          22.0   NodeBalance0104          -1.0
+    x180104   NodeBalance1804           1.0   Capacity1801           1.0
+    x180105   Total_Cost          22.0   NodeBalance0105          -1.0
+    x180105   NodeBalance1805           1.0   Capacity1801           1.0
+    x180106   Total_Cost          22.0   NodeBalance0106          -1.0
+    x180106   NodeBalance1806           1.0   Capacity1801           1.0
+    x180107   Total_Cost          22.0   NodeBalance0107          -1.0
+    x180107   NodeBalance1807           1.0   Capacity1801           1.0
+    x180108   Total_Cost          22.0   NodeBalance0108          -1.0
+    x180108   NodeBalance1808           1.0   Capacity1801           1.0
+    x180109   Total_Cost          22.0   NodeBalance0109          -1.0
+    x180109   NodeBalance1809           1.0   Capacity1801           1.0
+    x180110   Total_Cost          22.0   NodeBalance0110          -1.0
+    x180110   NodeBalance1810           1.0   Capacity1801           1.0
+    x180111   Total_Cost          22.0   NodeBalance0111          -1.0
+    x180111   NodeBalance1811           1.0   Capacity1801           1.0
+    x180112   Total_Cost          22.0   NodeBalance0112          -1.0
+    x180112   NodeBalance1812           1.0   Capacity1801           1.0
+    x180113   Total_Cost          22.0   NodeBalance0113          -1.0
+    x180113   NodeBalance1813           1.0   Capacity1801           1.0
+    x180114   Total_Cost          22.0   NodeBalance0114          -1.0
+    x180114   NodeBalance1814           1.0   Capacity1801           1.0
+    x180115   Total_Cost          22.0   NodeBalance0115          -1.0
+    x180115   NodeBalance1815           1.0   Capacity1801           1.0
+    x180116   Total_Cost          22.0   NodeBalance0116          -1.0
+    x180116   NodeBalance1816           1.0   Capacity1801           1.0
+    x180117   Total_Cost          22.0   NodeBalance0117          -1.0
+    x180117   NodeBalance1817           1.0   Capacity1801           1.0
+    x180118   Total_Cost          22.0   NodeBalance0118          -1.0
+    x180118   NodeBalance1818           1.0   Capacity1801           1.0
+    x180119   Total_Cost          22.0   NodeBalance0119          -1.0
+    x180119   NodeBalance1819           1.0   Capacity1801           1.0
+    x180120   Total_Cost          22.0   NodeBalance0120          -1.0
+    x180120   NodeBalance1820           1.0   Capacity1801           1.0
+    x180121   Total_Cost          22.0   NodeBalance0121          -1.0
+    x180121   NodeBalance1821           1.0   Capacity1801           1.0
+    x180122   Total_Cost          22.0   NodeBalance0122          -1.0
+    x180122   NodeBalance1822           1.0   Capacity1801           1.0
+    x180123   Total_Cost          22.0   NodeBalance0123          -1.0
+    x180123   NodeBalance1823           1.0   Capacity1801           1.0
+    x180124   Total_Cost          22.0   NodeBalance0124          -1.0
+    x180124   NodeBalance1824           1.0   Capacity1801           1.0
+    x180125   Total_Cost          22.0   NodeBalance0125          -1.0
+    x180125   NodeBalance1825           1.0   Capacity1801           1.0
+    x180126   Total_Cost          22.0   NodeBalance0126          -1.0
+    x180126   NodeBalance1826           1.0   Capacity1801           1.0
+    x180127   Total_Cost          22.0   NodeBalance0127          -1.0
+    x180127   NodeBalance1827           1.0   Capacity1801           1.0
+    x180128   Total_Cost          22.0   NodeBalance0128          -1.0
+    x180128   NodeBalance1828           1.0   Capacity1801           1.0
+    x180129   Total_Cost          22.0   NodeBalance0129          -1.0
+    x180129   NodeBalance1829           1.0   Capacity1801           1.0
+    x180130   Total_Cost          22.0   NodeBalance0130          -1.0
+    x180130   NodeBalance1830           1.0   Capacity1801           1.0
+    x180131   Total_Cost          22.0   NodeBalance0131          -1.0
+    x180131   NodeBalance1831           1.0   Capacity1801           1.0
+    x180132   Total_Cost          22.0   NodeBalance0132          -1.0
+    x180132   NodeBalance1832           1.0   Capacity1801           1.0
+    x180133   Total_Cost          22.0   NodeBalance0133          -1.0
+    x180133   NodeBalance1833           1.0   Capacity1801           1.0
+    x180134   Total_Cost          22.0   NodeBalance0134          -1.0
+    x180134   NodeBalance1834           1.0   Capacity1801           1.0
+    x180135   Total_Cost          22.0   NodeBalance0135          -1.0
+    x180135   NodeBalance1835           1.0   Capacity1801           1.0
+    x180136   Total_Cost          22.0   NodeBalance0136          -1.0
+    x180136   NodeBalance1836           1.0   Capacity1801           1.0
+    x180137   Total_Cost          22.0   NodeBalance0137          -1.0
+    x180137   NodeBalance1837           1.0   Capacity1801           1.0
+    x180138   Total_Cost          22.0   NodeBalance0138          -1.0
+    x180138   NodeBalance1838           1.0   Capacity1801           1.0
+    x180139   Total_Cost          22.0   NodeBalance0139          -1.0
+    x180139   NodeBalance1839           1.0   Capacity1801           1.0
+    x180140   Total_Cost          22.0   NodeBalance0140          -1.0
+    x180140   NodeBalance1840           1.0   Capacity1801           1.0
+    x180401   Total_Cost          91.0   NodeBalance0401          -1.0
+    x180401   NodeBalance1801           1.0   Capacity1804           1.0
+    x180402   Total_Cost          91.0   NodeBalance0402          -1.0
+    x180402   NodeBalance1802           1.0   Capacity1804           1.0
+    x180403   Total_Cost          91.0   NodeBalance0403          -1.0
+    x180403   NodeBalance1803           1.0   Capacity1804           1.0
+    x180404   Total_Cost          91.0   NodeBalance0404          -1.0
+    x180404   NodeBalance1804           1.0   Capacity1804           1.0
+    x180405   Total_Cost          91.0   NodeBalance0405          -1.0
+    x180405   NodeBalance1805           1.0   Capacity1804           1.0
+    x180406   Total_Cost          91.0   NodeBalance0406          -1.0
+    x180406   NodeBalance1806           1.0   Capacity1804           1.0
+    x180407   Total_Cost          91.0   NodeBalance0407          -1.0
+    x180407   NodeBalance1807           1.0   Capacity1804           1.0
+    x180408   Total_Cost          91.0   NodeBalance0408          -1.0
+    x180408   NodeBalance1808           1.0   Capacity1804           1.0
+    x180409   Total_Cost          91.0   NodeBalance0409          -1.0
+    x180409   NodeBalance1809           1.0   Capacity1804           1.0
+    x180410   Total_Cost          91.0   NodeBalance0410          -1.0
+    x180410   NodeBalance1810           1.0   Capacity1804           1.0
+    x180411   Total_Cost          91.0   NodeBalance0411          -1.0
+    x180411   NodeBalance1811           1.0   Capacity1804           1.0
+    x180412   Total_Cost          91.0   NodeBalance0412          -1.0
+    x180412   NodeBalance1812           1.0   Capacity1804           1.0
+    x180413   Total_Cost          91.0   NodeBalance0413          -1.0
+    x180413   NodeBalance1813           1.0   Capacity1804           1.0
+    x180414   Total_Cost          91.0   NodeBalance0414          -1.0
+    x180414   NodeBalance1814           1.0   Capacity1804           1.0
+    x180415   Total_Cost          91.0   NodeBalance0415          -1.0
+    x180415   NodeBalance1815           1.0   Capacity1804           1.0
+    x180416   Total_Cost          91.0   NodeBalance0416          -1.0
+    x180416   NodeBalance1816           1.0   Capacity1804           1.0
+    x180417   Total_Cost          91.0   NodeBalance0417          -1.0
+    x180417   NodeBalance1817           1.0   Capacity1804           1.0
+    x180418   Total_Cost          91.0   NodeBalance0418          -1.0
+    x180418   NodeBalance1818           1.0   Capacity1804           1.0
+    x180419   Total_Cost          91.0   NodeBalance0419          -1.0
+    x180419   NodeBalance1819           1.0   Capacity1804           1.0
+    x180420   Total_Cost          91.0   NodeBalance0420          -1.0
+    x180420   NodeBalance1820           1.0   Capacity1804           1.0
+    x180421   Total_Cost          91.0   NodeBalance0421          -1.0
+    x180421   NodeBalance1821           1.0   Capacity1804           1.0
+    x180422   Total_Cost          91.0   NodeBalance0422          -1.0
+    x180422   NodeBalance1822           1.0   Capacity1804           1.0
+    x180423   Total_Cost          91.0   NodeBalance0423          -1.0
+    x180423   NodeBalance1823           1.0   Capacity1804           1.0
+    x180424   Total_Cost          91.0   NodeBalance0424          -1.0
+    x180424   NodeBalance1824           1.0   Capacity1804           1.0
+    x180425   Total_Cost          91.0   NodeBalance0425          -1.0
+    x180425   NodeBalance1825           1.0   Capacity1804           1.0
+    x180426   Total_Cost          91.0   NodeBalance0426          -1.0
+    x180426   NodeBalance1826           1.0   Capacity1804           1.0
+    x180427   Total_Cost          91.0   NodeBalance0427          -1.0
+    x180427   NodeBalance1827           1.0   Capacity1804           1.0
+    x180428   Total_Cost          91.0   NodeBalance0428          -1.0
+    x180428   NodeBalance1828           1.0   Capacity1804           1.0
+    x180429   Total_Cost          91.0   NodeBalance0429          -1.0
+    x180429   NodeBalance1829           1.0   Capacity1804           1.0
+    x180430   Total_Cost          91.0   NodeBalance0430          -1.0
+    x180430   NodeBalance1830           1.0   Capacity1804           1.0
+    x180431   Total_Cost          91.0   NodeBalance0431          -1.0
+    x180431   NodeBalance1831           1.0   Capacity1804           1.0
+    x180432   Total_Cost          91.0   NodeBalance0432          -1.0
+    x180432   NodeBalance1832           1.0   Capacity1804           1.0
+    x180433   Total_Cost          91.0   NodeBalance0433          -1.0
+    x180433   NodeBalance1833           1.0   Capacity1804           1.0
+    x180434   Total_Cost          91.0   NodeBalance0434          -1.0
+    x180434   NodeBalance1834           1.0   Capacity1804           1.0
+    x180435   Total_Cost          91.0   NodeBalance0435          -1.0
+    x180435   NodeBalance1835           1.0   Capacity1804           1.0
+    x180436   Total_Cost          91.0   NodeBalance0436          -1.0
+    x180436   NodeBalance1836           1.0   Capacity1804           1.0
+    x180437   Total_Cost          91.0   NodeBalance0437          -1.0
+    x180437   NodeBalance1837           1.0   Capacity1804           1.0
+    x180438   Total_Cost          91.0   NodeBalance0438          -1.0
+    x180438   NodeBalance1838           1.0   Capacity1804           1.0
+    x180439   Total_Cost          91.0   NodeBalance0439          -1.0
+    x180439   NodeBalance1839           1.0   Capacity1804           1.0
+    x180440   Total_Cost          91.0   NodeBalance0440          -1.0
+    x180440   NodeBalance1840           1.0   Capacity1804           1.0
+    x180701   Total_Cost          11.0   NodeBalance0701          -1.0
+    x180701   NodeBalance1801           1.0   Capacity1807           1.0
+    x180702   Total_Cost          11.0   NodeBalance0702          -1.0
+    x180702   NodeBalance1802           1.0   Capacity1807           1.0
+    x180703   Total_Cost          11.0   NodeBalance0703          -1.0
+    x180703   NodeBalance1803           1.0   Capacity1807           1.0
+    x180704   Total_Cost          11.0   NodeBalance0704          -1.0
+    x180704   NodeBalance1804           1.0   Capacity1807           1.0
+    x180705   Total_Cost          11.0   NodeBalance0705          -1.0
+    x180705   NodeBalance1805           1.0   Capacity1807           1.0
+    x180706   Total_Cost          11.0   NodeBalance0706          -1.0
+    x180706   NodeBalance1806           1.0   Capacity1807           1.0
+    x180707   Total_Cost          11.0   NodeBalance0707          -1.0
+    x180707   NodeBalance1807           1.0   Capacity1807           1.0
+    x180708   Total_Cost          11.0   NodeBalance0708          -1.0
+    x180708   NodeBalance1808           1.0   Capacity1807           1.0
+    x180709   Total_Cost          11.0   NodeBalance0709          -1.0
+    x180709   NodeBalance1809           1.0   Capacity1807           1.0
+    x180710   Total_Cost          11.0   NodeBalance0710          -1.0
+    x180710   NodeBalance1810           1.0   Capacity1807           1.0
+    x180711   Total_Cost          11.0   NodeBalance0711          -1.0
+    x180711   NodeBalance1811           1.0   Capacity1807           1.0
+    x180712   Total_Cost          11.0   NodeBalance0712          -1.0
+    x180712   NodeBalance1812           1.0   Capacity1807           1.0
+    x180713   Total_Cost          11.0   NodeBalance0713          -1.0
+    x180713   NodeBalance1813           1.0   Capacity1807           1.0
+    x180714   Total_Cost          11.0   NodeBalance0714          -1.0
+    x180714   NodeBalance1814           1.0   Capacity1807           1.0
+    x180715   Total_Cost          11.0   NodeBalance0715          -1.0
+    x180715   NodeBalance1815           1.0   Capacity1807           1.0
+    x180716   Total_Cost          11.0   NodeBalance0716          -1.0
+    x180716   NodeBalance1816           1.0   Capacity1807           1.0
+    x180717   Total_Cost          11.0   NodeBalance0717          -1.0
+    x180717   NodeBalance1817           1.0   Capacity1807           1.0
+    x180718   Total_Cost          11.0   NodeBalance0718          -1.0
+    x180718   NodeBalance1818           1.0   Capacity1807           1.0
+    x180719   Total_Cost          11.0   NodeBalance0719          -1.0
+    x180719   NodeBalance1819           1.0   Capacity1807           1.0
+    x180720   Total_Cost          11.0   NodeBalance0720          -1.0
+    x180720   NodeBalance1820           1.0   Capacity1807           1.0
+    x180721   Total_Cost          11.0   NodeBalance0721          -1.0
+    x180721   NodeBalance1821           1.0   Capacity1807           1.0
+    x180722   Total_Cost          11.0   NodeBalance0722          -1.0
+    x180722   NodeBalance1822           1.0   Capacity1807           1.0
+    x180723   Total_Cost          11.0   NodeBalance0723          -1.0
+    x180723   NodeBalance1823           1.0   Capacity1807           1.0
+    x180724   Total_Cost          11.0   NodeBalance0724          -1.0
+    x180724   NodeBalance1824           1.0   Capacity1807           1.0
+    x180725   Total_Cost          11.0   NodeBalance0725          -1.0
+    x180725   NodeBalance1825           1.0   Capacity1807           1.0
+    x180726   Total_Cost          11.0   NodeBalance0726          -1.0
+    x180726   NodeBalance1826           1.0   Capacity1807           1.0
+    x180727   Total_Cost          11.0   NodeBalance0727          -1.0
+    x180727   NodeBalance1827           1.0   Capacity1807           1.0
+    x180728   Total_Cost          11.0   NodeBalance0728          -1.0
+    x180728   NodeBalance1828           1.0   Capacity1807           1.0
+    x180729   Total_Cost          11.0   NodeBalance0729          -1.0
+    x180729   NodeBalance1829           1.0   Capacity1807           1.0
+    x180730   Total_Cost          11.0   NodeBalance0730          -1.0
+    x180730   NodeBalance1830           1.0   Capacity1807           1.0
+    x180731   Total_Cost          11.0   NodeBalance0731          -1.0
+    x180731   NodeBalance1831           1.0   Capacity1807           1.0
+    x180732   Total_Cost          11.0   NodeBalance0732          -1.0
+    x180732   NodeBalance1832           1.0   Capacity1807           1.0
+    x180733   Total_Cost          11.0   NodeBalance0733          -1.0
+    x180733   NodeBalance1833           1.0   Capacity1807           1.0
+    x180734   Total_Cost          11.0   NodeBalance0734          -1.0
+    x180734   NodeBalance1834           1.0   Capacity1807           1.0
+    x180735   Total_Cost          11.0   NodeBalance0735          -1.0
+    x180735   NodeBalance1835           1.0   Capacity1807           1.0
+    x180736   Total_Cost          11.0   NodeBalance0736          -1.0
+    x180736   NodeBalance1836           1.0   Capacity1807           1.0
+    x180737   Total_Cost          11.0   NodeBalance0737          -1.0
+    x180737   NodeBalance1837           1.0   Capacity1807           1.0
+    x180738   Total_Cost          11.0   NodeBalance0738          -1.0
+    x180738   NodeBalance1838           1.0   Capacity1807           1.0
+    x180739   Total_Cost          11.0   NodeBalance0739          -1.0
+    x180739   NodeBalance1839           1.0   Capacity1807           1.0
+    x180740   Total_Cost          11.0   NodeBalance0740          -1.0
+    x180740   NodeBalance1840           1.0   Capacity1807           1.0
+    x181901   Total_Cost         100.0   NodeBalance1801           1.0
+    x181901   NodeBalance1901          -1.0   Capacity1819           1.0
+    x181902   Total_Cost         100.0   NodeBalance1802           1.0
+    x181902   NodeBalance1902          -1.0   Capacity1819           1.0
+    x181903   Total_Cost         100.0   NodeBalance1803           1.0
+    x181903   NodeBalance1903          -1.0   Capacity1819           1.0
+    x181904   Total_Cost         100.0   NodeBalance1804           1.0
+    x181904   NodeBalance1904          -1.0   Capacity1819           1.0
+    x181905   Total_Cost         100.0   NodeBalance1805           1.0
+    x181905   NodeBalance1905          -1.0   Capacity1819           1.0
+    x181906   Total_Cost         100.0   NodeBalance1806           1.0
+    x181906   NodeBalance1906          -1.0   Capacity1819           1.0
+    x181907   Total_Cost         100.0   NodeBalance1807           1.0
+    x181907   NodeBalance1907          -1.0   Capacity1819           1.0
+    x181908   Total_Cost         100.0   NodeBalance1808           1.0
+    x181908   NodeBalance1908          -1.0   Capacity1819           1.0
+    x181909   Total_Cost         100.0   NodeBalance1809           1.0
+    x181909   NodeBalance1909          -1.0   Capacity1819           1.0
+    x181910   Total_Cost         100.0   NodeBalance1810           1.0
+    x181910   NodeBalance1910          -1.0   Capacity1819           1.0
+    x181911   Total_Cost         100.0   NodeBalance1811           1.0
+    x181911   NodeBalance1911          -1.0   Capacity1819           1.0
+    x181912   Total_Cost         100.0   NodeBalance1812           1.0
+    x181912   NodeBalance1912          -1.0   Capacity1819           1.0
+    x181913   Total_Cost         100.0   NodeBalance1813           1.0
+    x181913   NodeBalance1913          -1.0   Capacity1819           1.0
+    x181914   Total_Cost         100.0   NodeBalance1814           1.0
+    x181914   NodeBalance1914          -1.0   Capacity1819           1.0
+    x181915   Total_Cost         100.0   NodeBalance1815           1.0
+    x181915   NodeBalance1915          -1.0   Capacity1819           1.0
+    x181916   Total_Cost         100.0   NodeBalance1816           1.0
+    x181916   NodeBalance1916          -1.0   Capacity1819           1.0
+    x181917   Total_Cost         100.0   NodeBalance1817           1.0
+    x181917   NodeBalance1917          -1.0   Capacity1819           1.0
+    x181918   Total_Cost         100.0   NodeBalance1818           1.0
+    x181918   NodeBalance1918          -1.0   Capacity1819           1.0
+    x181919   Total_Cost         100.0   NodeBalance1819           1.0
+    x181919   NodeBalance1919          -1.0   Capacity1819           1.0
+    x181920   Total_Cost         100.0   NodeBalance1820           1.0
+    x181920   NodeBalance1920          -1.0   Capacity1819           1.0
+    x181921   Total_Cost         100.0   NodeBalance1821           1.0
+    x181921   NodeBalance1921          -1.0   Capacity1819           1.0
+    x181922   Total_Cost         100.0   NodeBalance1822           1.0
+    x181922   NodeBalance1922          -1.0   Capacity1819           1.0
+    x181923   Total_Cost         100.0   NodeBalance1823           1.0
+    x181923   NodeBalance1923          -1.0   Capacity1819           1.0
+    x181924   Total_Cost         100.0   NodeBalance1824           1.0
+    x181924   NodeBalance1924          -1.0   Capacity1819           1.0
+    x181925   Total_Cost         100.0   NodeBalance1825           1.0
+    x181925   NodeBalance1925          -1.0   Capacity1819           1.0
+    x181926   Total_Cost         100.0   NodeBalance1826           1.0
+    x181926   NodeBalance1926          -1.0   Capacity1819           1.0
+    x181927   Total_Cost         100.0   NodeBalance1827           1.0
+    x181927   NodeBalance1927          -1.0   Capacity1819           1.0
+    x181928   Total_Cost         100.0   NodeBalance1828           1.0
+    x181928   NodeBalance1928          -1.0   Capacity1819           1.0
+    x181929   Total_Cost         100.0   NodeBalance1829           1.0
+    x181929   NodeBalance1929          -1.0   Capacity1819           1.0
+    x181930   Total_Cost         100.0   NodeBalance1830           1.0
+    x181930   NodeBalance1930          -1.0   Capacity1819           1.0
+    x181931   Total_Cost         100.0   NodeBalance1831           1.0
+    x181931   NodeBalance1931          -1.0   Capacity1819           1.0
+    x181932   Total_Cost         100.0   NodeBalance1832           1.0
+    x181932   NodeBalance1932          -1.0   Capacity1819           1.0
+    x181933   Total_Cost         100.0   NodeBalance1833           1.0
+    x181933   NodeBalance1933          -1.0   Capacity1819           1.0
+    x181934   Total_Cost         100.0   NodeBalance1834           1.0
+    x181934   NodeBalance1934          -1.0   Capacity1819           1.0
+    x181935   Total_Cost         100.0   NodeBalance1835           1.0
+    x181935   NodeBalance1935          -1.0   Capacity1819           1.0
+    x181936   Total_Cost         100.0   NodeBalance1836           1.0
+    x181936   NodeBalance1936          -1.0   Capacity1819           1.0
+    x181937   Total_Cost         100.0   NodeBalance1837           1.0
+    x181937   NodeBalance1937          -1.0   Capacity1819           1.0
+    x181938   Total_Cost         100.0   NodeBalance1838           1.0
+    x181938   NodeBalance1938          -1.0   Capacity1819           1.0
+    x181939   Total_Cost         100.0   NodeBalance1839           1.0
+    x181939   NodeBalance1939          -1.0   Capacity1819           1.0
+    x181940   Total_Cost         100.0   NodeBalance1840           1.0
+    x181940   NodeBalance1940          -1.0   Capacity1819           1.0
+    x182001   Total_Cost          80.0   NodeBalance1801           1.0
+    x182001   NodeBalance2001          -1.0   Capacity1820           1.0
+    x182002   Total_Cost          80.0   NodeBalance1802           1.0
+    x182002   NodeBalance2002          -1.0   Capacity1820           1.0
+    x182003   Total_Cost          80.0   NodeBalance1803           1.0
+    x182003   NodeBalance2003          -1.0   Capacity1820           1.0
+    x182004   Total_Cost          80.0   NodeBalance1804           1.0
+    x182004   NodeBalance2004          -1.0   Capacity1820           1.0
+    x182005   Total_Cost          80.0   NodeBalance1805           1.0
+    x182005   NodeBalance2005          -1.0   Capacity1820           1.0
+    x182006   Total_Cost          80.0   NodeBalance1806           1.0
+    x182006   NodeBalance2006          -1.0   Capacity1820           1.0
+    x182007   Total_Cost          80.0   NodeBalance1807           1.0
+    x182007   NodeBalance2007          -1.0   Capacity1820           1.0
+    x182008   Total_Cost          80.0   NodeBalance1808           1.0
+    x182008   NodeBalance2008          -1.0   Capacity1820           1.0
+    x182009   Total_Cost          80.0   NodeBalance1809           1.0
+    x182009   NodeBalance2009          -1.0   Capacity1820           1.0
+    x182010   Total_Cost          80.0   NodeBalance1810           1.0
+    x182010   NodeBalance2010          -1.0   Capacity1820           1.0
+    x182011   Total_Cost          80.0   NodeBalance1811           1.0
+    x182011   NodeBalance2011          -1.0   Capacity1820           1.0
+    x182012   Total_Cost          80.0   NodeBalance1812           1.0
+    x182012   NodeBalance2012          -1.0   Capacity1820           1.0
+    x182013   Total_Cost          80.0   NodeBalance1813           1.0
+    x182013   NodeBalance2013          -1.0   Capacity1820           1.0
+    x182014   Total_Cost          80.0   NodeBalance1814           1.0
+    x182014   NodeBalance2014          -1.0   Capacity1820           1.0
+    x182015   Total_Cost          80.0   NodeBalance1815           1.0
+    x182015   NodeBalance2015          -1.0   Capacity1820           1.0
+    x182016   Total_Cost          80.0   NodeBalance1816           1.0
+    x182016   NodeBalance2016          -1.0   Capacity1820           1.0
+    x182017   Total_Cost          80.0   NodeBalance1817           1.0
+    x182017   NodeBalance2017          -1.0   Capacity1820           1.0
+    x182018   Total_Cost          80.0   NodeBalance1818           1.0
+    x182018   NodeBalance2018          -1.0   Capacity1820           1.0
+    x182019   Total_Cost          80.0   NodeBalance1819           1.0
+    x182019   NodeBalance2019          -1.0   Capacity1820           1.0
+    x182020   Total_Cost          80.0   NodeBalance1820           1.0
+    x182020   NodeBalance2020          -1.0   Capacity1820           1.0
+    x182021   Total_Cost          80.0   NodeBalance1821           1.0
+    x182021   NodeBalance2021          -1.0   Capacity1820           1.0
+    x182022   Total_Cost          80.0   NodeBalance1822           1.0
+    x182022   NodeBalance2022          -1.0   Capacity1820           1.0
+    x182023   Total_Cost          80.0   NodeBalance1823           1.0
+    x182023   NodeBalance2023          -1.0   Capacity1820           1.0
+    x182024   Total_Cost          80.0   NodeBalance1824           1.0
+    x182024   NodeBalance2024          -1.0   Capacity1820           1.0
+    x182025   Total_Cost          80.0   NodeBalance1825           1.0
+    x182025   NodeBalance2025          -1.0   Capacity1820           1.0
+    x182026   Total_Cost          80.0   NodeBalance1826           1.0
+    x182026   NodeBalance2026          -1.0   Capacity1820           1.0
+    x182027   Total_Cost          80.0   NodeBalance1827           1.0
+    x182027   NodeBalance2027          -1.0   Capacity1820           1.0
+    x182028   Total_Cost          80.0   NodeBalance1828           1.0
+    x182028   NodeBalance2028          -1.0   Capacity1820           1.0
+    x182029   Total_Cost          80.0   NodeBalance1829           1.0
+    x182029   NodeBalance2029          -1.0   Capacity1820           1.0
+    x182030   Total_Cost          80.0   NodeBalance1830           1.0
+    x182030   NodeBalance2030          -1.0   Capacity1820           1.0
+    x182031   Total_Cost          80.0   NodeBalance1831           1.0
+    x182031   NodeBalance2031          -1.0   Capacity1820           1.0
+    x182032   Total_Cost          80.0   NodeBalance1832           1.0
+    x182032   NodeBalance2032          -1.0   Capacity1820           1.0
+    x182033   Total_Cost          80.0   NodeBalance1833           1.0
+    x182033   NodeBalance2033          -1.0   Capacity1820           1.0
+    x182034   Total_Cost          80.0   NodeBalance1834           1.0
+    x182034   NodeBalance2034          -1.0   Capacity1820           1.0
+    x182035   Total_Cost          80.0   NodeBalance1835           1.0
+    x182035   NodeBalance2035          -1.0   Capacity1820           1.0
+    x182036   Total_Cost          80.0   NodeBalance1836           1.0
+    x182036   NodeBalance2036          -1.0   Capacity1820           1.0
+    x182037   Total_Cost          80.0   NodeBalance1837           1.0
+    x182037   NodeBalance2037          -1.0   Capacity1820           1.0
+    x182038   Total_Cost          80.0   NodeBalance1838           1.0
+    x182038   NodeBalance2038          -1.0   Capacity1820           1.0
+    x182039   Total_Cost          80.0   NodeBalance1839           1.0
+    x182039   NodeBalance2039          -1.0   Capacity1820           1.0
+    x182040   Total_Cost          80.0   NodeBalance1840           1.0
+    x182040   NodeBalance2040          -1.0   Capacity1820           1.0
+    x190101   Total_Cost          51.0   NodeBalance0101          -1.0
+    x190101   NodeBalance1901           1.0   Capacity1901           1.0
+    x190102   Total_Cost          51.0   NodeBalance0102          -1.0
+    x190102   NodeBalance1902           1.0   Capacity1901           1.0
+    x190103   Total_Cost          51.0   NodeBalance0103          -1.0
+    x190103   NodeBalance1903           1.0   Capacity1901           1.0
+    x190104   Total_Cost          51.0   NodeBalance0104          -1.0
+    x190104   NodeBalance1904           1.0   Capacity1901           1.0
+    x190105   Total_Cost          51.0   NodeBalance0105          -1.0
+    x190105   NodeBalance1905           1.0   Capacity1901           1.0
+    x190106   Total_Cost          51.0   NodeBalance0106          -1.0
+    x190106   NodeBalance1906           1.0   Capacity1901           1.0
+    x190107   Total_Cost          51.0   NodeBalance0107          -1.0
+    x190107   NodeBalance1907           1.0   Capacity1901           1.0
+    x190108   Total_Cost          51.0   NodeBalance0108          -1.0
+    x190108   NodeBalance1908           1.0   Capacity1901           1.0
+    x190109   Total_Cost          51.0   NodeBalance0109          -1.0
+    x190109   NodeBalance1909           1.0   Capacity1901           1.0
+    x190110   Total_Cost          51.0   NodeBalance0110          -1.0
+    x190110   NodeBalance1910           1.0   Capacity1901           1.0
+    x190111   Total_Cost          51.0   NodeBalance0111          -1.0
+    x190111   NodeBalance1911           1.0   Capacity1901           1.0
+    x190112   Total_Cost          51.0   NodeBalance0112          -1.0
+    x190112   NodeBalance1912           1.0   Capacity1901           1.0
+    x190113   Total_Cost          51.0   NodeBalance0113          -1.0
+    x190113   NodeBalance1913           1.0   Capacity1901           1.0
+    x190114   Total_Cost          51.0   NodeBalance0114          -1.0
+    x190114   NodeBalance1914           1.0   Capacity1901           1.0
+    x190115   Total_Cost          51.0   NodeBalance0115          -1.0
+    x190115   NodeBalance1915           1.0   Capacity1901           1.0
+    x190116   Total_Cost          51.0   NodeBalance0116          -1.0
+    x190116   NodeBalance1916           1.0   Capacity1901           1.0
+    x190117   Total_Cost          51.0   NodeBalance0117          -1.0
+    x190117   NodeBalance1917           1.0   Capacity1901           1.0
+    x190118   Total_Cost          51.0   NodeBalance0118          -1.0
+    x190118   NodeBalance1918           1.0   Capacity1901           1.0
+    x190119   Total_Cost          51.0   NodeBalance0119          -1.0
+    x190119   NodeBalance1919           1.0   Capacity1901           1.0
+    x190120   Total_Cost          51.0   NodeBalance0120          -1.0
+    x190120   NodeBalance1920           1.0   Capacity1901           1.0
+    x190121   Total_Cost          51.0   NodeBalance0121          -1.0
+    x190121   NodeBalance1921           1.0   Capacity1901           1.0
+    x190122   Total_Cost          51.0   NodeBalance0122          -1.0
+    x190122   NodeBalance1922           1.0   Capacity1901           1.0
+    x190123   Total_Cost          51.0   NodeBalance0123          -1.0
+    x190123   NodeBalance1923           1.0   Capacity1901           1.0
+    x190124   Total_Cost          51.0   NodeBalance0124          -1.0
+    x190124   NodeBalance1924           1.0   Capacity1901           1.0
+    x190125   Total_Cost          51.0   NodeBalance0125          -1.0
+    x190125   NodeBalance1925           1.0   Capacity1901           1.0
+    x190126   Total_Cost          51.0   NodeBalance0126          -1.0
+    x190126   NodeBalance1926           1.0   Capacity1901           1.0
+    x190127   Total_Cost          51.0   NodeBalance0127          -1.0
+    x190127   NodeBalance1927           1.0   Capacity1901           1.0
+    x190128   Total_Cost          51.0   NodeBalance0128          -1.0
+    x190128   NodeBalance1928           1.0   Capacity1901           1.0
+    x190129   Total_Cost          51.0   NodeBalance0129          -1.0
+    x190129   NodeBalance1929           1.0   Capacity1901           1.0
+    x190130   Total_Cost          51.0   NodeBalance0130          -1.0
+    x190130   NodeBalance1930           1.0   Capacity1901           1.0
+    x190131   Total_Cost          51.0   NodeBalance0131          -1.0
+    x190131   NodeBalance1931           1.0   Capacity1901           1.0
+    x190132   Total_Cost          51.0   NodeBalance0132          -1.0
+    x190132   NodeBalance1932           1.0   Capacity1901           1.0
+    x190133   Total_Cost          51.0   NodeBalance0133          -1.0
+    x190133   NodeBalance1933           1.0   Capacity1901           1.0
+    x190134   Total_Cost          51.0   NodeBalance0134          -1.0
+    x190134   NodeBalance1934           1.0   Capacity1901           1.0
+    x190135   Total_Cost          51.0   NodeBalance0135          -1.0
+    x190135   NodeBalance1935           1.0   Capacity1901           1.0
+    x190136   Total_Cost          51.0   NodeBalance0136          -1.0
+    x190136   NodeBalance1936           1.0   Capacity1901           1.0
+    x190137   Total_Cost          51.0   NodeBalance0137          -1.0
+    x190137   NodeBalance1937           1.0   Capacity1901           1.0
+    x190138   Total_Cost          51.0   NodeBalance0138          -1.0
+    x190138   NodeBalance1938           1.0   Capacity1901           1.0
+    x190139   Total_Cost          51.0   NodeBalance0139          -1.0
+    x190139   NodeBalance1939           1.0   Capacity1901           1.0
+    x190140   Total_Cost          51.0   NodeBalance0140          -1.0
+    x190140   NodeBalance1940           1.0   Capacity1901           1.0
+    x190501   Total_Cost          40.0   NodeBalance0501          -1.0
+    x190501   NodeBalance1901           1.0   Capacity1905           1.0
+    x190502   Total_Cost          40.0   NodeBalance0502          -1.0
+    x190502   NodeBalance1902           1.0   Capacity1905           1.0
+    x190503   Total_Cost          40.0   NodeBalance0503          -1.0
+    x190503   NodeBalance1903           1.0   Capacity1905           1.0
+    x190504   Total_Cost          40.0   NodeBalance0504          -1.0
+    x190504   NodeBalance1904           1.0   Capacity1905           1.0
+    x190505   Total_Cost          40.0   NodeBalance0505          -1.0
+    x190505   NodeBalance1905           1.0   Capacity1905           1.0
+    x190506   Total_Cost          40.0   NodeBalance0506          -1.0
+    x190506   NodeBalance1906           1.0   Capacity1905           1.0
+    x190507   Total_Cost          40.0   NodeBalance0507          -1.0
+    x190507   NodeBalance1907           1.0   Capacity1905           1.0
+    x190508   Total_Cost          40.0   NodeBalance0508          -1.0
+    x190508   NodeBalance1908           1.0   Capacity1905           1.0
+    x190509   Total_Cost          40.0   NodeBalance0509          -1.0
+    x190509   NodeBalance1909           1.0   Capacity1905           1.0
+    x190510   Total_Cost          40.0   NodeBalance0510          -1.0
+    x190510   NodeBalance1910           1.0   Capacity1905           1.0
+    x190511   Total_Cost          40.0   NodeBalance0511          -1.0
+    x190511   NodeBalance1911           1.0   Capacity1905           1.0
+    x190512   Total_Cost          40.0   NodeBalance0512          -1.0
+    x190512   NodeBalance1912           1.0   Capacity1905           1.0
+    x190513   Total_Cost          40.0   NodeBalance0513          -1.0
+    x190513   NodeBalance1913           1.0   Capacity1905           1.0
+    x190514   Total_Cost          40.0   NodeBalance0514          -1.0
+    x190514   NodeBalance1914           1.0   Capacity1905           1.0
+    x190515   Total_Cost          40.0   NodeBalance0515          -1.0
+    x190515   NodeBalance1915           1.0   Capacity1905           1.0
+    x190516   Total_Cost          40.0   NodeBalance0516          -1.0
+    x190516   NodeBalance1916           1.0   Capacity1905           1.0
+    x190517   Total_Cost          40.0   NodeBalance0517          -1.0
+    x190517   NodeBalance1917           1.0   Capacity1905           1.0
+    x190518   Total_Cost          40.0   NodeBalance0518          -1.0
+    x190518   NodeBalance1918           1.0   Capacity1905           1.0
+    x190519   Total_Cost          40.0   NodeBalance0519          -1.0
+    x190519   NodeBalance1919           1.0   Capacity1905           1.0
+    x190520   Total_Cost          40.0   NodeBalance0520          -1.0
+    x190520   NodeBalance1920           1.0   Capacity1905           1.0
+    x190521   Total_Cost          40.0   NodeBalance0521          -1.0
+    x190521   NodeBalance1921           1.0   Capacity1905           1.0
+    x190522   Total_Cost          40.0   NodeBalance0522          -1.0
+    x190522   NodeBalance1922           1.0   Capacity1905           1.0
+    x190523   Total_Cost          40.0   NodeBalance0523          -1.0
+    x190523   NodeBalance1923           1.0   Capacity1905           1.0
+    x190524   Total_Cost          40.0   NodeBalance0524          -1.0
+    x190524   NodeBalance1924           1.0   Capacity1905           1.0
+    x190525   Total_Cost          40.0   NodeBalance0525          -1.0
+    x190525   NodeBalance1925           1.0   Capacity1905           1.0
+    x190526   Total_Cost          40.0   NodeBalance0526          -1.0
+    x190526   NodeBalance1926           1.0   Capacity1905           1.0
+    x190527   Total_Cost          40.0   NodeBalance0527          -1.0
+    x190527   NodeBalance1927           1.0   Capacity1905           1.0
+    x190528   Total_Cost          40.0   NodeBalance0528          -1.0
+    x190528   NodeBalance1928           1.0   Capacity1905           1.0
+    x190529   Total_Cost          40.0   NodeBalance0529          -1.0
+    x190529   NodeBalance1929           1.0   Capacity1905           1.0
+    x190530   Total_Cost          40.0   NodeBalance0530          -1.0
+    x190530   NodeBalance1930           1.0   Capacity1905           1.0
+    x190531   Total_Cost          40.0   NodeBalance0531          -1.0
+    x190531   NodeBalance1931           1.0   Capacity1905           1.0
+    x190532   Total_Cost          40.0   NodeBalance0532          -1.0
+    x190532   NodeBalance1932           1.0   Capacity1905           1.0
+    x190533   Total_Cost          40.0   NodeBalance0533          -1.0
+    x190533   NodeBalance1933           1.0   Capacity1905           1.0
+    x190534   Total_Cost          40.0   NodeBalance0534          -1.0
+    x190534   NodeBalance1934           1.0   Capacity1905           1.0
+    x190535   Total_Cost          40.0   NodeBalance0535          -1.0
+    x190535   NodeBalance1935           1.0   Capacity1905           1.0
+    x190536   Total_Cost          40.0   NodeBalance0536          -1.0
+    x190536   NodeBalance1936           1.0   Capacity1905           1.0
+    x190537   Total_Cost          40.0   NodeBalance0537          -1.0
+    x190537   NodeBalance1937           1.0   Capacity1905           1.0
+    x190538   Total_Cost          40.0   NodeBalance0538          -1.0
+    x190538   NodeBalance1938           1.0   Capacity1905           1.0
+    x190539   Total_Cost          40.0   NodeBalance0539          -1.0
+    x190539   NodeBalance1939           1.0   Capacity1905           1.0
+    x190540   Total_Cost          40.0   NodeBalance0540          -1.0
+    x190540   NodeBalance1940           1.0   Capacity1905           1.0
+    x191201   Total_Cost          51.0   NodeBalance1201          -1.0
+    x191201   NodeBalance1901           1.0   Capacity1912           1.0
+    x191202   Total_Cost          51.0   NodeBalance1202          -1.0
+    x191202   NodeBalance1902           1.0   Capacity1912           1.0
+    x191203   Total_Cost          51.0   NodeBalance1203          -1.0
+    x191203   NodeBalance1903           1.0   Capacity1912           1.0
+    x191204   Total_Cost          51.0   NodeBalance1204          -1.0
+    x191204   NodeBalance1904           1.0   Capacity1912           1.0
+    x191205   Total_Cost          51.0   NodeBalance1205          -1.0
+    x191205   NodeBalance1905           1.0   Capacity1912           1.0
+    x191206   Total_Cost          51.0   NodeBalance1206          -1.0
+    x191206   NodeBalance1906           1.0   Capacity1912           1.0
+    x191207   Total_Cost          51.0   NodeBalance1207          -1.0
+    x191207   NodeBalance1907           1.0   Capacity1912           1.0
+    x191208   Total_Cost          51.0   NodeBalance1208          -1.0
+    x191208   NodeBalance1908           1.0   Capacity1912           1.0
+    x191209   Total_Cost          51.0   NodeBalance1209          -1.0
+    x191209   NodeBalance1909           1.0   Capacity1912           1.0
+    x191210   Total_Cost          51.0   NodeBalance1210          -1.0
+    x191210   NodeBalance1910           1.0   Capacity1912           1.0
+    x191211   Total_Cost          51.0   NodeBalance1211          -1.0
+    x191211   NodeBalance1911           1.0   Capacity1912           1.0
+    x191212   Total_Cost          51.0   NodeBalance1212          -1.0
+    x191212   NodeBalance1912           1.0   Capacity1912           1.0
+    x191213   Total_Cost          51.0   NodeBalance1213          -1.0
+    x191213   NodeBalance1913           1.0   Capacity1912           1.0
+    x191214   Total_Cost          51.0   NodeBalance1214          -1.0
+    x191214   NodeBalance1914           1.0   Capacity1912           1.0
+    x191215   Total_Cost          51.0   NodeBalance1215          -1.0
+    x191215   NodeBalance1915           1.0   Capacity1912           1.0
+    x191216   Total_Cost          51.0   NodeBalance1216          -1.0
+    x191216   NodeBalance1916           1.0   Capacity1912           1.0
+    x191217   Total_Cost          51.0   NodeBalance1217          -1.0
+    x191217   NodeBalance1917           1.0   Capacity1912           1.0
+    x191218   Total_Cost          51.0   NodeBalance1218          -1.0
+    x191218   NodeBalance1918           1.0   Capacity1912           1.0
+    x191219   Total_Cost          51.0   NodeBalance1219          -1.0
+    x191219   NodeBalance1919           1.0   Capacity1912           1.0
+    x191220   Total_Cost          51.0   NodeBalance1220          -1.0
+    x191220   NodeBalance1920           1.0   Capacity1912           1.0
+    x191221   Total_Cost          51.0   NodeBalance1221          -1.0
+    x191221   NodeBalance1921           1.0   Capacity1912           1.0
+    x191222   Total_Cost          51.0   NodeBalance1222          -1.0
+    x191222   NodeBalance1922           1.0   Capacity1912           1.0
+    x191223   Total_Cost          51.0   NodeBalance1223          -1.0
+    x191223   NodeBalance1923           1.0   Capacity1912           1.0
+    x191224   Total_Cost          51.0   NodeBalance1224          -1.0
+    x191224   NodeBalance1924           1.0   Capacity1912           1.0
+    x191225   Total_Cost          51.0   NodeBalance1225          -1.0
+    x191225   NodeBalance1925           1.0   Capacity1912           1.0
+    x191226   Total_Cost          51.0   NodeBalance1226          -1.0
+    x191226   NodeBalance1926           1.0   Capacity1912           1.0
+    x191227   Total_Cost          51.0   NodeBalance1227          -1.0
+    x191227   NodeBalance1927           1.0   Capacity1912           1.0
+    x191228   Total_Cost          51.0   NodeBalance1228          -1.0
+    x191228   NodeBalance1928           1.0   Capacity1912           1.0
+    x191229   Total_Cost          51.0   NodeBalance1229          -1.0
+    x191229   NodeBalance1929           1.0   Capacity1912           1.0
+    x191230   Total_Cost          51.0   NodeBalance1230          -1.0
+    x191230   NodeBalance1930           1.0   Capacity1912           1.0
+    x191231   Total_Cost          51.0   NodeBalance1231          -1.0
+    x191231   NodeBalance1931           1.0   Capacity1912           1.0
+    x191232   Total_Cost          51.0   NodeBalance1232          -1.0
+    x191232   NodeBalance1932           1.0   Capacity1912           1.0
+    x191233   Total_Cost          51.0   NodeBalance1233          -1.0
+    x191233   NodeBalance1933           1.0   Capacity1912           1.0
+    x191234   Total_Cost          51.0   NodeBalance1234          -1.0
+    x191234   NodeBalance1934           1.0   Capacity1912           1.0
+    x191235   Total_Cost          51.0   NodeBalance1235          -1.0
+    x191235   NodeBalance1935           1.0   Capacity1912           1.0
+    x191236   Total_Cost          51.0   NodeBalance1236          -1.0
+    x191236   NodeBalance1936           1.0   Capacity1912           1.0
+    x191237   Total_Cost          51.0   NodeBalance1237          -1.0
+    x191237   NodeBalance1937           1.0   Capacity1912           1.0
+    x191238   Total_Cost          51.0   NodeBalance1238          -1.0
+    x191238   NodeBalance1938           1.0   Capacity1912           1.0
+    x191239   Total_Cost          51.0   NodeBalance1239          -1.0
+    x191239   NodeBalance1939           1.0   Capacity1912           1.0
+    x191240   Total_Cost          51.0   NodeBalance1240          -1.0
+    x191240   NodeBalance1940           1.0   Capacity1912           1.0
+    x191601   Total_Cost          46.0   NodeBalance1601          -1.0
+    x191601   NodeBalance1901           1.0   Capacity1916           1.0
+    x191602   Total_Cost          46.0   NodeBalance1602          -1.0
+    x191602   NodeBalance1902           1.0   Capacity1916           1.0
+    x191603   Total_Cost          46.0   NodeBalance1603          -1.0
+    x191603   NodeBalance1903           1.0   Capacity1916           1.0
+    x191604   Total_Cost          46.0   NodeBalance1604          -1.0
+    x191604   NodeBalance1904           1.0   Capacity1916           1.0
+    x191605   Total_Cost          46.0   NodeBalance1605          -1.0
+    x191605   NodeBalance1905           1.0   Capacity1916           1.0
+    x191606   Total_Cost          46.0   NodeBalance1606          -1.0
+    x191606   NodeBalance1906           1.0   Capacity1916           1.0
+    x191607   Total_Cost          46.0   NodeBalance1607          -1.0
+    x191607   NodeBalance1907           1.0   Capacity1916           1.0
+    x191608   Total_Cost          46.0   NodeBalance1608          -1.0
+    x191608   NodeBalance1908           1.0   Capacity1916           1.0
+    x191609   Total_Cost          46.0   NodeBalance1609          -1.0
+    x191609   NodeBalance1909           1.0   Capacity1916           1.0
+    x191610   Total_Cost          46.0   NodeBalance1610          -1.0
+    x191610   NodeBalance1910           1.0   Capacity1916           1.0
+    x191611   Total_Cost          46.0   NodeBalance1611          -1.0
+    x191611   NodeBalance1911           1.0   Capacity1916           1.0
+    x191612   Total_Cost          46.0   NodeBalance1612          -1.0
+    x191612   NodeBalance1912           1.0   Capacity1916           1.0
+    x191613   Total_Cost          46.0   NodeBalance1613          -1.0
+    x191613   NodeBalance1913           1.0   Capacity1916           1.0
+    x191614   Total_Cost          46.0   NodeBalance1614          -1.0
+    x191614   NodeBalance1914           1.0   Capacity1916           1.0
+    x191615   Total_Cost          46.0   NodeBalance1615          -1.0
+    x191615   NodeBalance1915           1.0   Capacity1916           1.0
+    x191616   Total_Cost          46.0   NodeBalance1616          -1.0
+    x191616   NodeBalance1916           1.0   Capacity1916           1.0
+    x191617   Total_Cost          46.0   NodeBalance1617          -1.0
+    x191617   NodeBalance1917           1.0   Capacity1916           1.0
+    x191618   Total_Cost          46.0   NodeBalance1618          -1.0
+    x191618   NodeBalance1918           1.0   Capacity1916           1.0
+    x191619   Total_Cost          46.0   NodeBalance1619          -1.0
+    x191619   NodeBalance1919           1.0   Capacity1916           1.0
+    x191620   Total_Cost          46.0   NodeBalance1620          -1.0
+    x191620   NodeBalance1920           1.0   Capacity1916           1.0
+    x191621   Total_Cost          46.0   NodeBalance1621          -1.0
+    x191621   NodeBalance1921           1.0   Capacity1916           1.0
+    x191622   Total_Cost          46.0   NodeBalance1622          -1.0
+    x191622   NodeBalance1922           1.0   Capacity1916           1.0
+    x191623   Total_Cost          46.0   NodeBalance1623          -1.0
+    x191623   NodeBalance1923           1.0   Capacity1916           1.0
+    x191624   Total_Cost          46.0   NodeBalance1624          -1.0
+    x191624   NodeBalance1924           1.0   Capacity1916           1.0
+    x191625   Total_Cost          46.0   NodeBalance1625          -1.0
+    x191625   NodeBalance1925           1.0   Capacity1916           1.0
+    x191626   Total_Cost          46.0   NodeBalance1626          -1.0
+    x191626   NodeBalance1926           1.0   Capacity1916           1.0
+    x191627   Total_Cost          46.0   NodeBalance1627          -1.0
+    x191627   NodeBalance1927           1.0   Capacity1916           1.0
+    x191628   Total_Cost          46.0   NodeBalance1628          -1.0
+    x191628   NodeBalance1928           1.0   Capacity1916           1.0
+    x191629   Total_Cost          46.0   NodeBalance1629          -1.0
+    x191629   NodeBalance1929           1.0   Capacity1916           1.0
+    x191630   Total_Cost          46.0   NodeBalance1630          -1.0
+    x191630   NodeBalance1930           1.0   Capacity1916           1.0
+    x191631   Total_Cost          46.0   NodeBalance1631          -1.0
+    x191631   NodeBalance1931           1.0   Capacity1916           1.0
+    x191632   Total_Cost          46.0   NodeBalance1632          -1.0
+    x191632   NodeBalance1932           1.0   Capacity1916           1.0
+    x191633   Total_Cost          46.0   NodeBalance1633          -1.0
+    x191633   NodeBalance1933           1.0   Capacity1916           1.0
+    x191634   Total_Cost          46.0   NodeBalance1634          -1.0
+    x191634   NodeBalance1934           1.0   Capacity1916           1.0
+    x191635   Total_Cost          46.0   NodeBalance1635          -1.0
+    x191635   NodeBalance1935           1.0   Capacity1916           1.0
+    x191636   Total_Cost          46.0   NodeBalance1636          -1.0
+    x191636   NodeBalance1936           1.0   Capacity1916           1.0
+    x191637   Total_Cost          46.0   NodeBalance1637          -1.0
+    x191637   NodeBalance1937           1.0   Capacity1916           1.0
+    x191638   Total_Cost          46.0   NodeBalance1638          -1.0
+    x191638   NodeBalance1938           1.0   Capacity1916           1.0
+    x191639   Total_Cost          46.0   NodeBalance1639          -1.0
+    x191639   NodeBalance1939           1.0   Capacity1916           1.0
+    x191640   Total_Cost          46.0   NodeBalance1640          -1.0
+    x191640   NodeBalance1940           1.0   Capacity1916           1.0
+    x192001   Total_Cost         100.0   NodeBalance1901           1.0
+    x192001   NodeBalance2001          -1.0   Capacity1920           1.0
+    x192002   Total_Cost         100.0   NodeBalance1902           1.0
+    x192002   NodeBalance2002          -1.0   Capacity1920           1.0
+    x192003   Total_Cost         100.0   NodeBalance1903           1.0
+    x192003   NodeBalance2003          -1.0   Capacity1920           1.0
+    x192004   Total_Cost         100.0   NodeBalance1904           1.0
+    x192004   NodeBalance2004          -1.0   Capacity1920           1.0
+    x192005   Total_Cost         100.0   NodeBalance1905           1.0
+    x192005   NodeBalance2005          -1.0   Capacity1920           1.0
+    x192006   Total_Cost         100.0   NodeBalance1906           1.0
+    x192006   NodeBalance2006          -1.0   Capacity1920           1.0
+    x192007   Total_Cost         100.0   NodeBalance1907           1.0
+    x192007   NodeBalance2007          -1.0   Capacity1920           1.0
+    x192008   Total_Cost         100.0   NodeBalance1908           1.0
+    x192008   NodeBalance2008          -1.0   Capacity1920           1.0
+    x192009   Total_Cost         100.0   NodeBalance1909           1.0
+    x192009   NodeBalance2009          -1.0   Capacity1920           1.0
+    x192010   Total_Cost         100.0   NodeBalance1910           1.0
+    x192010   NodeBalance2010          -1.0   Capacity1920           1.0
+    x192011   Total_Cost         100.0   NodeBalance1911           1.0
+    x192011   NodeBalance2011          -1.0   Capacity1920           1.0
+    x192012   Total_Cost         100.0   NodeBalance1912           1.0
+    x192012   NodeBalance2012          -1.0   Capacity1920           1.0
+    x192013   Total_Cost         100.0   NodeBalance1913           1.0
+    x192013   NodeBalance2013          -1.0   Capacity1920           1.0
+    x192014   Total_Cost         100.0   NodeBalance1914           1.0
+    x192014   NodeBalance2014          -1.0   Capacity1920           1.0
+    x192015   Total_Cost         100.0   NodeBalance1915           1.0
+    x192015   NodeBalance2015          -1.0   Capacity1920           1.0
+    x192016   Total_Cost         100.0   NodeBalance1916           1.0
+    x192016   NodeBalance2016          -1.0   Capacity1920           1.0
+    x192017   Total_Cost         100.0   NodeBalance1917           1.0
+    x192017   NodeBalance2017          -1.0   Capacity1920           1.0
+    x192018   Total_Cost         100.0   NodeBalance1918           1.0
+    x192018   NodeBalance2018          -1.0   Capacity1920           1.0
+    x192019   Total_Cost         100.0   NodeBalance1919           1.0
+    x192019   NodeBalance2019          -1.0   Capacity1920           1.0
+    x192020   Total_Cost         100.0   NodeBalance1920           1.0
+    x192020   NodeBalance2020          -1.0   Capacity1920           1.0
+    x192021   Total_Cost         100.0   NodeBalance1921           1.0
+    x192021   NodeBalance2021          -1.0   Capacity1920           1.0
+    x192022   Total_Cost         100.0   NodeBalance1922           1.0
+    x192022   NodeBalance2022          -1.0   Capacity1920           1.0
+    x192023   Total_Cost         100.0   NodeBalance1923           1.0
+    x192023   NodeBalance2023          -1.0   Capacity1920           1.0
+    x192024   Total_Cost         100.0   NodeBalance1924           1.0
+    x192024   NodeBalance2024          -1.0   Capacity1920           1.0
+    x192025   Total_Cost         100.0   NodeBalance1925           1.0
+    x192025   NodeBalance2025          -1.0   Capacity1920           1.0
+    x192026   Total_Cost         100.0   NodeBalance1926           1.0
+    x192026   NodeBalance2026          -1.0   Capacity1920           1.0
+    x192027   Total_Cost         100.0   NodeBalance1927           1.0
+    x192027   NodeBalance2027          -1.0   Capacity1920           1.0
+    x192028   Total_Cost         100.0   NodeBalance1928           1.0
+    x192028   NodeBalance2028          -1.0   Capacity1920           1.0
+    x192029   Total_Cost         100.0   NodeBalance1929           1.0
+    x192029   NodeBalance2029          -1.0   Capacity1920           1.0
+    x192030   Total_Cost         100.0   NodeBalance1930           1.0
+    x192030   NodeBalance2030          -1.0   Capacity1920           1.0
+    x192031   Total_Cost         100.0   NodeBalance1931           1.0
+    x192031   NodeBalance2031          -1.0   Capacity1920           1.0
+    x192032   Total_Cost         100.0   NodeBalance1932           1.0
+    x192032   NodeBalance2032          -1.0   Capacity1920           1.0
+    x192033   Total_Cost         100.0   NodeBalance1933           1.0
+    x192033   NodeBalance2033          -1.0   Capacity1920           1.0
+    x192034   Total_Cost         100.0   NodeBalance1934           1.0
+    x192034   NodeBalance2034          -1.0   Capacity1920           1.0
+    x192035   Total_Cost         100.0   NodeBalance1935           1.0
+    x192035   NodeBalance2035          -1.0   Capacity1920           1.0
+    x192036   Total_Cost         100.0   NodeBalance1936           1.0
+    x192036   NodeBalance2036          -1.0   Capacity1920           1.0
+    x192037   Total_Cost         100.0   NodeBalance1937           1.0
+    x192037   NodeBalance2037          -1.0   Capacity1920           1.0
+    x192038   Total_Cost         100.0   NodeBalance1938           1.0
+    x192038   NodeBalance2038          -1.0   Capacity1920           1.0
+    x192039   Total_Cost         100.0   NodeBalance1939           1.0
+    x192039   NodeBalance2039          -1.0   Capacity1920           1.0
+    x192040   Total_Cost         100.0   NodeBalance1940           1.0
+    x192040   NodeBalance2040          -1.0   Capacity1920           1.0
+    x200101   Total_Cost         100.0   NodeBalance0101          -1.0
+    x200101   NodeBalance2001           1.0   Capacity2001           1.0
+    x200102   Total_Cost         100.0   NodeBalance0102          -1.0
+    x200102   NodeBalance2002           1.0   Capacity2001           1.0
+    x200103   Total_Cost         100.0   NodeBalance0103          -1.0
+    x200103   NodeBalance2003           1.0   Capacity2001           1.0
+    x200104   Total_Cost         100.0   NodeBalance0104          -1.0
+    x200104   NodeBalance2004           1.0   Capacity2001           1.0
+    x200105   Total_Cost         100.0   NodeBalance0105          -1.0
+    x200105   NodeBalance2005           1.0   Capacity2001           1.0
+    x200106   Total_Cost         100.0   NodeBalance0106          -1.0
+    x200106   NodeBalance2006           1.0   Capacity2001           1.0
+    x200107   Total_Cost         100.0   NodeBalance0107          -1.0
+    x200107   NodeBalance2007           1.0   Capacity2001           1.0
+    x200108   Total_Cost         100.0   NodeBalance0108          -1.0
+    x200108   NodeBalance2008           1.0   Capacity2001           1.0
+    x200109   Total_Cost         100.0   NodeBalance0109          -1.0
+    x200109   NodeBalance2009           1.0   Capacity2001           1.0
+    x200110   Total_Cost         100.0   NodeBalance0110          -1.0
+    x200110   NodeBalance2010           1.0   Capacity2001           1.0
+    x200111   Total_Cost         100.0   NodeBalance0111          -1.0
+    x200111   NodeBalance2011           1.0   Capacity2001           1.0
+    x200112   Total_Cost         100.0   NodeBalance0112          -1.0
+    x200112   NodeBalance2012           1.0   Capacity2001           1.0
+    x200113   Total_Cost         100.0   NodeBalance0113          -1.0
+    x200113   NodeBalance2013           1.0   Capacity2001           1.0
+    x200114   Total_Cost         100.0   NodeBalance0114          -1.0
+    x200114   NodeBalance2014           1.0   Capacity2001           1.0
+    x200115   Total_Cost         100.0   NodeBalance0115          -1.0
+    x200115   NodeBalance2015           1.0   Capacity2001           1.0
+    x200116   Total_Cost         100.0   NodeBalance0116          -1.0
+    x200116   NodeBalance2016           1.0   Capacity2001           1.0
+    x200117   Total_Cost         100.0   NodeBalance0117          -1.0
+    x200117   NodeBalance2017           1.0   Capacity2001           1.0
+    x200118   Total_Cost         100.0   NodeBalance0118          -1.0
+    x200118   NodeBalance2018           1.0   Capacity2001           1.0
+    x200119   Total_Cost         100.0   NodeBalance0119          -1.0
+    x200119   NodeBalance2019           1.0   Capacity2001           1.0
+    x200120   Total_Cost         100.0   NodeBalance0120          -1.0
+    x200120   NodeBalance2020           1.0   Capacity2001           1.0
+    x200121   Total_Cost         100.0   NodeBalance0121          -1.0
+    x200121   NodeBalance2021           1.0   Capacity2001           1.0
+    x200122   Total_Cost         100.0   NodeBalance0122          -1.0
+    x200122   NodeBalance2022           1.0   Capacity2001           1.0
+    x200123   Total_Cost         100.0   NodeBalance0123          -1.0
+    x200123   NodeBalance2023           1.0   Capacity2001           1.0
+    x200124   Total_Cost         100.0   NodeBalance0124          -1.0
+    x200124   NodeBalance2024           1.0   Capacity2001           1.0
+    x200125   Total_Cost         100.0   NodeBalance0125          -1.0
+    x200125   NodeBalance2025           1.0   Capacity2001           1.0
+    x200126   Total_Cost         100.0   NodeBalance0126          -1.0
+    x200126   NodeBalance2026           1.0   Capacity2001           1.0
+    x200127   Total_Cost         100.0   NodeBalance0127          -1.0
+    x200127   NodeBalance2027           1.0   Capacity2001           1.0
+    x200128   Total_Cost         100.0   NodeBalance0128          -1.0
+    x200128   NodeBalance2028           1.0   Capacity2001           1.0
+    x200129   Total_Cost         100.0   NodeBalance0129          -1.0
+    x200129   NodeBalance2029           1.0   Capacity2001           1.0
+    x200130   Total_Cost         100.0   NodeBalance0130          -1.0
+    x200130   NodeBalance2030           1.0   Capacity2001           1.0
+    x200131   Total_Cost         100.0   NodeBalance0131          -1.0
+    x200131   NodeBalance2031           1.0   Capacity2001           1.0
+    x200132   Total_Cost         100.0   NodeBalance0132          -1.0
+    x200132   NodeBalance2032           1.0   Capacity2001           1.0
+    x200133   Total_Cost         100.0   NodeBalance0133          -1.0
+    x200133   NodeBalance2033           1.0   Capacity2001           1.0
+    x200134   Total_Cost         100.0   NodeBalance0134          -1.0
+    x200134   NodeBalance2034           1.0   Capacity2001           1.0
+    x200135   Total_Cost         100.0   NodeBalance0135          -1.0
+    x200135   NodeBalance2035           1.0   Capacity2001           1.0
+    x200136   Total_Cost         100.0   NodeBalance0136          -1.0
+    x200136   NodeBalance2036           1.0   Capacity2001           1.0
+    x200137   Total_Cost         100.0   NodeBalance0137          -1.0
+    x200137   NodeBalance2037           1.0   Capacity2001           1.0
+    x200138   Total_Cost         100.0   NodeBalance0138          -1.0
+    x200138   NodeBalance2038           1.0   Capacity2001           1.0
+    x200139   Total_Cost         100.0   NodeBalance0139          -1.0
+    x200139   NodeBalance2039           1.0   Capacity2001           1.0
+    x200140   Total_Cost         100.0   NodeBalance0140          -1.0
+    x200140   NodeBalance2040           1.0   Capacity2001           1.0
+    x200601   Total_Cost          48.0   NodeBalance0601          -1.0
+    x200601   NodeBalance2001           1.0   Capacity2006           1.0
+    x200602   Total_Cost          48.0   NodeBalance0602          -1.0
+    x200602   NodeBalance2002           1.0   Capacity2006           1.0
+    x200603   Total_Cost          48.0   NodeBalance0603          -1.0
+    x200603   NodeBalance2003           1.0   Capacity2006           1.0
+    x200604   Total_Cost          48.0   NodeBalance0604          -1.0
+    x200604   NodeBalance2004           1.0   Capacity2006           1.0
+    x200605   Total_Cost          48.0   NodeBalance0605          -1.0
+    x200605   NodeBalance2005           1.0   Capacity2006           1.0
+    x200606   Total_Cost          48.0   NodeBalance0606          -1.0
+    x200606   NodeBalance2006           1.0   Capacity2006           1.0
+    x200607   Total_Cost          48.0   NodeBalance0607          -1.0
+    x200607   NodeBalance2007           1.0   Capacity2006           1.0
+    x200608   Total_Cost          48.0   NodeBalance0608          -1.0
+    x200608   NodeBalance2008           1.0   Capacity2006           1.0
+    x200609   Total_Cost          48.0   NodeBalance0609          -1.0
+    x200609   NodeBalance2009           1.0   Capacity2006           1.0
+    x200610   Total_Cost          48.0   NodeBalance0610          -1.0
+    x200610   NodeBalance2010           1.0   Capacity2006           1.0
+    x200611   Total_Cost          48.0   NodeBalance0611          -1.0
+    x200611   NodeBalance2011           1.0   Capacity2006           1.0
+    x200612   Total_Cost          48.0   NodeBalance0612          -1.0
+    x200612   NodeBalance2012           1.0   Capacity2006           1.0
+    x200613   Total_Cost          48.0   NodeBalance0613          -1.0
+    x200613   NodeBalance2013           1.0   Capacity2006           1.0
+    x200614   Total_Cost          48.0   NodeBalance0614          -1.0
+    x200614   NodeBalance2014           1.0   Capacity2006           1.0
+    x200615   Total_Cost          48.0   NodeBalance0615          -1.0
+    x200615   NodeBalance2015           1.0   Capacity2006           1.0
+    x200616   Total_Cost          48.0   NodeBalance0616          -1.0
+    x200616   NodeBalance2016           1.0   Capacity2006           1.0
+    x200617   Total_Cost          48.0   NodeBalance0617          -1.0
+    x200617   NodeBalance2017           1.0   Capacity2006           1.0
+    x200618   Total_Cost          48.0   NodeBalance0618          -1.0
+    x200618   NodeBalance2018           1.0   Capacity2006           1.0
+    x200619   Total_Cost          48.0   NodeBalance0619          -1.0
+    x200619   NodeBalance2019           1.0   Capacity2006           1.0
+    x200620   Total_Cost          48.0   NodeBalance0620          -1.0
+    x200620   NodeBalance2020           1.0   Capacity2006           1.0
+    x200621   Total_Cost          48.0   NodeBalance0621          -1.0
+    x200621   NodeBalance2021           1.0   Capacity2006           1.0
+    x200622   Total_Cost          48.0   NodeBalance0622          -1.0
+    x200622   NodeBalance2022           1.0   Capacity2006           1.0
+    x200623   Total_Cost          48.0   NodeBalance0623          -1.0
+    x200623   NodeBalance2023           1.0   Capacity2006           1.0
+    x200624   Total_Cost          48.0   NodeBalance0624          -1.0
+    x200624   NodeBalance2024           1.0   Capacity2006           1.0
+    x200625   Total_Cost          48.0   NodeBalance0625          -1.0
+    x200625   NodeBalance2025           1.0   Capacity2006           1.0
+    x200626   Total_Cost          48.0   NodeBalance0626          -1.0
+    x200626   NodeBalance2026           1.0   Capacity2006           1.0
+    x200627   Total_Cost          48.0   NodeBalance0627          -1.0
+    x200627   NodeBalance2027           1.0   Capacity2006           1.0
+    x200628   Total_Cost          48.0   NodeBalance0628          -1.0
+    x200628   NodeBalance2028           1.0   Capacity2006           1.0
+    x200629   Total_Cost          48.0   NodeBalance0629          -1.0
+    x200629   NodeBalance2029           1.0   Capacity2006           1.0
+    x200630   Total_Cost          48.0   NodeBalance0630          -1.0
+    x200630   NodeBalance2030           1.0   Capacity2006           1.0
+    x200631   Total_Cost          48.0   NodeBalance0631          -1.0
+    x200631   NodeBalance2031           1.0   Capacity2006           1.0
+    x200632   Total_Cost          48.0   NodeBalance0632          -1.0
+    x200632   NodeBalance2032           1.0   Capacity2006           1.0
+    x200633   Total_Cost          48.0   NodeBalance0633          -1.0
+    x200633   NodeBalance2033           1.0   Capacity2006           1.0
+    x200634   Total_Cost          48.0   NodeBalance0634          -1.0
+    x200634   NodeBalance2034           1.0   Capacity2006           1.0
+    x200635   Total_Cost          48.0   NodeBalance0635          -1.0
+    x200635   NodeBalance2035           1.0   Capacity2006           1.0
+    x200636   Total_Cost          48.0   NodeBalance0636          -1.0
+    x200636   NodeBalance2036           1.0   Capacity2006           1.0
+    x200637   Total_Cost          48.0   NodeBalance0637          -1.0
+    x200637   NodeBalance2037           1.0   Capacity2006           1.0
+    x200638   Total_Cost          48.0   NodeBalance0638          -1.0
+    x200638   NodeBalance2038           1.0   Capacity2006           1.0
+    x200639   Total_Cost          48.0   NodeBalance0639          -1.0
+    x200639   NodeBalance2039           1.0   Capacity2006           1.0
+    x200640   Total_Cost          48.0   NodeBalance0640          -1.0
+    x200640   NodeBalance2040           1.0   Capacity2006           1.0
+    x201101   Total_Cost          21.0   NodeBalance1101          -1.0
+    x201101   NodeBalance2001           1.0   Capacity2011           1.0
+    x201102   Total_Cost          21.0   NodeBalance1102          -1.0
+    x201102   NodeBalance2002           1.0   Capacity2011           1.0
+    x201103   Total_Cost          21.0   NodeBalance1103          -1.0
+    x201103   NodeBalance2003           1.0   Capacity2011           1.0
+    x201104   Total_Cost          21.0   NodeBalance1104          -1.0
+    x201104   NodeBalance2004           1.0   Capacity2011           1.0
+    x201105   Total_Cost          21.0   NodeBalance1105          -1.0
+    x201105   NodeBalance2005           1.0   Capacity2011           1.0
+    x201106   Total_Cost          21.0   NodeBalance1106          -1.0
+    x201106   NodeBalance2006           1.0   Capacity2011           1.0
+    x201107   Total_Cost          21.0   NodeBalance1107          -1.0
+    x201107   NodeBalance2007           1.0   Capacity2011           1.0
+    x201108   Total_Cost          21.0   NodeBalance1108          -1.0
+    x201108   NodeBalance2008           1.0   Capacity2011           1.0
+    x201109   Total_Cost          21.0   NodeBalance1109          -1.0
+    x201109   NodeBalance2009           1.0   Capacity2011           1.0
+    x201110   Total_Cost          21.0   NodeBalance1110          -1.0
+    x201110   NodeBalance2010           1.0   Capacity2011           1.0
+    x201111   Total_Cost          21.0   NodeBalance1111          -1.0
+    x201111   NodeBalance2011           1.0   Capacity2011           1.0
+    x201112   Total_Cost          21.0   NodeBalance1112          -1.0
+    x201112   NodeBalance2012           1.0   Capacity2011           1.0
+    x201113   Total_Cost          21.0   NodeBalance1113          -1.0
+    x201113   NodeBalance2013           1.0   Capacity2011           1.0
+    x201114   Total_Cost          21.0   NodeBalance1114          -1.0
+    x201114   NodeBalance2014           1.0   Capacity2011           1.0
+    x201115   Total_Cost          21.0   NodeBalance1115          -1.0
+    x201115   NodeBalance2015           1.0   Capacity2011           1.0
+    x201116   Total_Cost          21.0   NodeBalance1116          -1.0
+    x201116   NodeBalance2016           1.0   Capacity2011           1.0
+    x201117   Total_Cost          21.0   NodeBalance1117          -1.0
+    x201117   NodeBalance2017           1.0   Capacity2011           1.0
+    x201118   Total_Cost          21.0   NodeBalance1118          -1.0
+    x201118   NodeBalance2018           1.0   Capacity2011           1.0
+    x201119   Total_Cost          21.0   NodeBalance1119          -1.0
+    x201119   NodeBalance2019           1.0   Capacity2011           1.0
+    x201120   Total_Cost          21.0   NodeBalance1120          -1.0
+    x201120   NodeBalance2020           1.0   Capacity2011           1.0
+    x201121   Total_Cost          21.0   NodeBalance1121          -1.0
+    x201121   NodeBalance2021           1.0   Capacity2011           1.0
+    x201122   Total_Cost          21.0   NodeBalance1122          -1.0
+    x201122   NodeBalance2022           1.0   Capacity2011           1.0
+    x201123   Total_Cost          21.0   NodeBalance1123          -1.0
+    x201123   NodeBalance2023           1.0   Capacity2011           1.0
+    x201124   Total_Cost          21.0   NodeBalance1124          -1.0
+    x201124   NodeBalance2024           1.0   Capacity2011           1.0
+    x201125   Total_Cost          21.0   NodeBalance1125          -1.0
+    x201125   NodeBalance2025           1.0   Capacity2011           1.0
+    x201126   Total_Cost          21.0   NodeBalance1126          -1.0
+    x201126   NodeBalance2026           1.0   Capacity2011           1.0
+    x201127   Total_Cost          21.0   NodeBalance1127          -1.0
+    x201127   NodeBalance2027           1.0   Capacity2011           1.0
+    x201128   Total_Cost          21.0   NodeBalance1128          -1.0
+    x201128   NodeBalance2028           1.0   Capacity2011           1.0
+    x201129   Total_Cost          21.0   NodeBalance1129          -1.0
+    x201129   NodeBalance2029           1.0   Capacity2011           1.0
+    x201130   Total_Cost          21.0   NodeBalance1130          -1.0
+    x201130   NodeBalance2030           1.0   Capacity2011           1.0
+    x201131   Total_Cost          21.0   NodeBalance1131          -1.0
+    x201131   NodeBalance2031           1.0   Capacity2011           1.0
+    x201132   Total_Cost          21.0   NodeBalance1132          -1.0
+    x201132   NodeBalance2032           1.0   Capacity2011           1.0
+    x201133   Total_Cost          21.0   NodeBalance1133          -1.0
+    x201133   NodeBalance2033           1.0   Capacity2011           1.0
+    x201134   Total_Cost          21.0   NodeBalance1134          -1.0
+    x201134   NodeBalance2034           1.0   Capacity2011           1.0
+    x201135   Total_Cost          21.0   NodeBalance1135          -1.0
+    x201135   NodeBalance2035           1.0   Capacity2011           1.0
+    x201136   Total_Cost          21.0   NodeBalance1136          -1.0
+    x201136   NodeBalance2036           1.0   Capacity2011           1.0
+    x201137   Total_Cost          21.0   NodeBalance1137          -1.0
+    x201137   NodeBalance2037           1.0   Capacity2011           1.0
+    x201138   Total_Cost          21.0   NodeBalance1138          -1.0
+    x201138   NodeBalance2038           1.0   Capacity2011           1.0
+    x201139   Total_Cost          21.0   NodeBalance1139          -1.0
+    x201139   NodeBalance2039           1.0   Capacity2011           1.0
+    x201140   Total_Cost          21.0   NodeBalance1140          -1.0
+    x201140   NodeBalance2040           1.0   Capacity2011           1.0
+    x201801   Total_Cost          29.0   NodeBalance1801          -1.0
+    x201801   NodeBalance2001           1.0   Capacity2018           1.0
+    x201802   Total_Cost          29.0   NodeBalance1802          -1.0
+    x201802   NodeBalance2002           1.0   Capacity2018           1.0
+    x201803   Total_Cost          29.0   NodeBalance1803          -1.0
+    x201803   NodeBalance2003           1.0   Capacity2018           1.0
+    x201804   Total_Cost          29.0   NodeBalance1804          -1.0
+    x201804   NodeBalance2004           1.0   Capacity2018           1.0
+    x201805   Total_Cost          29.0   NodeBalance1805          -1.0
+    x201805   NodeBalance2005           1.0   Capacity2018           1.0
+    x201806   Total_Cost          29.0   NodeBalance1806          -1.0
+    x201806   NodeBalance2006           1.0   Capacity2018           1.0
+    x201807   Total_Cost          29.0   NodeBalance1807          -1.0
+    x201807   NodeBalance2007           1.0   Capacity2018           1.0
+    x201808   Total_Cost          29.0   NodeBalance1808          -1.0
+    x201808   NodeBalance2008           1.0   Capacity2018           1.0
+    x201809   Total_Cost          29.0   NodeBalance1809          -1.0
+    x201809   NodeBalance2009           1.0   Capacity2018           1.0
+    x201810   Total_Cost          29.0   NodeBalance1810          -1.0
+    x201810   NodeBalance2010           1.0   Capacity2018           1.0
+    x201811   Total_Cost          29.0   NodeBalance1811          -1.0
+    x201811   NodeBalance2011           1.0   Capacity2018           1.0
+    x201812   Total_Cost          29.0   NodeBalance1812          -1.0
+    x201812   NodeBalance2012           1.0   Capacity2018           1.0
+    x201813   Total_Cost          29.0   NodeBalance1813          -1.0
+    x201813   NodeBalance2013           1.0   Capacity2018           1.0
+    x201814   Total_Cost          29.0   NodeBalance1814          -1.0
+    x201814   NodeBalance2014           1.0   Capacity2018           1.0
+    x201815   Total_Cost          29.0   NodeBalance1815          -1.0
+    x201815   NodeBalance2015           1.0   Capacity2018           1.0
+    x201816   Total_Cost          29.0   NodeBalance1816          -1.0
+    x201816   NodeBalance2016           1.0   Capacity2018           1.0
+    x201817   Total_Cost          29.0   NodeBalance1817          -1.0
+    x201817   NodeBalance2017           1.0   Capacity2018           1.0
+    x201818   Total_Cost          29.0   NodeBalance1818          -1.0
+    x201818   NodeBalance2018           1.0   Capacity2018           1.0
+    x201819   Total_Cost          29.0   NodeBalance1819          -1.0
+    x201819   NodeBalance2019           1.0   Capacity2018           1.0
+    x201820   Total_Cost          29.0   NodeBalance1820          -1.0
+    x201820   NodeBalance2020           1.0   Capacity2018           1.0
+    x201821   Total_Cost          29.0   NodeBalance1821          -1.0
+    x201821   NodeBalance2021           1.0   Capacity2018           1.0
+    x201822   Total_Cost          29.0   NodeBalance1822          -1.0
+    x201822   NodeBalance2022           1.0   Capacity2018           1.0
+    x201823   Total_Cost          29.0   NodeBalance1823          -1.0
+    x201823   NodeBalance2023           1.0   Capacity2018           1.0
+    x201824   Total_Cost          29.0   NodeBalance1824          -1.0
+    x201824   NodeBalance2024           1.0   Capacity2018           1.0
+    x201825   Total_Cost          29.0   NodeBalance1825          -1.0
+    x201825   NodeBalance2025           1.0   Capacity2018           1.0
+    x201826   Total_Cost          29.0   NodeBalance1826          -1.0
+    x201826   NodeBalance2026           1.0   Capacity2018           1.0
+    x201827   Total_Cost          29.0   NodeBalance1827          -1.0
+    x201827   NodeBalance2027           1.0   Capacity2018           1.0
+    x201828   Total_Cost          29.0   NodeBalance1828          -1.0
+    x201828   NodeBalance2028           1.0   Capacity2018           1.0
+    x201829   Total_Cost          29.0   NodeBalance1829          -1.0
+    x201829   NodeBalance2029           1.0   Capacity2018           1.0
+    x201830   Total_Cost          29.0   NodeBalance1830          -1.0
+    x201830   NodeBalance2030           1.0   Capacity2018           1.0
+    x201831   Total_Cost          29.0   NodeBalance1831          -1.0
+    x201831   NodeBalance2031           1.0   Capacity2018           1.0
+    x201832   Total_Cost          29.0   NodeBalance1832          -1.0
+    x201832   NodeBalance2032           1.0   Capacity2018           1.0
+    x201833   Total_Cost          29.0   NodeBalance1833          -1.0
+    x201833   NodeBalance2033           1.0   Capacity2018           1.0
+    x201834   Total_Cost          29.0   NodeBalance1834          -1.0
+    x201834   NodeBalance2034           1.0   Capacity2018           1.0
+    x201835   Total_Cost          29.0   NodeBalance1835          -1.0
+    x201835   NodeBalance2035           1.0   Capacity2018           1.0
+    x201836   Total_Cost          29.0   NodeBalance1836          -1.0
+    x201836   NodeBalance2036           1.0   Capacity2018           1.0
+    x201837   Total_Cost          29.0   NodeBalance1837          -1.0
+    x201837   NodeBalance2037           1.0   Capacity2018           1.0
+    x201838   Total_Cost          29.0   NodeBalance1838          -1.0
+    x201838   NodeBalance2038           1.0   Capacity2018           1.0
+    x201839   Total_Cost          29.0   NodeBalance1839          -1.0
+    x201839   NodeBalance2039           1.0   Capacity2018           1.0
+    x201840   Total_Cost          29.0   NodeBalance1840          -1.0
+    x201840   NodeBalance2040           1.0   Capacity2018           1.0
+    x201901   Total_Cost          65.0   NodeBalance1901          -1.0
+    x201901   NodeBalance2001           1.0   Capacity2019           1.0
+    x201902   Total_Cost          65.0   NodeBalance1902          -1.0
+    x201902   NodeBalance2002           1.0   Capacity2019           1.0
+    x201903   Total_Cost          65.0   NodeBalance1903          -1.0
+    x201903   NodeBalance2003           1.0   Capacity2019           1.0
+    x201904   Total_Cost          65.0   NodeBalance1904          -1.0
+    x201904   NodeBalance2004           1.0   Capacity2019           1.0
+    x201905   Total_Cost          65.0   NodeBalance1905          -1.0
+    x201905   NodeBalance2005           1.0   Capacity2019           1.0
+    x201906   Total_Cost          65.0   NodeBalance1906          -1.0
+    x201906   NodeBalance2006           1.0   Capacity2019           1.0
+    x201907   Total_Cost          65.0   NodeBalance1907          -1.0
+    x201907   NodeBalance2007           1.0   Capacity2019           1.0
+    x201908   Total_Cost          65.0   NodeBalance1908          -1.0
+    x201908   NodeBalance2008           1.0   Capacity2019           1.0
+    x201909   Total_Cost          65.0   NodeBalance1909          -1.0
+    x201909   NodeBalance2009           1.0   Capacity2019           1.0
+    x201910   Total_Cost          65.0   NodeBalance1910          -1.0
+    x201910   NodeBalance2010           1.0   Capacity2019           1.0
+    x201911   Total_Cost          65.0   NodeBalance1911          -1.0
+    x201911   NodeBalance2011           1.0   Capacity2019           1.0
+    x201912   Total_Cost          65.0   NodeBalance1912          -1.0
+    x201912   NodeBalance2012           1.0   Capacity2019           1.0
+    x201913   Total_Cost          65.0   NodeBalance1913          -1.0
+    x201913   NodeBalance2013           1.0   Capacity2019           1.0
+    x201914   Total_Cost          65.0   NodeBalance1914          -1.0
+    x201914   NodeBalance2014           1.0   Capacity2019           1.0
+    x201915   Total_Cost          65.0   NodeBalance1915          -1.0
+    x201915   NodeBalance2015           1.0   Capacity2019           1.0
+    x201916   Total_Cost          65.0   NodeBalance1916          -1.0
+    x201916   NodeBalance2016           1.0   Capacity2019           1.0
+    x201917   Total_Cost          65.0   NodeBalance1917          -1.0
+    x201917   NodeBalance2017           1.0   Capacity2019           1.0
+    x201918   Total_Cost          65.0   NodeBalance1918          -1.0
+    x201918   NodeBalance2018           1.0   Capacity2019           1.0
+    x201919   Total_Cost          65.0   NodeBalance1919          -1.0
+    x201919   NodeBalance2019           1.0   Capacity2019           1.0
+    x201920   Total_Cost          65.0   NodeBalance1920          -1.0
+    x201920   NodeBalance2020           1.0   Capacity2019           1.0
+    x201921   Total_Cost          65.0   NodeBalance1921          -1.0
+    x201921   NodeBalance2021           1.0   Capacity2019           1.0
+    x201922   Total_Cost          65.0   NodeBalance1922          -1.0
+    x201922   NodeBalance2022           1.0   Capacity2019           1.0
+    x201923   Total_Cost          65.0   NodeBalance1923          -1.0
+    x201923   NodeBalance2023           1.0   Capacity2019           1.0
+    x201924   Total_Cost          65.0   NodeBalance1924          -1.0
+    x201924   NodeBalance2024           1.0   Capacity2019           1.0
+    x201925   Total_Cost          65.0   NodeBalance1925          -1.0
+    x201925   NodeBalance2025           1.0   Capacity2019           1.0
+    x201926   Total_Cost          65.0   NodeBalance1926          -1.0
+    x201926   NodeBalance2026           1.0   Capacity2019           1.0
+    x201927   Total_Cost          65.0   NodeBalance1927          -1.0
+    x201927   NodeBalance2027           1.0   Capacity2019           1.0
+    x201928   Total_Cost          65.0   NodeBalance1928          -1.0
+    x201928   NodeBalance2028           1.0   Capacity2019           1.0
+    x201929   Total_Cost          65.0   NodeBalance1929          -1.0
+    x201929   NodeBalance2029           1.0   Capacity2019           1.0
+    x201930   Total_Cost          65.0   NodeBalance1930          -1.0
+    x201930   NodeBalance2030           1.0   Capacity2019           1.0
+    x201931   Total_Cost          65.0   NodeBalance1931          -1.0
+    x201931   NodeBalance2031           1.0   Capacity2019           1.0
+    x201932   Total_Cost          65.0   NodeBalance1932          -1.0
+    x201932   NodeBalance2032           1.0   Capacity2019           1.0
+    x201933   Total_Cost          65.0   NodeBalance1933          -1.0
+    x201933   NodeBalance2033           1.0   Capacity2019           1.0
+    x201934   Total_Cost          65.0   NodeBalance1934          -1.0
+    x201934   NodeBalance2034           1.0   Capacity2019           1.0
+    x201935   Total_Cost          65.0   NodeBalance1935          -1.0
+    x201935   NodeBalance2035           1.0   Capacity2019           1.0
+    x201936   Total_Cost          65.0   NodeBalance1936          -1.0
+    x201936   NodeBalance2036           1.0   Capacity2019           1.0
+    x201937   Total_Cost          65.0   NodeBalance1937          -1.0
+    x201937   NodeBalance2037           1.0   Capacity2019           1.0
+    x201938   Total_Cost          65.0   NodeBalance1938          -1.0
+    x201938   NodeBalance2038           1.0   Capacity2019           1.0
+    x201939   Total_Cost          65.0   NodeBalance1939          -1.0
+    x201939   NodeBalance2039           1.0   Capacity2019           1.0
+    x201940   Total_Cost          65.0   NodeBalance1940          -1.0
+    x201940   NodeBalance2040           1.0   Capacity2019           1.0
+RHS
+    RHS1      NodeBalance0111      -34.1431   NodeBalance0112       25.8007
+    RHS1      NodeBalance0113      -58.7956   NodeBalance0130      -22.3759
+    RHS1      NodeBalance0131         16.99   NodeBalance0133      -29.9122
+    RHS1      NodeBalance0135       79.7604   NodeBalance0227       102.416
+    RHS1      NodeBalance0314      -53.3368   NodeBalance0320       47.3413
+    RHS1      NodeBalance0339      -22.0388   NodeBalance0401       63.5006
+    RHS1      NodeBalance0403      -84.8367   NodeBalance0408       60.5468
+    RHS1      NodeBalance0410       72.0536   NodeBalance0421      -16.7477
+    RHS1      NodeBalance0425      -27.6046   NodeBalance0431        -16.99
+    RHS1      NodeBalance0505      -29.6614   NodeBalance0508      -60.5468
+    RHS1      NodeBalance0520      -47.3413   NodeBalance0629       53.5191
+    RHS1      NodeBalance0705       29.6614   NodeBalance0706      -46.0261
+    RHS1      NodeBalance0707       31.3384   NodeBalance0709      -52.5535
+    RHS1      NodeBalance0722      -75.5328   NodeBalance0736      -10.1731
+    RHS1      NodeBalance0817      -22.6705   NodeBalance0819       1.41882
+    RHS1      NodeBalance0837       5.32734   NodeBalance0838      -78.3026
+    RHS1      NodeBalance0904       17.3787   NodeBalance0913       58.7956
+    RHS1      NodeBalance0926       61.9847   NodeBalance0927      -102.416
+    RHS1      NodeBalance0932       17.4307   NodeBalance1003       84.8367
+    RHS1      NodeBalance1018       -91.108   NodeBalance1024      -52.8798
+    RHS1      NodeBalance1134       5.96326   NodeBalance1202       -23.732
+    RHS1      NodeBalance1207      -31.3384   NodeBalance1228       23.8817
+    RHS1      NodeBalance1310      -72.0536   NodeBalance1319      -1.41882
+    RHS1      NodeBalance1339       22.0388   NodeBalance1404      -17.3787
+    RHS1      NodeBalance1409       52.5535   NodeBalance1414       53.3368
+    RHS1      NodeBalance1416       35.8027   NodeBalance1423      -27.0731
+    RHS1      NodeBalance1429      -53.5191   NodeBalance1522       75.5328
+    RHS1      NodeBalance1524       52.8798   NodeBalance1534      -5.96326
+    RHS1      NodeBalance1606       46.0261   NodeBalance1617       22.6705
+    RHS1      NodeBalance1626      -61.9847   NodeBalance1630       22.3759
+    RHS1      NodeBalance1635      -79.7604   NodeBalance1701      -63.5006
+    RHS1      NodeBalance1712      -25.8007   NodeBalance1721       16.7477
+    RHS1      NodeBalance1732      -17.4307   NodeBalance1737      -5.32734
+    RHS1      NodeBalance1738       78.3026   NodeBalance1740        21.527
+    RHS1      NodeBalance1815       -22.718   NodeBalance1823       27.0731
+    RHS1      NodeBalance1825       27.6046   NodeBalance1840       -21.527
+    RHS1      NodeBalance1902        23.732   NodeBalance1933       29.9122
+    RHS1      NodeBalance2011       34.1431   NodeBalance2015        22.718
+    RHS1      NodeBalance2016      -35.8027   NodeBalance2018        91.108
+    RHS1      NodeBalance2028      -23.8817   NodeBalance2036       10.1731
+BOUNDS
+ BV BOUND1    y0102              1.0
+ BV BOUND1    y0103              1.0
+ BV BOUND1    y0104              1.0
+ BV BOUND1    y0107              1.0
+ BV BOUND1    y0108              1.0
+ BV BOUND1    y0110              1.0
+ BV BOUND1    y0111              1.0
+ BV BOUND1    y0115              1.0
+ BV BOUND1    y0117              1.0
+ BV BOUND1    y0118              1.0
+ BV BOUND1    y0119              1.0
+ BV BOUND1    y0120              1.0
+ BV BOUND1    y0201              1.0
+ BV BOUND1    y0203              1.0
+ BV BOUND1    y0206              1.0
+ BV BOUND1    y0207              1.0
+ BV BOUND1    y0209              1.0
+ BV BOUND1    y0210              1.0
+ BV BOUND1    y0217              1.0
+ BV BOUND1    y0304              1.0
+ BV BOUND1    y0309              1.0
+ BV BOUND1    y0311              1.0
+ BV BOUND1    y0314              1.0
+ BV BOUND1    y0318              1.0
+ BV BOUND1    y0402              1.0
+ BV BOUND1    y0405              1.0
+ BV BOUND1    y0410              1.0
+ BV BOUND1    y0411              1.0
+ BV BOUND1    y0415              1.0
+ BV BOUND1    y0418              1.0
+ BV BOUND1    y0503              1.0
+ BV BOUND1    y0506              1.0
+ BV BOUND1    y0509              1.0
+ BV BOUND1    y0513              1.0
+ BV BOUND1    y0516              1.0
+ BV BOUND1    y0607              1.0
+ BV BOUND1    y0608              1.0
+ BV BOUND1    y0611              1.0
+ BV BOUND1    y0613              1.0
+ BV BOUND1    y0614              1.0
+ BV BOUND1    y0615              1.0
+ BV BOUND1    y0703              1.0
+ BV BOUND1    y0708              1.0
+ BV BOUND1    y0709              1.0
+ BV BOUND1    y0713              1.0
+ BV BOUND1    y0718              1.0
+ BV BOUND1    y0719              1.0
+ BV BOUND1    y0805              1.0
+ BV BOUND1    y0806              1.0
+ BV BOUND1    y0807              1.0
+ BV BOUND1    y0809              1.0
+ BV BOUND1    y0810              1.0
+ BV BOUND1    y0817              1.0
+ BV BOUND1    y0904              1.0
+ BV BOUND1    y0906              1.0
+ BV BOUND1    y0908              1.0
+ BV BOUND1    y0910              1.0
+ BV BOUND1    y0913              1.0
+ BV BOUND1    y0916              1.0
+ BV BOUND1    y0917              1.0
+ BV BOUND1    y1011              1.0
+ BV BOUND1    y1012              1.0
+ BV BOUND1    y1016              1.0
+ BV BOUND1    y1107              1.0
+ BV BOUND1    y1112              1.0
+ BV BOUND1    y1115              1.0
+ BV BOUND1    y1120              1.0
+ BV BOUND1    y1203              1.0
+ BV BOUND1    y1204              1.0
+ BV BOUND1    y1210              1.0
+ BV BOUND1    y1213              1.0
+ BV BOUND1    y1215              1.0
+ BV BOUND1    y1217              1.0
+ BV BOUND1    y1218              1.0
+ BV BOUND1    y1220              1.0
+ BV BOUND1    y1314              1.0
+ BV BOUND1    y1316              1.0
+ BV BOUND1    y1319              1.0
+ BV BOUND1    y1320              1.0
+ BV BOUND1    y1403              1.0
+ BV BOUND1    y1404              1.0
+ BV BOUND1    y1405              1.0
+ BV BOUND1    y1410              1.0
+ BV BOUND1    y1415              1.0
+ BV BOUND1    y1416              1.0
+ BV BOUND1    y1420              1.0
+ BV BOUND1    y1502              1.0
+ BV BOUND1    y1504              1.0
+ BV BOUND1    y1512              1.0
+ BV BOUND1    y1514              1.0
+ BV BOUND1    y1516              1.0
+ BV BOUND1    y1517              1.0
+ BV BOUND1    y1601              1.0
+ BV BOUND1    y1605              1.0
+ BV BOUND1    y1606              1.0
+ BV BOUND1    y1607              1.0
+ BV BOUND1    y1609              1.0
+ BV BOUND1    y1611              1.0
+ BV BOUND1    y1614              1.0
+ BV BOUND1    y1617              1.0
+ BV BOUND1    y1619              1.0
+ BV BOUND1    y1705              1.0
+ BV BOUND1    y1712              1.0
+ BV BOUND1    y1714              1.0
+ BV BOUND1    y1718              1.0
+ BV BOUND1    y1801              1.0
+ BV BOUND1    y1804              1.0
+ BV BOUND1    y1807              1.0
+ BV BOUND1    y1819              1.0
+ BV BOUND1    y1820              1.0
+ BV BOUND1    y1901              1.0
+ BV BOUND1    y1905              1.0
+ BV BOUND1    y1912              1.0
+ BV BOUND1    y1916              1.0
+ BV BOUND1    y1920              1.0
+ BV BOUND1    y2001              1.0
+ BV BOUND1    y2006              1.0
+ BV BOUND1    y2011              1.0
+ BV BOUND1    y2018              1.0
+ BV BOUND1    y2019              1.0
+*
+TIME          MCFNDSD  (MIN)
+PERIODS       IMPLICIT
+    y0102     NodeBalance0101                 Stage1    
+    x010201   NodeBalance0101                 Stage2    
+*
+STOCH         MCFNDSD  (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'        0.015625   Stage1    
+    RHS1      NodeBalance0111      -34.1431
+    RHS1      NodeBalance0112       25.8007
+    RHS1      NodeBalance0113      -58.7956
+    RHS1      NodeBalance0130      -22.3759
+    RHS1      NodeBalance0131         16.99
+    RHS1      NodeBalance0133      -29.9122
+    RHS1      NodeBalance0135       79.7604
+    RHS1      NodeBalance0227       102.416
+    RHS1      NodeBalance0314      -53.3368
+    RHS1      NodeBalance0320       47.3413
+    RHS1      NodeBalance0339      -22.0388
+    RHS1      NodeBalance0401       63.5006
+    RHS1      NodeBalance0403      -84.8367
+    RHS1      NodeBalance0408       60.5468
+    RHS1      NodeBalance0410       72.0536
+    RHS1      NodeBalance0421      -16.7477
+    RHS1      NodeBalance0425      -27.6046
+    RHS1      NodeBalance0431        -16.99
+    RHS1      NodeBalance0505      -29.6614
+    RHS1      NodeBalance0508      -60.5468
+    RHS1      NodeBalance0520      -47.3413
+    RHS1      NodeBalance0629       53.5191
+    RHS1      NodeBalance0705       29.6614
+    RHS1      NodeBalance0706      -46.0261
+    RHS1      NodeBalance0707       31.3384
+    RHS1      NodeBalance0709      -52.5535
+    RHS1      NodeBalance0722      -75.5328
+    RHS1      NodeBalance0736      -10.1731
+    RHS1      NodeBalance0817      -22.6705
+    RHS1      NodeBalance0819       1.41882
+    RHS1      NodeBalance0837       5.32734
+    RHS1      NodeBalance0838      -78.3026
+    RHS1      NodeBalance0904       17.3787
+    RHS1      NodeBalance0913       58.7956
+    RHS1      NodeBalance0926       61.9847
+    RHS1      NodeBalance0927      -102.416
+    RHS1      NodeBalance0932       17.4307
+    RHS1      NodeBalance1003       84.8367
+    RHS1      NodeBalance1018       -91.108
+    RHS1      NodeBalance1024      -52.8798
+    RHS1      NodeBalance1134       5.96326
+    RHS1      NodeBalance1202       -23.732
+    RHS1      NodeBalance1207      -31.3384
+    RHS1      NodeBalance1228       23.8817
+    RHS1      NodeBalance1310      -72.0536
+    RHS1      NodeBalance1319      -1.41882
+    RHS1      NodeBalance1339       22.0388
+    RHS1      NodeBalance1404      -17.3787
+    RHS1      NodeBalance1409       52.5535
+    RHS1      NodeBalance1414       53.3368
+    RHS1      NodeBalance1416       35.8027
+    RHS1      NodeBalance1423      -27.0731
+    RHS1      NodeBalance1429      -53.5191
+    RHS1      NodeBalance1522       75.5328
+    RHS1      NodeBalance1524       52.8798
+    RHS1      NodeBalance1534      -5.96326
+    RHS1      NodeBalance1606       46.0261
+    RHS1      NodeBalance1617       22.6705
+    RHS1      NodeBalance1626      -61.9847
+    RHS1      NodeBalance1630       22.3759
+    RHS1      NodeBalance1635      -79.7604
+    RHS1      NodeBalance1701      -63.5006
+    RHS1      NodeBalance1712      -25.8007
+    RHS1      NodeBalance1721       16.7477
+    RHS1      NodeBalance1732      -17.4307
+    RHS1      NodeBalance1737      -5.32734
+    RHS1      NodeBalance1738       78.3026
+    RHS1      NodeBalance1740        21.527
+    RHS1      NodeBalance1815       -22.718
+    RHS1      NodeBalance1823       27.0731
+    RHS1      NodeBalance1825       27.6046
+    RHS1      NodeBalance1840       -21.527
+    RHS1      NodeBalance1902        23.732
+    RHS1      NodeBalance1933       29.9122
+    RHS1      NodeBalance2011       34.1431
+    RHS1      NodeBalance2015        22.718
+    RHS1      NodeBalance2016      -35.8027
+    RHS1      NodeBalance2018        91.108
+    RHS1      NodeBalance2028      -23.8817
+    RHS1      NodeBalance2036       10.1731
+ SC Scen2     Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -39.4113
+    RHS1      NodeBalance0112       25.7176
+    RHS1      NodeBalance0113      -101.488
+    RHS1      NodeBalance0130      -69.5943
+    RHS1      NodeBalance0131        31.401
+    RHS1      NodeBalance0133      -27.9153
+    RHS1      NodeBalance0135       70.6417
+    RHS1      NodeBalance0227       95.5909
+    RHS1      NodeBalance0314      -65.3231
+    RHS1      NodeBalance0320       50.2992
+    RHS1      NodeBalance0339      -52.2867
+    RHS1      NodeBalance0401       49.0157
+    RHS1      NodeBalance0403        -36.65
+    RHS1      NodeBalance0408       56.1961
+    RHS1      NodeBalance0410       47.8128
+    RHS1      NodeBalance0421      -14.7813
+    RHS1      NodeBalance0425      -37.6532
+    RHS1      NodeBalance0431       -31.401
+    RHS1      NodeBalance0505      -50.8585
+    RHS1      NodeBalance0508      -56.1961
+    RHS1      NodeBalance0520      -50.2992
+    RHS1      NodeBalance0629       46.3351
+    RHS1      NodeBalance0705       50.8585
+    RHS1      NodeBalance0706      -92.0135
+    RHS1      NodeBalance0707       57.5408
+    RHS1      NodeBalance0709      -22.2619
+    RHS1      NodeBalance0722      -54.0301
+    RHS1      NodeBalance0736      -8.90085
+    RHS1      NodeBalance0817      -24.5253
+    RHS1      NodeBalance0819       14.7238
+    RHS1      NodeBalance0837       30.5523
+    RHS1      NodeBalance0838      -86.8402
+    RHS1      NodeBalance0904       34.1652
+    RHS1      NodeBalance0913       101.488
+    RHS1      NodeBalance0926       63.4454
+    RHS1      NodeBalance0927      -95.5909
+    RHS1      NodeBalance0932       38.5453
+    RHS1      NodeBalance1003         36.65
+    RHS1      NodeBalance1018      -96.0434
+    RHS1      NodeBalance1024      -81.0707
+    RHS1      NodeBalance1134       6.56424
+    RHS1      NodeBalance1202      -38.0338
+    RHS1      NodeBalance1207      -57.5408
+    RHS1      NodeBalance1228       27.0592
+    RHS1      NodeBalance1310      -47.8128
+    RHS1      NodeBalance1319      -14.7238
+    RHS1      NodeBalance1339       52.2867
+    RHS1      NodeBalance1404      -34.1652
+    RHS1      NodeBalance1409       22.2619
+    RHS1      NodeBalance1414       65.3231
+    RHS1      NodeBalance1416       34.9695
+    RHS1      NodeBalance1423      -58.2356
+    RHS1      NodeBalance1429      -46.3351
+    RHS1      NodeBalance1522       54.0301
+    RHS1      NodeBalance1524       81.0707
+    RHS1      NodeBalance1534      -6.56424
+    RHS1      NodeBalance1606       92.0135
+    RHS1      NodeBalance1617       24.5253
+    RHS1      NodeBalance1626      -63.4454
+    RHS1      NodeBalance1630       69.5943
+    RHS1      NodeBalance1635      -70.6417
+    RHS1      NodeBalance1701      -49.0157
+    RHS1      NodeBalance1712      -25.7176
+    RHS1      NodeBalance1721       14.7813
+    RHS1      NodeBalance1732      -38.5453
+    RHS1      NodeBalance1737      -30.5523
+    RHS1      NodeBalance1738       86.8402
+    RHS1      NodeBalance1740       15.2615
+    RHS1      NodeBalance1815       -24.079
+    RHS1      NodeBalance1823       58.2356
+    RHS1      NodeBalance1825       37.6532
+    RHS1      NodeBalance1840      -15.2615
+    RHS1      NodeBalance1902       38.0338
+    RHS1      NodeBalance1933       27.9153
+    RHS1      NodeBalance2011       39.4113
+    RHS1      NodeBalance2015        24.079
+    RHS1      NodeBalance2016      -34.9695
+    RHS1      NodeBalance2018       96.0434
+    RHS1      NodeBalance2028      -27.0592
+    RHS1      NodeBalance2036       8.90085
+ SC Scen3     Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -38.1787
+    RHS1      NodeBalance0112       6.09944
+    RHS1      NodeBalance0113      -97.4757
+    RHS1      NodeBalance0130      -49.6081
+    RHS1      NodeBalance0131       19.5424
+    RHS1      NodeBalance0133      -39.4892
+    RHS1      NodeBalance0135       56.8279
+    RHS1      NodeBalance0227       76.7621
+    RHS1      NodeBalance0314      -94.3588
+    RHS1      NodeBalance0320       66.1343
+    RHS1      NodeBalance0339      -69.5317
+    RHS1      NodeBalance0401       71.1051
+    RHS1      NodeBalance0403      -88.5461
+    RHS1      NodeBalance0408       29.4553
+    RHS1      NodeBalance0410       48.6796
+    RHS1      NodeBalance0421      -7.04855
+    RHS1      NodeBalance0425      -45.6106
+    RHS1      NodeBalance0431      -19.5424
+    RHS1      NodeBalance0505      -40.0102
+    RHS1      NodeBalance0508      -29.4553
+    RHS1      NodeBalance0520      -66.1343
+    RHS1      NodeBalance0629       47.3939
+    RHS1      NodeBalance0705       40.0102
+    RHS1      NodeBalance0706      -79.9967
+    RHS1      NodeBalance0707       53.3257
+    RHS1      NodeBalance0709      -44.8745
+    RHS1      NodeBalance0722      -101.711
+    RHS1      NodeBalance0736      -17.9349
+    RHS1      NodeBalance0817      -34.5272
+    RHS1      NodeBalance0819       10.3156
+    RHS1      NodeBalance0837       6.74284
+    RHS1      NodeBalance0838      -53.9873
+    RHS1      NodeBalance0904       29.6613
+    RHS1      NodeBalance0913       97.4757
+    RHS1      NodeBalance0926       60.5227
+    RHS1      NodeBalance0927      -76.7621
+    RHS1      NodeBalance0932       19.3297
+    RHS1      NodeBalance1003       88.5461
+    RHS1      NodeBalance1018      -89.8476
+    RHS1      NodeBalance1024      -84.2671
+    RHS1      NodeBalance1134         12.44
+    RHS1      NodeBalance1202      -22.4378
+    RHS1      NodeBalance1207      -53.3257
+    RHS1      NodeBalance1228        22.422
+    RHS1      NodeBalance1310      -48.6796
+    RHS1      NodeBalance1319      -10.3156
+    RHS1      NodeBalance1339       69.5317
+    RHS1      NodeBalance1404      -29.6613
+    RHS1      NodeBalance1409       44.8745
+    RHS1      NodeBalance1414       94.3588
+    RHS1      NodeBalance1416       35.2235
+    RHS1      NodeBalance1423      -28.5658
+    RHS1      NodeBalance1429      -47.3939
+    RHS1      NodeBalance1522       101.711
+    RHS1      NodeBalance1524       84.2671
+    RHS1      NodeBalance1534        -12.44
+    RHS1      NodeBalance1606       79.9967
+    RHS1      NodeBalance1617       34.5272
+    RHS1      NodeBalance1626      -60.5227
+    RHS1      NodeBalance1630       49.6081
+    RHS1      NodeBalance1635      -56.8279
+    RHS1      NodeBalance1701      -71.1051
+    RHS1      NodeBalance1712      -6.09944
+    RHS1      NodeBalance1721       7.04855
+    RHS1      NodeBalance1732      -19.3297
+    RHS1      NodeBalance1737      -6.74284
+    RHS1      NodeBalance1738       53.9873
+    RHS1      NodeBalance1740       13.1209
+    RHS1      NodeBalance1815       -30.706
+    RHS1      NodeBalance1823       28.5658
+    RHS1      NodeBalance1825       45.6106
+    RHS1      NodeBalance1840      -13.1209
+    RHS1      NodeBalance1902       22.4378
+    RHS1      NodeBalance1933       39.4892
+    RHS1      NodeBalance2011       38.1787
+    RHS1      NodeBalance2015        30.706
+    RHS1      NodeBalance2016      -35.2235
+    RHS1      NodeBalance2018       89.8476
+    RHS1      NodeBalance2028       -22.422
+    RHS1      NodeBalance2036       17.9349
+ SC Scen4     Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -8.43638
+    RHS1      NodeBalance0112       23.2282
+    RHS1      NodeBalance0113      -26.9231
+    RHS1      NodeBalance0130       -33.068
+    RHS1      NodeBalance0131       26.0827
+    RHS1      NodeBalance0133      -29.5388
+    RHS1      NodeBalance0135       58.9962
+    RHS1      NodeBalance0227       76.8454
+    RHS1      NodeBalance0314      -79.9599
+    RHS1      NodeBalance0320       21.1467
+    RHS1      NodeBalance0339      -99.5281
+    RHS1      NodeBalance0401       74.2197
+    RHS1      NodeBalance0403      -79.6822
+    RHS1      NodeBalance0408       81.2008
+    RHS1      NodeBalance0410       61.6209
+    RHS1      NodeBalance0421      -10.5416
+    RHS1      NodeBalance0425      -55.6251
+    RHS1      NodeBalance0431      -26.0827
+    RHS1      NodeBalance0505      -21.3735
+    RHS1      NodeBalance0508      -81.2008
+    RHS1      NodeBalance0520      -21.1467
+    RHS1      NodeBalance0629       34.3092
+    RHS1      NodeBalance0705       21.3735
+    RHS1      NodeBalance0706      -67.2563
+    RHS1      NodeBalance0707       33.9103
+    RHS1      NodeBalance0709      -35.1219
+    RHS1      NodeBalance0722      -100.184
+    RHS1      NodeBalance0736      -4.18644
+    RHS1      NodeBalance0817      -17.6251
+    RHS1      NodeBalance0819       14.2114
+    RHS1      NodeBalance0837       39.3437
+    RHS1      NodeBalance0838      -36.2942
+    RHS1      NodeBalance0904       41.8901
+    RHS1      NodeBalance0913       26.9231
+    RHS1      NodeBalance0926       37.4199
+    RHS1      NodeBalance0927      -76.8454
+    RHS1      NodeBalance0932        31.264
+    RHS1      NodeBalance1003       79.6822
+    RHS1      NodeBalance1018       -40.355
+    RHS1      NodeBalance1024      -83.4236
+    RHS1      NodeBalance1134       15.8116
+    RHS1      NodeBalance1202      -33.9446
+    RHS1      NodeBalance1207      -33.9103
+    RHS1      NodeBalance1228       32.1009
+    RHS1      NodeBalance1310      -61.6209
+    RHS1      NodeBalance1319      -14.2114
+    RHS1      NodeBalance1339       99.5281
+    RHS1      NodeBalance1404      -41.8901
+    RHS1      NodeBalance1409       35.1219
+    RHS1      NodeBalance1414       79.9599
+    RHS1      NodeBalance1416       36.3107
+    RHS1      NodeBalance1423      -47.9332
+    RHS1      NodeBalance1429      -34.3092
+    RHS1      NodeBalance1522       100.184
+    RHS1      NodeBalance1524       83.4236
+    RHS1      NodeBalance1534      -15.8116
+    RHS1      NodeBalance1606       67.2563
+    RHS1      NodeBalance1617       17.6251
+    RHS1      NodeBalance1626      -37.4199
+    RHS1      NodeBalance1630        33.068
+    RHS1      NodeBalance1635      -58.9962
+    RHS1      NodeBalance1701      -74.2197
+    RHS1      NodeBalance1712      -23.2282
+    RHS1      NodeBalance1721       10.5416
+    RHS1      NodeBalance1732       -31.264
+    RHS1      NodeBalance1737      -39.3437
+    RHS1      NodeBalance1738       36.2942
+    RHS1      NodeBalance1740       29.8764
+    RHS1      NodeBalance1815      -16.6004
+    RHS1      NodeBalance1823       47.9332
+    RHS1      NodeBalance1825       55.6251
+    RHS1      NodeBalance1840      -29.8764
+    RHS1      NodeBalance1902       33.9446
+    RHS1      NodeBalance1933       29.5388
+    RHS1      NodeBalance2011       8.43638
+    RHS1      NodeBalance2015       16.6004
+    RHS1      NodeBalance2016      -36.3107
+    RHS1      NodeBalance2018        40.355
+    RHS1      NodeBalance2028      -32.1009
+    RHS1      NodeBalance2036       4.18644
+ SC Scen5     Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -24.0281
+    RHS1      NodeBalance0112       21.8428
+    RHS1      NodeBalance0113       -62.301
+    RHS1      NodeBalance0130      -29.5482
+    RHS1      NodeBalance0131       28.8801
+    RHS1      NodeBalance0133      -10.9455
+    RHS1      NodeBalance0135       66.8789
+    RHS1      NodeBalance0227       79.9319
+    RHS1      NodeBalance0314       -107.09
+    RHS1      NodeBalance0320       18.0574
+    RHS1      NodeBalance0339      -70.5321
+    RHS1      NodeBalance0401        78.413
+    RHS1      NodeBalance0403      -62.2959
+    RHS1      NodeBalance0408       68.5221
+    RHS1      NodeBalance0410       52.1652
+    RHS1      NodeBalance0421      -10.8948
+    RHS1      NodeBalance0425       -26.783
+    RHS1      NodeBalance0431      -28.8801
+    RHS1      NodeBalance0505      -27.5825
+    RHS1      NodeBalance0508      -68.5221
+    RHS1      NodeBalance0520      -18.0574
+    RHS1      NodeBalance0629       38.1224
+    RHS1      NodeBalance0705       27.5825
+    RHS1      NodeBalance0706      -20.7136
+    RHS1      NodeBalance0707       40.4207
+    RHS1      NodeBalance0709      -64.7242
+    RHS1      NodeBalance0722      -93.7383
+    RHS1      NodeBalance0736      -12.1571
+    RHS1      NodeBalance0817      -12.7048
+    RHS1      NodeBalance0819       13.0496
+    RHS1      NodeBalance0837       45.3153
+    RHS1      NodeBalance0838      -37.9808
+    RHS1      NodeBalance0904       12.2319
+    RHS1      NodeBalance0913        62.301
+    RHS1      NodeBalance0926       50.1166
+    RHS1      NodeBalance0927      -79.9319
+    RHS1      NodeBalance0932       14.7046
+    RHS1      NodeBalance1003       62.2959
+    RHS1      NodeBalance1018      -39.6384
+    RHS1      NodeBalance1024      -58.1809
+    RHS1      NodeBalance1134       1.77101
+    RHS1      NodeBalance1202      -12.5286
+    RHS1      NodeBalance1207      -40.4207
+    RHS1      NodeBalance1228       30.2768
+    RHS1      NodeBalance1310      -52.1652
+    RHS1      NodeBalance1319      -13.0496
+    RHS1      NodeBalance1339       70.5321
+    RHS1      NodeBalance1404      -12.2319
+    RHS1      NodeBalance1409       64.7242
+    RHS1      NodeBalance1414        107.09
+    RHS1      NodeBalance1416       39.5707
+    RHS1      NodeBalance1423      -16.1884
+    RHS1      NodeBalance1429      -38.1224
+    RHS1      NodeBalance1522       93.7383
+    RHS1      NodeBalance1524       58.1809
+    RHS1      NodeBalance1534      -1.77101
+    RHS1      NodeBalance1606       20.7136
+    RHS1      NodeBalance1617       12.7048
+    RHS1      NodeBalance1626      -50.1166
+    RHS1      NodeBalance1630       29.5482
+    RHS1      NodeBalance1635      -66.8789
+    RHS1      NodeBalance1701       -78.413
+    RHS1      NodeBalance1712      -21.8428
+    RHS1      NodeBalance1721       10.8948
+    RHS1      NodeBalance1732      -14.7046
+    RHS1      NodeBalance1737      -45.3153
+    RHS1      NodeBalance1738       37.9808
+    RHS1      NodeBalance1740       24.2211
+    RHS1      NodeBalance1815      -22.3347
+    RHS1      NodeBalance1823       16.1884
+    RHS1      NodeBalance1825        26.783
+    RHS1      NodeBalance1840      -24.2211
+    RHS1      NodeBalance1902       12.5286
+    RHS1      NodeBalance1933       10.9455
+    RHS1      NodeBalance2011       24.0281
+    RHS1      NodeBalance2015       22.3347
+    RHS1      NodeBalance2016      -39.5707
+    RHS1      NodeBalance2018       39.6384
+    RHS1      NodeBalance2028      -30.2768
+    RHS1      NodeBalance2036       12.1571
+ SC Scen6     Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111        -35.81
+    RHS1      NodeBalance0112       11.8926
+    RHS1      NodeBalance0113      -66.7147
+    RHS1      NodeBalance0130      -70.7985
+    RHS1      NodeBalance0131       17.9225
+    RHS1      NodeBalance0133      -32.1191
+    RHS1      NodeBalance0135       54.5615
+    RHS1      NodeBalance0227       57.4417
+    RHS1      NodeBalance0314       -86.016
+    RHS1      NodeBalance0320       63.1396
+    RHS1      NodeBalance0339      -9.35939
+    RHS1      NodeBalance0401       67.5359
+    RHS1      NodeBalance0403      -25.8118
+    RHS1      NodeBalance0408       83.5215
+    RHS1      NodeBalance0410       87.7691
+    RHS1      NodeBalance0421      -6.82616
+    RHS1      NodeBalance0425      -44.7935
+    RHS1      NodeBalance0431      -17.9225
+    RHS1      NodeBalance0505      -5.71809
+    RHS1      NodeBalance0508      -83.5215
+    RHS1      NodeBalance0520      -63.1396
+    RHS1      NodeBalance0629       23.2107
+    RHS1      NodeBalance0705       5.71809
+    RHS1      NodeBalance0706      -74.0203
+    RHS1      NodeBalance0707       24.3704
+    RHS1      NodeBalance0709      -32.3682
+    RHS1      NodeBalance0722      -13.9374
+    RHS1      NodeBalance0736      -14.4712
+    RHS1      NodeBalance0817      -30.0539
+    RHS1      NodeBalance0819       7.29229
+    RHS1      NodeBalance0837       23.8981
+    RHS1      NodeBalance0838      -52.4482
+    RHS1      NodeBalance0904       38.3879
+    RHS1      NodeBalance0913       66.7147
+    RHS1      NodeBalance0926       58.8685
+    RHS1      NodeBalance0927      -57.4417
+    RHS1      NodeBalance0932       24.2371
+    RHS1      NodeBalance1003       25.8118
+    RHS1      NodeBalance1018      -82.4876
+    RHS1      NodeBalance1024      -13.2689
+    RHS1      NodeBalance1134       11.7561
+    RHS1      NodeBalance1202      -20.8612
+    RHS1      NodeBalance1207      -24.3704
+    RHS1      NodeBalance1228       35.6551
+    RHS1      NodeBalance1310      -87.7691
+    RHS1      NodeBalance1319      -7.29229
+    RHS1      NodeBalance1339       9.35939
+    RHS1      NodeBalance1404      -38.3879
+    RHS1      NodeBalance1409       32.3682
+    RHS1      NodeBalance1414        86.016
+    RHS1      NodeBalance1416       29.3322
+    RHS1      NodeBalance1423      -35.9846
+    RHS1      NodeBalance1429      -23.2107
+    RHS1      NodeBalance1522       13.9374
+    RHS1      NodeBalance1524       13.2689
+    RHS1      NodeBalance1534      -11.7561
+    RHS1      NodeBalance1606       74.0203
+    RHS1      NodeBalance1617       30.0539
+    RHS1      NodeBalance1626      -58.8685
+    RHS1      NodeBalance1630       70.7985
+    RHS1      NodeBalance1635      -54.5615
+    RHS1      NodeBalance1701      -67.5359
+    RHS1      NodeBalance1712      -11.8926
+    RHS1      NodeBalance1721       6.82616
+    RHS1      NodeBalance1732      -24.2371
+    RHS1      NodeBalance1737      -23.8981
+    RHS1      NodeBalance1738       52.4482
+    RHS1      NodeBalance1740       15.0469
+    RHS1      NodeBalance1815       -29.287
+    RHS1      NodeBalance1823       35.9846
+    RHS1      NodeBalance1825       44.7935
+    RHS1      NodeBalance1840      -15.0469
+    RHS1      NodeBalance1902       20.8612
+    RHS1      NodeBalance1933       32.1191
+    RHS1      NodeBalance2011         35.81
+    RHS1      NodeBalance2015        29.287
+    RHS1      NodeBalance2016      -29.3322
+    RHS1      NodeBalance2018       82.4876
+    RHS1      NodeBalance2028      -35.6551
+    RHS1      NodeBalance2036       14.4712
+ SC Scen7     Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -16.6319
+    RHS1      NodeBalance0112       12.3842
+    RHS1      NodeBalance0113      -71.3705
+    RHS1      NodeBalance0130      -56.7463
+    RHS1      NodeBalance0131        11.115
+    RHS1      NodeBalance0133      -38.0437
+    RHS1      NodeBalance0135       23.7185
+    RHS1      NodeBalance0227        20.721
+    RHS1      NodeBalance0314      -66.2628
+    RHS1      NodeBalance0320       30.5572
+    RHS1      NodeBalance0339      -70.8803
+    RHS1      NodeBalance0401       67.7881
+    RHS1      NodeBalance0403      -46.3928
+    RHS1      NodeBalance0408       57.1168
+    RHS1      NodeBalance0410       61.4631
+    RHS1      NodeBalance0421      -6.43589
+    RHS1      NodeBalance0425      -45.5563
+    RHS1      NodeBalance0431       -11.115
+    RHS1      NodeBalance0505      -34.0389
+    RHS1      NodeBalance0508      -57.1168
+    RHS1      NodeBalance0520      -30.5572
+    RHS1      NodeBalance0629       39.6133
+    RHS1      NodeBalance0705       34.0389
+    RHS1      NodeBalance0706      -48.8559
+    RHS1      NodeBalance0707       14.6574
+    RHS1      NodeBalance0709      -42.4599
+    RHS1      NodeBalance0722      -45.7359
+    RHS1      NodeBalance0736      -9.83546
+    RHS1      NodeBalance0817      -23.7838
+    RHS1      NodeBalance0819       17.6561
+    RHS1      NodeBalance0837       35.2933
+    RHS1      NodeBalance0838      -65.9982
+    RHS1      NodeBalance0904        37.488
+    RHS1      NodeBalance0913       71.3705
+    RHS1      NodeBalance0926       58.0941
+    RHS1      NodeBalance0927       -20.721
+    RHS1      NodeBalance0932       31.1853
+    RHS1      NodeBalance1003       46.3928
+    RHS1      NodeBalance1018      -41.8778
+    RHS1      NodeBalance1024      -44.1063
+    RHS1      NodeBalance1134       4.98521
+    RHS1      NodeBalance1202      -35.0631
+    RHS1      NodeBalance1207      -14.6574
+    RHS1      NodeBalance1228       17.5462
+    RHS1      NodeBalance1310      -61.4631
+    RHS1      NodeBalance1319      -17.6561
+    RHS1      NodeBalance1339       70.8803
+    RHS1      NodeBalance1404       -37.488
+    RHS1      NodeBalance1409       42.4599
+    RHS1      NodeBalance1414       66.2628
+    RHS1      NodeBalance1416       8.34312
+    RHS1      NodeBalance1423      -30.8699
+    RHS1      NodeBalance1429      -39.6133
+    RHS1      NodeBalance1522       45.7359
+    RHS1      NodeBalance1524       44.1063
+    RHS1      NodeBalance1534      -4.98521
+    RHS1      NodeBalance1606       48.8559
+    RHS1      NodeBalance1617       23.7838
+    RHS1      NodeBalance1626      -58.0941
+    RHS1      NodeBalance1630       56.7463
+    RHS1      NodeBalance1635      -23.7185
+    RHS1      NodeBalance1701      -67.7881
+    RHS1      NodeBalance1712      -12.3842
+    RHS1      NodeBalance1721       6.43589
+    RHS1      NodeBalance1732      -31.1853
+    RHS1      NodeBalance1737      -35.2933
+    RHS1      NodeBalance1738       65.9982
+    RHS1      NodeBalance1740       15.8779
+    RHS1      NodeBalance1815      -20.6692
+    RHS1      NodeBalance1823       30.8699
+    RHS1      NodeBalance1825       45.5563
+    RHS1      NodeBalance1840      -15.8779
+    RHS1      NodeBalance1902       35.0631
+    RHS1      NodeBalance1933       38.0437
+    RHS1      NodeBalance2011       16.6319
+    RHS1      NodeBalance2015       20.6692
+    RHS1      NodeBalance2016      -8.34312
+    RHS1      NodeBalance2018       41.8778
+    RHS1      NodeBalance2028      -17.5462
+    RHS1      NodeBalance2036       9.83546
+ SC Scen8     Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -17.5837
+    RHS1      NodeBalance0112       21.4434
+    RHS1      NodeBalance0113      -47.3048
+    RHS1      NodeBalance0130      -35.8693
+    RHS1      NodeBalance0131       9.98135
+    RHS1      NodeBalance0133      -35.4565
+    RHS1      NodeBalance0135       70.9211
+    RHS1      NodeBalance0227       81.2768
+    RHS1      NodeBalance0314      -38.0927
+    RHS1      NodeBalance0320       47.9405
+    RHS1      NodeBalance0339      -48.6856
+    RHS1      NodeBalance0401       29.9577
+    RHS1      NodeBalance0403      -76.1478
+    RHS1      NodeBalance0408       52.8478
+    RHS1      NodeBalance0410       52.4578
+    RHS1      NodeBalance0421      -11.5366
+    RHS1      NodeBalance0425      -54.7128
+    RHS1      NodeBalance0431      -9.98135
+    RHS1      NodeBalance0505      -46.9342
+    RHS1      NodeBalance0508      -52.8478
+    RHS1      NodeBalance0520      -47.9405
+    RHS1      NodeBalance0629       54.6887
+    RHS1      NodeBalance0705       46.9342
+    RHS1      NodeBalance0706      -12.2287
+    RHS1      NodeBalance0707        41.338
+    RHS1      NodeBalance0709      -42.5737
+    RHS1      NodeBalance0722      -78.7165
+    RHS1      NodeBalance0736      -12.9779
+    RHS1      NodeBalance0817      -17.3657
+    RHS1      NodeBalance0819       11.5887
+    RHS1      NodeBalance0837       33.5678
+    RHS1      NodeBalance0838       -10.358
+    RHS1      NodeBalance0904       30.6108
+    RHS1      NodeBalance0913       47.3048
+    RHS1      NodeBalance0926       41.5863
+    RHS1      NodeBalance0927      -81.2768
+    RHS1      NodeBalance0932        26.509
+    RHS1      NodeBalance1003       76.1478
+    RHS1      NodeBalance1018      -94.3034
+    RHS1      NodeBalance1024      -68.9847
+    RHS1      NodeBalance1134        9.8793
+    RHS1      NodeBalance1202       -30.429
+    RHS1      NodeBalance1207       -41.338
+    RHS1      NodeBalance1228       25.8157
+    RHS1      NodeBalance1310      -52.4578
+    RHS1      NodeBalance1319      -11.5887
+    RHS1      NodeBalance1339       48.6856
+    RHS1      NodeBalance1404      -30.6108
+    RHS1      NodeBalance1409       42.5737
+    RHS1      NodeBalance1414       38.0927
+    RHS1      NodeBalance1416       14.1561
+    RHS1      NodeBalance1423       -57.134
+    RHS1      NodeBalance1429      -54.6887
+    RHS1      NodeBalance1522       78.7165
+    RHS1      NodeBalance1524       68.9847
+    RHS1      NodeBalance1534       -9.8793
+    RHS1      NodeBalance1606       12.2287
+    RHS1      NodeBalance1617       17.3657
+    RHS1      NodeBalance1626      -41.5863
+    RHS1      NodeBalance1630       35.8693
+    RHS1      NodeBalance1635      -70.9211
+    RHS1      NodeBalance1701      -29.9577
+    RHS1      NodeBalance1712      -21.4434
+    RHS1      NodeBalance1721       11.5366
+    RHS1      NodeBalance1732       -26.509
+    RHS1      NodeBalance1737      -33.5678
+    RHS1      NodeBalance1738        10.358
+    RHS1      NodeBalance1740       16.5794
+    RHS1      NodeBalance1815      -22.0293
+    RHS1      NodeBalance1823        57.134
+    RHS1      NodeBalance1825       54.7128
+    RHS1      NodeBalance1840      -16.5794
+    RHS1      NodeBalance1902        30.429
+    RHS1      NodeBalance1933       35.4565
+    RHS1      NodeBalance2011       17.5837
+    RHS1      NodeBalance2015       22.0293
+    RHS1      NodeBalance2016      -14.1561
+    RHS1      NodeBalance2018       94.3034
+    RHS1      NodeBalance2028      -25.8157
+    RHS1      NodeBalance2036       12.9779
+ SC Scen9     Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -7.12522
+    RHS1      NodeBalance0112        21.309
+    RHS1      NodeBalance0113      -31.4473
+    RHS1      NodeBalance0130      -55.6365
+    RHS1      NodeBalance0131       11.4764
+    RHS1      NodeBalance0133      -43.9813
+    RHS1      NodeBalance0135       39.9153
+    RHS1      NodeBalance0227       35.6252
+    RHS1      NodeBalance0314      -88.9306
+    RHS1      NodeBalance0320       43.2914
+    RHS1      NodeBalance0339      -59.1401
+    RHS1      NodeBalance0401       73.9136
+    RHS1      NodeBalance0403        -32.47
+    RHS1      NodeBalance0408       80.6402
+    RHS1      NodeBalance0410        68.716
+    RHS1      NodeBalance0421      -14.8541
+    RHS1      NodeBalance0425      -64.3796
+    RHS1      NodeBalance0431      -11.4764
+    RHS1      NodeBalance0505      -49.3799
+    RHS1      NodeBalance0508      -80.6402
+    RHS1      NodeBalance0520      -43.2914
+    RHS1      NodeBalance0629          28.7
+    RHS1      NodeBalance0705       49.3799
+    RHS1      NodeBalance0706      -48.6142
+    RHS1      NodeBalance0707       47.2356
+    RHS1      NodeBalance0709       -51.487
+    RHS1      NodeBalance0722      -56.6335
+    RHS1      NodeBalance0736      -6.32658
+    RHS1      NodeBalance0817      -32.6817
+    RHS1      NodeBalance0819       8.92211
+    RHS1      NodeBalance0837       53.6323
+    RHS1      NodeBalance0838      -42.9882
+    RHS1      NodeBalance0904       31.3587
+    RHS1      NodeBalance0913       31.4473
+    RHS1      NodeBalance0926       53.8142
+    RHS1      NodeBalance0927      -35.6252
+    RHS1      NodeBalance0932       24.5117
+    RHS1      NodeBalance1003         32.47
+    RHS1      NodeBalance1018      -33.7608
+    RHS1      NodeBalance1024      -42.1808
+    RHS1      NodeBalance1134       10.7465
+    RHS1      NodeBalance1202      -37.8493
+    RHS1      NodeBalance1207      -47.2356
+    RHS1      NodeBalance1228       15.0695
+    RHS1      NodeBalance1310       -68.716
+    RHS1      NodeBalance1319      -8.92211
+    RHS1      NodeBalance1339       59.1401
+    RHS1      NodeBalance1404      -31.3587
+    RHS1      NodeBalance1409        51.487
+    RHS1      NodeBalance1414       88.9306
+    RHS1      NodeBalance1416       37.6234
+    RHS1      NodeBalance1423      -29.9933
+    RHS1      NodeBalance1429         -28.7
+    RHS1      NodeBalance1522       56.6335
+    RHS1      NodeBalance1524       42.1808
+    RHS1      NodeBalance1534      -10.7465
+    RHS1      NodeBalance1606       48.6142
+    RHS1      NodeBalance1617       32.6817
+    RHS1      NodeBalance1626      -53.8142
+    RHS1      NodeBalance1630       55.6365
+    RHS1      NodeBalance1635      -39.9153
+    RHS1      NodeBalance1701      -73.9136
+    RHS1      NodeBalance1712       -21.309
+    RHS1      NodeBalance1721       14.8541
+    RHS1      NodeBalance1732      -24.5117
+    RHS1      NodeBalance1737      -53.6323
+    RHS1      NodeBalance1738       42.9882
+    RHS1      NodeBalance1740       17.3531
+    RHS1      NodeBalance1815      -2.14613
+    RHS1      NodeBalance1823       29.9933
+    RHS1      NodeBalance1825       64.3796
+    RHS1      NodeBalance1840      -17.3531
+    RHS1      NodeBalance1902       37.8493
+    RHS1      NodeBalance1933       43.9813
+    RHS1      NodeBalance2011       7.12522
+    RHS1      NodeBalance2015       2.14613
+    RHS1      NodeBalance2016      -37.6234
+    RHS1      NodeBalance2018       33.7608
+    RHS1      NodeBalance2028      -15.0695
+    RHS1      NodeBalance2036       6.32658
+ SC Scen10    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -38.8508
+    RHS1      NodeBalance0112       5.57979
+    RHS1      NodeBalance0113      -56.6351
+    RHS1      NodeBalance0130      -59.1699
+    RHS1      NodeBalance0131       8.28672
+    RHS1      NodeBalance0133       -9.9438
+    RHS1      NodeBalance0135        31.952
+    RHS1      NodeBalance0227       88.7635
+    RHS1      NodeBalance0314      -87.3852
+    RHS1      NodeBalance0320       62.2874
+    RHS1      NodeBalance0339      -68.5687
+    RHS1      NodeBalance0401       31.9444
+    RHS1      NodeBalance0403      -63.2251
+    RHS1      NodeBalance0408       37.9453
+    RHS1      NodeBalance0410       65.9708
+    RHS1      NodeBalance0421      -6.60116
+    RHS1      NodeBalance0425      -41.8896
+    RHS1      NodeBalance0431      -8.28672
+    RHS1      NodeBalance0505      -55.4148
+    RHS1      NodeBalance0508      -37.9453
+    RHS1      NodeBalance0520      -62.2874
+    RHS1      NodeBalance0629       23.4204
+    RHS1      NodeBalance0705       55.4148
+    RHS1      NodeBalance0706      -52.7643
+    RHS1      NodeBalance0707       55.4075
+    RHS1      NodeBalance0709      -58.1598
+    RHS1      NodeBalance0722      -62.4012
+    RHS1      NodeBalance0736      -15.1902
+    RHS1      NodeBalance0817      -38.2593
+    RHS1      NodeBalance0819       8.52193
+    RHS1      NodeBalance0837       26.3332
+    RHS1      NodeBalance0838      -41.3115
+    RHS1      NodeBalance0904        30.122
+    RHS1      NodeBalance0913       56.6351
+    RHS1      NodeBalance0926        36.363
+    RHS1      NodeBalance0927      -88.7635
+    RHS1      NodeBalance0932       20.6483
+    RHS1      NodeBalance1003       63.2251
+    RHS1      NodeBalance1018      -90.8802
+    RHS1      NodeBalance1024      -79.2021
+    RHS1      NodeBalance1134       10.1719
+    RHS1      NodeBalance1202      -17.0363
+    RHS1      NodeBalance1207      -55.4075
+    RHS1      NodeBalance1228       8.17036
+    RHS1      NodeBalance1310      -65.9708
+    RHS1      NodeBalance1319      -8.52193
+    RHS1      NodeBalance1339       68.5687
+    RHS1      NodeBalance1404       -30.122
+    RHS1      NodeBalance1409       58.1598
+    RHS1      NodeBalance1414       87.3852
+    RHS1      NodeBalance1416        31.887
+    RHS1      NodeBalance1423      -54.5518
+    RHS1      NodeBalance1429      -23.4204
+    RHS1      NodeBalance1522       62.4012
+    RHS1      NodeBalance1524       79.2021
+    RHS1      NodeBalance1534      -10.1719
+    RHS1      NodeBalance1606       52.7643
+    RHS1      NodeBalance1617       38.2593
+    RHS1      NodeBalance1626       -36.363
+    RHS1      NodeBalance1630       59.1699
+    RHS1      NodeBalance1635       -31.952
+    RHS1      NodeBalance1701      -31.9444
+    RHS1      NodeBalance1712      -5.57979
+    RHS1      NodeBalance1721       6.60116
+    RHS1      NodeBalance1732      -20.6483
+    RHS1      NodeBalance1737      -26.3332
+    RHS1      NodeBalance1738       41.3115
+    RHS1      NodeBalance1740       15.8416
+    RHS1      NodeBalance1815      -24.5291
+    RHS1      NodeBalance1823       54.5518
+    RHS1      NodeBalance1825       41.8896
+    RHS1      NodeBalance1840      -15.8416
+    RHS1      NodeBalance1902       17.0363
+    RHS1      NodeBalance1933        9.9438
+    RHS1      NodeBalance2011       38.8508
+    RHS1      NodeBalance2015       24.5291
+    RHS1      NodeBalance2016       -31.887
+    RHS1      NodeBalance2018       90.8802
+    RHS1      NodeBalance2028      -8.17036
+    RHS1      NodeBalance2036       15.1902
+ SC Scen11    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -19.4296
+    RHS1      NodeBalance0112       8.24791
+    RHS1      NodeBalance0113      -63.2457
+    RHS1      NodeBalance0130      -74.0041
+    RHS1      NodeBalance0131       15.4566
+    RHS1      NodeBalance0133      -27.0161
+    RHS1      NodeBalance0135       34.7241
+    RHS1      NodeBalance0227       66.8143
+    RHS1      NodeBalance0314      -84.0394
+    RHS1      NodeBalance0320       41.2171
+    RHS1      NodeBalance0339      -84.0808
+    RHS1      NodeBalance0401       23.4911
+    RHS1      NodeBalance0403      -95.7787
+    RHS1      NodeBalance0408       32.3744
+    RHS1      NodeBalance0410       67.1691
+    RHS1      NodeBalance0421      -17.3207
+    RHS1      NodeBalance0425      -61.7241
+    RHS1      NodeBalance0431      -15.4566
+    RHS1      NodeBalance0505      -11.6451
+    RHS1      NodeBalance0508      -32.3744
+    RHS1      NodeBalance0520      -41.2171
+    RHS1      NodeBalance0629       34.2529
+    RHS1      NodeBalance0705       11.6451
+    RHS1      NodeBalance0706      -34.9509
+    RHS1      NodeBalance0707       19.2937
+    RHS1      NodeBalance0709      -26.7402
+    RHS1      NodeBalance0722       -98.322
+    RHS1      NodeBalance0736      -7.00158
+    RHS1      NodeBalance0817      -34.4722
+    RHS1      NodeBalance0819       8.05997
+    RHS1      NodeBalance0837       42.3676
+    RHS1      NodeBalance0838      -52.4924
+    RHS1      NodeBalance0904       28.9133
+    RHS1      NodeBalance0913       63.2457
+    RHS1      NodeBalance0926       80.3072
+    RHS1      NodeBalance0927      -66.8143
+    RHS1      NodeBalance0932       33.7712
+    RHS1      NodeBalance1003       95.7787
+    RHS1      NodeBalance1018      -23.5774
+    RHS1      NodeBalance1024      -64.6008
+    RHS1      NodeBalance1134       7.14401
+    RHS1      NodeBalance1202      -30.8624
+    RHS1      NodeBalance1207      -19.2937
+    RHS1      NodeBalance1228       32.7542
+    RHS1      NodeBalance1310      -67.1691
+    RHS1      NodeBalance1319      -8.05997
+    RHS1      NodeBalance1339       84.0808
+    RHS1      NodeBalance1404      -28.9133
+    RHS1      NodeBalance1409       26.7402
+    RHS1      NodeBalance1414       84.0394
+    RHS1      NodeBalance1416       33.7297
+    RHS1      NodeBalance1423       -56.169
+    RHS1      NodeBalance1429      -34.2529
+    RHS1      NodeBalance1522        98.322
+    RHS1      NodeBalance1524       64.6008
+    RHS1      NodeBalance1534      -7.14401
+    RHS1      NodeBalance1606       34.9509
+    RHS1      NodeBalance1617       34.4722
+    RHS1      NodeBalance1626      -80.3072
+    RHS1      NodeBalance1630       74.0041
+    RHS1      NodeBalance1635      -34.7241
+    RHS1      NodeBalance1701      -23.4911
+    RHS1      NodeBalance1712      -8.24791
+    RHS1      NodeBalance1721       17.3207
+    RHS1      NodeBalance1732      -33.7712
+    RHS1      NodeBalance1737      -42.3676
+    RHS1      NodeBalance1738       52.4924
+    RHS1      NodeBalance1740       22.8428
+    RHS1      NodeBalance1815      -17.3297
+    RHS1      NodeBalance1823        56.169
+    RHS1      NodeBalance1825       61.7241
+    RHS1      NodeBalance1840      -22.8428
+    RHS1      NodeBalance1902       30.8624
+    RHS1      NodeBalance1933       27.0161
+    RHS1      NodeBalance2011       19.4296
+    RHS1      NodeBalance2015       17.3297
+    RHS1      NodeBalance2016      -33.7297
+    RHS1      NodeBalance2018       23.5774
+    RHS1      NodeBalance2028      -32.7542
+    RHS1      NodeBalance2036       7.00158
+ SC Scen12    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -21.5019
+    RHS1      NodeBalance0112       22.6702
+    RHS1      NodeBalance0113      -76.5956
+    RHS1      NodeBalance0130      -13.8471
+    RHS1      NodeBalance0131       32.7798
+    RHS1      NodeBalance0133      -13.2877
+    RHS1      NodeBalance0135        53.227
+    RHS1      NodeBalance0227       64.4171
+    RHS1      NodeBalance0314      -92.2848
+    RHS1      NodeBalance0320       69.9585
+    RHS1      NodeBalance0339      -14.1572
+    RHS1      NodeBalance0401       67.0319
+    RHS1      NodeBalance0403      -59.7539
+    RHS1      NodeBalance0408       47.7815
+    RHS1      NodeBalance0410       63.4919
+    RHS1      NodeBalance0421      -12.6039
+    RHS1      NodeBalance0425      -57.6818
+    RHS1      NodeBalance0431      -32.7798
+    RHS1      NodeBalance0505      -48.7726
+    RHS1      NodeBalance0508      -47.7815
+    RHS1      NodeBalance0520      -69.9585
+    RHS1      NodeBalance0629       33.5552
+    RHS1      NodeBalance0705       48.7726
+    RHS1      NodeBalance0706      -67.6073
+    RHS1      NodeBalance0707        49.886
+    RHS1      NodeBalance0709      -38.8565
+    RHS1      NodeBalance0722      -64.0102
+    RHS1      NodeBalance0736      -14.2273
+    RHS1      NodeBalance0817      -32.7095
+    RHS1      NodeBalance0819       20.7446
+    RHS1      NodeBalance0837       51.7925
+    RHS1      NodeBalance0838      -83.8544
+    RHS1      NodeBalance0904       34.8689
+    RHS1      NodeBalance0913       76.5956
+    RHS1      NodeBalance0926       44.1424
+    RHS1      NodeBalance0927      -64.4171
+    RHS1      NodeBalance0932       27.0048
+    RHS1      NodeBalance1003       59.7539
+    RHS1      NodeBalance1018      -66.5617
+    RHS1      NodeBalance1024      -67.2399
+    RHS1      NodeBalance1134       13.3266
+    RHS1      NodeBalance1202       -8.0944
+    RHS1      NodeBalance1207       -49.886
+    RHS1      NodeBalance1228       33.1139
+    RHS1      NodeBalance1310      -63.4919
+    RHS1      NodeBalance1319      -20.7446
+    RHS1      NodeBalance1339       14.1572
+    RHS1      NodeBalance1404      -34.8689
+    RHS1      NodeBalance1409       38.8565
+    RHS1      NodeBalance1414       92.2848
+    RHS1      NodeBalance1416       20.1851
+    RHS1      NodeBalance1423      -53.4775
+    RHS1      NodeBalance1429      -33.5552
+    RHS1      NodeBalance1522       64.0102
+    RHS1      NodeBalance1524       67.2399
+    RHS1      NodeBalance1534      -13.3266
+    RHS1      NodeBalance1606       67.6073
+    RHS1      NodeBalance1617       32.7095
+    RHS1      NodeBalance1626      -44.1424
+    RHS1      NodeBalance1630       13.8471
+    RHS1      NodeBalance1635       -53.227
+    RHS1      NodeBalance1701      -67.0319
+    RHS1      NodeBalance1712      -22.6702
+    RHS1      NodeBalance1721       12.6039
+    RHS1      NodeBalance1732      -27.0048
+    RHS1      NodeBalance1737      -51.7925
+    RHS1      NodeBalance1738       83.8544
+    RHS1      NodeBalance1740       20.9783
+    RHS1      NodeBalance1815      -26.7087
+    RHS1      NodeBalance1823       53.4775
+    RHS1      NodeBalance1825       57.6818
+    RHS1      NodeBalance1840      -20.9783
+    RHS1      NodeBalance1902        8.0944
+    RHS1      NodeBalance1933       13.2877
+    RHS1      NodeBalance2011       21.5019
+    RHS1      NodeBalance2015       26.7087
+    RHS1      NodeBalance2016      -20.1851
+    RHS1      NodeBalance2018       66.5617
+    RHS1      NodeBalance2028      -33.1139
+    RHS1      NodeBalance2036       14.2273
+ SC Scen13    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111       -39.956
+    RHS1      NodeBalance0112       12.9077
+    RHS1      NodeBalance0113      -71.9719
+    RHS1      NodeBalance0130      -28.9555
+    RHS1      NodeBalance0131       19.0066
+    RHS1      NodeBalance0133      -33.2682
+    RHS1      NodeBalance0135       42.9833
+    RHS1      NodeBalance0227       93.9068
+    RHS1      NodeBalance0314      -53.6365
+    RHS1      NodeBalance0320       62.9499
+    RHS1      NodeBalance0339      -29.0314
+    RHS1      NodeBalance0401       78.0189
+    RHS1      NodeBalance0403      -65.0002
+    RHS1      NodeBalance0408       36.1674
+    RHS1      NodeBalance0410       82.0315
+    RHS1      NodeBalance0421      -14.1132
+    RHS1      NodeBalance0425      -49.9613
+    RHS1      NodeBalance0431      -19.0066
+    RHS1      NodeBalance0505       -19.112
+    RHS1      NodeBalance0508      -36.1674
+    RHS1      NodeBalance0520      -62.9499
+    RHS1      NodeBalance0629        39.241
+    RHS1      NodeBalance0705        19.112
+    RHS1      NodeBalance0706      -57.2092
+    RHS1      NodeBalance0707       51.5652
+    RHS1      NodeBalance0709      -37.3875
+    RHS1      NodeBalance0722      -6.85155
+    RHS1      NodeBalance0736      -13.4058
+    RHS1      NodeBalance0817      -13.6471
+    RHS1      NodeBalance0819       14.9804
+    RHS1      NodeBalance0837       51.4297
+    RHS1      NodeBalance0838      -67.9899
+    RHS1      NodeBalance0904       41.8131
+    RHS1      NodeBalance0913       71.9719
+    RHS1      NodeBalance0926       54.5318
+    RHS1      NodeBalance0927      -93.9068
+    RHS1      NodeBalance0932       34.4089
+    RHS1      NodeBalance1003       65.0002
+    RHS1      NodeBalance1018      -104.009
+    RHS1      NodeBalance1024      -16.7144
+    RHS1      NodeBalance1134       10.0787
+    RHS1      NodeBalance1202       -31.611
+    RHS1      NodeBalance1207      -51.5652
+    RHS1      NodeBalance1228       29.2236
+    RHS1      NodeBalance1310      -82.0315
+    RHS1      NodeBalance1319      -14.9804
+    RHS1      NodeBalance1339       29.0314
+    RHS1      NodeBalance1404      -41.8131
+    RHS1      NodeBalance1409       37.3875
+    RHS1      NodeBalance1414       53.6365
+    RHS1      NodeBalance1416       16.8588
+    RHS1      NodeBalance1423      -47.6004
+    RHS1      NodeBalance1429       -39.241
+    RHS1      NodeBalance1522       6.85155
+    RHS1      NodeBalance1524       16.7144
+    RHS1      NodeBalance1534      -10.0787
+    RHS1      NodeBalance1606       57.2092
+    RHS1      NodeBalance1617       13.6471
+    RHS1      NodeBalance1626      -54.5318
+    RHS1      NodeBalance1630       28.9555
+    RHS1      NodeBalance1635      -42.9833
+    RHS1      NodeBalance1701      -78.0189
+    RHS1      NodeBalance1712      -12.9077
+    RHS1      NodeBalance1721       14.1132
+    RHS1      NodeBalance1732      -34.4089
+    RHS1      NodeBalance1737      -51.4297
+    RHS1      NodeBalance1738       67.9899
+    RHS1      NodeBalance1740       16.9436
+    RHS1      NodeBalance1815      -32.5805
+    RHS1      NodeBalance1823       47.6004
+    RHS1      NodeBalance1825       49.9613
+    RHS1      NodeBalance1840      -16.9436
+    RHS1      NodeBalance1902        31.611
+    RHS1      NodeBalance1933       33.2682
+    RHS1      NodeBalance2011        39.956
+    RHS1      NodeBalance2015       32.5805
+    RHS1      NodeBalance2016      -16.8588
+    RHS1      NodeBalance2018       104.009
+    RHS1      NodeBalance2028      -29.2236
+    RHS1      NodeBalance2036       13.4058
+ SC Scen14    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -41.1111
+    RHS1      NodeBalance0112         23.66
+    RHS1      NodeBalance0113      -90.0236
+    RHS1      NodeBalance0130      -40.0965
+    RHS1      NodeBalance0131       28.3239
+    RHS1      NodeBalance0133        -32.66
+    RHS1      NodeBalance0135       70.8035
+    RHS1      NodeBalance0227       85.1442
+    RHS1      NodeBalance0314      -63.5777
+    RHS1      NodeBalance0320       46.4295
+    RHS1      NodeBalance0339      -97.9089
+    RHS1      NodeBalance0401       53.4196
+    RHS1      NodeBalance0403       -82.004
+    RHS1      NodeBalance0408       23.4721
+    RHS1      NodeBalance0410       59.0135
+    RHS1      NodeBalance0421       -10.199
+    RHS1      NodeBalance0425      -49.6834
+    RHS1      NodeBalance0431      -28.3239
+    RHS1      NodeBalance0505      -28.8961
+    RHS1      NodeBalance0508      -23.4721
+    RHS1      NodeBalance0520      -46.4295
+    RHS1      NodeBalance0629       41.5564
+    RHS1      NodeBalance0705       28.8961
+    RHS1      NodeBalance0706      -63.6672
+    RHS1      NodeBalance0707       45.4831
+    RHS1      NodeBalance0709      -30.5545
+    RHS1      NodeBalance0722       -88.435
+    RHS1      NodeBalance0736       -12.785
+    RHS1      NodeBalance0817       -26.964
+    RHS1      NodeBalance0819       17.8818
+    RHS1      NodeBalance0837       28.6481
+    RHS1      NodeBalance0838      -44.4776
+    RHS1      NodeBalance0904       10.5314
+    RHS1      NodeBalance0913       90.0236
+    RHS1      NodeBalance0926       65.2774
+    RHS1      NodeBalance0927      -85.1442
+    RHS1      NodeBalance0932       23.5041
+    RHS1      NodeBalance1003        82.004
+    RHS1      NodeBalance1018      -99.8512
+    RHS1      NodeBalance1024      -49.9561
+    RHS1      NodeBalance1134       14.6974
+    RHS1      NodeBalance1202      -9.95524
+    RHS1      NodeBalance1207      -45.4831
+    RHS1      NodeBalance1228       22.3518
+    RHS1      NodeBalance1310      -59.0135
+    RHS1      NodeBalance1319      -17.8818
+    RHS1      NodeBalance1339       97.9089
+    RHS1      NodeBalance1404      -10.5314
+    RHS1      NodeBalance1409       30.5545
+    RHS1      NodeBalance1414       63.5777
+    RHS1      NodeBalance1416       34.7185
+    RHS1      NodeBalance1423      -58.2469
+    RHS1      NodeBalance1429      -41.5564
+    RHS1      NodeBalance1522        88.435
+    RHS1      NodeBalance1524       49.9561
+    RHS1      NodeBalance1534      -14.6974
+    RHS1      NodeBalance1606       63.6672
+    RHS1      NodeBalance1617        26.964
+    RHS1      NodeBalance1626      -65.2774
+    RHS1      NodeBalance1630       40.0965
+    RHS1      NodeBalance1635      -70.8035
+    RHS1      NodeBalance1701      -53.4196
+    RHS1      NodeBalance1712        -23.66
+    RHS1      NodeBalance1721        10.199
+    RHS1      NodeBalance1732      -23.5041
+    RHS1      NodeBalance1737      -28.6481
+    RHS1      NodeBalance1738       44.4776
+    RHS1      NodeBalance1740        26.667
+    RHS1      NodeBalance1815      -17.6062
+    RHS1      NodeBalance1823       58.2469
+    RHS1      NodeBalance1825       49.6834
+    RHS1      NodeBalance1840       -26.667
+    RHS1      NodeBalance1902       9.95524
+    RHS1      NodeBalance1933         32.66
+    RHS1      NodeBalance2011       41.1111
+    RHS1      NodeBalance2015       17.6062
+    RHS1      NodeBalance2016      -34.7185
+    RHS1      NodeBalance2018       99.8512
+    RHS1      NodeBalance2028      -22.3518
+    RHS1      NodeBalance2036        12.785
+ SC Scen15    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -41.5634
+    RHS1      NodeBalance0112       13.3885
+    RHS1      NodeBalance0113       -93.869
+    RHS1      NodeBalance0130      -5.60029
+    RHS1      NodeBalance0131       17.5886
+    RHS1      NodeBalance0133      -14.9127
+    RHS1      NodeBalance0135        28.956
+    RHS1      NodeBalance0227       69.4914
+    RHS1      NodeBalance0314      -72.6812
+    RHS1      NodeBalance0320        40.285
+    RHS1      NodeBalance0339      -69.8664
+    RHS1      NodeBalance0401       16.9625
+    RHS1      NodeBalance0403       -19.676
+    RHS1      NodeBalance0408       68.2951
+    RHS1      NodeBalance0410       21.5948
+    RHS1      NodeBalance0421       -7.2884
+    RHS1      NodeBalance0425      -41.6141
+    RHS1      NodeBalance0431      -17.5886
+    RHS1      NodeBalance0505      -49.8616
+    RHS1      NodeBalance0508      -68.2951
+    RHS1      NodeBalance0520       -40.285
+    RHS1      NodeBalance0629       46.0945
+    RHS1      NodeBalance0705       49.8616
+    RHS1      NodeBalance0706      -45.5122
+    RHS1      NodeBalance0707       9.38504
+    RHS1      NodeBalance0709       -45.217
+    RHS1      NodeBalance0722      -101.317
+    RHS1      NodeBalance0736      -9.95806
+    RHS1      NodeBalance0817      -30.2602
+    RHS1      NodeBalance0819       21.8639
+    RHS1      NodeBalance0837       31.8092
+    RHS1      NodeBalance0838      -20.4114
+    RHS1      NodeBalance0904       38.7109
+    RHS1      NodeBalance0913        93.869
+    RHS1      NodeBalance0926       40.5996
+    RHS1      NodeBalance0927      -69.4914
+    RHS1      NodeBalance0932       25.0485
+    RHS1      NodeBalance1003        19.676
+    RHS1      NodeBalance1018      -90.1336
+    RHS1      NodeBalance1024      -57.2029
+    RHS1      NodeBalance1134       6.15575
+    RHS1      NodeBalance1202      -25.6179
+    RHS1      NodeBalance1207      -9.38504
+    RHS1      NodeBalance1228       15.1575
+    RHS1      NodeBalance1310      -21.5948
+    RHS1      NodeBalance1319      -21.8639
+    RHS1      NodeBalance1339       69.8664
+    RHS1      NodeBalance1404      -38.7109
+    RHS1      NodeBalance1409        45.217
+    RHS1      NodeBalance1414       72.6812
+    RHS1      NodeBalance1416       32.6737
+    RHS1      NodeBalance1423      -64.8179
+    RHS1      NodeBalance1429      -46.0945
+    RHS1      NodeBalance1522       101.317
+    RHS1      NodeBalance1524       57.2029
+    RHS1      NodeBalance1534      -6.15575
+    RHS1      NodeBalance1606       45.5122
+    RHS1      NodeBalance1617       30.2602
+    RHS1      NodeBalance1626      -40.5996
+    RHS1      NodeBalance1630       5.60029
+    RHS1      NodeBalance1635       -28.956
+    RHS1      NodeBalance1701      -16.9625
+    RHS1      NodeBalance1712      -13.3885
+    RHS1      NodeBalance1721        7.2884
+    RHS1      NodeBalance1732      -25.0485
+    RHS1      NodeBalance1737      -31.8092
+    RHS1      NodeBalance1738       20.4114
+    RHS1      NodeBalance1740       9.78176
+    RHS1      NodeBalance1815      -30.0959
+    RHS1      NodeBalance1823       64.8179
+    RHS1      NodeBalance1825       41.6141
+    RHS1      NodeBalance1840      -9.78176
+    RHS1      NodeBalance1902       25.6179
+    RHS1      NodeBalance1933       14.9127
+    RHS1      NodeBalance2011       41.5634
+    RHS1      NodeBalance2015       30.0959
+    RHS1      NodeBalance2016      -32.6737
+    RHS1      NodeBalance2018       90.1336
+    RHS1      NodeBalance2028      -15.1575
+    RHS1      NodeBalance2036       9.95806
+ SC Scen16    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -13.5994
+    RHS1      NodeBalance0112       15.0375
+    RHS1      NodeBalance0113      -72.7904
+    RHS1      NodeBalance0130      -31.3026
+    RHS1      NodeBalance0131       25.5385
+    RHS1      NodeBalance0133      -28.2993
+    RHS1      NodeBalance0135       35.2532
+    RHS1      NodeBalance0227       92.6247
+    RHS1      NodeBalance0314      -36.4595
+    RHS1      NodeBalance0320       60.6468
+    RHS1      NodeBalance0339      -77.5639
+    RHS1      NodeBalance0401       48.7092
+    RHS1      NodeBalance0403      -32.0101
+    RHS1      NodeBalance0408       48.8507
+    RHS1      NodeBalance0410       41.0337
+    RHS1      NodeBalance0421      -13.3674
+    RHS1      NodeBalance0425      -36.3016
+    RHS1      NodeBalance0431      -25.5385
+    RHS1      NodeBalance0505       -24.468
+    RHS1      NodeBalance0508      -48.8507
+    RHS1      NodeBalance0520      -60.6468
+    RHS1      NodeBalance0629       47.0163
+    RHS1      NodeBalance0705        24.468
+    RHS1      NodeBalance0706      -53.1494
+    RHS1      NodeBalance0707       42.1634
+    RHS1      NodeBalance0709      -49.6262
+    RHS1      NodeBalance0722       -47.603
+    RHS1      NodeBalance0736      -3.66263
+    RHS1      NodeBalance0817      -1.34551
+    RHS1      NodeBalance0819       12.2554
+    RHS1      NodeBalance0837       41.1233
+    RHS1      NodeBalance0838      -71.9417
+    RHS1      NodeBalance0904        33.544
+    RHS1      NodeBalance0913       72.7904
+    RHS1      NodeBalance0926       24.4143
+    RHS1      NodeBalance0927      -92.6247
+    RHS1      NodeBalance0932       23.3173
+    RHS1      NodeBalance1003       32.0101
+    RHS1      NodeBalance1018      -37.3984
+    RHS1      NodeBalance1024      -38.5595
+    RHS1      NodeBalance1134       11.3228
+    RHS1      NodeBalance1202       -18.463
+    RHS1      NodeBalance1207      -42.1634
+    RHS1      NodeBalance1228       6.31878
+    RHS1      NodeBalance1310      -41.0337
+    RHS1      NodeBalance1319      -12.2554
+    RHS1      NodeBalance1339       77.5639
+    RHS1      NodeBalance1404       -33.544
+    RHS1      NodeBalance1409       49.6262
+    RHS1      NodeBalance1414       36.4595
+    RHS1      NodeBalance1416       21.8974
+    RHS1      NodeBalance1423      -38.5161
+    RHS1      NodeBalance1429      -47.0163
+    RHS1      NodeBalance1522        47.603
+    RHS1      NodeBalance1524       38.5595
+    RHS1      NodeBalance1534      -11.3228
+    RHS1      NodeBalance1606       53.1494
+    RHS1      NodeBalance1617       1.34551
+    RHS1      NodeBalance1626      -24.4143
+    RHS1      NodeBalance1630       31.3026
+    RHS1      NodeBalance1635      -35.2532
+    RHS1      NodeBalance1701      -48.7092
+    RHS1      NodeBalance1712      -15.0375
+    RHS1      NodeBalance1721       13.3674
+    RHS1      NodeBalance1732      -23.3173
+    RHS1      NodeBalance1737      -41.1233
+    RHS1      NodeBalance1738       71.9417
+    RHS1      NodeBalance1740       29.0258
+    RHS1      NodeBalance1815      -5.91606
+    RHS1      NodeBalance1823       38.5161
+    RHS1      NodeBalance1825       36.3016
+    RHS1      NodeBalance1840      -29.0258
+    RHS1      NodeBalance1902        18.463
+    RHS1      NodeBalance1933       28.2993
+    RHS1      NodeBalance2011       13.5994
+    RHS1      NodeBalance2015       5.91606
+    RHS1      NodeBalance2016      -21.8974
+    RHS1      NodeBalance2018       37.3984
+    RHS1      NodeBalance2028      -6.31878
+    RHS1      NodeBalance2036       3.66263
+ SC Scen17    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -10.0552
+    RHS1      NodeBalance0112       14.1035
+    RHS1      NodeBalance0113       -52.601
+    RHS1      NodeBalance0130      -67.7932
+    RHS1      NodeBalance0131       9.30517
+    RHS1      NodeBalance0133      -36.2249
+    RHS1      NodeBalance0135       36.8099
+    RHS1      NodeBalance0227       54.0383
+    RHS1      NodeBalance0314      -92.8699
+    RHS1      NodeBalance0320       25.4604
+    RHS1      NodeBalance0339      -87.8263
+    RHS1      NodeBalance0401       76.8917
+    RHS1      NodeBalance0403       -48.413
+    RHS1      NodeBalance0408       80.3113
+    RHS1      NodeBalance0410       70.6199
+    RHS1      NodeBalance0421      -10.6651
+    RHS1      NodeBalance0425      -32.3845
+    RHS1      NodeBalance0431      -9.30517
+    RHS1      NodeBalance0505      -54.8398
+    RHS1      NodeBalance0508      -80.3113
+    RHS1      NodeBalance0520      -25.4604
+    RHS1      NodeBalance0629       42.1537
+    RHS1      NodeBalance0705       54.8398
+    RHS1      NodeBalance0706      -89.0567
+    RHS1      NodeBalance0707       52.2543
+    RHS1      NodeBalance0709      -33.0803
+    RHS1      NodeBalance0722      -108.961
+    RHS1      NodeBalance0736      -10.6268
+    RHS1      NodeBalance0817      -39.5383
+    RHS1      NodeBalance0819       19.2176
+    RHS1      NodeBalance0837       34.6123
+    RHS1      NodeBalance0838      -67.5292
+    RHS1      NodeBalance0904       21.8572
+    RHS1      NodeBalance0913        52.601
+    RHS1      NodeBalance0926       22.9657
+    RHS1      NodeBalance0927      -54.0383
+    RHS1      NodeBalance0932       6.34283
+    RHS1      NodeBalance1003        48.413
+    RHS1      NodeBalance1018      -20.2108
+    RHS1      NodeBalance1024      -87.6197
+    RHS1      NodeBalance1134       7.25759
+    RHS1      NodeBalance1202      -18.3922
+    RHS1      NodeBalance1207      -52.2543
+    RHS1      NodeBalance1228       24.4216
+    RHS1      NodeBalance1310      -70.6199
+    RHS1      NodeBalance1319      -19.2176
+    RHS1      NodeBalance1339       87.8263
+    RHS1      NodeBalance1404      -21.8572
+    RHS1      NodeBalance1409       33.0803
+    RHS1      NodeBalance1414       92.8699
+    RHS1      NodeBalance1416       27.4644
+    RHS1      NodeBalance1423      -48.2392
+    RHS1      NodeBalance1429      -42.1537
+    RHS1      NodeBalance1522       108.961
+    RHS1      NodeBalance1524       87.6197
+    RHS1      NodeBalance1534      -7.25759
+    RHS1      NodeBalance1606       89.0567
+    RHS1      NodeBalance1617       39.5383
+    RHS1      NodeBalance1626      -22.9657
+    RHS1      NodeBalance1630       67.7932
+    RHS1      NodeBalance1635      -36.8099
+    RHS1      NodeBalance1701      -76.8917
+    RHS1      NodeBalance1712      -14.1035
+    RHS1      NodeBalance1721       10.6651
+    RHS1      NodeBalance1732      -6.34283
+    RHS1      NodeBalance1737      -34.6123
+    RHS1      NodeBalance1738       67.5292
+    RHS1      NodeBalance1740       18.3042
+    RHS1      NodeBalance1815      -20.1017
+    RHS1      NodeBalance1823       48.2392
+    RHS1      NodeBalance1825       32.3845
+    RHS1      NodeBalance1840      -18.3042
+    RHS1      NodeBalance1902       18.3922
+    RHS1      NodeBalance1933       36.2249
+    RHS1      NodeBalance2011       10.0552
+    RHS1      NodeBalance2015       20.1017
+    RHS1      NodeBalance2016      -27.4644
+    RHS1      NodeBalance2018       20.2108
+    RHS1      NodeBalance2028      -24.4216
+    RHS1      NodeBalance2036       10.6268
+ SC Scen18    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -16.4487
+    RHS1      NodeBalance0112       14.1074
+    RHS1      NodeBalance0113      -90.8749
+    RHS1      NodeBalance0130       -66.594
+    RHS1      NodeBalance0131       24.4376
+    RHS1      NodeBalance0133      -31.4797
+    RHS1      NodeBalance0135       50.7666
+    RHS1      NodeBalance0227        23.901
+    RHS1      NodeBalance0314      -58.1109
+    RHS1      NodeBalance0320       33.7263
+    RHS1      NodeBalance0339      -98.3906
+    RHS1      NodeBalance0401       42.4795
+    RHS1      NodeBalance0403      -41.8695
+    RHS1      NodeBalance0408       82.2878
+    RHS1      NodeBalance0410        78.481
+    RHS1      NodeBalance0421      -16.8178
+    RHS1      NodeBalance0425      -38.2632
+    RHS1      NodeBalance0431      -24.4376
+    RHS1      NodeBalance0505      -52.0714
+    RHS1      NodeBalance0508      -82.2878
+    RHS1      NodeBalance0520      -33.7263
+    RHS1      NodeBalance0629       49.5561
+    RHS1      NodeBalance0705       52.0714
+    RHS1      NodeBalance0706      -20.0293
+    RHS1      NodeBalance0707       24.5928
+    RHS1      NodeBalance0709      -62.6962
+    RHS1      NodeBalance0722      -89.5517
+    RHS1      NodeBalance0736      -13.5468
+    RHS1      NodeBalance0817      -11.0121
+    RHS1      NodeBalance0819       17.8138
+    RHS1      NodeBalance0837       38.3378
+    RHS1      NodeBalance0838      -73.9559
+    RHS1      NodeBalance0904       41.5802
+    RHS1      NodeBalance0913       90.8749
+    RHS1      NodeBalance0926        73.551
+    RHS1      NodeBalance0927       -23.901
+    RHS1      NodeBalance0932       34.9519
+    RHS1      NodeBalance1003       41.8695
+    RHS1      NodeBalance1018      -107.364
+    RHS1      NodeBalance1024      -50.4616
+    RHS1      NodeBalance1134       10.4362
+    RHS1      NodeBalance1202      -2.78216
+    RHS1      NodeBalance1207      -24.5928
+    RHS1      NodeBalance1228       9.71256
+    RHS1      NodeBalance1310       -78.481
+    RHS1      NodeBalance1319      -17.8138
+    RHS1      NodeBalance1339       98.3906
+    RHS1      NodeBalance1404      -41.5802
+    RHS1      NodeBalance1409       62.6962
+    RHS1      NodeBalance1414       58.1109
+    RHS1      NodeBalance1416       40.8727
+    RHS1      NodeBalance1423      -47.3342
+    RHS1      NodeBalance1429      -49.5561
+    RHS1      NodeBalance1522       89.5517
+    RHS1      NodeBalance1524       50.4616
+    RHS1      NodeBalance1534      -10.4362
+    RHS1      NodeBalance1606       20.0293
+    RHS1      NodeBalance1617       11.0121
+    RHS1      NodeBalance1626       -73.551
+    RHS1      NodeBalance1630        66.594
+    RHS1      NodeBalance1635      -50.7666
+    RHS1      NodeBalance1701      -42.4795
+    RHS1      NodeBalance1712      -14.1074
+    RHS1      NodeBalance1721       16.8178
+    RHS1      NodeBalance1732      -34.9519
+    RHS1      NodeBalance1737      -38.3378
+    RHS1      NodeBalance1738       73.9559
+    RHS1      NodeBalance1740       28.1271
+    RHS1      NodeBalance1815      -27.1467
+    RHS1      NodeBalance1823       47.3342
+    RHS1      NodeBalance1825       38.2632
+    RHS1      NodeBalance1840      -28.1271
+    RHS1      NodeBalance1902       2.78216
+    RHS1      NodeBalance1933       31.4797
+    RHS1      NodeBalance2011       16.4487
+    RHS1      NodeBalance2015       27.1467
+    RHS1      NodeBalance2016      -40.8727
+    RHS1      NodeBalance2018       107.364
+    RHS1      NodeBalance2028      -9.71256
+    RHS1      NodeBalance2036       13.5468
+ SC Scen19    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -28.2518
+    RHS1      NodeBalance0112       17.8632
+    RHS1      NodeBalance0113      -96.5517
+    RHS1      NodeBalance0130      -65.9068
+    RHS1      NodeBalance0131       20.4026
+    RHS1      NodeBalance0133      -15.2844
+    RHS1      NodeBalance0135       68.7883
+    RHS1      NodeBalance0227        46.628
+    RHS1      NodeBalance0314      -84.7162
+    RHS1      NodeBalance0320       53.1641
+    RHS1      NodeBalance0339      -63.3003
+    RHS1      NodeBalance0401        84.425
+    RHS1      NodeBalance0403      -24.5157
+    RHS1      NodeBalance0408         69.24
+    RHS1      NodeBalance0410       44.9525
+    RHS1      NodeBalance0421      -10.8287
+    RHS1      NodeBalance0425      -61.4632
+    RHS1      NodeBalance0431      -20.4026
+    RHS1      NodeBalance0505      -2.19431
+    RHS1      NodeBalance0508        -69.24
+    RHS1      NodeBalance0520      -53.1641
+    RHS1      NodeBalance0629       21.3472
+    RHS1      NodeBalance0705       2.19431
+    RHS1      NodeBalance0706      -54.2825
+    RHS1      NodeBalance0707       6.45252
+    RHS1      NodeBalance0709      -49.9403
+    RHS1      NodeBalance0722      -106.324
+    RHS1      NodeBalance0736       -5.6342
+    RHS1      NodeBalance0817      -13.3016
+    RHS1      NodeBalance0819       12.5428
+    RHS1      NodeBalance0837       47.9877
+    RHS1      NodeBalance0838      -62.1199
+    RHS1      NodeBalance0904       29.9189
+    RHS1      NodeBalance0913       96.5517
+    RHS1      NodeBalance0926       60.3041
+    RHS1      NodeBalance0927       -46.628
+    RHS1      NodeBalance0932       36.5665
+    RHS1      NodeBalance1003       24.5157
+    RHS1      NodeBalance1018      -55.8359
+    RHS1      NodeBalance1024      -52.7548
+    RHS1      NodeBalance1134        11.882
+    RHS1      NodeBalance1202      -6.25931
+    RHS1      NodeBalance1207      -6.45252
+    RHS1      NodeBalance1228       31.7904
+    RHS1      NodeBalance1310      -44.9525
+    RHS1      NodeBalance1319      -12.5428
+    RHS1      NodeBalance1339       63.3003
+    RHS1      NodeBalance1404      -29.9189
+    RHS1      NodeBalance1409       49.9403
+    RHS1      NodeBalance1414       84.7162
+    RHS1      NodeBalance1416       25.1036
+    RHS1      NodeBalance1423      -51.1731
+    RHS1      NodeBalance1429      -21.3472
+    RHS1      NodeBalance1522       106.324
+    RHS1      NodeBalance1524       52.7548
+    RHS1      NodeBalance1534       -11.882
+    RHS1      NodeBalance1606       54.2825
+    RHS1      NodeBalance1617       13.3016
+    RHS1      NodeBalance1626      -60.3041
+    RHS1      NodeBalance1630       65.9068
+    RHS1      NodeBalance1635      -68.7883
+    RHS1      NodeBalance1701       -84.425
+    RHS1      NodeBalance1712      -17.8632
+    RHS1      NodeBalance1721       10.8287
+    RHS1      NodeBalance1732      -36.5665
+    RHS1      NodeBalance1737      -47.9877
+    RHS1      NodeBalance1738       62.1199
+    RHS1      NodeBalance1740       26.9546
+    RHS1      NodeBalance1815      -18.0178
+    RHS1      NodeBalance1823       51.1731
+    RHS1      NodeBalance1825       61.4632
+    RHS1      NodeBalance1840      -26.9546
+    RHS1      NodeBalance1902       6.25931
+    RHS1      NodeBalance1933       15.2844
+    RHS1      NodeBalance2011       28.2518
+    RHS1      NodeBalance2015       18.0178
+    RHS1      NodeBalance2016      -25.1036
+    RHS1      NodeBalance2018       55.8359
+    RHS1      NodeBalance2028      -31.7904
+    RHS1      NodeBalance2036        5.6342
+ SC Scen20    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -35.5546
+    RHS1      NodeBalance0112       19.4644
+    RHS1      NodeBalance0113      -69.6845
+    RHS1      NodeBalance0130      -81.4336
+    RHS1      NodeBalance0131       14.2455
+    RHS1      NodeBalance0133      -40.8375
+    RHS1      NodeBalance0135       41.9918
+    RHS1      NodeBalance0227       60.3603
+    RHS1      NodeBalance0314      -68.6344
+    RHS1      NodeBalance0320       45.4543
+    RHS1      NodeBalance0339      -109.077
+    RHS1      NodeBalance0401       81.4328
+    RHS1      NodeBalance0403      -22.7388
+    RHS1      NodeBalance0408       83.4161
+    RHS1      NodeBalance0410        75.616
+    RHS1      NodeBalance0421      -14.4566
+    RHS1      NodeBalance0425      -37.8116
+    RHS1      NodeBalance0431      -14.2455
+    RHS1      NodeBalance0505      -42.2331
+    RHS1      NodeBalance0508      -83.4161
+    RHS1      NodeBalance0520      -45.4543
+    RHS1      NodeBalance0629       50.1363
+    RHS1      NodeBalance0705       42.2331
+    RHS1      NodeBalance0706      -76.8754
+    RHS1      NodeBalance0707        56.038
+    RHS1      NodeBalance0709      -16.5412
+    RHS1      NodeBalance0722      -101.572
+    RHS1      NodeBalance0736       -14.722
+    RHS1      NodeBalance0817      -36.8264
+    RHS1      NodeBalance0819       18.2957
+    RHS1      NodeBalance0837        51.375
+    RHS1      NodeBalance0838      -75.3998
+    RHS1      NodeBalance0904         6.865
+    RHS1      NodeBalance0913       69.6845
+    RHS1      NodeBalance0926       41.7969
+    RHS1      NodeBalance0927      -60.3603
+    RHS1      NodeBalance0932       26.2377
+    RHS1      NodeBalance1003       22.7388
+    RHS1      NodeBalance1018      -104.966
+    RHS1      NodeBalance1024       -53.177
+    RHS1      NodeBalance1134       4.70998
+    RHS1      NodeBalance1202      -20.3127
+    RHS1      NodeBalance1207       -56.038
+    RHS1      NodeBalance1228       38.0305
+    RHS1      NodeBalance1310       -75.616
+    RHS1      NodeBalance1319      -18.2957
+    RHS1      NodeBalance1339       109.077
+    RHS1      NodeBalance1404        -6.865
+    RHS1      NodeBalance1409       16.5412
+    RHS1      NodeBalance1414       68.6344
+    RHS1      NodeBalance1416       31.2047
+    RHS1      NodeBalance1423       -31.987
+    RHS1      NodeBalance1429      -50.1363
+    RHS1      NodeBalance1522       101.572
+    RHS1      NodeBalance1524        53.177
+    RHS1      NodeBalance1534      -4.70998
+    RHS1      NodeBalance1606       76.8754
+    RHS1      NodeBalance1617       36.8264
+    RHS1      NodeBalance1626      -41.7969
+    RHS1      NodeBalance1630       81.4336
+    RHS1      NodeBalance1635      -41.9918
+    RHS1      NodeBalance1701      -81.4328
+    RHS1      NodeBalance1712      -19.4644
+    RHS1      NodeBalance1721       14.4566
+    RHS1      NodeBalance1732      -26.2377
+    RHS1      NodeBalance1737       -51.375
+    RHS1      NodeBalance1738       75.3998
+    RHS1      NodeBalance1740       28.6583
+    RHS1      NodeBalance1815      -28.4868
+    RHS1      NodeBalance1823        31.987
+    RHS1      NodeBalance1825       37.8116
+    RHS1      NodeBalance1840      -28.6583
+    RHS1      NodeBalance1902       20.3127
+    RHS1      NodeBalance1933       40.8375
+    RHS1      NodeBalance2011       35.5546
+    RHS1      NodeBalance2015       28.4868
+    RHS1      NodeBalance2016      -31.2047
+    RHS1      NodeBalance2018       104.966
+    RHS1      NodeBalance2028      -38.0305
+    RHS1      NodeBalance2036        14.722
+ SC Scen21    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -26.2685
+    RHS1      NodeBalance0112       24.8925
+    RHS1      NodeBalance0113      -40.0154
+    RHS1      NodeBalance0130      -58.5313
+    RHS1      NodeBalance0131       20.4598
+    RHS1      NodeBalance0133      -34.5583
+    RHS1      NodeBalance0135       64.3167
+    RHS1      NodeBalance0227         87.15
+    RHS1      NodeBalance0314      -51.8694
+    RHS1      NodeBalance0320        68.729
+    RHS1      NodeBalance0339      -49.4154
+    RHS1      NodeBalance0401       44.8747
+    RHS1      NodeBalance0403      -59.3695
+    RHS1      NodeBalance0408        59.888
+    RHS1      NodeBalance0410        75.364
+    RHS1      NodeBalance0421      -18.3409
+    RHS1      NodeBalance0425       -40.767
+    RHS1      NodeBalance0431      -20.4598
+    RHS1      NodeBalance0505      -32.4282
+    RHS1      NodeBalance0508       -59.888
+    RHS1      NodeBalance0520       -68.729
+    RHS1      NodeBalance0629       26.1263
+    RHS1      NodeBalance0705       32.4282
+    RHS1      NodeBalance0706       -82.093
+    RHS1      NodeBalance0707        50.762
+    RHS1      NodeBalance0709      -62.1271
+    RHS1      NodeBalance0722      -105.342
+    RHS1      NodeBalance0736       -16.162
+    RHS1      NodeBalance0817       -36.618
+    RHS1      NodeBalance0819       11.7833
+    RHS1      NodeBalance0837       28.5415
+    RHS1      NodeBalance0838      -61.2964
+    RHS1      NodeBalance0904       39.2471
+    RHS1      NodeBalance0913       40.0154
+    RHS1      NodeBalance0926       48.1572
+    RHS1      NodeBalance0927        -87.15
+    RHS1      NodeBalance0932         30.14
+    RHS1      NodeBalance1003       59.3695
+    RHS1      NodeBalance1018       -74.139
+    RHS1      NodeBalance1024      -63.1021
+    RHS1      NodeBalance1134       12.5728
+    RHS1      NodeBalance1202      -25.2917
+    RHS1      NodeBalance1207       -50.762
+    RHS1      NodeBalance1228       18.8711
+    RHS1      NodeBalance1310       -75.364
+    RHS1      NodeBalance1319      -11.7833
+    RHS1      NodeBalance1339       49.4154
+    RHS1      NodeBalance1404      -39.2471
+    RHS1      NodeBalance1409       62.1271
+    RHS1      NodeBalance1414       51.8694
+    RHS1      NodeBalance1416       24.7288
+    RHS1      NodeBalance1423      -27.0188
+    RHS1      NodeBalance1429      -26.1263
+    RHS1      NodeBalance1522       105.342
+    RHS1      NodeBalance1524       63.1021
+    RHS1      NodeBalance1534      -12.5728
+    RHS1      NodeBalance1606        82.093
+    RHS1      NodeBalance1617        36.618
+    RHS1      NodeBalance1626      -48.1572
+    RHS1      NodeBalance1630       58.5313
+    RHS1      NodeBalance1635      -64.3167
+    RHS1      NodeBalance1701      -44.8747
+    RHS1      NodeBalance1712      -24.8925
+    RHS1      NodeBalance1721       18.3409
+    RHS1      NodeBalance1732        -30.14
+    RHS1      NodeBalance1737      -28.5415
+    RHS1      NodeBalance1738       61.2964
+    RHS1      NodeBalance1740       25.9314
+    RHS1      NodeBalance1815      -16.4676
+    RHS1      NodeBalance1823       27.0188
+    RHS1      NodeBalance1825        40.767
+    RHS1      NodeBalance1840      -25.9314
+    RHS1      NodeBalance1902       25.2917
+    RHS1      NodeBalance1933       34.5583
+    RHS1      NodeBalance2011       26.2685
+    RHS1      NodeBalance2015       16.4676
+    RHS1      NodeBalance2016      -24.7288
+    RHS1      NodeBalance2018        74.139
+    RHS1      NodeBalance2028      -18.8711
+    RHS1      NodeBalance2036        16.162
+ SC Scen22    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -33.8887
+    RHS1      NodeBalance0112       17.5548
+    RHS1      NodeBalance0113      -26.7644
+    RHS1      NodeBalance0130      -26.1499
+    RHS1      NodeBalance0131       23.0662
+    RHS1      NodeBalance0133      -6.36786
+    RHS1      NodeBalance0135       70.8599
+    RHS1      NodeBalance0227       81.4275
+    RHS1      NodeBalance0314      -44.9344
+    RHS1      NodeBalance0320       66.0923
+    RHS1      NodeBalance0339       -68.353
+    RHS1      NodeBalance0401       74.8487
+    RHS1      NodeBalance0403      -55.0543
+    RHS1      NodeBalance0408       17.7773
+    RHS1      NodeBalance0410       73.5704
+    RHS1      NodeBalance0421      -13.3085
+    RHS1      NodeBalance0425      -57.2024
+    RHS1      NodeBalance0431      -23.0662
+    RHS1      NodeBalance0505      -45.9025
+    RHS1      NodeBalance0508      -17.7773
+    RHS1      NodeBalance0520      -66.0923
+    RHS1      NodeBalance0629       49.0336
+    RHS1      NodeBalance0705       45.9025
+    RHS1      NodeBalance0706      -29.7529
+    RHS1      NodeBalance0707       48.4164
+    RHS1      NodeBalance0709      -30.0271
+    RHS1      NodeBalance0722      -87.6207
+    RHS1      NodeBalance0736      -17.0746
+    RHS1      NodeBalance0817      -20.6449
+    RHS1      NodeBalance0819       14.3487
+    RHS1      NodeBalance0837       44.8776
+    RHS1      NodeBalance0838      -40.5859
+    RHS1      NodeBalance0904       33.1079
+    RHS1      NodeBalance0913       26.7644
+    RHS1      NodeBalance0926       14.7573
+    RHS1      NodeBalance0927      -81.4275
+    RHS1      NodeBalance0932       10.3787
+    RHS1      NodeBalance1003       55.0543
+    RHS1      NodeBalance1018      -78.4221
+    RHS1      NodeBalance1024      -30.0163
+    RHS1      NodeBalance1134       9.62061
+    RHS1      NodeBalance1202      -4.75985
+    RHS1      NodeBalance1207      -48.4164
+    RHS1      NodeBalance1228       18.8498
+    RHS1      NodeBalance1310      -73.5704
+    RHS1      NodeBalance1319      -14.3487
+    RHS1      NodeBalance1339        68.353
+    RHS1      NodeBalance1404      -33.1079
+    RHS1      NodeBalance1409       30.0271
+    RHS1      NodeBalance1414       44.9344
+    RHS1      NodeBalance1416       36.9418
+    RHS1      NodeBalance1423      -53.9221
+    RHS1      NodeBalance1429      -49.0336
+    RHS1      NodeBalance1522       87.6207
+    RHS1      NodeBalance1524       30.0163
+    RHS1      NodeBalance1534      -9.62061
+    RHS1      NodeBalance1606       29.7529
+    RHS1      NodeBalance1617       20.6449
+    RHS1      NodeBalance1626      -14.7573
+    RHS1      NodeBalance1630       26.1499
+    RHS1      NodeBalance1635      -70.8599
+    RHS1      NodeBalance1701      -74.8487
+    RHS1      NodeBalance1712      -17.5548
+    RHS1      NodeBalance1721       13.3085
+    RHS1      NodeBalance1732      -10.3787
+    RHS1      NodeBalance1737      -44.8776
+    RHS1      NodeBalance1738       40.5859
+    RHS1      NodeBalance1740        22.566
+    RHS1      NodeBalance1815      -18.6692
+    RHS1      NodeBalance1823       53.9221
+    RHS1      NodeBalance1825       57.2024
+    RHS1      NodeBalance1840       -22.566
+    RHS1      NodeBalance1902       4.75985
+    RHS1      NodeBalance1933       6.36786
+    RHS1      NodeBalance2011       33.8887
+    RHS1      NodeBalance2015       18.6692
+    RHS1      NodeBalance2016      -36.9418
+    RHS1      NodeBalance2018       78.4221
+    RHS1      NodeBalance2028      -18.8498
+    RHS1      NodeBalance2036       17.0746
+ SC Scen23    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -39.1506
+    RHS1      NodeBalance0112       2.02382
+    RHS1      NodeBalance0113      -90.7867
+    RHS1      NodeBalance0130       -85.186
+    RHS1      NodeBalance0131       13.4645
+    RHS1      NodeBalance0133      -17.8219
+    RHS1      NodeBalance0135       54.8857
+    RHS1      NodeBalance0227       77.5301
+    RHS1      NodeBalance0314      -103.731
+    RHS1      NodeBalance0320       20.3361
+    RHS1      NodeBalance0339      -80.9225
+    RHS1      NodeBalance0401       54.2626
+    RHS1      NodeBalance0403      -40.1043
+    RHS1      NodeBalance0408       73.9551
+    RHS1      NodeBalance0410       82.8905
+    RHS1      NodeBalance0421      -19.4781
+    RHS1      NodeBalance0425      -24.3177
+    RHS1      NodeBalance0431      -13.4645
+    RHS1      NodeBalance0505      -21.9534
+    RHS1      NodeBalance0508      -73.9551
+    RHS1      NodeBalance0520      -20.3361
+    RHS1      NodeBalance0629       42.8967
+    RHS1      NodeBalance0705       21.9534
+    RHS1      NodeBalance0706      -33.3184
+    RHS1      NodeBalance0707       25.1533
+    RHS1      NodeBalance0709      -50.4429
+    RHS1      NodeBalance0722      -54.5828
+    RHS1      NodeBalance0736      -9.03218
+    RHS1      NodeBalance0817       -37.736
+    RHS1      NodeBalance0819       11.5084
+    RHS1      NodeBalance0837       42.1571
+    RHS1      NodeBalance0838      -63.9189
+    RHS1      NodeBalance0904       16.5417
+    RHS1      NodeBalance0913       90.7867
+    RHS1      NodeBalance0926       26.0013
+    RHS1      NodeBalance0927      -77.5301
+    RHS1      NodeBalance0932       43.7743
+    RHS1      NodeBalance1003       40.1043
+    RHS1      NodeBalance1018      -89.0996
+    RHS1      NodeBalance1024      -28.9902
+    RHS1      NodeBalance1134       10.6512
+    RHS1      NodeBalance1202      -18.0446
+    RHS1      NodeBalance1207      -25.1533
+    RHS1      NodeBalance1228        25.252
+    RHS1      NodeBalance1310      -82.8905
+    RHS1      NodeBalance1319      -11.5084
+    RHS1      NodeBalance1339       80.9225
+    RHS1      NodeBalance1404      -16.5417
+    RHS1      NodeBalance1409       50.4429
+    RHS1      NodeBalance1414       103.731
+    RHS1      NodeBalance1416       32.0986
+    RHS1      NodeBalance1423      -29.2787
+    RHS1      NodeBalance1429      -42.8967
+    RHS1      NodeBalance1522       54.5828
+    RHS1      NodeBalance1524       28.9902
+    RHS1      NodeBalance1534      -10.6512
+    RHS1      NodeBalance1606       33.3184
+    RHS1      NodeBalance1617        37.736
+    RHS1      NodeBalance1626      -26.0013
+    RHS1      NodeBalance1630        85.186
+    RHS1      NodeBalance1635      -54.8857
+    RHS1      NodeBalance1701      -54.2626
+    RHS1      NodeBalance1712      -2.02382
+    RHS1      NodeBalance1721       19.4781
+    RHS1      NodeBalance1732      -43.7743
+    RHS1      NodeBalance1737      -42.1571
+    RHS1      NodeBalance1738       63.9189
+    RHS1      NodeBalance1740       19.3139
+    RHS1      NodeBalance1815      -26.4558
+    RHS1      NodeBalance1823       29.2787
+    RHS1      NodeBalance1825       24.3177
+    RHS1      NodeBalance1840      -19.3139
+    RHS1      NodeBalance1902       18.0446
+    RHS1      NodeBalance1933       17.8219
+    RHS1      NodeBalance2011       39.1506
+    RHS1      NodeBalance2015       26.4558
+    RHS1      NodeBalance2016      -32.0986
+    RHS1      NodeBalance2018       89.0996
+    RHS1      NodeBalance2028       -25.252
+    RHS1      NodeBalance2036       9.03218
+ SC Scen24    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -38.9947
+    RHS1      NodeBalance0112       22.4225
+    RHS1      NodeBalance0113      -74.7335
+    RHS1      NodeBalance0130      -46.1603
+    RHS1      NodeBalance0131       32.4258
+    RHS1      NodeBalance0133      -30.2029
+    RHS1      NodeBalance0135       51.1401
+    RHS1      NodeBalance0227       61.3419
+    RHS1      NodeBalance0314      -110.752
+    RHS1      NodeBalance0320       59.8649
+    RHS1      NodeBalance0339      -40.7965
+    RHS1      NodeBalance0401       26.0602
+    RHS1      NodeBalance0403      -42.5419
+    RHS1      NodeBalance0408       74.7535
+    RHS1      NodeBalance0410       41.7231
+    RHS1      NodeBalance0421      -17.9276
+    RHS1      NodeBalance0425      -54.5328
+    RHS1      NodeBalance0431      -32.4258
+    RHS1      NodeBalance0505      -44.4193
+    RHS1      NodeBalance0508      -74.7535
+    RHS1      NodeBalance0520      -59.8649
+    RHS1      NodeBalance0629       23.6706
+    RHS1      NodeBalance0705       44.4193
+    RHS1      NodeBalance0706      -41.2758
+    RHS1      NodeBalance0707       67.6268
+    RHS1      NodeBalance0709      -29.2119
+    RHS1      NodeBalance0722      -60.6708
+    RHS1      NodeBalance0736      -17.8713
+    RHS1      NodeBalance0817      -16.7085
+    RHS1      NodeBalance0819        19.734
+    RHS1      NodeBalance0837       46.1678
+    RHS1      NodeBalance0838      -72.8235
+    RHS1      NodeBalance0904       14.8825
+    RHS1      NodeBalance0913       74.7335
+    RHS1      NodeBalance0926       42.4784
+    RHS1      NodeBalance0927      -61.3419
+    RHS1      NodeBalance0932        18.367
+    RHS1      NodeBalance1003       42.5419
+    RHS1      NodeBalance1018      -113.188
+    RHS1      NodeBalance1024      -37.5847
+    RHS1      NodeBalance1134       11.7212
+    RHS1      NodeBalance1202      -27.6488
+    RHS1      NodeBalance1207      -67.6268
+    RHS1      NodeBalance1228       33.7612
+    RHS1      NodeBalance1310      -41.7231
+    RHS1      NodeBalance1319       -19.734
+    RHS1      NodeBalance1339       40.7965
+    RHS1      NodeBalance1404      -14.8825
+    RHS1      NodeBalance1409       29.2119
+    RHS1      NodeBalance1414       110.752
+    RHS1      NodeBalance1416       29.8953
+    RHS1      NodeBalance1423      -38.9015
+    RHS1      NodeBalance1429      -23.6706
+    RHS1      NodeBalance1522       60.6708
+    RHS1      NodeBalance1524       37.5847
+    RHS1      NodeBalance1534      -11.7212
+    RHS1      NodeBalance1606       41.2758
+    RHS1      NodeBalance1617       16.7085
+    RHS1      NodeBalance1626      -42.4784
+    RHS1      NodeBalance1630       46.1603
+    RHS1      NodeBalance1635      -51.1401
+    RHS1      NodeBalance1701      -26.0602
+    RHS1      NodeBalance1712      -22.4225
+    RHS1      NodeBalance1721       17.9276
+    RHS1      NodeBalance1732       -18.367
+    RHS1      NodeBalance1737      -46.1678
+    RHS1      NodeBalance1738       72.8235
+    RHS1      NodeBalance1740       26.5569
+    RHS1      NodeBalance1815      -29.5928
+    RHS1      NodeBalance1823       38.9015
+    RHS1      NodeBalance1825       54.5328
+    RHS1      NodeBalance1840      -26.5569
+    RHS1      NodeBalance1902       27.6488
+    RHS1      NodeBalance1933       30.2029
+    RHS1      NodeBalance2011       38.9947
+    RHS1      NodeBalance2015       29.5928
+    RHS1      NodeBalance2016      -29.8953
+    RHS1      NodeBalance2018       113.188
+    RHS1      NodeBalance2028      -33.7612
+    RHS1      NodeBalance2036       17.8713
+ SC Scen25    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -16.7148
+    RHS1      NodeBalance0112       19.8034
+    RHS1      NodeBalance0113      -50.3942
+    RHS1      NodeBalance0130      -68.2688
+    RHS1      NodeBalance0131       22.2259
+    RHS1      NodeBalance0133      -41.1531
+    RHS1      NodeBalance0135       50.5388
+    RHS1      NodeBalance0227       113.646
+    RHS1      NodeBalance0314      -26.2108
+    RHS1      NodeBalance0320       33.2714
+    RHS1      NodeBalance0339      -80.2777
+    RHS1      NodeBalance0401       45.5357
+    RHS1      NodeBalance0403       -38.973
+    RHS1      NodeBalance0408       20.7433
+    RHS1      NodeBalance0410       40.3402
+    RHS1      NodeBalance0421      -19.9231
+    RHS1      NodeBalance0425      -60.4906
+    RHS1      NodeBalance0431      -22.2259
+    RHS1      NodeBalance0505      -33.7415
+    RHS1      NodeBalance0508      -20.7433
+    RHS1      NodeBalance0520      -33.2714
+    RHS1      NodeBalance0629       51.1631
+    RHS1      NodeBalance0705       33.7415
+    RHS1      NodeBalance0706      -92.2926
+    RHS1      NodeBalance0707       4.59782
+    RHS1      NodeBalance0709      -21.1227
+    RHS1      NodeBalance0722      -72.2249
+    RHS1      NodeBalance0736      -7.62891
+    RHS1      NodeBalance0817       -36.758
+    RHS1      NodeBalance0819       22.5735
+    RHS1      NodeBalance0837       56.2778
+    RHS1      NodeBalance0838      -61.8199
+    RHS1      NodeBalance0904       20.2764
+    RHS1      NodeBalance0913       50.3942
+    RHS1      NodeBalance0926       56.7724
+    RHS1      NodeBalance0927      -113.646
+    RHS1      NodeBalance0932       12.1922
+    RHS1      NodeBalance1003        38.973
+    RHS1      NodeBalance1018      -60.6328
+    RHS1      NodeBalance1024      -51.8715
+    RHS1      NodeBalance1134       13.0569
+    RHS1      NodeBalance1202      -27.1143
+    RHS1      NodeBalance1207      -4.59782
+    RHS1      NodeBalance1228       25.9785
+    RHS1      NodeBalance1310      -40.3402
+    RHS1      NodeBalance1319      -22.5735
+    RHS1      NodeBalance1339       80.2777
+    RHS1      NodeBalance1404      -20.2764
+    RHS1      NodeBalance1409       21.1227
+    RHS1      NodeBalance1414       26.2108
+    RHS1      NodeBalance1416       15.1654
+    RHS1      NodeBalance1423      -49.4795
+    RHS1      NodeBalance1429      -51.1631
+    RHS1      NodeBalance1522       72.2249
+    RHS1      NodeBalance1524       51.8715
+    RHS1      NodeBalance1534      -13.0569
+    RHS1      NodeBalance1606       92.2926
+    RHS1      NodeBalance1617        36.758
+    RHS1      NodeBalance1626      -56.7724
+    RHS1      NodeBalance1630       68.2688
+    RHS1      NodeBalance1635      -50.5388
+    RHS1      NodeBalance1701      -45.5357
+    RHS1      NodeBalance1712      -19.8034
+    RHS1      NodeBalance1721       19.9231
+    RHS1      NodeBalance1732      -12.1922
+    RHS1      NodeBalance1737      -56.2778
+    RHS1      NodeBalance1738       61.8199
+    RHS1      NodeBalance1740        16.314
+    RHS1      NodeBalance1815      -19.0182
+    RHS1      NodeBalance1823       49.4795
+    RHS1      NodeBalance1825       60.4906
+    RHS1      NodeBalance1840       -16.314
+    RHS1      NodeBalance1902       27.1143
+    RHS1      NodeBalance1933       41.1531
+    RHS1      NodeBalance2011       16.7148
+    RHS1      NodeBalance2015       19.0182
+    RHS1      NodeBalance2016      -15.1654
+    RHS1      NodeBalance2018       60.6328
+    RHS1      NodeBalance2028      -25.9785
+    RHS1      NodeBalance2036       7.62891
+ SC Scen26    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -21.2083
+    RHS1      NodeBalance0112       5.35908
+    RHS1      NodeBalance0113      -73.6655
+    RHS1      NodeBalance0130      -74.1095
+    RHS1      NodeBalance0131       7.28261
+    RHS1      NodeBalance0133      -39.1209
+    RHS1      NodeBalance0135        27.291
+    RHS1      NodeBalance0227       95.4981
+    RHS1      NodeBalance0314      -68.1334
+    RHS1      NodeBalance0320       26.2834
+    RHS1      NodeBalance0339      -54.1456
+    RHS1      NodeBalance0401       45.2064
+    RHS1      NodeBalance0403      -26.7799
+    RHS1      NodeBalance0408       8.85647
+    RHS1      NodeBalance0410       9.11075
+    RHS1      NodeBalance0421      -10.4577
+    RHS1      NodeBalance0425      -18.0899
+    RHS1      NodeBalance0431      -7.28261
+    RHS1      NodeBalance0505      -49.2835
+    RHS1      NodeBalance0508      -8.85647
+    RHS1      NodeBalance0520      -26.2834
+    RHS1      NodeBalance0629         28.76
+    RHS1      NodeBalance0705       49.2835
+    RHS1      NodeBalance0706      -13.3022
+    RHS1      NodeBalance0707       53.4175
+    RHS1      NodeBalance0709      -42.2313
+    RHS1      NodeBalance0722      -96.4818
+    RHS1      NodeBalance0736      -7.75337
+    RHS1      NodeBalance0817      -22.5063
+    RHS1      NodeBalance0819       16.9431
+    RHS1      NodeBalance0837       45.4375
+    RHS1      NodeBalance0838      -28.4837
+    RHS1      NodeBalance0904       40.6452
+    RHS1      NodeBalance0913       73.6655
+    RHS1      NodeBalance0926       83.2642
+    RHS1      NodeBalance0927      -95.4981
+    RHS1      NodeBalance0932       26.3579
+    RHS1      NodeBalance1003       26.7799
+    RHS1      NodeBalance1018      -86.1468
+    RHS1      NodeBalance1024      -78.4435
+    RHS1      NodeBalance1134        8.9327
+    RHS1      NodeBalance1202      -35.8856
+    RHS1      NodeBalance1207      -53.4175
+    RHS1      NodeBalance1228       25.3723
+    RHS1      NodeBalance1310      -9.11075
+    RHS1      NodeBalance1319      -16.9431
+    RHS1      NodeBalance1339       54.1456
+    RHS1      NodeBalance1404      -40.6452
+    RHS1      NodeBalance1409       42.2313
+    RHS1      NodeBalance1414       68.1334
+    RHS1      NodeBalance1416       32.9971
+    RHS1      NodeBalance1423      -42.0533
+    RHS1      NodeBalance1429        -28.76
+    RHS1      NodeBalance1522       96.4818
+    RHS1      NodeBalance1524       78.4435
+    RHS1      NodeBalance1534       -8.9327
+    RHS1      NodeBalance1606       13.3022
+    RHS1      NodeBalance1617       22.5063
+    RHS1      NodeBalance1626      -83.2642
+    RHS1      NodeBalance1630       74.1095
+    RHS1      NodeBalance1635       -27.291
+    RHS1      NodeBalance1701      -45.2064
+    RHS1      NodeBalance1712      -5.35908
+    RHS1      NodeBalance1721       10.4577
+    RHS1      NodeBalance1732      -26.3579
+    RHS1      NodeBalance1737      -45.4375
+    RHS1      NodeBalance1738       28.4837
+    RHS1      NodeBalance1740       15.0388
+    RHS1      NodeBalance1815      -25.6948
+    RHS1      NodeBalance1823       42.0533
+    RHS1      NodeBalance1825       18.0899
+    RHS1      NodeBalance1840      -15.0388
+    RHS1      NodeBalance1902       35.8856
+    RHS1      NodeBalance1933       39.1209
+    RHS1      NodeBalance2011       21.2083
+    RHS1      NodeBalance2015       25.6948
+    RHS1      NodeBalance2016      -32.9971
+    RHS1      NodeBalance2018       86.1468
+    RHS1      NodeBalance2028      -25.3723
+    RHS1      NodeBalance2036       7.75337
+ SC Scen27    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -38.2725
+    RHS1      NodeBalance0112       25.1372
+    RHS1      NodeBalance0113      -104.954
+    RHS1      NodeBalance0130      -54.0506
+    RHS1      NodeBalance0131       7.90985
+    RHS1      NodeBalance0133      -25.1886
+    RHS1      NodeBalance0135       75.1737
+    RHS1      NodeBalance0227       59.9308
+    RHS1      NodeBalance0314      -107.488
+    RHS1      NodeBalance0320       57.2515
+    RHS1      NodeBalance0339      -100.074
+    RHS1      NodeBalance0401       65.7732
+    RHS1      NodeBalance0403      -53.6689
+    RHS1      NodeBalance0408        76.919
+    RHS1      NodeBalance0410       56.8113
+    RHS1      NodeBalance0421      -17.8169
+    RHS1      NodeBalance0425      -51.2063
+    RHS1      NodeBalance0431      -7.90985
+    RHS1      NodeBalance0505      -38.1004
+    RHS1      NodeBalance0508       -76.919
+    RHS1      NodeBalance0520      -57.2515
+    RHS1      NodeBalance0629       29.0047
+    RHS1      NodeBalance0705       38.1004
+    RHS1      NodeBalance0706      -54.6682
+    RHS1      NodeBalance0707       40.1733
+    RHS1      NodeBalance0709      -38.8789
+    RHS1      NodeBalance0722      -65.4617
+    RHS1      NodeBalance0736      -11.2534
+    RHS1      NodeBalance0817      -27.7035
+    RHS1      NodeBalance0819       18.9919
+    RHS1      NodeBalance0837       46.2317
+    RHS1      NodeBalance0838      -80.1376
+    RHS1      NodeBalance0904       40.7609
+    RHS1      NodeBalance0913       104.954
+    RHS1      NodeBalance0926       46.9024
+    RHS1      NodeBalance0927      -59.9308
+    RHS1      NodeBalance0932       20.7183
+    RHS1      NodeBalance1003       53.6689
+    RHS1      NodeBalance1018      -88.0937
+    RHS1      NodeBalance1024      -51.3185
+    RHS1      NodeBalance1134       8.66844
+    RHS1      NodeBalance1202      -31.3742
+    RHS1      NodeBalance1207      -40.1733
+    RHS1      NodeBalance1228       20.7851
+    RHS1      NodeBalance1310      -56.8113
+    RHS1      NodeBalance1319      -18.9919
+    RHS1      NodeBalance1339       100.074
+    RHS1      NodeBalance1404      -40.7609
+    RHS1      NodeBalance1409       38.8789
+    RHS1      NodeBalance1414       107.488
+    RHS1      NodeBalance1416       33.2816
+    RHS1      NodeBalance1423      -44.4872
+    RHS1      NodeBalance1429      -29.0047
+    RHS1      NodeBalance1522       65.4617
+    RHS1      NodeBalance1524       51.3185
+    RHS1      NodeBalance1534      -8.66844
+    RHS1      NodeBalance1606       54.6682
+    RHS1      NodeBalance1617       27.7035
+    RHS1      NodeBalance1626      -46.9024
+    RHS1      NodeBalance1630       54.0506
+    RHS1      NodeBalance1635      -75.1737
+    RHS1      NodeBalance1701      -65.7732
+    RHS1      NodeBalance1712      -25.1372
+    RHS1      NodeBalance1721       17.8169
+    RHS1      NodeBalance1732      -20.7183
+    RHS1      NodeBalance1737      -46.2317
+    RHS1      NodeBalance1738       80.1376
+    RHS1      NodeBalance1740       19.3662
+    RHS1      NodeBalance1815      -6.03656
+    RHS1      NodeBalance1823       44.4872
+    RHS1      NodeBalance1825       51.2063
+    RHS1      NodeBalance1840      -19.3662
+    RHS1      NodeBalance1902       31.3742
+    RHS1      NodeBalance1933       25.1886
+    RHS1      NodeBalance2011       38.2725
+    RHS1      NodeBalance2015       6.03656
+    RHS1      NodeBalance2016      -33.2816
+    RHS1      NodeBalance2018       88.0937
+    RHS1      NodeBalance2028      -20.7851
+    RHS1      NodeBalance2036       11.2534
+ SC Scen28    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -36.2044
+    RHS1      NodeBalance0112       24.0572
+    RHS1      NodeBalance0113      -3.56203
+    RHS1      NodeBalance0130      -39.9903
+    RHS1      NodeBalance0131       26.9856
+    RHS1      NodeBalance0133      -33.8775
+    RHS1      NodeBalance0135       40.2559
+    RHS1      NodeBalance0227       58.8143
+    RHS1      NodeBalance0314      -67.7282
+    RHS1      NodeBalance0320        41.942
+    RHS1      NodeBalance0339      -72.2772
+    RHS1      NodeBalance0401       72.4566
+    RHS1      NodeBalance0403      -51.7963
+    RHS1      NodeBalance0408       55.9553
+    RHS1      NodeBalance0410        71.357
+    RHS1      NodeBalance0421      -12.2858
+    RHS1      NodeBalance0425      -49.7223
+    RHS1      NodeBalance0431      -26.9856
+    RHS1      NodeBalance0505      -37.0122
+    RHS1      NodeBalance0508      -55.9553
+    RHS1      NodeBalance0520       -41.942
+    RHS1      NodeBalance0629       47.5846
+    RHS1      NodeBalance0705       37.0122
+    RHS1      NodeBalance0706      -50.3529
+    RHS1      NodeBalance0707        38.806
+    RHS1      NodeBalance0709      -46.3204
+    RHS1      NodeBalance0722      -9.14307
+    RHS1      NodeBalance0736       -10.596
+    RHS1      NodeBalance0817      -34.2145
+    RHS1      NodeBalance0819       20.0613
+    RHS1      NodeBalance0837       50.1133
+    RHS1      NodeBalance0838      -27.3033
+    RHS1      NodeBalance0904       8.73675
+    RHS1      NodeBalance0913       3.56203
+    RHS1      NodeBalance0926       49.4292
+    RHS1      NodeBalance0927      -58.8143
+    RHS1      NodeBalance0932       19.7892
+    RHS1      NodeBalance1003       51.7963
+    RHS1      NodeBalance1018      -90.6697
+    RHS1      NodeBalance1024      -43.8766
+    RHS1      NodeBalance1134        8.2338
+    RHS1      NodeBalance1202      -27.0714
+    RHS1      NodeBalance1207       -38.806
+    RHS1      NodeBalance1228       17.8655
+    RHS1      NodeBalance1310       -71.357
+    RHS1      NodeBalance1319      -20.0613
+    RHS1      NodeBalance1339       72.2772
+    RHS1      NodeBalance1404      -8.73675
+    RHS1      NodeBalance1409       46.3204
+    RHS1      NodeBalance1414       67.7282
+    RHS1      NodeBalance1416       4.35262
+    RHS1      NodeBalance1423      -45.5116
+    RHS1      NodeBalance1429      -47.5846
+    RHS1      NodeBalance1522       9.14307
+    RHS1      NodeBalance1524       43.8766
+    RHS1      NodeBalance1534       -8.2338
+    RHS1      NodeBalance1606       50.3529
+    RHS1      NodeBalance1617       34.2145
+    RHS1      NodeBalance1626      -49.4292
+    RHS1      NodeBalance1630       39.9903
+    RHS1      NodeBalance1635      -40.2559
+    RHS1      NodeBalance1701      -72.4566
+    RHS1      NodeBalance1712      -24.0572
+    RHS1      NodeBalance1721       12.2858
+    RHS1      NodeBalance1732      -19.7892
+    RHS1      NodeBalance1737      -50.1133
+    RHS1      NodeBalance1738       27.3033
+    RHS1      NodeBalance1740       33.0215
+    RHS1      NodeBalance1815      -31.5744
+    RHS1      NodeBalance1823       45.5116
+    RHS1      NodeBalance1825       49.7223
+    RHS1      NodeBalance1840      -33.0215
+    RHS1      NodeBalance1902       27.0714
+    RHS1      NodeBalance1933       33.8775
+    RHS1      NodeBalance2011       36.2044
+    RHS1      NodeBalance2015       31.5744
+    RHS1      NodeBalance2016      -4.35262
+    RHS1      NodeBalance2018       90.6697
+    RHS1      NodeBalance2028      -17.8655
+    RHS1      NodeBalance2036        10.596
+ SC Scen29    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -33.5833
+    RHS1      NodeBalance0112       10.6952
+    RHS1      NodeBalance0113      -99.8356
+    RHS1      NodeBalance0130      -15.9885
+    RHS1      NodeBalance0131       11.8571
+    RHS1      NodeBalance0133      -25.7095
+    RHS1      NodeBalance0135       12.2187
+    RHS1      NodeBalance0227       82.5353
+    RHS1      NodeBalance0314      -73.2528
+    RHS1      NodeBalance0320       24.5218
+    RHS1      NodeBalance0339      -36.0616
+    RHS1      NodeBalance0401       38.4038
+    RHS1      NodeBalance0403      -82.1616
+    RHS1      NodeBalance0408       63.5838
+    RHS1      NodeBalance0410        63.528
+    RHS1      NodeBalance0421      -15.4923
+    RHS1      NodeBalance0425      -25.6324
+    RHS1      NodeBalance0431      -11.8571
+    RHS1      NodeBalance0505      -47.9133
+    RHS1      NodeBalance0508      -63.5838
+    RHS1      NodeBalance0520      -24.5218
+    RHS1      NodeBalance0629       39.9512
+    RHS1      NodeBalance0705       47.9133
+    RHS1      NodeBalance0706      -71.4558
+    RHS1      NodeBalance0707       56.6765
+    RHS1      NodeBalance0709      -49.9734
+    RHS1      NodeBalance0722      -76.7157
+    RHS1      NodeBalance0736      -8.08355
+    RHS1      NodeBalance0817      -30.7857
+    RHS1      NodeBalance0819       15.1401
+    RHS1      NodeBalance0837       53.2852
+    RHS1      NodeBalance0838      -55.8625
+    RHS1      NodeBalance0904       30.9362
+    RHS1      NodeBalance0913       99.8356
+    RHS1      NodeBalance0926       66.0971
+    RHS1      NodeBalance0927      -82.5353
+    RHS1      NodeBalance0932       32.1916
+    RHS1      NodeBalance1003       82.1616
+    RHS1      NodeBalance1018      -78.9186
+    RHS1      NodeBalance1024      -22.6219
+    RHS1      NodeBalance1134       14.2483
+    RHS1      NodeBalance1202      -19.7709
+    RHS1      NodeBalance1207      -56.6765
+    RHS1      NodeBalance1228        36.866
+    RHS1      NodeBalance1310       -63.528
+    RHS1      NodeBalance1319      -15.1401
+    RHS1      NodeBalance1339       36.0616
+    RHS1      NodeBalance1404      -30.9362
+    RHS1      NodeBalance1409       49.9734
+    RHS1      NodeBalance1414       73.2528
+    RHS1      NodeBalance1416       36.5115
+    RHS1      NodeBalance1423      -31.2674
+    RHS1      NodeBalance1429      -39.9512
+    RHS1      NodeBalance1522       76.7157
+    RHS1      NodeBalance1524       22.6219
+    RHS1      NodeBalance1534      -14.2483
+    RHS1      NodeBalance1606       71.4558
+    RHS1      NodeBalance1617       30.7857
+    RHS1      NodeBalance1626      -66.0971
+    RHS1      NodeBalance1630       15.9885
+    RHS1      NodeBalance1635      -12.2187
+    RHS1      NodeBalance1701      -38.4038
+    RHS1      NodeBalance1712      -10.6952
+    RHS1      NodeBalance1721       15.4923
+    RHS1      NodeBalance1732      -32.1916
+    RHS1      NodeBalance1737      -53.2852
+    RHS1      NodeBalance1738       55.8625
+    RHS1      NodeBalance1740       29.6506
+    RHS1      NodeBalance1815      -16.8022
+    RHS1      NodeBalance1823       31.2674
+    RHS1      NodeBalance1825       25.6324
+    RHS1      NodeBalance1840      -29.6506
+    RHS1      NodeBalance1902       19.7709
+    RHS1      NodeBalance1933       25.7095
+    RHS1      NodeBalance2011       33.5833
+    RHS1      NodeBalance2015       16.8022
+    RHS1      NodeBalance2016      -36.5115
+    RHS1      NodeBalance2018       78.9186
+    RHS1      NodeBalance2028       -36.866
+    RHS1      NodeBalance2036       8.08355
+ SC Scen30    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -30.6894
+    RHS1      NodeBalance0112       17.3834
+    RHS1      NodeBalance0113      -77.7332
+    RHS1      NodeBalance0130      -18.5175
+    RHS1      NodeBalance0131       20.2732
+    RHS1      NodeBalance0133      -38.1656
+    RHS1      NodeBalance0135       65.8877
+    RHS1      NodeBalance0227       72.1986
+    RHS1      NodeBalance0314      -80.4977
+    RHS1      NodeBalance0320       64.5025
+    RHS1      NodeBalance0339      -110.636
+    RHS1      NodeBalance0401        28.363
+    RHS1      NodeBalance0403      -72.8267
+    RHS1      NodeBalance0408       10.7922
+    RHS1      NodeBalance0410        50.725
+    RHS1      NodeBalance0421      -14.2984
+    RHS1      NodeBalance0425      -38.8071
+    RHS1      NodeBalance0431      -20.2732
+    RHS1      NodeBalance0505      -40.9076
+    RHS1      NodeBalance0508      -10.7922
+    RHS1      NodeBalance0520      -64.5025
+    RHS1      NodeBalance0629       31.9458
+    RHS1      NodeBalance0705       40.9076
+    RHS1      NodeBalance0706      -54.1979
+    RHS1      NodeBalance0707       50.1359
+    RHS1      NodeBalance0709       -51.113
+    RHS1      NodeBalance0722      -106.182
+    RHS1      NodeBalance0736       -9.6651
+    RHS1      NodeBalance0817      -25.7817
+    RHS1      NodeBalance0819       18.7298
+    RHS1      NodeBalance0837       44.4603
+    RHS1      NodeBalance0838      -59.8316
+    RHS1      NodeBalance0904       32.4234
+    RHS1      NodeBalance0913       77.7332
+    RHS1      NodeBalance0926       75.0307
+    RHS1      NodeBalance0927      -72.1986
+    RHS1      NodeBalance0932       41.6168
+    RHS1      NodeBalance1003       72.8267
+    RHS1      NodeBalance1018      -65.3778
+    RHS1      NodeBalance1024      -71.2777
+    RHS1      NodeBalance1134       10.5097
+    RHS1      NodeBalance1202      -35.0763
+    RHS1      NodeBalance1207      -50.1359
+    RHS1      NodeBalance1228       17.1031
+    RHS1      NodeBalance1310       -50.725
+    RHS1      NodeBalance1319      -18.7298
+    RHS1      NodeBalance1339       110.636
+    RHS1      NodeBalance1404      -32.4234
+    RHS1      NodeBalance1409        51.113
+    RHS1      NodeBalance1414       80.4977
+    RHS1      NodeBalance1416       33.9858
+    RHS1      NodeBalance1423      -43.8887
+    RHS1      NodeBalance1429      -31.9458
+    RHS1      NodeBalance1522       106.182
+    RHS1      NodeBalance1524       71.2777
+    RHS1      NodeBalance1534      -10.5097
+    RHS1      NodeBalance1606       54.1979
+    RHS1      NodeBalance1617       25.7817
+    RHS1      NodeBalance1626      -75.0307
+    RHS1      NodeBalance1630       18.5175
+    RHS1      NodeBalance1635      -65.8877
+    RHS1      NodeBalance1701       -28.363
+    RHS1      NodeBalance1712      -17.3834
+    RHS1      NodeBalance1721       14.2984
+    RHS1      NodeBalance1732      -41.6168
+    RHS1      NodeBalance1737      -44.4603
+    RHS1      NodeBalance1738       59.8316
+    RHS1      NodeBalance1740       10.4775
+    RHS1      NodeBalance1815      -26.6943
+    RHS1      NodeBalance1823       43.8887
+    RHS1      NodeBalance1825       38.8071
+    RHS1      NodeBalance1840      -10.4775
+    RHS1      NodeBalance1902       35.0763
+    RHS1      NodeBalance1933       38.1656
+    RHS1      NodeBalance2011       30.6894
+    RHS1      NodeBalance2015       26.6943
+    RHS1      NodeBalance2016      -33.9858
+    RHS1      NodeBalance2018       65.3778
+    RHS1      NodeBalance2028      -17.1031
+    RHS1      NodeBalance2036        9.6651
+ SC Scen31    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111       -22.585
+    RHS1      NodeBalance0112       20.4063
+    RHS1      NodeBalance0113      -84.1006
+    RHS1      NodeBalance0130      -61.7543
+    RHS1      NodeBalance0131       29.2526
+    RHS1      NodeBalance0133      -32.7604
+    RHS1      NodeBalance0135       68.7325
+    RHS1      NodeBalance0227        28.703
+    RHS1      NodeBalance0314      -62.3844
+    RHS1      NodeBalance0320        65.185
+    RHS1      NodeBalance0339      -112.847
+    RHS1      NodeBalance0401       62.2281
+    RHS1      NodeBalance0403      -75.5518
+    RHS1      NodeBalance0408       67.2511
+    RHS1      NodeBalance0410       43.3597
+    RHS1      NodeBalance0421      -12.7928
+    RHS1      NodeBalance0425      -67.0749
+    RHS1      NodeBalance0431      -29.2526
+    RHS1      NodeBalance0505      -27.1719
+    RHS1      NodeBalance0508      -67.2511
+    RHS1      NodeBalance0520       -65.185
+    RHS1      NodeBalance0629       30.6007
+    RHS1      NodeBalance0705       27.1719
+    RHS1      NodeBalance0706      -82.3935
+    RHS1      NodeBalance0707       20.7131
+    RHS1      NodeBalance0709      -48.0414
+    RHS1      NodeBalance0722      -56.3458
+    RHS1      NodeBalance0736      -8.82483
+    RHS1      NodeBalance0817      -19.1246
+    RHS1      NodeBalance0819       9.39433
+    RHS1      NodeBalance0837       29.1772
+    RHS1      NodeBalance0838      -82.9203
+    RHS1      NodeBalance0904       31.0083
+    RHS1      NodeBalance0913       84.1006
+    RHS1      NodeBalance0926       62.9993
+    RHS1      NodeBalance0927       -28.703
+    RHS1      NodeBalance0932       32.6481
+    RHS1      NodeBalance1003       75.5518
+    RHS1      NodeBalance1018      -85.9179
+    RHS1      NodeBalance1024      -59.3447
+    RHS1      NodeBalance1134       10.0221
+    RHS1      NodeBalance1202      -36.1603
+    RHS1      NodeBalance1207      -20.7131
+    RHS1      NodeBalance1228       13.8914
+    RHS1      NodeBalance1310      -43.3597
+    RHS1      NodeBalance1319      -9.39433
+    RHS1      NodeBalance1339       112.847
+    RHS1      NodeBalance1404      -31.0083
+    RHS1      NodeBalance1409       48.0414
+    RHS1      NodeBalance1414       62.3844
+    RHS1      NodeBalance1416       28.4408
+    RHS1      NodeBalance1423      -51.3449
+    RHS1      NodeBalance1429      -30.6007
+    RHS1      NodeBalance1522       56.3458
+    RHS1      NodeBalance1524       59.3447
+    RHS1      NodeBalance1534      -10.0221
+    RHS1      NodeBalance1606       82.3935
+    RHS1      NodeBalance1617       19.1246
+    RHS1      NodeBalance1626      -62.9993
+    RHS1      NodeBalance1630       61.7543
+    RHS1      NodeBalance1635      -68.7325
+    RHS1      NodeBalance1701      -62.2281
+    RHS1      NodeBalance1712      -20.4063
+    RHS1      NodeBalance1721       12.7928
+    RHS1      NodeBalance1732      -32.6481
+    RHS1      NodeBalance1737      -29.1772
+    RHS1      NodeBalance1738       82.9203
+    RHS1      NodeBalance1740       35.3573
+    RHS1      NodeBalance1815      -14.3225
+    RHS1      NodeBalance1823       51.3449
+    RHS1      NodeBalance1825       67.0749
+    RHS1      NodeBalance1840      -35.3573
+    RHS1      NodeBalance1902       36.1603
+    RHS1      NodeBalance1933       32.7604
+    RHS1      NodeBalance2011        22.585
+    RHS1      NodeBalance2015       14.3225
+    RHS1      NodeBalance2016      -28.4408
+    RHS1      NodeBalance2018       85.9179
+    RHS1      NodeBalance2028      -13.8914
+    RHS1      NodeBalance2036       8.82483
+ SC Scen32    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -32.7603
+    RHS1      NodeBalance0112       18.5272
+    RHS1      NodeBalance0113       -14.748
+    RHS1      NodeBalance0130       -60.006
+    RHS1      NodeBalance0131       27.9836
+    RHS1      NodeBalance0133      -22.4903
+    RHS1      NodeBalance0135       67.0196
+    RHS1      NodeBalance0227       54.4928
+    RHS1      NodeBalance0314      -42.8563
+    RHS1      NodeBalance0320       4.15393
+    RHS1      NodeBalance0339      -57.5238
+    RHS1      NodeBalance0401       56.7304
+    RHS1      NodeBalance0403      -63.9626
+    RHS1      NodeBalance0408       60.1436
+    RHS1      NodeBalance0410       27.3117
+    RHS1      NodeBalance0421      -18.7396
+    RHS1      NodeBalance0425      -19.5052
+    RHS1      NodeBalance0431      -27.9836
+    RHS1      NodeBalance0505      -37.5165
+    RHS1      NodeBalance0508      -60.1436
+    RHS1      NodeBalance0520      -4.15393
+    RHS1      NodeBalance0629       38.2141
+    RHS1      NodeBalance0705       37.5165
+    RHS1      NodeBalance0706      -81.0739
+    RHS1      NodeBalance0707       20.3633
+    RHS1      NodeBalance0709       -10.894
+    RHS1      NodeBalance0722       -53.731
+    RHS1      NodeBalance0736      -14.8115
+    RHS1      NodeBalance0817      -18.7831
+    RHS1      NodeBalance0819       10.1007
+    RHS1      NodeBalance0837       27.2353
+    RHS1      NodeBalance0838      -36.4391
+    RHS1      NodeBalance0904       34.9095
+    RHS1      NodeBalance0913        14.748
+    RHS1      NodeBalance0926       62.8368
+    RHS1      NodeBalance0927      -54.4928
+    RHS1      NodeBalance0932       10.0766
+    RHS1      NodeBalance1003       63.9626
+    RHS1      NodeBalance1018      -59.6643
+    RHS1      NodeBalance1024      -40.9683
+    RHS1      NodeBalance1134       12.6945
+    RHS1      NodeBalance1202      -37.1193
+    RHS1      NodeBalance1207      -20.3633
+    RHS1      NodeBalance1228       26.6952
+    RHS1      NodeBalance1310      -27.3117
+    RHS1      NodeBalance1319      -10.1007
+    RHS1      NodeBalance1339       57.5238
+    RHS1      NodeBalance1404      -34.9095
+    RHS1      NodeBalance1409        10.894
+    RHS1      NodeBalance1414       42.8563
+    RHS1      NodeBalance1416       11.9095
+    RHS1      NodeBalance1423      -43.0747
+    RHS1      NodeBalance1429      -38.2141
+    RHS1      NodeBalance1522        53.731
+    RHS1      NodeBalance1524       40.9683
+    RHS1      NodeBalance1534      -12.6945
+    RHS1      NodeBalance1606       81.0739
+    RHS1      NodeBalance1617       18.7831
+    RHS1      NodeBalance1626      -62.8368
+    RHS1      NodeBalance1630        60.006
+    RHS1      NodeBalance1635      -67.0196
+    RHS1      NodeBalance1701      -56.7304
+    RHS1      NodeBalance1712      -18.5272
+    RHS1      NodeBalance1721       18.7396
+    RHS1      NodeBalance1732      -10.0766
+    RHS1      NodeBalance1737      -27.2353
+    RHS1      NodeBalance1738       36.4391
+    RHS1      NodeBalance1740       31.9913
+    RHS1      NodeBalance1815      -31.9939
+    RHS1      NodeBalance1823       43.0747
+    RHS1      NodeBalance1825       19.5052
+    RHS1      NodeBalance1840      -31.9913
+    RHS1      NodeBalance1902       37.1193
+    RHS1      NodeBalance1933       22.4903
+    RHS1      NodeBalance2011       32.7603
+    RHS1      NodeBalance2015       31.9939
+    RHS1      NodeBalance2016      -11.9095
+    RHS1      NodeBalance2018       59.6643
+    RHS1      NodeBalance2028      -26.6952
+    RHS1      NodeBalance2036       14.8115
+ SC Scen33    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -34.8687
+    RHS1      NodeBalance0112       23.0167
+    RHS1      NodeBalance0113      -106.639
+    RHS1      NodeBalance0130      -52.6908
+    RHS1      NodeBalance0131       19.1647
+    RHS1      NodeBalance0133      -28.2805
+    RHS1      NodeBalance0135       44.7476
+    RHS1      NodeBalance0227       87.9515
+    RHS1      NodeBalance0314       -76.709
+    RHS1      NodeBalance0320       55.1479
+    RHS1      NodeBalance0339      -75.9407
+    RHS1      NodeBalance0401       60.1679
+    RHS1      NodeBalance0403      -43.5948
+    RHS1      NodeBalance0408       55.4848
+    RHS1      NodeBalance0410       56.4362
+    RHS1      NodeBalance0421      -13.2807
+    RHS1      NodeBalance0425      -59.3043
+    RHS1      NodeBalance0431      -19.1647
+    RHS1      NodeBalance0505      -34.7462
+    RHS1      NodeBalance0508      -55.4848
+    RHS1      NodeBalance0520      -55.1479
+    RHS1      NodeBalance0629       37.5125
+    RHS1      NodeBalance0705       34.7462
+    RHS1      NodeBalance0706      -66.5424
+    RHS1      NodeBalance0707         47.95
+    RHS1      NodeBalance0709      -66.8858
+    RHS1      NodeBalance0722      -97.9072
+    RHS1      NodeBalance0736      -14.3493
+    RHS1      NodeBalance0817      -12.3567
+    RHS1      NodeBalance0819       5.45703
+    RHS1      NodeBalance0837       51.1343
+    RHS1      NodeBalance0838      -46.2987
+    RHS1      NodeBalance0904       46.1708
+    RHS1      NodeBalance0913       106.639
+    RHS1      NodeBalance0926       71.5175
+    RHS1      NodeBalance0927      -87.9515
+    RHS1      NodeBalance0932       26.1153
+    RHS1      NodeBalance1003       43.5948
+    RHS1      NodeBalance1018      -30.6959
+    RHS1      NodeBalance1024      -52.6105
+    RHS1      NodeBalance1134        4.7859
+    RHS1      NodeBalance1202      -26.3295
+    RHS1      NodeBalance1207        -47.95
+    RHS1      NodeBalance1228       16.3529
+    RHS1      NodeBalance1310      -56.4362
+    RHS1      NodeBalance1319      -5.45703
+    RHS1      NodeBalance1339       75.9407
+    RHS1      NodeBalance1404      -46.1708
+    RHS1      NodeBalance1409       66.8858
+    RHS1      NodeBalance1414        76.709
+    RHS1      NodeBalance1416       39.7374
+    RHS1      NodeBalance1423      -45.7388
+    RHS1      NodeBalance1429      -37.5125
+    RHS1      NodeBalance1522       97.9072
+    RHS1      NodeBalance1524       52.6105
+    RHS1      NodeBalance1534       -4.7859
+    RHS1      NodeBalance1606       66.5424
+    RHS1      NodeBalance1617       12.3567
+    RHS1      NodeBalance1626      -71.5175
+    RHS1      NodeBalance1630       52.6908
+    RHS1      NodeBalance1635      -44.7476
+    RHS1      NodeBalance1701      -60.1679
+    RHS1      NodeBalance1712      -23.0167
+    RHS1      NodeBalance1721       13.2807
+    RHS1      NodeBalance1732      -26.1153
+    RHS1      NodeBalance1737      -51.1343
+    RHS1      NodeBalance1738       46.2987
+    RHS1      NodeBalance1740       21.7892
+    RHS1      NodeBalance1815      -23.5034
+    RHS1      NodeBalance1823       45.7388
+    RHS1      NodeBalance1825       59.3043
+    RHS1      NodeBalance1840      -21.7892
+    RHS1      NodeBalance1902       26.3295
+    RHS1      NodeBalance1933       28.2805
+    RHS1      NodeBalance2011       34.8687
+    RHS1      NodeBalance2015       23.5034
+    RHS1      NodeBalance2016      -39.7374
+    RHS1      NodeBalance2018       30.6959
+    RHS1      NodeBalance2028      -16.3529
+    RHS1      NodeBalance2036       14.3493
+ SC Scen34    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -35.3136
+    RHS1      NodeBalance0112       6.40863
+    RHS1      NodeBalance0113      -50.3342
+    RHS1      NodeBalance0130      -77.0279
+    RHS1      NodeBalance0131        17.859
+    RHS1      NodeBalance0133      -36.3744
+    RHS1      NodeBalance0135       29.9977
+    RHS1      NodeBalance0227       106.608
+    RHS1      NodeBalance0314       -73.184
+    RHS1      NodeBalance0320       50.3153
+    RHS1      NodeBalance0339      -89.9198
+    RHS1      NodeBalance0401       61.4594
+    RHS1      NodeBalance0403       -92.824
+    RHS1      NodeBalance0408       43.1094
+    RHS1      NodeBalance0410       34.3762
+    RHS1      NodeBalance0421      -13.6808
+    RHS1      NodeBalance0425      -48.2463
+    RHS1      NodeBalance0431       -17.859
+    RHS1      NodeBalance0505      -15.6462
+    RHS1      NodeBalance0508      -43.1094
+    RHS1      NodeBalance0520      -50.3153
+    RHS1      NodeBalance0629       27.9119
+    RHS1      NodeBalance0705       15.6462
+    RHS1      NodeBalance0706      -61.8839
+    RHS1      NodeBalance0707       10.6131
+    RHS1      NodeBalance0709      -55.8438
+    RHS1      NodeBalance0722      -18.8203
+    RHS1      NodeBalance0736      -15.4754
+    RHS1      NodeBalance0817      -30.4524
+    RHS1      NodeBalance0819       10.8261
+    RHS1      NodeBalance0837       23.5769
+    RHS1      NodeBalance0838      -71.7299
+    RHS1      NodeBalance0904       37.0601
+    RHS1      NodeBalance0913       50.3342
+    RHS1      NodeBalance0926       43.9822
+    RHS1      NodeBalance0927      -106.608
+    RHS1      NodeBalance0932       22.5093
+    RHS1      NodeBalance1003        92.824
+    RHS1      NodeBalance1018      -47.0267
+    RHS1      NodeBalance1024      -73.4448
+    RHS1      NodeBalance1134       7.84153
+    RHS1      NodeBalance1202      -12.0936
+    RHS1      NodeBalance1207      -10.6131
+    RHS1      NodeBalance1228       17.0499
+    RHS1      NodeBalance1310      -34.3762
+    RHS1      NodeBalance1319      -10.8261
+    RHS1      NodeBalance1339       89.9198
+    RHS1      NodeBalance1404      -37.0601
+    RHS1      NodeBalance1409       55.8438
+    RHS1      NodeBalance1414        73.184
+    RHS1      NodeBalance1416       35.1992
+    RHS1      NodeBalance1423      -38.0269
+    RHS1      NodeBalance1429      -27.9119
+    RHS1      NodeBalance1522       18.8203
+    RHS1      NodeBalance1524       73.4448
+    RHS1      NodeBalance1534      -7.84153
+    RHS1      NodeBalance1606       61.8839
+    RHS1      NodeBalance1617       30.4524
+    RHS1      NodeBalance1626      -43.9822
+    RHS1      NodeBalance1630       77.0279
+    RHS1      NodeBalance1635      -29.9977
+    RHS1      NodeBalance1701      -61.4594
+    RHS1      NodeBalance1712      -6.40863
+    RHS1      NodeBalance1721       13.6808
+    RHS1      NodeBalance1732      -22.5093
+    RHS1      NodeBalance1737      -23.5769
+    RHS1      NodeBalance1738       71.7299
+    RHS1      NodeBalance1740       17.2522
+    RHS1      NodeBalance1815      -19.5501
+    RHS1      NodeBalance1823       38.0269
+    RHS1      NodeBalance1825       48.2463
+    RHS1      NodeBalance1840      -17.2522
+    RHS1      NodeBalance1902       12.0936
+    RHS1      NodeBalance1933       36.3744
+    RHS1      NodeBalance2011       35.3136
+    RHS1      NodeBalance2015       19.5501
+    RHS1      NodeBalance2016      -35.1992
+    RHS1      NodeBalance2018       47.0267
+    RHS1      NodeBalance2028      -17.0499
+    RHS1      NodeBalance2036       15.4754
+ SC Scen35    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -20.2845
+    RHS1      NodeBalance0112       17.9312
+    RHS1      NodeBalance0113      -75.0955
+    RHS1      NodeBalance0130      -69.0328
+    RHS1      NodeBalance0131       20.8258
+    RHS1      NodeBalance0133      -29.3295
+    RHS1      NodeBalance0135       71.3599
+    RHS1      NodeBalance0227       61.0132
+    RHS1      NodeBalance0314      -88.7324
+    RHS1      NodeBalance0320       56.0505
+    RHS1      NodeBalance0339      -48.1794
+    RHS1      NodeBalance0401       73.0256
+    RHS1      NodeBalance0403      -56.9312
+    RHS1      NodeBalance0408       34.5527
+    RHS1      NodeBalance0410       50.2608
+    RHS1      NodeBalance0421      -17.8674
+    RHS1      NodeBalance0425      -51.8856
+    RHS1      NodeBalance0431      -20.8258
+    RHS1      NodeBalance0505         -52.3
+    RHS1      NodeBalance0508      -34.5527
+    RHS1      NodeBalance0520      -56.0505
+    RHS1      NodeBalance0629       22.0625
+    RHS1      NodeBalance0705          52.3
+    RHS1      NodeBalance0706       -73.997
+    RHS1      NodeBalance0707       45.4665
+    RHS1      NodeBalance0709      -23.5617
+    RHS1      NodeBalance0722      -33.7086
+    RHS1      NodeBalance0736      -4.72318
+    RHS1      NodeBalance0817      -36.2196
+    RHS1      NodeBalance0819       4.79024
+    RHS1      NodeBalance0837       2.16784
+    RHS1      NodeBalance0838      -51.4287
+    RHS1      NodeBalance0904       35.3352
+    RHS1      NodeBalance0913       75.0955
+    RHS1      NodeBalance0926       77.8463
+    RHS1      NodeBalance0927      -61.0132
+    RHS1      NodeBalance0932       33.1535
+    RHS1      NodeBalance1003       56.9312
+    RHS1      NodeBalance1018      -51.1669
+    RHS1      NodeBalance1024      -46.2185
+    RHS1      NodeBalance1134       11.8484
+    RHS1      NodeBalance1202      -13.1547
+    RHS1      NodeBalance1207      -45.4665
+    RHS1      NodeBalance1228       19.5507
+    RHS1      NodeBalance1310      -50.2608
+    RHS1      NodeBalance1319      -4.79024
+    RHS1      NodeBalance1339       48.1794
+    RHS1      NodeBalance1404      -35.3352
+    RHS1      NodeBalance1409       23.5617
+    RHS1      NodeBalance1414       88.7324
+    RHS1      NodeBalance1416       25.7128
+    RHS1      NodeBalance1423      -56.5958
+    RHS1      NodeBalance1429      -22.0625
+    RHS1      NodeBalance1522       33.7086
+    RHS1      NodeBalance1524       46.2185
+    RHS1      NodeBalance1534      -11.8484
+    RHS1      NodeBalance1606        73.997
+    RHS1      NodeBalance1617       36.2196
+    RHS1      NodeBalance1626      -77.8463
+    RHS1      NodeBalance1630       69.0328
+    RHS1      NodeBalance1635      -71.3599
+    RHS1      NodeBalance1701      -73.0256
+    RHS1      NodeBalance1712      -17.9312
+    RHS1      NodeBalance1721       17.8674
+    RHS1      NodeBalance1732      -33.1535
+    RHS1      NodeBalance1737      -2.16784
+    RHS1      NodeBalance1738       51.4287
+    RHS1      NodeBalance1740         19.92
+    RHS1      NodeBalance1815      -12.5395
+    RHS1      NodeBalance1823       56.5958
+    RHS1      NodeBalance1825       51.8856
+    RHS1      NodeBalance1840        -19.92
+    RHS1      NodeBalance1902       13.1547
+    RHS1      NodeBalance1933       29.3295
+    RHS1      NodeBalance2011       20.2845
+    RHS1      NodeBalance2015       12.5395
+    RHS1      NodeBalance2016      -25.7128
+    RHS1      NodeBalance2018       51.1669
+    RHS1      NodeBalance2028      -19.5507
+    RHS1      NodeBalance2036       4.72318
+ SC Scen36    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -25.9265
+    RHS1      NodeBalance0112       9.74486
+    RHS1      NodeBalance0113      -64.4518
+    RHS1      NodeBalance0130      -16.9955
+    RHS1      NodeBalance0131        25.736
+    RHS1      NodeBalance0133      -35.1849
+    RHS1      NodeBalance0135       43.0638
+    RHS1      NodeBalance0227       52.4482
+    RHS1      NodeBalance0314      -81.3735
+    RHS1      NodeBalance0320       26.8831
+    RHS1      NodeBalance0339       -107.06
+    RHS1      NodeBalance0401       59.6471
+    RHS1      NodeBalance0403      -65.3399
+    RHS1      NodeBalance0408       37.6181
+    RHS1      NodeBalance0410       55.7326
+    RHS1      NodeBalance0421      -17.5868
+    RHS1      NodeBalance0425      -62.9464
+    RHS1      NodeBalance0431       -25.736
+    RHS1      NodeBalance0505      -20.2058
+    RHS1      NodeBalance0508      -37.6181
+    RHS1      NodeBalance0520      -26.8831
+    RHS1      NodeBalance0629       26.6601
+    RHS1      NodeBalance0705       20.2058
+    RHS1      NodeBalance0706      -46.7234
+    RHS1      NodeBalance0707       49.0118
+    RHS1      NodeBalance0709       -21.583
+    RHS1      NodeBalance0722      -15.1753
+    RHS1      NodeBalance0736      -12.3107
+    RHS1      NodeBalance0817      -21.7792
+    RHS1      NodeBalance0819       15.7132
+    RHS1      NodeBalance0837       33.5551
+    RHS1      NodeBalance0838      -58.1246
+    RHS1      NodeBalance0904        40.098
+    RHS1      NodeBalance0913       64.4518
+    RHS1      NodeBalance0926       54.9154
+    RHS1      NodeBalance0927      -52.4482
+    RHS1      NodeBalance0932       25.8191
+    RHS1      NodeBalance1003       65.3399
+    RHS1      NodeBalance1018      -101.872
+    RHS1      NodeBalance1024      -55.0309
+    RHS1      NodeBalance1134       9.70233
+    RHS1      NodeBalance1202       -21.291
+    RHS1      NodeBalance1207      -49.0118
+    RHS1      NodeBalance1228       19.6092
+    RHS1      NodeBalance1310      -55.7326
+    RHS1      NodeBalance1319      -15.7132
+    RHS1      NodeBalance1339        107.06
+    RHS1      NodeBalance1404       -40.098
+    RHS1      NodeBalance1409        21.583
+    RHS1      NodeBalance1414       81.3735
+    RHS1      NodeBalance1416       36.9602
+    RHS1      NodeBalance1423      -45.0871
+    RHS1      NodeBalance1429      -26.6601
+    RHS1      NodeBalance1522       15.1753
+    RHS1      NodeBalance1524       55.0309
+    RHS1      NodeBalance1534      -9.70233
+    RHS1      NodeBalance1606       46.7234
+    RHS1      NodeBalance1617       21.7792
+    RHS1      NodeBalance1626      -54.9154
+    RHS1      NodeBalance1630       16.9955
+    RHS1      NodeBalance1635      -43.0638
+    RHS1      NodeBalance1701      -59.6471
+    RHS1      NodeBalance1712      -9.74486
+    RHS1      NodeBalance1721       17.5868
+    RHS1      NodeBalance1732      -25.8191
+    RHS1      NodeBalance1737      -33.5551
+    RHS1      NodeBalance1738       58.1246
+    RHS1      NodeBalance1740       20.3001
+    RHS1      NodeBalance1815       -28.453
+    RHS1      NodeBalance1823       45.0871
+    RHS1      NodeBalance1825       62.9464
+    RHS1      NodeBalance1840      -20.3001
+    RHS1      NodeBalance1902        21.291
+    RHS1      NodeBalance1933       35.1849
+    RHS1      NodeBalance2011       25.9265
+    RHS1      NodeBalance2015        28.453
+    RHS1      NodeBalance2016      -36.9602
+    RHS1      NodeBalance2018       101.872
+    RHS1      NodeBalance2028      -19.6092
+    RHS1      NodeBalance2036       12.3107
+ SC Scen37    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -19.7536
+    RHS1      NodeBalance0112       20.6514
+    RHS1      NodeBalance0113      -99.3796
+    RHS1      NodeBalance0130      -58.1959
+    RHS1      NodeBalance0131       18.3806
+    RHS1      NodeBalance0133       -29.879
+    RHS1      NodeBalance0135        64.015
+    RHS1      NodeBalance0227        57.125
+    RHS1      NodeBalance0314      -105.721
+    RHS1      NodeBalance0320       58.3935
+    RHS1      NodeBalance0339      -55.2404
+    RHS1      NodeBalance0401       53.9828
+    RHS1      NodeBalance0403      -39.4964
+    RHS1      NodeBalance0408       6.47924
+    RHS1      NodeBalance0410       25.8086
+    RHS1      NodeBalance0421       -11.711
+    RHS1      NodeBalance0425      -11.3757
+    RHS1      NodeBalance0431      -18.3806
+    RHS1      NodeBalance0505      -37.7175
+    RHS1      NodeBalance0508      -6.47924
+    RHS1      NodeBalance0520      -58.3935
+    RHS1      NodeBalance0629       35.3325
+    RHS1      NodeBalance0705       37.7175
+    RHS1      NodeBalance0706      -47.3356
+    RHS1      NodeBalance0707       52.4898
+    RHS1      NodeBalance0709      -56.0125
+    RHS1      NodeBalance0722        -36.43
+    RHS1      NodeBalance0736      -9.17323
+    RHS1      NodeBalance0817       -8.0456
+    RHS1      NodeBalance0819       12.7332
+    RHS1      NodeBalance0837       31.3042
+    RHS1      NodeBalance0838      -31.3572
+    RHS1      NodeBalance0904       49.2602
+    RHS1      NodeBalance0913       99.3796
+    RHS1      NodeBalance0926       52.0465
+    RHS1      NodeBalance0927       -57.125
+    RHS1      NodeBalance0932       31.3602
+    RHS1      NodeBalance1003       39.4964
+    RHS1      NodeBalance1018      -115.054
+    RHS1      NodeBalance1024       -49.466
+    RHS1      NodeBalance1134       10.5611
+    RHS1      NodeBalance1202      -15.3946
+    RHS1      NodeBalance1207      -52.4898
+    RHS1      NodeBalance1228       38.4528
+    RHS1      NodeBalance1310      -25.8086
+    RHS1      NodeBalance1319      -12.7332
+    RHS1      NodeBalance1339       55.2404
+    RHS1      NodeBalance1404      -49.2602
+    RHS1      NodeBalance1409       56.0125
+    RHS1      NodeBalance1414       105.721
+    RHS1      NodeBalance1416       30.4505
+    RHS1      NodeBalance1423      -24.2818
+    RHS1      NodeBalance1429      -35.3325
+    RHS1      NodeBalance1522         36.43
+    RHS1      NodeBalance1524        49.466
+    RHS1      NodeBalance1534      -10.5611
+    RHS1      NodeBalance1606       47.3356
+    RHS1      NodeBalance1617        8.0456
+    RHS1      NodeBalance1626      -52.0465
+    RHS1      NodeBalance1630       58.1959
+    RHS1      NodeBalance1635       -64.015
+    RHS1      NodeBalance1701      -53.9828
+    RHS1      NodeBalance1712      -20.6514
+    RHS1      NodeBalance1721        11.711
+    RHS1      NodeBalance1732      -31.3602
+    RHS1      NodeBalance1737      -31.3042
+    RHS1      NodeBalance1738       31.3572
+    RHS1      NodeBalance1740       25.2437
+    RHS1      NodeBalance1815      -28.8505
+    RHS1      NodeBalance1823       24.2818
+    RHS1      NodeBalance1825       11.3757
+    RHS1      NodeBalance1840      -25.2437
+    RHS1      NodeBalance1902       15.3946
+    RHS1      NodeBalance1933        29.879
+    RHS1      NodeBalance2011       19.7536
+    RHS1      NodeBalance2015       28.8505
+    RHS1      NodeBalance2016      -30.4505
+    RHS1      NodeBalance2018       115.054
+    RHS1      NodeBalance2028      -38.4528
+    RHS1      NodeBalance2036       9.17323
+ SC Scen38    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -33.4741
+    RHS1      NodeBalance0112       24.4221
+    RHS1      NodeBalance0113      -71.8887
+    RHS1      NodeBalance0130      -3.31954
+    RHS1      NodeBalance0131       27.1161
+    RHS1      NodeBalance0133      -19.7736
+    RHS1      NodeBalance0135       67.6233
+    RHS1      NodeBalance0227       39.7312
+    RHS1      NodeBalance0314      -54.9443
+    RHS1      NodeBalance0320       57.0427
+    RHS1      NodeBalance0339      -91.0959
+    RHS1      NodeBalance0401       33.3474
+    RHS1      NodeBalance0403      -44.2644
+    RHS1      NodeBalance0408       37.9749
+    RHS1      NodeBalance0410       69.4882
+    RHS1      NodeBalance0421      -6.54435
+    RHS1      NodeBalance0425      -17.4421
+    RHS1      NodeBalance0431      -27.1161
+    RHS1      NodeBalance0505      -36.1649
+    RHS1      NodeBalance0508      -37.9749
+    RHS1      NodeBalance0520      -57.0427
+    RHS1      NodeBalance0629       45.0618
+    RHS1      NodeBalance0705       36.1649
+    RHS1      NodeBalance0706      -28.4867
+    RHS1      NodeBalance0707        37.313
+    RHS1      NodeBalance0709      -41.6042
+    RHS1      NodeBalance0722      -35.6504
+    RHS1      NodeBalance0736        -15.97
+    RHS1      NodeBalance0817      -5.82108
+    RHS1      NodeBalance0819       17.5806
+    RHS1      NodeBalance0837       41.3157
+    RHS1      NodeBalance0838      -82.4128
+    RHS1      NodeBalance0904        18.807
+    RHS1      NodeBalance0913       71.8887
+    RHS1      NodeBalance0926       76.5204
+    RHS1      NodeBalance0927      -39.7312
+    RHS1      NodeBalance0932       31.9927
+    RHS1      NodeBalance1003       44.2644
+    RHS1      NodeBalance1018      -66.6013
+    RHS1      NodeBalance1024      -79.0002
+    RHS1      NodeBalance1134       3.98352
+    RHS1      NodeBalance1202      -27.8544
+    RHS1      NodeBalance1207       -37.313
+    RHS1      NodeBalance1228       30.1019
+    RHS1      NodeBalance1310      -69.4882
+    RHS1      NodeBalance1319      -17.5806
+    RHS1      NodeBalance1339       91.0959
+    RHS1      NodeBalance1404       -18.807
+    RHS1      NodeBalance1409       41.6042
+    RHS1      NodeBalance1414       54.9443
+    RHS1      NodeBalance1416       26.8183
+    RHS1      NodeBalance1423      -21.5104
+    RHS1      NodeBalance1429      -45.0618
+    RHS1      NodeBalance1522       35.6504
+    RHS1      NodeBalance1524       79.0002
+    RHS1      NodeBalance1534      -3.98352
+    RHS1      NodeBalance1606       28.4867
+    RHS1      NodeBalance1617       5.82108
+    RHS1      NodeBalance1626      -76.5204
+    RHS1      NodeBalance1630       3.31954
+    RHS1      NodeBalance1635      -67.6233
+    RHS1      NodeBalance1701      -33.3474
+    RHS1      NodeBalance1712      -24.4221
+    RHS1      NodeBalance1721       6.54435
+    RHS1      NodeBalance1732      -31.9927
+    RHS1      NodeBalance1737      -41.3157
+    RHS1      NodeBalance1738       82.4128
+    RHS1      NodeBalance1740       29.3932
+    RHS1      NodeBalance1815      -21.4888
+    RHS1      NodeBalance1823       21.5104
+    RHS1      NodeBalance1825       17.4421
+    RHS1      NodeBalance1840      -29.3932
+    RHS1      NodeBalance1902       27.8544
+    RHS1      NodeBalance1933       19.7736
+    RHS1      NodeBalance2011       33.4741
+    RHS1      NodeBalance2015       21.4888
+    RHS1      NodeBalance2016      -26.8183
+    RHS1      NodeBalance2018       66.6013
+    RHS1      NodeBalance2028      -30.1019
+    RHS1      NodeBalance2036         15.97
+ SC Scen39    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -7.66904
+    RHS1      NodeBalance0112       24.6767
+    RHS1      NodeBalance0113      -60.0561
+    RHS1      NodeBalance0130      -64.0909
+    RHS1      NodeBalance0131       22.5743
+    RHS1      NodeBalance0133      -17.1043
+    RHS1      NodeBalance0135       66.5741
+    RHS1      NodeBalance0227       46.4256
+    RHS1      NodeBalance0314      -19.2154
+    RHS1      NodeBalance0320       59.8839
+    RHS1      NodeBalance0339      -38.2079
+    RHS1      NodeBalance0401       58.5973
+    RHS1      NodeBalance0403      -16.2137
+    RHS1      NodeBalance0408       75.2068
+    RHS1      NodeBalance0410       31.8483
+    RHS1      NodeBalance0421      -12.5118
+    RHS1      NodeBalance0425      -40.7547
+    RHS1      NodeBalance0431      -22.5743
+    RHS1      NodeBalance0505      -44.4795
+    RHS1      NodeBalance0508      -75.2068
+    RHS1      NodeBalance0520      -59.8839
+    RHS1      NodeBalance0629       28.1057
+    RHS1      NodeBalance0705       44.4795
+    RHS1      NodeBalance0706      -65.4423
+    RHS1      NodeBalance0707       60.5138
+    RHS1      NodeBalance0709      -14.0808
+    RHS1      NodeBalance0722      -110.753
+    RHS1      NodeBalance0736      -12.4576
+    RHS1      NodeBalance0817      -26.9685
+    RHS1      NodeBalance0819        12.671
+    RHS1      NodeBalance0837       2.97636
+    RHS1      NodeBalance0838       -35.465
+    RHS1      NodeBalance0904       13.5579
+    RHS1      NodeBalance0913       60.0561
+    RHS1      NodeBalance0926       68.6334
+    RHS1      NodeBalance0927      -46.4256
+    RHS1      NodeBalance0932       36.3838
+    RHS1      NodeBalance1003       16.2137
+    RHS1      NodeBalance1018      -50.7906
+    RHS1      NodeBalance1024      -84.2087
+    RHS1      NodeBalance1134       11.0092
+    RHS1      NodeBalance1202      -29.0338
+    RHS1      NodeBalance1207      -60.5138
+    RHS1      NodeBalance1228       30.8639
+    RHS1      NodeBalance1310      -31.8483
+    RHS1      NodeBalance1319       -12.671
+    RHS1      NodeBalance1339       38.2079
+    RHS1      NodeBalance1404      -13.5579
+    RHS1      NodeBalance1409       14.0808
+    RHS1      NodeBalance1414       19.2154
+    RHS1      NodeBalance1416       19.7591
+    RHS1      NodeBalance1423      -52.5435
+    RHS1      NodeBalance1429      -28.1057
+    RHS1      NodeBalance1522       110.753
+    RHS1      NodeBalance1524       84.2087
+    RHS1      NodeBalance1534      -11.0092
+    RHS1      NodeBalance1606       65.4423
+    RHS1      NodeBalance1617       26.9685
+    RHS1      NodeBalance1626      -68.6334
+    RHS1      NodeBalance1630       64.0909
+    RHS1      NodeBalance1635      -66.5741
+    RHS1      NodeBalance1701      -58.5973
+    RHS1      NodeBalance1712      -24.6767
+    RHS1      NodeBalance1721       12.5118
+    RHS1      NodeBalance1732      -36.3838
+    RHS1      NodeBalance1737      -2.97636
+    RHS1      NodeBalance1738        35.465
+    RHS1      NodeBalance1740       17.7357
+    RHS1      NodeBalance1815      -7.42178
+    RHS1      NodeBalance1823       52.5435
+    RHS1      NodeBalance1825       40.7547
+    RHS1      NodeBalance1840      -17.7357
+    RHS1      NodeBalance1902       29.0338
+    RHS1      NodeBalance1933       17.1043
+    RHS1      NodeBalance2011       7.66904
+    RHS1      NodeBalance2015       7.42178
+    RHS1      NodeBalance2016      -19.7591
+    RHS1      NodeBalance2018       50.7906
+    RHS1      NodeBalance2028      -30.8639
+    RHS1      NodeBalance2036       12.4576
+ SC Scen40    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -13.4759
+    RHS1      NodeBalance0112       14.5615
+    RHS1      NodeBalance0113      -109.527
+    RHS1      NodeBalance0130      -75.6215
+    RHS1      NodeBalance0131       30.0167
+    RHS1      NodeBalance0133      -21.6345
+    RHS1      NodeBalance0135       56.5864
+    RHS1      NodeBalance0227       51.4167
+    RHS1      NodeBalance0314        -109.6
+    RHS1      NodeBalance0320       35.1127
+    RHS1      NodeBalance0339      -51.0273
+    RHS1      NodeBalance0401       64.5127
+    RHS1      NodeBalance0403      -60.8688
+    RHS1      NodeBalance0408       56.9192
+    RHS1      NodeBalance0410       71.4099
+    RHS1      NodeBalance0421      -9.21859
+    RHS1      NodeBalance0425      -49.8271
+    RHS1      NodeBalance0431      -30.0167
+    RHS1      NodeBalance0505      -57.0239
+    RHS1      NodeBalance0508      -56.9192
+    RHS1      NodeBalance0520      -35.1127
+    RHS1      NodeBalance0629       45.1663
+    RHS1      NodeBalance0705       57.0239
+    RHS1      NodeBalance0706      -49.3626
+    RHS1      NodeBalance0707       49.4534
+    RHS1      NodeBalance0709      -59.2707
+    RHS1      NodeBalance0722      -82.9055
+    RHS1      NodeBalance0736      -12.3447
+    RHS1      NodeBalance0817      -29.9563
+    RHS1      NodeBalance0819       11.6369
+    RHS1      NodeBalance0837       29.6084
+    RHS1      NodeBalance0838      -67.6384
+    RHS1      NodeBalance0904       42.3223
+    RHS1      NodeBalance0913       109.527
+    RHS1      NodeBalance0926       80.6546
+    RHS1      NodeBalance0927      -51.4167
+    RHS1      NodeBalance0932       33.2261
+    RHS1      NodeBalance1003       60.8688
+    RHS1      NodeBalance1018      -55.4485
+    RHS1      NodeBalance1024      -37.1165
+    RHS1      NodeBalance1134       12.8098
+    RHS1      NodeBalance1202      -22.0718
+    RHS1      NodeBalance1207      -49.4534
+    RHS1      NodeBalance1228       31.2732
+    RHS1      NodeBalance1310      -71.4099
+    RHS1      NodeBalance1319      -11.6369
+    RHS1      NodeBalance1339       51.0273
+    RHS1      NodeBalance1404      -42.3223
+    RHS1      NodeBalance1409       59.2707
+    RHS1      NodeBalance1414         109.6
+    RHS1      NodeBalance1416       21.3845
+    RHS1      NodeBalance1423       -38.714
+    RHS1      NodeBalance1429      -45.1663
+    RHS1      NodeBalance1522       82.9055
+    RHS1      NodeBalance1524       37.1165
+    RHS1      NodeBalance1534      -12.8098
+    RHS1      NodeBalance1606       49.3626
+    RHS1      NodeBalance1617       29.9563
+    RHS1      NodeBalance1626      -80.6546
+    RHS1      NodeBalance1630       75.6215
+    RHS1      NodeBalance1635      -56.5864
+    RHS1      NodeBalance1701      -64.5127
+    RHS1      NodeBalance1712      -14.5615
+    RHS1      NodeBalance1721       9.21859
+    RHS1      NodeBalance1732      -33.2261
+    RHS1      NodeBalance1737      -29.6084
+    RHS1      NodeBalance1738       67.6384
+    RHS1      NodeBalance1740       2.50192
+    RHS1      NodeBalance1815      -16.9466
+    RHS1      NodeBalance1823        38.714
+    RHS1      NodeBalance1825       49.8271
+    RHS1      NodeBalance1840      -2.50192
+    RHS1      NodeBalance1902       22.0718
+    RHS1      NodeBalance1933       21.6345
+    RHS1      NodeBalance2011       13.4759
+    RHS1      NodeBalance2015       16.9466
+    RHS1      NodeBalance2016      -21.3845
+    RHS1      NodeBalance2018       55.4485
+    RHS1      NodeBalance2028      -31.2732
+    RHS1      NodeBalance2036       12.3447
+ SC Scen41    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -41.2219
+    RHS1      NodeBalance0112       15.9441
+    RHS1      NodeBalance0113      -66.5625
+    RHS1      NodeBalance0130      -48.5898
+    RHS1      NodeBalance0131       20.7839
+    RHS1      NodeBalance0133      -34.1149
+    RHS1      NodeBalance0135       58.7913
+    RHS1      NodeBalance0227       64.6144
+    RHS1      NodeBalance0314      -95.9491
+    RHS1      NodeBalance0320       38.2056
+    RHS1      NodeBalance0339       -81.876
+    RHS1      NodeBalance0401       13.5377
+    RHS1      NodeBalance0403      -67.4147
+    RHS1      NodeBalance0408       38.5492
+    RHS1      NodeBalance0410       54.8128
+    RHS1      NodeBalance0421      -3.71841
+    RHS1      NodeBalance0425      -13.9326
+    RHS1      NodeBalance0431      -20.7839
+    RHS1      NodeBalance0505      -25.0584
+    RHS1      NodeBalance0508      -38.5492
+    RHS1      NodeBalance0520      -38.2056
+    RHS1      NodeBalance0629       43.8659
+    RHS1      NodeBalance0705       25.0584
+    RHS1      NodeBalance0706      -51.9014
+    RHS1      NodeBalance0707       54.0905
+    RHS1      NodeBalance0709      -46.0171
+    RHS1      NodeBalance0722       -39.048
+    RHS1      NodeBalance0736      -16.9507
+    RHS1      NodeBalance0817      -25.1698
+    RHS1      NodeBalance0819       16.8666
+    RHS1      NodeBalance0837       49.3967
+    RHS1      NodeBalance0838      -54.1316
+    RHS1      NodeBalance0904       44.7419
+    RHS1      NodeBalance0913       66.5625
+    RHS1      NodeBalance0926       83.8754
+    RHS1      NodeBalance0927      -64.6144
+    RHS1      NodeBalance0932       42.8077
+    RHS1      NodeBalance1003       67.4147
+    RHS1      NodeBalance1018      -93.2489
+    RHS1      NodeBalance1024      -42.7795
+    RHS1      NodeBalance1134       6.24915
+    RHS1      NodeBalance1202      -31.1785
+    RHS1      NodeBalance1207      -54.0905
+    RHS1      NodeBalance1228       20.8109
+    RHS1      NodeBalance1310      -54.8128
+    RHS1      NodeBalance1319      -16.8666
+    RHS1      NodeBalance1339        81.876
+    RHS1      NodeBalance1404      -44.7419
+    RHS1      NodeBalance1409       46.0171
+    RHS1      NodeBalance1414       95.9491
+    RHS1      NodeBalance1416       31.0345
+    RHS1      NodeBalance1423      -31.4701
+    RHS1      NodeBalance1429      -43.8659
+    RHS1      NodeBalance1522        39.048
+    RHS1      NodeBalance1524       42.7795
+    RHS1      NodeBalance1534      -6.24915
+    RHS1      NodeBalance1606       51.9014
+    RHS1      NodeBalance1617       25.1698
+    RHS1      NodeBalance1626      -83.8754
+    RHS1      NodeBalance1630       48.5898
+    RHS1      NodeBalance1635      -58.7913
+    RHS1      NodeBalance1701      -13.5377
+    RHS1      NodeBalance1712      -15.9441
+    RHS1      NodeBalance1721       3.71841
+    RHS1      NodeBalance1732      -42.8077
+    RHS1      NodeBalance1737      -49.3967
+    RHS1      NodeBalance1738       54.1316
+    RHS1      NodeBalance1740       27.0898
+    RHS1      NodeBalance1815      -19.9273
+    RHS1      NodeBalance1823       31.4701
+    RHS1      NodeBalance1825       13.9326
+    RHS1      NodeBalance1840      -27.0898
+    RHS1      NodeBalance1902       31.1785
+    RHS1      NodeBalance1933       34.1149
+    RHS1      NodeBalance2011       41.2219
+    RHS1      NodeBalance2015       19.9273
+    RHS1      NodeBalance2016      -31.0345
+    RHS1      NodeBalance2018       93.2489
+    RHS1      NodeBalance2028      -20.8109
+    RHS1      NodeBalance2036       16.9507
+ SC Scen42    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -28.5463
+    RHS1      NodeBalance0112       7.42251
+    RHS1      NodeBalance0113      -113.335
+    RHS1      NodeBalance0130      -79.7372
+    RHS1      NodeBalance0131       6.25153
+    RHS1      NodeBalance0133       -24.346
+    RHS1      NodeBalance0135        20.209
+    RHS1      NodeBalance0227       59.2803
+    RHS1      NodeBalance0314      -57.1305
+    RHS1      NodeBalance0320       57.9534
+    RHS1      NodeBalance0339      -48.9499
+    RHS1      NodeBalance0401       68.2932
+    RHS1      NodeBalance0403      -90.4701
+    RHS1      NodeBalance0408       68.6704
+    RHS1      NodeBalance0410       62.3191
+    RHS1      NodeBalance0421      -13.1489
+    RHS1      NodeBalance0425      -64.8123
+    RHS1      NodeBalance0431      -6.25153
+    RHS1      NodeBalance0505      -35.1057
+    RHS1      NodeBalance0508      -68.6704
+    RHS1      NodeBalance0520      -57.9534
+    RHS1      NodeBalance0629       29.3369
+    RHS1      NodeBalance0705       35.1057
+    RHS1      NodeBalance0706      -98.2242
+    RHS1      NodeBalance0707       66.0666
+    RHS1      NodeBalance0709      -45.8527
+    RHS1      NodeBalance0722      -77.6434
+    RHS1      NodeBalance0736      -10.9576
+    RHS1      NodeBalance0817       -35.871
+    RHS1      NodeBalance0819       16.2268
+    RHS1      NodeBalance0837       37.1109
+    RHS1      NodeBalance0838      -66.2354
+    RHS1      NodeBalance0904       38.1085
+    RHS1      NodeBalance0913       113.335
+    RHS1      NodeBalance0926       46.3632
+    RHS1      NodeBalance0927      -59.2803
+    RHS1      NodeBalance0932       34.9854
+    RHS1      NodeBalance1003       90.4701
+    RHS1      NodeBalance1018       -43.402
+    RHS1      NodeBalance1024      -45.7823
+    RHS1      NodeBalance1134        7.2855
+    RHS1      NodeBalance1202      -21.8269
+    RHS1      NodeBalance1207      -66.0666
+    RHS1      NodeBalance1228       33.6624
+    RHS1      NodeBalance1310      -62.3191
+    RHS1      NodeBalance1319      -16.2268
+    RHS1      NodeBalance1339       48.9499
+    RHS1      NodeBalance1404      -38.1085
+    RHS1      NodeBalance1409       45.8527
+    RHS1      NodeBalance1414       57.1305
+    RHS1      NodeBalance1416       23.2824
+    RHS1      NodeBalance1423      -37.0568
+    RHS1      NodeBalance1429      -29.3369
+    RHS1      NodeBalance1522       77.6434
+    RHS1      NodeBalance1524       45.7823
+    RHS1      NodeBalance1534       -7.2855
+    RHS1      NodeBalance1606       98.2242
+    RHS1      NodeBalance1617        35.871
+    RHS1      NodeBalance1626      -46.3632
+    RHS1      NodeBalance1630       79.7372
+    RHS1      NodeBalance1635       -20.209
+    RHS1      NodeBalance1701      -68.2932
+    RHS1      NodeBalance1712      -7.42251
+    RHS1      NodeBalance1721       13.1489
+    RHS1      NodeBalance1732      -34.9854
+    RHS1      NodeBalance1737      -37.1109
+    RHS1      NodeBalance1738       66.2354
+    RHS1      NodeBalance1740        27.346
+    RHS1      NodeBalance1815      -14.2046
+    RHS1      NodeBalance1823       37.0568
+    RHS1      NodeBalance1825       64.8123
+    RHS1      NodeBalance1840       -27.346
+    RHS1      NodeBalance1902       21.8269
+    RHS1      NodeBalance1933        24.346
+    RHS1      NodeBalance2011       28.5463
+    RHS1      NodeBalance2015       14.2046
+    RHS1      NodeBalance2016      -23.2824
+    RHS1      NodeBalance2018        43.402
+    RHS1      NodeBalance2028      -33.6624
+    RHS1      NodeBalance2036       10.9576
+ SC Scen43    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -18.1968
+    RHS1      NodeBalance0112       24.1213
+    RHS1      NodeBalance0113      -38.8924
+    RHS1      NodeBalance0130      -17.9105
+    RHS1      NodeBalance0131       31.6517
+    RHS1      NodeBalance0133      -31.3524
+    RHS1      NodeBalance0135        39.371
+    RHS1      NodeBalance0227       38.0604
+    RHS1      NodeBalance0314      -40.4836
+    RHS1      NodeBalance0320       64.3762
+    RHS1      NodeBalance0339      -90.7362
+    RHS1      NodeBalance0401        85.973
+    RHS1      NodeBalance0403      -74.4828
+    RHS1      NodeBalance0408       45.1586
+    RHS1      NodeBalance0410       74.9975
+    RHS1      NodeBalance0421      -16.3656
+    RHS1      NodeBalance0425      -20.0894
+    RHS1      NodeBalance0431      -31.6517
+    RHS1      NodeBalance0505       -54.743
+    RHS1      NodeBalance0508      -45.1586
+    RHS1      NodeBalance0520      -64.3762
+    RHS1      NodeBalance0629       24.1921
+    RHS1      NodeBalance0705        54.743
+    RHS1      NodeBalance0706      -31.5712
+    RHS1      NodeBalance0707       58.5216
+    RHS1      NodeBalance0709      -36.3464
+    RHS1      NodeBalance0722      -44.0564
+    RHS1      NodeBalance0736      -8.29729
+    RHS1      NodeBalance0817       -24.264
+    RHS1      NodeBalance0819       18.4872
+    RHS1      NodeBalance0837       48.9218
+    RHS1      NodeBalance0838      -39.7204
+    RHS1      NodeBalance0904       20.4218
+    RHS1      NodeBalance0913       38.8924
+    RHS1      NodeBalance0926       6.14825
+    RHS1      NodeBalance0927      -38.0604
+    RHS1      NodeBalance0932       19.8161
+    RHS1      NodeBalance1003       74.4828
+    RHS1      NodeBalance1018      -9.03322
+    RHS1      NodeBalance1024      -79.2282
+    RHS1      NodeBalance1134       10.8527
+    RHS1      NodeBalance1202      -14.9148
+    RHS1      NodeBalance1207      -58.5216
+    RHS1      NodeBalance1228       19.5302
+    RHS1      NodeBalance1310      -74.9975
+    RHS1      NodeBalance1319      -18.4872
+    RHS1      NodeBalance1339       90.7362
+    RHS1      NodeBalance1404      -20.4218
+    RHS1      NodeBalance1409       36.3464
+    RHS1      NodeBalance1414       40.4836
+    RHS1      NodeBalance1416       14.4246
+    RHS1      NodeBalance1423      -54.7151
+    RHS1      NodeBalance1429      -24.1921
+    RHS1      NodeBalance1522       44.0564
+    RHS1      NodeBalance1524       79.2282
+    RHS1      NodeBalance1534      -10.8527
+    RHS1      NodeBalance1606       31.5712
+    RHS1      NodeBalance1617        24.264
+    RHS1      NodeBalance1626      -6.14825
+    RHS1      NodeBalance1630       17.9105
+    RHS1      NodeBalance1635       -39.371
+    RHS1      NodeBalance1701       -85.973
+    RHS1      NodeBalance1712      -24.1213
+    RHS1      NodeBalance1721       16.3656
+    RHS1      NodeBalance1732      -19.8161
+    RHS1      NodeBalance1737      -48.9218
+    RHS1      NodeBalance1738       39.7204
+    RHS1      NodeBalance1740       20.1744
+    RHS1      NodeBalance1815      -10.3103
+    RHS1      NodeBalance1823       54.7151
+    RHS1      NodeBalance1825       20.0894
+    RHS1      NodeBalance1840      -20.1744
+    RHS1      NodeBalance1902       14.9148
+    RHS1      NodeBalance1933       31.3524
+    RHS1      NodeBalance2011       18.1968
+    RHS1      NodeBalance2015       10.3103
+    RHS1      NodeBalance2016      -14.4246
+    RHS1      NodeBalance2018       9.03322
+    RHS1      NodeBalance2028      -19.5302
+    RHS1      NodeBalance2036       8.29729
+ SC Scen44    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -32.2375
+    RHS1      NodeBalance0112       17.3065
+    RHS1      NodeBalance0113      -110.275
+    RHS1      NodeBalance0130      -55.2973
+    RHS1      NodeBalance0131       16.2777
+    RHS1      NodeBalance0133      -25.7487
+    RHS1      NodeBalance0135       68.2277
+    RHS1      NodeBalance0227       12.8571
+    RHS1      NodeBalance0314      -29.9574
+    RHS1      NodeBalance0320       42.8797
+    RHS1      NodeBalance0339      -71.6612
+    RHS1      NodeBalance0401       71.9044
+    RHS1      NodeBalance0403      -54.2963
+    RHS1      NodeBalance0408       41.4136
+    RHS1      NodeBalance0410       67.9293
+    RHS1      NodeBalance0421      -3.29755
+    RHS1      NodeBalance0425      -64.2211
+    RHS1      NodeBalance0431      -16.2777
+    RHS1      NodeBalance0505      -61.6834
+    RHS1      NodeBalance0508      -41.4136
+    RHS1      NodeBalance0520      -42.8797
+    RHS1      NodeBalance0629       52.3286
+    RHS1      NodeBalance0705       61.6834
+    RHS1      NodeBalance0706      -61.5621
+    RHS1      NodeBalance0707       59.5349
+    RHS1      NodeBalance0709        -21.52
+    RHS1      NodeBalance0722      -67.2291
+    RHS1      NodeBalance0736      -12.1616
+    RHS1      NodeBalance0817      -31.8098
+    RHS1      NodeBalance0819       8.16666
+    RHS1      NodeBalance0837       40.2303
+    RHS1      NodeBalance0838      -27.0865
+    RHS1      NodeBalance0904       36.5895
+    RHS1      NodeBalance0913       110.275
+    RHS1      NodeBalance0926       87.5823
+    RHS1      NodeBalance0927      -12.8571
+    RHS1      NodeBalance0932       39.6436
+    RHS1      NodeBalance1003       54.2963
+    RHS1      NodeBalance1018      -92.6763
+    RHS1      NodeBalance1024      -53.7779
+    RHS1      NodeBalance1134       5.25361
+    RHS1      NodeBalance1202      -24.5148
+    RHS1      NodeBalance1207      -59.5349
+    RHS1      NodeBalance1228       26.4414
+    RHS1      NodeBalance1310      -67.9293
+    RHS1      NodeBalance1319      -8.16666
+    RHS1      NodeBalance1339       71.6612
+    RHS1      NodeBalance1404      -36.5895
+    RHS1      NodeBalance1409         21.52
+    RHS1      NodeBalance1414       29.9574
+    RHS1      NodeBalance1416        1.6375
+    RHS1      NodeBalance1423      -63.6226
+    RHS1      NodeBalance1429      -52.3286
+    RHS1      NodeBalance1522       67.2291
+    RHS1      NodeBalance1524       53.7779
+    RHS1      NodeBalance1534      -5.25361
+    RHS1      NodeBalance1606       61.5621
+    RHS1      NodeBalance1617       31.8098
+    RHS1      NodeBalance1626      -87.5823
+    RHS1      NodeBalance1630       55.2973
+    RHS1      NodeBalance1635      -68.2277
+    RHS1      NodeBalance1701      -71.9044
+    RHS1      NodeBalance1712      -17.3065
+    RHS1      NodeBalance1721       3.29755
+    RHS1      NodeBalance1732      -39.6436
+    RHS1      NodeBalance1737      -40.2303
+    RHS1      NodeBalance1738       27.0865
+    RHS1      NodeBalance1740        16.446
+    RHS1      NodeBalance1815      -24.6903
+    RHS1      NodeBalance1823       63.6226
+    RHS1      NodeBalance1825       64.2211
+    RHS1      NodeBalance1840       -16.446
+    RHS1      NodeBalance1902       24.5148
+    RHS1      NodeBalance1933       25.7487
+    RHS1      NodeBalance2011       32.2375
+    RHS1      NodeBalance2015       24.6903
+    RHS1      NodeBalance2016       -1.6375
+    RHS1      NodeBalance2018       92.6763
+    RHS1      NodeBalance2028      -26.4414
+    RHS1      NodeBalance2036       12.1616
+ SC Scen45    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -22.1148
+    RHS1      NodeBalance0112       16.4423
+    RHS1      NodeBalance0113      -86.2286
+    RHS1      NodeBalance0130      -64.8152
+    RHS1      NodeBalance0131         22.12
+    RHS1      NodeBalance0133      -25.7779
+    RHS1      NodeBalance0135       75.6129
+    RHS1      NodeBalance0227       69.0096
+    RHS1      NodeBalance0314      -101.598
+    RHS1      NodeBalance0320       70.8934
+    RHS1      NodeBalance0339      -12.1931
+    RHS1      NodeBalance0401       17.9365
+    RHS1      NodeBalance0403      -60.2182
+    RHS1      NodeBalance0408       48.2609
+    RHS1      NodeBalance0410       45.8871
+    RHS1      NodeBalance0421      -4.58748
+    RHS1      NodeBalance0425      -57.5916
+    RHS1      NodeBalance0431        -22.12
+    RHS1      NodeBalance0505      -56.5661
+    RHS1      NodeBalance0508      -48.2609
+    RHS1      NodeBalance0520      -70.8934
+    RHS1      NodeBalance0629       41.7342
+    RHS1      NodeBalance0705       56.5661
+    RHS1      NodeBalance0706      -62.3063
+    RHS1      NodeBalance0707       45.0121
+    RHS1      NodeBalance0709      -63.3804
+    RHS1      NodeBalance0722      -55.9072
+    RHS1      NodeBalance0736      -6.88585
+    RHS1      NodeBalance0817      -22.0811
+    RHS1      NodeBalance0819       19.9932
+    RHS1      NodeBalance0837       38.9652
+    RHS1      NodeBalance0838      -63.4493
+    RHS1      NodeBalance0904       25.7308
+    RHS1      NodeBalance0913       86.2286
+    RHS1      NodeBalance0926       72.2836
+    RHS1      NodeBalance0927      -69.0096
+    RHS1      NodeBalance0932       19.2615
+    RHS1      NodeBalance1003       60.2182
+    RHS1      NodeBalance1018      -21.6609
+    RHS1      NodeBalance1024      -84.9124
+    RHS1      NodeBalance1134       14.0948
+    RHS1      NodeBalance1202      -27.1192
+    RHS1      NodeBalance1207      -45.0121
+    RHS1      NodeBalance1228       4.87957
+    RHS1      NodeBalance1310      -45.8871
+    RHS1      NodeBalance1319      -19.9932
+    RHS1      NodeBalance1339       12.1931
+    RHS1      NodeBalance1404      -25.7308
+    RHS1      NodeBalance1409       63.3804
+    RHS1      NodeBalance1414       101.598
+    RHS1      NodeBalance1416        40.057
+    RHS1      NodeBalance1423      -48.3685
+    RHS1      NodeBalance1429      -41.7342
+    RHS1      NodeBalance1522       55.9072
+    RHS1      NodeBalance1524       84.9124
+    RHS1      NodeBalance1534      -14.0948
+    RHS1      NodeBalance1606       62.3063
+    RHS1      NodeBalance1617       22.0811
+    RHS1      NodeBalance1626      -72.2836
+    RHS1      NodeBalance1630       64.8152
+    RHS1      NodeBalance1635      -75.6129
+    RHS1      NodeBalance1701      -17.9365
+    RHS1      NodeBalance1712      -16.4423
+    RHS1      NodeBalance1721       4.58748
+    RHS1      NodeBalance1732      -19.2615
+    RHS1      NodeBalance1737      -38.9652
+    RHS1      NodeBalance1738       63.4493
+    RHS1      NodeBalance1740       31.6606
+    RHS1      NodeBalance1815        -18.11
+    RHS1      NodeBalance1823       48.3685
+    RHS1      NodeBalance1825       57.5916
+    RHS1      NodeBalance1840      -31.6606
+    RHS1      NodeBalance1902       27.1192
+    RHS1      NodeBalance1933       25.7779
+    RHS1      NodeBalance2011       22.1148
+    RHS1      NodeBalance2015         18.11
+    RHS1      NodeBalance2016       -40.057
+    RHS1      NodeBalance2018       21.6609
+    RHS1      NodeBalance2028      -4.87957
+    RHS1      NodeBalance2036       6.88585
+ SC Scen46    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -24.7266
+    RHS1      NodeBalance0112       16.9528
+    RHS1      NodeBalance0113      -32.1373
+    RHS1      NodeBalance0130      -69.6695
+    RHS1      NodeBalance0131       26.7445
+    RHS1      NodeBalance0133      -21.8247
+    RHS1      NodeBalance0135       41.4854
+    RHS1      NodeBalance0227       73.0263
+    RHS1      NodeBalance0314      -78.1517
+    RHS1      NodeBalance0320       13.7431
+    RHS1      NodeBalance0339      -69.4223
+    RHS1      NodeBalance0401       48.0907
+    RHS1      NodeBalance0403      -65.5061
+    RHS1      NodeBalance0408       41.5759
+    RHS1      NodeBalance0410        46.202
+    RHS1      NodeBalance0421      -15.9646
+    RHS1      NodeBalance0425      -31.0683
+    RHS1      NodeBalance0431      -26.7445
+    RHS1      NodeBalance0505      -45.6514
+    RHS1      NodeBalance0508      -41.5759
+    RHS1      NodeBalance0520      -13.7431
+    RHS1      NodeBalance0629       46.2908
+    RHS1      NodeBalance0705       45.6514
+    RHS1      NodeBalance0706      -66.8754
+    RHS1      NodeBalance0707        65.739
+    RHS1      NodeBalance0709      -58.1544
+    RHS1      NodeBalance0722      -76.0177
+    RHS1      NodeBalance0736      -14.1388
+    RHS1      NodeBalance0817      -28.0251
+    RHS1      NodeBalance0819       9.83037
+    RHS1      NodeBalance0837       31.1935
+    RHS1      NodeBalance0838       -77.711
+    RHS1      NodeBalance0904       28.6303
+    RHS1      NodeBalance0913       32.1373
+    RHS1      NodeBalance0926        36.587
+    RHS1      NodeBalance0927      -73.0263
+    RHS1      NodeBalance0932       21.8373
+    RHS1      NodeBalance1003       65.5061
+    RHS1      NodeBalance1018      -64.2782
+    RHS1      NodeBalance1024      -3.40847
+    RHS1      NodeBalance1134       13.9847
+    RHS1      NodeBalance1202      -29.1886
+    RHS1      NodeBalance1207       -65.739
+    RHS1      NodeBalance1228       26.4952
+    RHS1      NodeBalance1310       -46.202
+    RHS1      NodeBalance1319      -9.83037
+    RHS1      NodeBalance1339       69.4223
+    RHS1      NodeBalance1404      -28.6303
+    RHS1      NodeBalance1409       58.1544
+    RHS1      NodeBalance1414       78.1517
+    RHS1      NodeBalance1416       26.6412
+    RHS1      NodeBalance1423       -43.828
+    RHS1      NodeBalance1429      -46.2908
+    RHS1      NodeBalance1522       76.0177
+    RHS1      NodeBalance1524       3.40847
+    RHS1      NodeBalance1534      -13.9847
+    RHS1      NodeBalance1606       66.8754
+    RHS1      NodeBalance1617       28.0251
+    RHS1      NodeBalance1626       -36.587
+    RHS1      NodeBalance1630       69.6695
+    RHS1      NodeBalance1635      -41.4854
+    RHS1      NodeBalance1701      -48.0907
+    RHS1      NodeBalance1712      -16.9528
+    RHS1      NodeBalance1721       15.9646
+    RHS1      NodeBalance1732      -21.8373
+    RHS1      NodeBalance1737      -31.1935
+    RHS1      NodeBalance1738        77.711
+    RHS1      NodeBalance1740       32.8128
+    RHS1      NodeBalance1815      -24.9843
+    RHS1      NodeBalance1823        43.828
+    RHS1      NodeBalance1825       31.0683
+    RHS1      NodeBalance1840      -32.8128
+    RHS1      NodeBalance1902       29.1886
+    RHS1      NodeBalance1933       21.8247
+    RHS1      NodeBalance2011       24.7266
+    RHS1      NodeBalance2015       24.9843
+    RHS1      NodeBalance2016      -26.6412
+    RHS1      NodeBalance2018       64.2782
+    RHS1      NodeBalance2028      -26.4952
+    RHS1      NodeBalance2036       14.1388
+ SC Scen47    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -41.9186
+    RHS1      NodeBalance0112       20.8587
+    RHS1      NodeBalance0113      -78.6904
+    RHS1      NodeBalance0130      -76.9202
+    RHS1      NodeBalance0131       23.2825
+    RHS1      NodeBalance0133      -37.8492
+    RHS1      NodeBalance0135        78.707
+    RHS1      NodeBalance0227       98.2838
+    RHS1      NodeBalance0314      -34.7311
+    RHS1      NodeBalance0320       30.8008
+    RHS1      NodeBalance0339       -116.66
+    RHS1      NodeBalance0401       75.5019
+    RHS1      NodeBalance0403      -69.0365
+    RHS1      NodeBalance0408       59.8454
+    RHS1      NodeBalance0410       68.5242
+    RHS1      NodeBalance0421      -9.76218
+    RHS1      NodeBalance0425      -25.9284
+    RHS1      NodeBalance0431      -23.2825
+    RHS1      NodeBalance0505      -40.0383
+    RHS1      NodeBalance0508      -59.8454
+    RHS1      NodeBalance0520      -30.8008
+    RHS1      NodeBalance0629       50.7612
+    RHS1      NodeBalance0705       40.0383
+    RHS1      NodeBalance0706      -91.1104
+    RHS1      NodeBalance0707       54.7651
+    RHS1      NodeBalance0709      -47.1473
+    RHS1      NodeBalance0722      -65.7963
+    RHS1      NodeBalance0736       -13.478
+    RHS1      NodeBalance0817      -22.5659
+    RHS1      NodeBalance0819       12.1113
+    RHS1      NodeBalance0837       12.1148
+    RHS1      NodeBalance0838      -50.4948
+    RHS1      NodeBalance0904       40.4355
+    RHS1      NodeBalance0913       78.6904
+    RHS1      NodeBalance0926       74.5111
+    RHS1      NodeBalance0927      -98.2838
+    RHS1      NodeBalance0932       34.3868
+    RHS1      NodeBalance1003       69.0365
+    RHS1      NodeBalance1018      -84.0529
+    RHS1      NodeBalance1024      -20.3143
+    RHS1      NodeBalance1134       5.05797
+    RHS1      NodeBalance1202      -33.3716
+    RHS1      NodeBalance1207      -54.7651
+    RHS1      NodeBalance1228       20.7108
+    RHS1      NodeBalance1310      -68.5242
+    RHS1      NodeBalance1319      -12.1113
+    RHS1      NodeBalance1339        116.66
+    RHS1      NodeBalance1404      -40.4355
+    RHS1      NodeBalance1409       47.1473
+    RHS1      NodeBalance1414       34.7311
+    RHS1      NodeBalance1416       27.3314
+    RHS1      NodeBalance1423      -36.5093
+    RHS1      NodeBalance1429      -50.7612
+    RHS1      NodeBalance1522       65.7963
+    RHS1      NodeBalance1524       20.3143
+    RHS1      NodeBalance1534      -5.05797
+    RHS1      NodeBalance1606       91.1104
+    RHS1      NodeBalance1617       22.5659
+    RHS1      NodeBalance1626      -74.5111
+    RHS1      NodeBalance1630       76.9202
+    RHS1      NodeBalance1635       -78.707
+    RHS1      NodeBalance1701      -75.5019
+    RHS1      NodeBalance1712      -20.8587
+    RHS1      NodeBalance1721       9.76218
+    RHS1      NodeBalance1732      -34.3868
+    RHS1      NodeBalance1737      -12.1148
+    RHS1      NodeBalance1738       50.4948
+    RHS1      NodeBalance1740       22.1442
+    RHS1      NodeBalance1815      -26.1377
+    RHS1      NodeBalance1823       36.5093
+    RHS1      NodeBalance1825       25.9284
+    RHS1      NodeBalance1840      -22.1442
+    RHS1      NodeBalance1902       33.3716
+    RHS1      NodeBalance1933       37.8492
+    RHS1      NodeBalance2011       41.9186
+    RHS1      NodeBalance2015       26.1377
+    RHS1      NodeBalance2016      -27.3314
+    RHS1      NodeBalance2018       84.0529
+    RHS1      NodeBalance2028      -20.7108
+    RHS1      NodeBalance2036        13.478
+ SC Scen48    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -39.6236
+    RHS1      NodeBalance0112       15.9579
+    RHS1      NodeBalance0113      -90.7485
+    RHS1      NodeBalance0130      -60.0808
+    RHS1      NodeBalance0131       23.0216
+    RHS1      NodeBalance0133      -42.1062
+    RHS1      NodeBalance0135       63.3556
+    RHS1      NodeBalance0227       49.2873
+    RHS1      NodeBalance0314      -72.0714
+    RHS1      NodeBalance0320       24.7453
+    RHS1      NodeBalance0339      -62.5654
+    RHS1      NodeBalance0401       64.7651
+    RHS1      NodeBalance0403      -76.7842
+    RHS1      NodeBalance0408       49.5648
+    RHS1      NodeBalance0410       6.01257
+    RHS1      NodeBalance0421      -6.57923
+    RHS1      NodeBalance0425      -40.3843
+    RHS1      NodeBalance0431      -23.0216
+    RHS1      NodeBalance0505      -29.7861
+    RHS1      NodeBalance0508      -49.5648
+    RHS1      NodeBalance0520      -24.7453
+    RHS1      NodeBalance0629       21.2597
+    RHS1      NodeBalance0705       29.7861
+    RHS1      NodeBalance0706      -79.1594
+    RHS1      NodeBalance0707       19.2634
+    RHS1      NodeBalance0709      -49.5418
+    RHS1      NodeBalance0722      -78.4939
+    RHS1      NodeBalance0736      -15.5854
+    RHS1      NodeBalance0817      -27.4933
+    RHS1      NodeBalance0819       16.4437
+    RHS1      NodeBalance0837       57.8493
+    RHS1      NodeBalance0838      -11.7259
+    RHS1      NodeBalance0904       28.7775
+    RHS1      NodeBalance0913       90.7485
+    RHS1      NodeBalance0926       64.7292
+    RHS1      NodeBalance0927      -49.2873
+    RHS1      NodeBalance0932        38.342
+    RHS1      NodeBalance1003       76.7842
+    RHS1      NodeBalance1018      -79.3157
+    RHS1      NodeBalance1024      -66.3018
+    RHS1      NodeBalance1134        8.2759
+    RHS1      NodeBalance1202      -28.8376
+    RHS1      NodeBalance1207      -19.2634
+    RHS1      NodeBalance1228       31.1813
+    RHS1      NodeBalance1310      -6.01257
+    RHS1      NodeBalance1319      -16.4437
+    RHS1      NodeBalance1339       62.5654
+    RHS1      NodeBalance1404      -28.7775
+    RHS1      NodeBalance1409       49.5418
+    RHS1      NodeBalance1414       72.0714
+    RHS1      NodeBalance1416       36.7583
+    RHS1      NodeBalance1423      -47.6274
+    RHS1      NodeBalance1429      -21.2597
+    RHS1      NodeBalance1522       78.4939
+    RHS1      NodeBalance1524       66.3018
+    RHS1      NodeBalance1534       -8.2759
+    RHS1      NodeBalance1606       79.1594
+    RHS1      NodeBalance1617       27.4933
+    RHS1      NodeBalance1626      -64.7292
+    RHS1      NodeBalance1630       60.0808
+    RHS1      NodeBalance1635      -63.3556
+    RHS1      NodeBalance1701      -64.7651
+    RHS1      NodeBalance1712      -15.9579
+    RHS1      NodeBalance1721       6.57923
+    RHS1      NodeBalance1732       -38.342
+    RHS1      NodeBalance1737      -57.8493
+    RHS1      NodeBalance1738       11.7259
+    RHS1      NodeBalance1740       5.51791
+    RHS1      NodeBalance1815      -27.3802
+    RHS1      NodeBalance1823       47.6274
+    RHS1      NodeBalance1825       40.3843
+    RHS1      NodeBalance1840      -5.51791
+    RHS1      NodeBalance1902       28.8376
+    RHS1      NodeBalance1933       42.1062
+    RHS1      NodeBalance2011       39.6236
+    RHS1      NodeBalance2015       27.3802
+    RHS1      NodeBalance2016      -36.7583
+    RHS1      NodeBalance2018       79.3157
+    RHS1      NodeBalance2028      -31.1813
+    RHS1      NodeBalance2036       15.5854
+ SC Scen49    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -20.0455
+    RHS1      NodeBalance0112       20.8397
+    RHS1      NodeBalance0113      -60.6186
+    RHS1      NodeBalance0130      -62.3139
+    RHS1      NodeBalance0131       25.6286
+    RHS1      NodeBalance0133      -35.8126
+    RHS1      NodeBalance0135       84.8451
+    RHS1      NodeBalance0227       92.2547
+    RHS1      NodeBalance0314       -53.805
+    RHS1      NodeBalance0320       48.8321
+    RHS1      NodeBalance0339      -82.6046
+    RHS1      NodeBalance0401       3.20417
+    RHS1      NodeBalance0403       -18.305
+    RHS1      NodeBalance0408       3.05832
+    RHS1      NodeBalance0410        2.8446
+    RHS1      NodeBalance0421      -18.9605
+    RHS1      NodeBalance0425      -19.4043
+    RHS1      NodeBalance0431      -25.6286
+    RHS1      NodeBalance0505      -26.6307
+    RHS1      NodeBalance0508      -3.05832
+    RHS1      NodeBalance0520      -48.8321
+    RHS1      NodeBalance0629       30.1288
+    RHS1      NodeBalance0705       26.6307
+    RHS1      NodeBalance0706      -74.8458
+    RHS1      NodeBalance0707       54.2875
+    RHS1      NodeBalance0709      -25.6804
+    RHS1      NodeBalance0722      -62.1529
+    RHS1      NodeBalance0736      -11.9285
+    RHS1      NodeBalance0817      -22.9936
+    RHS1      NodeBalance0819       4.95075
+    RHS1      NodeBalance0837        38.059
+    RHS1      NodeBalance0838      -51.3301
+    RHS1      NodeBalance0904       34.1581
+    RHS1      NodeBalance0913       60.6186
+    RHS1      NodeBalance0926       58.9131
+    RHS1      NodeBalance0927      -92.2547
+    RHS1      NodeBalance0932       11.9775
+    RHS1      NodeBalance1003        18.305
+    RHS1      NodeBalance1018      -62.4612
+    RHS1      NodeBalance1024       -63.365
+    RHS1      NodeBalance1134        9.6968
+    RHS1      NodeBalance1202      -20.0388
+    RHS1      NodeBalance1207      -54.2875
+    RHS1      NodeBalance1228       15.9097
+    RHS1      NodeBalance1310       -2.8446
+    RHS1      NodeBalance1319      -4.95075
+    RHS1      NodeBalance1339       82.6046
+    RHS1      NodeBalance1404      -34.1581
+    RHS1      NodeBalance1409       25.6804
+    RHS1      NodeBalance1414        53.805
+    RHS1      NodeBalance1416       16.2503
+    RHS1      NodeBalance1423      -19.4753
+    RHS1      NodeBalance1429      -30.1288
+    RHS1      NodeBalance1522       62.1529
+    RHS1      NodeBalance1524        63.365
+    RHS1      NodeBalance1534       -9.6968
+    RHS1      NodeBalance1606       74.8458
+    RHS1      NodeBalance1617       22.9936
+    RHS1      NodeBalance1626      -58.9131
+    RHS1      NodeBalance1630       62.3139
+    RHS1      NodeBalance1635      -84.8451
+    RHS1      NodeBalance1701      -3.20417
+    RHS1      NodeBalance1712      -20.8397
+    RHS1      NodeBalance1721       18.9605
+    RHS1      NodeBalance1732      -11.9775
+    RHS1      NodeBalance1737       -38.059
+    RHS1      NodeBalance1738       51.3301
+    RHS1      NodeBalance1740       25.4234
+    RHS1      NodeBalance1815      -7.91938
+    RHS1      NodeBalance1823       19.4753
+    RHS1      NodeBalance1825       19.4043
+    RHS1      NodeBalance1840      -25.4234
+    RHS1      NodeBalance1902       20.0388
+    RHS1      NodeBalance1933       35.8126
+    RHS1      NodeBalance2011       20.0455
+    RHS1      NodeBalance2015       7.91938
+    RHS1      NodeBalance2016      -16.2503
+    RHS1      NodeBalance2018       62.4612
+    RHS1      NodeBalance2028      -15.9097
+    RHS1      NodeBalance2036       11.9285
+ SC Scen50    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111       -9.4674
+    RHS1      NodeBalance0112       21.1303
+    RHS1      NodeBalance0113      -77.6952
+    RHS1      NodeBalance0130      -60.3943
+    RHS1      NodeBalance0131       25.6678
+    RHS1      NodeBalance0133       -32.626
+    RHS1      NodeBalance0135       58.4077
+    RHS1      NodeBalance0227        87.259
+    RHS1      NodeBalance0314      -84.2483
+    RHS1      NodeBalance0320       66.8623
+    RHS1      NodeBalance0339      -77.8268
+    RHS1      NodeBalance0401       69.5623
+    RHS1      NodeBalance0403      -75.0283
+    RHS1      NodeBalance0408        65.572
+    RHS1      NodeBalance0410       59.4785
+    RHS1      NodeBalance0421      -3.80101
+    RHS1      NodeBalance0425       -32.325
+    RHS1      NodeBalance0431      -25.6678
+    RHS1      NodeBalance0505      -28.5238
+    RHS1      NodeBalance0508       -65.572
+    RHS1      NodeBalance0520      -66.8623
+    RHS1      NodeBalance0629       37.4162
+    RHS1      NodeBalance0705       28.5238
+    RHS1      NodeBalance0706      -37.7004
+    RHS1      NodeBalance0707       53.4027
+    RHS1      NodeBalance0709      -65.5934
+    RHS1      NodeBalance0722      -75.1655
+    RHS1      NodeBalance0736      -13.0292
+    RHS1      NodeBalance0817      -28.9356
+    RHS1      NodeBalance0819       16.1016
+    RHS1      NodeBalance0837       24.6027
+    RHS1      NodeBalance0838       -22.935
+    RHS1      NodeBalance0904       36.8497
+    RHS1      NodeBalance0913       77.6952
+    RHS1      NodeBalance0926       77.9103
+    RHS1      NodeBalance0927       -87.259
+    RHS1      NodeBalance0932       39.6341
+    RHS1      NodeBalance1003       75.0283
+    RHS1      NodeBalance1018      -66.0103
+    RHS1      NodeBalance1024      -65.4568
+    RHS1      NodeBalance1134       15.3121
+    RHS1      NodeBalance1202      -1.50027
+    RHS1      NodeBalance1207      -53.4027
+    RHS1      NodeBalance1228         30.78
+    RHS1      NodeBalance1310      -59.4785
+    RHS1      NodeBalance1319      -16.1016
+    RHS1      NodeBalance1339       77.8268
+    RHS1      NodeBalance1404      -36.8497
+    RHS1      NodeBalance1409       65.5934
+    RHS1      NodeBalance1414       84.2483
+    RHS1      NodeBalance1416       36.4607
+    RHS1      NodeBalance1423      -42.0073
+    RHS1      NodeBalance1429      -37.4162
+    RHS1      NodeBalance1522       75.1655
+    RHS1      NodeBalance1524       65.4568
+    RHS1      NodeBalance1534      -15.3121
+    RHS1      NodeBalance1606       37.7004
+    RHS1      NodeBalance1617       28.9356
+    RHS1      NodeBalance1626      -77.9103
+    RHS1      NodeBalance1630       60.3943
+    RHS1      NodeBalance1635      -58.4077
+    RHS1      NodeBalance1701      -69.5623
+    RHS1      NodeBalance1712      -21.1303
+    RHS1      NodeBalance1721       3.80101
+    RHS1      NodeBalance1732      -39.6341
+    RHS1      NodeBalance1737      -24.6027
+    RHS1      NodeBalance1738        22.935
+    RHS1      NodeBalance1740       4.20071
+    RHS1      NodeBalance1815      -9.12586
+    RHS1      NodeBalance1823       42.0073
+    RHS1      NodeBalance1825        32.325
+    RHS1      NodeBalance1840      -4.20071
+    RHS1      NodeBalance1902       1.50027
+    RHS1      NodeBalance1933        32.626
+    RHS1      NodeBalance2011        9.4674
+    RHS1      NodeBalance2015       9.12586
+    RHS1      NodeBalance2016      -36.4607
+    RHS1      NodeBalance2018       66.0103
+    RHS1      NodeBalance2028        -30.78
+    RHS1      NodeBalance2036       13.0292
+ SC Scen51    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -44.4172
+    RHS1      NodeBalance0112       7.00282
+    RHS1      NodeBalance0113      -83.6416
+    RHS1      NodeBalance0130      -40.5568
+    RHS1      NodeBalance0131       21.0907
+    RHS1      NodeBalance0133      -18.0903
+    RHS1      NodeBalance0135       53.3366
+    RHS1      NodeBalance0227       91.8317
+    RHS1      NodeBalance0314      -4.34185
+    RHS1      NodeBalance0320       29.0049
+    RHS1      NodeBalance0339      -22.7082
+    RHS1      NodeBalance0401        55.917
+    RHS1      NodeBalance0403      -46.9418
+    RHS1      NodeBalance0408       49.1926
+    RHS1      NodeBalance0410       15.4272
+    RHS1      NodeBalance0421      -15.7915
+    RHS1      NodeBalance0425      -56.8953
+    RHS1      NodeBalance0431      -21.0907
+    RHS1      NodeBalance0505      -49.1089
+    RHS1      NodeBalance0508      -49.1926
+    RHS1      NodeBalance0520      -29.0049
+    RHS1      NodeBalance0629        8.4378
+    RHS1      NodeBalance0705       49.1089
+    RHS1      NodeBalance0706       -19.302
+    RHS1      NodeBalance0707       33.7468
+    RHS1      NodeBalance0709      -16.2989
+    RHS1      NodeBalance0722      -88.7871
+    RHS1      NodeBalance0736      -16.3184
+    RHS1      NodeBalance0817      -28.0763
+    RHS1      NodeBalance0819        7.9938
+    RHS1      NodeBalance0837       16.2391
+    RHS1      NodeBalance0838      -62.7034
+    RHS1      NodeBalance0904        32.245
+    RHS1      NodeBalance0913       83.6416
+    RHS1      NodeBalance0926       45.1046
+    RHS1      NodeBalance0927      -91.8317
+    RHS1      NodeBalance0932       20.2522
+    RHS1      NodeBalance1003       46.9418
+    RHS1      NodeBalance1018      -75.5269
+    RHS1      NodeBalance1024      -76.9516
+    RHS1      NodeBalance1134       12.3428
+    RHS1      NodeBalance1202      -7.18263
+    RHS1      NodeBalance1207      -33.7468
+    RHS1      NodeBalance1228       29.0909
+    RHS1      NodeBalance1310      -15.4272
+    RHS1      NodeBalance1319       -7.9938
+    RHS1      NodeBalance1339       22.7082
+    RHS1      NodeBalance1404       -32.245
+    RHS1      NodeBalance1409       16.2989
+    RHS1      NodeBalance1414       4.34185
+    RHS1      NodeBalance1416       22.5297
+    RHS1      NodeBalance1423      -20.9095
+    RHS1      NodeBalance1429       -8.4378
+    RHS1      NodeBalance1522       88.7871
+    RHS1      NodeBalance1524       76.9516
+    RHS1      NodeBalance1534      -12.3428
+    RHS1      NodeBalance1606        19.302
+    RHS1      NodeBalance1617       28.0763
+    RHS1      NodeBalance1626      -45.1046
+    RHS1      NodeBalance1630       40.5568
+    RHS1      NodeBalance1635      -53.3366
+    RHS1      NodeBalance1701       -55.917
+    RHS1      NodeBalance1712      -7.00282
+    RHS1      NodeBalance1721       15.7915
+    RHS1      NodeBalance1732      -20.2522
+    RHS1      NodeBalance1737      -16.2391
+    RHS1      NodeBalance1738       62.7034
+    RHS1      NodeBalance1740       30.8586
+    RHS1      NodeBalance1815      -22.3216
+    RHS1      NodeBalance1823       20.9095
+    RHS1      NodeBalance1825       56.8953
+    RHS1      NodeBalance1840      -30.8586
+    RHS1      NodeBalance1902       7.18263
+    RHS1      NodeBalance1933       18.0903
+    RHS1      NodeBalance2011       44.4172
+    RHS1      NodeBalance2015       22.3216
+    RHS1      NodeBalance2016      -22.5297
+    RHS1      NodeBalance2018       75.5269
+    RHS1      NodeBalance2028      -29.0909
+    RHS1      NodeBalance2036       16.3184
+ SC Scen52    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -28.8655
+    RHS1      NodeBalance0112       9.42609
+    RHS1      NodeBalance0113      -53.3615
+    RHS1      NodeBalance0130      -62.2181
+    RHS1      NodeBalance0131       18.7598
+    RHS1      NodeBalance0133      -20.9444
+    RHS1      NodeBalance0135       77.6743
+    RHS1      NodeBalance0227       98.0614
+    RHS1      NodeBalance0314       -44.254
+    RHS1      NodeBalance0320       31.3763
+    RHS1      NodeBalance0339      -99.9888
+    RHS1      NodeBalance0401       24.1635
+    RHS1      NodeBalance0403      -45.9691
+    RHS1      NodeBalance0408       42.5424
+    RHS1      NodeBalance0410       54.3426
+    RHS1      NodeBalance0421      -10.1736
+    RHS1      NodeBalance0425      -4.71055
+    RHS1      NodeBalance0431      -18.7598
+    RHS1      NodeBalance0505      -16.7614
+    RHS1      NodeBalance0508      -42.5424
+    RHS1      NodeBalance0520      -31.3763
+    RHS1      NodeBalance0629       3.54551
+    RHS1      NodeBalance0705       16.7614
+    RHS1      NodeBalance0706       -52.439
+    RHS1      NodeBalance0707        42.987
+    RHS1      NodeBalance0709      -39.4035
+    RHS1      NodeBalance0722      -37.5642
+    RHS1      NodeBalance0736      -12.5887
+    RHS1      NodeBalance0817      -19.2911
+    RHS1      NodeBalance0819       18.1939
+    RHS1      NodeBalance0837       29.3055
+    RHS1      NodeBalance0838      -63.8592
+    RHS1      NodeBalance0904       15.1464
+    RHS1      NodeBalance0913       53.3615
+    RHS1      NodeBalance0926       58.9411
+    RHS1      NodeBalance0927      -98.0614
+    RHS1      NodeBalance0932       33.6972
+    RHS1      NodeBalance1003       45.9691
+    RHS1      NodeBalance1018      -80.3245
+    RHS1      NodeBalance1024      -55.5504
+    RHS1      NodeBalance1134       8.23575
+    RHS1      NodeBalance1202      -36.1876
+    RHS1      NodeBalance1207       -42.987
+    RHS1      NodeBalance1228       20.2274
+    RHS1      NodeBalance1310      -54.3426
+    RHS1      NodeBalance1319      -18.1939
+    RHS1      NodeBalance1339       99.9888
+    RHS1      NodeBalance1404      -15.1464
+    RHS1      NodeBalance1409       39.4035
+    RHS1      NodeBalance1414        44.254
+    RHS1      NodeBalance1416       29.2938
+    RHS1      NodeBalance1423      -6.02315
+    RHS1      NodeBalance1429      -3.54551
+    RHS1      NodeBalance1522       37.5642
+    RHS1      NodeBalance1524       55.5504
+    RHS1      NodeBalance1534      -8.23575
+    RHS1      NodeBalance1606        52.439
+    RHS1      NodeBalance1617       19.2911
+    RHS1      NodeBalance1626      -58.9411
+    RHS1      NodeBalance1630       62.2181
+    RHS1      NodeBalance1635      -77.6743
+    RHS1      NodeBalance1701      -24.1635
+    RHS1      NodeBalance1712      -9.42609
+    RHS1      NodeBalance1721       10.1736
+    RHS1      NodeBalance1732      -33.6972
+    RHS1      NodeBalance1737      -29.3055
+    RHS1      NodeBalance1738       63.8592
+    RHS1      NodeBalance1740       12.6925
+    RHS1      NodeBalance1815      -12.9179
+    RHS1      NodeBalance1823       6.02315
+    RHS1      NodeBalance1825       4.71055
+    RHS1      NodeBalance1840      -12.6925
+    RHS1      NodeBalance1902       36.1876
+    RHS1      NodeBalance1933       20.9444
+    RHS1      NodeBalance2011       28.8655
+    RHS1      NodeBalance2015       12.9179
+    RHS1      NodeBalance2016      -29.2938
+    RHS1      NodeBalance2018       80.3245
+    RHS1      NodeBalance2028      -20.2274
+    RHS1      NodeBalance2036       12.5887
+ SC Scen53    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -29.0416
+    RHS1      NodeBalance0112       11.0755
+    RHS1      NodeBalance0113      -98.3837
+    RHS1      NodeBalance0130      -53.2136
+    RHS1      NodeBalance0131       13.9694
+    RHS1      NodeBalance0133      -42.9098
+    RHS1      NodeBalance0135       44.9342
+    RHS1      NodeBalance0227       110.263
+    RHS1      NodeBalance0314       -39.288
+    RHS1      NodeBalance0320       61.2496
+    RHS1      NodeBalance0339      -61.3615
+    RHS1      NodeBalance0401       82.3388
+    RHS1      NodeBalance0403      -49.4317
+    RHS1      NodeBalance0408       79.5392
+    RHS1      NodeBalance0410       87.0412
+    RHS1      NodeBalance0421       -18.045
+    RHS1      NodeBalance0425      -59.2319
+    RHS1      NodeBalance0431      -13.9694
+    RHS1      NodeBalance0505      -42.8667
+    RHS1      NodeBalance0508      -79.5392
+    RHS1      NodeBalance0520      -61.2496
+    RHS1      NodeBalance0629       31.0616
+    RHS1      NodeBalance0705       42.8667
+    RHS1      NodeBalance0706       -51.459
+    RHS1      NodeBalance0707       42.5931
+    RHS1      NodeBalance0709      -55.2529
+    RHS1      NodeBalance0722        -98.24
+    RHS1      NodeBalance0736      -10.4777
+    RHS1      NodeBalance0817      -18.9594
+    RHS1      NodeBalance0819       13.1869
+    RHS1      NodeBalance0837       38.5894
+    RHS1      NodeBalance0838      -41.6081
+    RHS1      NodeBalance0904       36.0253
+    RHS1      NodeBalance0913       98.3837
+    RHS1      NodeBalance0926       71.1117
+    RHS1      NodeBalance0927      -110.263
+    RHS1      NodeBalance0932       37.5748
+    RHS1      NodeBalance1003       49.4317
+    RHS1      NodeBalance1018      -50.5089
+    RHS1      NodeBalance1024      -85.8187
+    RHS1      NodeBalance1134       10.2212
+    RHS1      NodeBalance1202      -34.6127
+    RHS1      NodeBalance1207      -42.5931
+    RHS1      NodeBalance1228       24.9664
+    RHS1      NodeBalance1310      -87.0412
+    RHS1      NodeBalance1319      -13.1869
+    RHS1      NodeBalance1339       61.3615
+    RHS1      NodeBalance1404      -36.0253
+    RHS1      NodeBalance1409       55.2529
+    RHS1      NodeBalance1414        39.288
+    RHS1      NodeBalance1416       30.7856
+    RHS1      NodeBalance1423      -56.0634
+    RHS1      NodeBalance1429      -31.0616
+    RHS1      NodeBalance1522         98.24
+    RHS1      NodeBalance1524       85.8187
+    RHS1      NodeBalance1534      -10.2212
+    RHS1      NodeBalance1606        51.459
+    RHS1      NodeBalance1617       18.9594
+    RHS1      NodeBalance1626      -71.1117
+    RHS1      NodeBalance1630       53.2136
+    RHS1      NodeBalance1635      -44.9342
+    RHS1      NodeBalance1701      -82.3388
+    RHS1      NodeBalance1712      -11.0755
+    RHS1      NodeBalance1721        18.045
+    RHS1      NodeBalance1732      -37.5748
+    RHS1      NodeBalance1737      -38.5894
+    RHS1      NodeBalance1738       41.6081
+    RHS1      NodeBalance1740        26.291
+    RHS1      NodeBalance1815      -28.9239
+    RHS1      NodeBalance1823       56.0634
+    RHS1      NodeBalance1825       59.2319
+    RHS1      NodeBalance1840       -26.291
+    RHS1      NodeBalance1902       34.6127
+    RHS1      NodeBalance1933       42.9098
+    RHS1      NodeBalance2011       29.0416
+    RHS1      NodeBalance2015       28.9239
+    RHS1      NodeBalance2016      -30.7856
+    RHS1      NodeBalance2018       50.5089
+    RHS1      NodeBalance2028      -24.9664
+    RHS1      NodeBalance2036       10.4777
+ SC Scen54    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111       -31.036
+    RHS1      NodeBalance0112       3.94654
+    RHS1      NodeBalance0113      -35.7975
+    RHS1      NodeBalance0130      -72.1545
+    RHS1      NodeBalance0131       13.4823
+    RHS1      NodeBalance0133      -32.6426
+    RHS1      NodeBalance0135       25.1278
+    RHS1      NodeBalance0227       8.38785
+    RHS1      NodeBalance0314      -48.6623
+    RHS1      NodeBalance0320       31.9804
+    RHS1      NodeBalance0339      -33.8792
+    RHS1      NodeBalance0401        57.268
+    RHS1      NodeBalance0403      -70.6622
+    RHS1      NodeBalance0408       18.5817
+    RHS1      NodeBalance0410         64.38
+    RHS1      NodeBalance0421      -13.9938
+    RHS1      NodeBalance0425      -39.4869
+    RHS1      NodeBalance0431      -13.4823
+    RHS1      NodeBalance0505      -51.8439
+    RHS1      NodeBalance0508      -18.5817
+    RHS1      NodeBalance0520      -31.9804
+    RHS1      NodeBalance0629       41.2615
+    RHS1      NodeBalance0705       51.8439
+    RHS1      NodeBalance0706      -59.1549
+    RHS1      NodeBalance0707       55.0474
+    RHS1      NodeBalance0709      -59.8696
+    RHS1      NodeBalance0722      -68.8511
+    RHS1      NodeBalance0736      -14.9869
+    RHS1      NodeBalance0817      -29.2612
+    RHS1      NodeBalance0819       16.7059
+    RHS1      NodeBalance0837       28.8141
+    RHS1      NodeBalance0838      -62.4402
+    RHS1      NodeBalance0904        11.007
+    RHS1      NodeBalance0913       35.7975
+    RHS1      NodeBalance0926       62.4854
+    RHS1      NodeBalance0927      -8.38785
+    RHS1      NodeBalance0932       6.03118
+    RHS1      NodeBalance1003       70.6622
+    RHS1      NodeBalance1018      -106.218
+    RHS1      NodeBalance1024      -79.3493
+    RHS1      NodeBalance1134       14.6782
+    RHS1      NodeBalance1202         -22.8
+    RHS1      NodeBalance1207      -55.0474
+    RHS1      NodeBalance1228       15.2158
+    RHS1      NodeBalance1310        -64.38
+    RHS1      NodeBalance1319      -16.7059
+    RHS1      NodeBalance1339       33.8792
+    RHS1      NodeBalance1404       -11.007
+    RHS1      NodeBalance1409       59.8696
+    RHS1      NodeBalance1414       48.6623
+    RHS1      NodeBalance1416       22.4383
+    RHS1      NodeBalance1423      -10.7438
+    RHS1      NodeBalance1429      -41.2615
+    RHS1      NodeBalance1522       68.8511
+    RHS1      NodeBalance1524       79.3493
+    RHS1      NodeBalance1534      -14.6782
+    RHS1      NodeBalance1606       59.1549
+    RHS1      NodeBalance1617       29.2612
+    RHS1      NodeBalance1626      -62.4854
+    RHS1      NodeBalance1630       72.1545
+    RHS1      NodeBalance1635      -25.1278
+    RHS1      NodeBalance1701       -57.268
+    RHS1      NodeBalance1712      -3.94654
+    RHS1      NodeBalance1721       13.9938
+    RHS1      NodeBalance1732      -6.03118
+    RHS1      NodeBalance1737      -28.8141
+    RHS1      NodeBalance1738       62.4402
+    RHS1      NodeBalance1740       32.2808
+    RHS1      NodeBalance1815      -30.8909
+    RHS1      NodeBalance1823       10.7438
+    RHS1      NodeBalance1825       39.4869
+    RHS1      NodeBalance1840      -32.2808
+    RHS1      NodeBalance1902          22.8
+    RHS1      NodeBalance1933       32.6426
+    RHS1      NodeBalance2011        31.036
+    RHS1      NodeBalance2015       30.8909
+    RHS1      NodeBalance2016      -22.4383
+    RHS1      NodeBalance2018       106.218
+    RHS1      NodeBalance2028      -15.2158
+    RHS1      NodeBalance2036       14.9869
+ SC Scen55    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -38.0346
+    RHS1      NodeBalance0112       21.3338
+    RHS1      NodeBalance0113      -75.7506
+    RHS1      NodeBalance0130      -49.8786
+    RHS1      NodeBalance0131       29.3198
+    RHS1      NodeBalance0133      -23.1026
+    RHS1      NodeBalance0135       76.1927
+    RHS1      NodeBalance0227       90.7091
+    RHS1      NodeBalance0314      -77.2018
+    RHS1      NodeBalance0320       58.2985
+    RHS1      NodeBalance0339      -46.6604
+    RHS1      NodeBalance0401        55.644
+    RHS1      NodeBalance0403      -78.4197
+    RHS1      NodeBalance0408       77.8969
+    RHS1      NodeBalance0410       58.9727
+    RHS1      NodeBalance0421      -7.22284
+    RHS1      NodeBalance0425      -42.3442
+    RHS1      NodeBalance0431      -29.3198
+    RHS1      NodeBalance0505      -53.8466
+    RHS1      NodeBalance0508      -77.8969
+    RHS1      NodeBalance0520      -58.2985
+    RHS1      NodeBalance0629       19.7542
+    RHS1      NodeBalance0705       53.8466
+    RHS1      NodeBalance0706      -43.0768
+    RHS1      NodeBalance0707       58.6842
+    RHS1      NodeBalance0709      -64.4458
+    RHS1      NodeBalance0722      -92.9998
+    RHS1      NodeBalance0736      -3.05344
+    RHS1      NodeBalance0817      -26.7446
+    RHS1      NodeBalance0819       13.2016
+    RHS1      NodeBalance0837       43.8596
+    RHS1      NodeBalance0838      -56.5955
+    RHS1      NodeBalance0904       39.5096
+    RHS1      NodeBalance0913       75.7506
+    RHS1      NodeBalance0926       41.1805
+    RHS1      NodeBalance0927      -90.7091
+    RHS1      NodeBalance0932       36.5046
+    RHS1      NodeBalance1003       78.4197
+    RHS1      NodeBalance1018      -84.5317
+    RHS1      NodeBalance1024      -63.1539
+    RHS1      NodeBalance1134       15.5469
+    RHS1      NodeBalance1202      -22.2354
+    RHS1      NodeBalance1207      -58.6842
+    RHS1      NodeBalance1228       32.3713
+    RHS1      NodeBalance1310      -58.9727
+    RHS1      NodeBalance1319      -13.2016
+    RHS1      NodeBalance1339       46.6604
+    RHS1      NodeBalance1404      -39.5096
+    RHS1      NodeBalance1409       64.4458
+    RHS1      NodeBalance1414       77.2018
+    RHS1      NodeBalance1416       41.3097
+    RHS1      NodeBalance1423      -42.7088
+    RHS1      NodeBalance1429      -19.7542
+    RHS1      NodeBalance1522       92.9998
+    RHS1      NodeBalance1524       63.1539
+    RHS1      NodeBalance1534      -15.5469
+    RHS1      NodeBalance1606       43.0768
+    RHS1      NodeBalance1617       26.7446
+    RHS1      NodeBalance1626      -41.1805
+    RHS1      NodeBalance1630       49.8786
+    RHS1      NodeBalance1635      -76.1927
+    RHS1      NodeBalance1701       -55.644
+    RHS1      NodeBalance1712      -21.3338
+    RHS1      NodeBalance1721       7.22284
+    RHS1      NodeBalance1732      -36.5046
+    RHS1      NodeBalance1737      -43.8596
+    RHS1      NodeBalance1738       56.5955
+    RHS1      NodeBalance1740       13.6982
+    RHS1      NodeBalance1815      -22.9658
+    RHS1      NodeBalance1823       42.7088
+    RHS1      NodeBalance1825       42.3442
+    RHS1      NodeBalance1840      -13.6982
+    RHS1      NodeBalance1902       22.2354
+    RHS1      NodeBalance1933       23.1026
+    RHS1      NodeBalance2011       38.0346
+    RHS1      NodeBalance2015       22.9658
+    RHS1      NodeBalance2016      -41.3097
+    RHS1      NodeBalance2018       84.5317
+    RHS1      NodeBalance2028      -32.3713
+    RHS1      NodeBalance2036       3.05344
+ SC Scen56    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -32.6015
+    RHS1      NodeBalance0112       12.5924
+    RHS1      NodeBalance0113      -79.4222
+    RHS1      NodeBalance0130      -29.4353
+    RHS1      NodeBalance0131       22.1001
+    RHS1      NodeBalance0133      -32.5807
+    RHS1      NodeBalance0135       62.3891
+    RHS1      NodeBalance0227       50.8325
+    RHS1      NodeBalance0314      -81.0272
+    RHS1      NodeBalance0320       15.2182
+    RHS1      NodeBalance0339      -81.0796
+    RHS1      NodeBalance0401       75.8384
+    RHS1      NodeBalance0403      -71.1437
+    RHS1      NodeBalance0408       73.2777
+    RHS1      NodeBalance0410       51.2707
+    RHS1      NodeBalance0421      -10.5097
+    RHS1      NodeBalance0425        -43.89
+    RHS1      NodeBalance0431      -22.1001
+    RHS1      NodeBalance0505      -14.9165
+    RHS1      NodeBalance0508      -73.2777
+    RHS1      NodeBalance0520      -15.2182
+    RHS1      NodeBalance0629       13.8013
+    RHS1      NodeBalance0705       14.9165
+    RHS1      NodeBalance0706      -29.2676
+    RHS1      NodeBalance0707       47.6231
+    RHS1      NodeBalance0709      -39.6161
+    RHS1      NodeBalance0722      -83.1164
+    RHS1      NodeBalance0736      -11.7641
+    RHS1      NodeBalance0817      -17.7061
+    RHS1      NodeBalance0819       22.3959
+    RHS1      NodeBalance0837       33.2887
+    RHS1      NodeBalance0838      -54.0866
+    RHS1      NodeBalance0904       24.0456
+    RHS1      NodeBalance0913       79.4222
+    RHS1      NodeBalance0926       30.7958
+    RHS1      NodeBalance0927      -50.8325
+    RHS1      NodeBalance0932       14.4684
+    RHS1      NodeBalance1003       71.1437
+    RHS1      NodeBalance1018       -54.754
+    RHS1      NodeBalance1024       -70.882
+    RHS1      NodeBalance1134       7.96177
+    RHS1      NodeBalance1202      -27.6223
+    RHS1      NodeBalance1207      -47.6231
+    RHS1      NodeBalance1228        16.524
+    RHS1      NodeBalance1310      -51.2707
+    RHS1      NodeBalance1319      -22.3959
+    RHS1      NodeBalance1339       81.0796
+    RHS1      NodeBalance1404      -24.0456
+    RHS1      NodeBalance1409       39.6161
+    RHS1      NodeBalance1414       81.0272
+    RHS1      NodeBalance1416       15.1893
+    RHS1      NodeBalance1423      -50.4079
+    RHS1      NodeBalance1429      -13.8013
+    RHS1      NodeBalance1522       83.1164
+    RHS1      NodeBalance1524        70.882
+    RHS1      NodeBalance1534      -7.96177
+    RHS1      NodeBalance1606       29.2676
+    RHS1      NodeBalance1617       17.7061
+    RHS1      NodeBalance1626      -30.7958
+    RHS1      NodeBalance1630       29.4353
+    RHS1      NodeBalance1635      -62.3891
+    RHS1      NodeBalance1701      -75.8384
+    RHS1      NodeBalance1712      -12.5924
+    RHS1      NodeBalance1721       10.5097
+    RHS1      NodeBalance1732      -14.4684
+    RHS1      NodeBalance1737      -33.2887
+    RHS1      NodeBalance1738       54.0866
+    RHS1      NodeBalance1740       13.7859
+    RHS1      NodeBalance1815      -19.4857
+    RHS1      NodeBalance1823       50.4079
+    RHS1      NodeBalance1825         43.89
+    RHS1      NodeBalance1840      -13.7859
+    RHS1      NodeBalance1902       27.6223
+    RHS1      NodeBalance1933       32.5807
+    RHS1      NodeBalance2011       32.6015
+    RHS1      NodeBalance2015       19.4857
+    RHS1      NodeBalance2016      -15.1893
+    RHS1      NodeBalance2018        54.754
+    RHS1      NodeBalance2028       -16.524
+    RHS1      NodeBalance2036       11.7641
+ SC Scen57    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -30.6311
+    RHS1      NodeBalance0112       11.5656
+    RHS1      NodeBalance0113      -46.1543
+    RHS1      NodeBalance0130      -75.1287
+    RHS1      NodeBalance0131       22.1337
+    RHS1      NodeBalance0133      -35.4998
+    RHS1      NodeBalance0135       54.5874
+    RHS1      NodeBalance0227       85.6676
+    RHS1      NodeBalance0314      -85.7973
+    RHS1      NodeBalance0320       49.6952
+    RHS1      NodeBalance0339       -95.643
+    RHS1      NodeBalance0401         40.68
+    RHS1      NodeBalance0403      -91.0428
+    RHS1      NodeBalance0408       67.1771
+    RHS1      NodeBalance0410       79.4605
+    RHS1      NodeBalance0421      -13.5548
+    RHS1      NodeBalance0425       -27.833
+    RHS1      NodeBalance0431      -22.1337
+    RHS1      NodeBalance0505      -58.0773
+    RHS1      NodeBalance0508      -67.1771
+    RHS1      NodeBalance0520      -49.6952
+    RHS1      NodeBalance0629       52.5627
+    RHS1      NodeBalance0705       58.0773
+    RHS1      NodeBalance0706      -73.4739
+    RHS1      NodeBalance0707       66.7044
+    RHS1      NodeBalance0709      -51.9381
+    RHS1      NodeBalance0722      -80.4575
+    RHS1      NodeBalance0736      -8.32173
+    RHS1      NodeBalance0817      -14.5287
+    RHS1      NodeBalance0819       16.5447
+    RHS1      NodeBalance0837        49.745
+    RHS1      NodeBalance0838      -34.3757
+    RHS1      NodeBalance0904       38.0919
+    RHS1      NodeBalance0913       46.1543
+    RHS1      NodeBalance0926       51.9565
+    RHS1      NodeBalance0927      -85.6676
+    RHS1      NodeBalance0932       4.30175
+    RHS1      NodeBalance1003       91.0428
+    RHS1      NodeBalance1018      -70.6355
+    RHS1      NodeBalance1024      -75.8113
+    RHS1      NodeBalance1134       11.6793
+    RHS1      NodeBalance1202      -12.7163
+    RHS1      NodeBalance1207      -66.7044
+    RHS1      NodeBalance1228       31.5569
+    RHS1      NodeBalance1310      -79.4605
+    RHS1      NodeBalance1319      -16.5447
+    RHS1      NodeBalance1339        95.643
+    RHS1      NodeBalance1404      -38.0919
+    RHS1      NodeBalance1409       51.9381
+    RHS1      NodeBalance1414       85.7973
+    RHS1      NodeBalance1416       18.0221
+    RHS1      NodeBalance1423      -50.5907
+    RHS1      NodeBalance1429      -52.5627
+    RHS1      NodeBalance1522       80.4575
+    RHS1      NodeBalance1524       75.8113
+    RHS1      NodeBalance1534      -11.6793
+    RHS1      NodeBalance1606       73.4739
+    RHS1      NodeBalance1617       14.5287
+    RHS1      NodeBalance1626      -51.9565
+    RHS1      NodeBalance1630       75.1287
+    RHS1      NodeBalance1635      -54.5874
+    RHS1      NodeBalance1701        -40.68
+    RHS1      NodeBalance1712      -11.5656
+    RHS1      NodeBalance1721       13.5548
+    RHS1      NodeBalance1732      -4.30175
+    RHS1      NodeBalance1737       -49.745
+    RHS1      NodeBalance1738       34.3757
+    RHS1      NodeBalance1740       15.9389
+    RHS1      NodeBalance1815      -13.3508
+    RHS1      NodeBalance1823       50.5907
+    RHS1      NodeBalance1825        27.833
+    RHS1      NodeBalance1840      -15.9389
+    RHS1      NodeBalance1902       12.7163
+    RHS1      NodeBalance1933       35.4998
+    RHS1      NodeBalance2011       30.6311
+    RHS1      NodeBalance2015       13.3508
+    RHS1      NodeBalance2016      -18.0221
+    RHS1      NodeBalance2018       70.6355
+    RHS1      NodeBalance2028      -31.5569
+    RHS1      NodeBalance2036       8.32173
+ SC Scen58    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -34.9229
+    RHS1      NodeBalance0112        14.675
+    RHS1      NodeBalance0113      -100.718
+    RHS1      NodeBalance0130      -34.0634
+    RHS1      NodeBalance0131        19.348
+    RHS1      NodeBalance0133      -45.5822
+    RHS1      NodeBalance0135       57.9468
+    RHS1      NodeBalance0227       41.8436
+    RHS1      NodeBalance0314      -65.1083
+    RHS1      NodeBalance0320       15.3464
+    RHS1      NodeBalance0339      -49.8594
+    RHS1      NodeBalance0401       41.0465
+    RHS1      NodeBalance0403      -83.8307
+    RHS1      NodeBalance0408        36.501
+    RHS1      NodeBalance0410       51.6673
+    RHS1      NodeBalance0421      -11.6406
+    RHS1      NodeBalance0425      -59.1208
+    RHS1      NodeBalance0431       -19.348
+    RHS1      NodeBalance0505      -59.4085
+    RHS1      NodeBalance0508       -36.501
+    RHS1      NodeBalance0520      -15.3464
+    RHS1      NodeBalance0629       43.5518
+    RHS1      NodeBalance0705       59.4085
+    RHS1      NodeBalance0706      -85.3483
+    RHS1      NodeBalance0707       50.0163
+    RHS1      NodeBalance0709       -20.044
+    RHS1      NodeBalance0722      -102.016
+    RHS1      NodeBalance0736      -16.0942
+    RHS1      NodeBalance0817      -10.5235
+    RHS1      NodeBalance0819       8.97435
+    RHS1      NodeBalance0837       27.5348
+    RHS1      NodeBalance0838      -32.1371
+    RHS1      NodeBalance0904       29.2544
+    RHS1      NodeBalance0913       100.718
+    RHS1      NodeBalance0926       42.0015
+    RHS1      NodeBalance0927      -41.8436
+    RHS1      NodeBalance0932       30.6198
+    RHS1      NodeBalance1003       83.8307
+    RHS1      NodeBalance1018      -91.8759
+    RHS1      NodeBalance1024      -41.2248
+    RHS1      NodeBalance1134       13.1939
+    RHS1      NodeBalance1202      -34.2702
+    RHS1      NodeBalance1207      -50.0163
+    RHS1      NodeBalance1228       11.8921
+    RHS1      NodeBalance1310      -51.6673
+    RHS1      NodeBalance1319      -8.97435
+    RHS1      NodeBalance1339       49.8594
+    RHS1      NodeBalance1404      -29.2544
+    RHS1      NodeBalance1409        20.044
+    RHS1      NodeBalance1414       65.1083
+    RHS1      NodeBalance1416       30.9087
+    RHS1      NodeBalance1423      -52.0992
+    RHS1      NodeBalance1429      -43.5518
+    RHS1      NodeBalance1522       102.016
+    RHS1      NodeBalance1524       41.2248
+    RHS1      NodeBalance1534      -13.1939
+    RHS1      NodeBalance1606       85.3483
+    RHS1      NodeBalance1617       10.5235
+    RHS1      NodeBalance1626      -42.0015
+    RHS1      NodeBalance1630       34.0634
+    RHS1      NodeBalance1635      -57.9468
+    RHS1      NodeBalance1701      -41.0465
+    RHS1      NodeBalance1712       -14.675
+    RHS1      NodeBalance1721       11.6406
+    RHS1      NodeBalance1732      -30.6198
+    RHS1      NodeBalance1737      -27.5348
+    RHS1      NodeBalance1738       32.1371
+    RHS1      NodeBalance1740       5.13853
+    RHS1      NodeBalance1815      -18.0282
+    RHS1      NodeBalance1823       52.0992
+    RHS1      NodeBalance1825       59.1208
+    RHS1      NodeBalance1840      -5.13853
+    RHS1      NodeBalance1902       34.2702
+    RHS1      NodeBalance1933       45.5822
+    RHS1      NodeBalance2011       34.9229
+    RHS1      NodeBalance2015       18.0282
+    RHS1      NodeBalance2016      -30.9087
+    RHS1      NodeBalance2018       91.8759
+    RHS1      NodeBalance2028      -11.8921
+    RHS1      NodeBalance2036       16.0942
+ SC Scen59    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -26.7159
+    RHS1      NodeBalance0112       21.0664
+    RHS1      NodeBalance0113      -12.6174
+    RHS1      NodeBalance0130       -77.966
+    RHS1      NodeBalance0131       16.0577
+    RHS1      NodeBalance0133      -18.4658
+    RHS1      NodeBalance0135       75.9334
+    RHS1      NodeBalance0227       74.4286
+    RHS1      NodeBalance0314      -63.3798
+    RHS1      NodeBalance0320       59.3588
+    RHS1      NodeBalance0339      -92.0032
+    RHS1      NodeBalance0401       71.6342
+    RHS1      NodeBalance0403      -74.9353
+    RHS1      NodeBalance0408       54.4379
+    RHS1      NodeBalance0410       36.6433
+    RHS1      NodeBalance0421      -7.26397
+    RHS1      NodeBalance0425      -37.1934
+    RHS1      NodeBalance0431      -16.0577
+    RHS1      NodeBalance0505      -4.57777
+    RHS1      NodeBalance0508      -54.4379
+    RHS1      NodeBalance0520      -59.3588
+    RHS1      NodeBalance0629       49.3191
+    RHS1      NodeBalance0705       4.57777
+    RHS1      NodeBalance0706      -69.6709
+    RHS1      NodeBalance0707       2.32536
+    RHS1      NodeBalance0709      -32.1839
+    RHS1      NodeBalance0722      -70.3627
+    RHS1      NodeBalance0736      -14.3216
+    RHS1      NodeBalance0817      -33.5389
+    RHS1      NodeBalance0819       18.2041
+    RHS1      NodeBalance0837       52.8503
+    RHS1      NodeBalance0838      -69.7561
+    RHS1      NodeBalance0904       25.2324
+    RHS1      NodeBalance0913       12.6174
+    RHS1      NodeBalance0926       27.2888
+    RHS1      NodeBalance0927      -74.4286
+    RHS1      NodeBalance0932       22.6389
+    RHS1      NodeBalance1003       74.9353
+    RHS1      NodeBalance1018      -104.218
+    RHS1      NodeBalance1024      -83.0758
+    RHS1      NodeBalance1134       15.1998
+    RHS1      NodeBalance1202      -34.6723
+    RHS1      NodeBalance1207      -2.32536
+    RHS1      NodeBalance1228       21.7608
+    RHS1      NodeBalance1310      -36.6433
+    RHS1      NodeBalance1319      -18.2041
+    RHS1      NodeBalance1339       92.0032
+    RHS1      NodeBalance1404      -25.2324
+    RHS1      NodeBalance1409       32.1839
+    RHS1      NodeBalance1414       63.3798
+    RHS1      NodeBalance1416       24.4866
+    RHS1      NodeBalance1423      -52.8926
+    RHS1      NodeBalance1429      -49.3191
+    RHS1      NodeBalance1522       70.3627
+    RHS1      NodeBalance1524       83.0758
+    RHS1      NodeBalance1534      -15.1998
+    RHS1      NodeBalance1606       69.6709
+    RHS1      NodeBalance1617       33.5389
+    RHS1      NodeBalance1626      -27.2888
+    RHS1      NodeBalance1630        77.966
+    RHS1      NodeBalance1635      -75.9334
+    RHS1      NodeBalance1701      -71.6342
+    RHS1      NodeBalance1712      -21.0664
+    RHS1      NodeBalance1721       7.26397
+    RHS1      NodeBalance1732      -22.6389
+    RHS1      NodeBalance1737      -52.8503
+    RHS1      NodeBalance1738       69.7561
+    RHS1      NodeBalance1740       25.1024
+    RHS1      NodeBalance1815      -29.4502
+    RHS1      NodeBalance1823       52.8926
+    RHS1      NodeBalance1825       37.1934
+    RHS1      NodeBalance1840      -25.1024
+    RHS1      NodeBalance1902       34.6723
+    RHS1      NodeBalance1933       18.4658
+    RHS1      NodeBalance2011       26.7159
+    RHS1      NodeBalance2015       29.4502
+    RHS1      NodeBalance2016      -24.4866
+    RHS1      NodeBalance2018       104.218
+    RHS1      NodeBalance2028      -21.7608
+    RHS1      NodeBalance2036       14.3216
+ SC Scen60    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -31.4045
+    RHS1      NodeBalance0112       23.0196
+    RHS1      NodeBalance0113      -56.9432
+    RHS1      NodeBalance0130      -20.8102
+    RHS1      NodeBalance0131       28.8223
+    RHS1      NodeBalance0133      -25.6152
+    RHS1      NodeBalance0135       71.0962
+    RHS1      NodeBalance0227       51.0638
+    RHS1      NodeBalance0314      -55.5306
+    RHS1      NodeBalance0320       59.7152
+    RHS1      NodeBalance0339      -105.396
+    RHS1      NodeBalance0401       53.1361
+    RHS1      NodeBalance0403        -79.09
+    RHS1      NodeBalance0408       66.1304
+    RHS1      NodeBalance0410       73.5882
+    RHS1      NodeBalance0421      -8.22495
+    RHS1      NodeBalance0425      -43.1168
+    RHS1      NodeBalance0431      -28.8223
+    RHS1      NodeBalance0505      -36.7136
+    RHS1      NodeBalance0508      -66.1304
+    RHS1      NodeBalance0520      -59.7152
+    RHS1      NodeBalance0629       28.5834
+    RHS1      NodeBalance0705       36.7136
+    RHS1      NodeBalance0706      -3.66124
+    RHS1      NodeBalance0707       13.5442
+    RHS1      NodeBalance0709      -26.4994
+    RHS1      NodeBalance0722      -92.4544
+    RHS1      NodeBalance0736      -14.0608
+    RHS1      NodeBalance0817      -11.9376
+    RHS1      NodeBalance0819       19.0697
+    RHS1      NodeBalance0837       29.3229
+    RHS1      NodeBalance0838      -68.3248
+    RHS1      NodeBalance0904       44.2853
+    RHS1      NodeBalance0913       56.9432
+    RHS1      NodeBalance0926       57.3957
+    RHS1      NodeBalance0927      -51.0638
+    RHS1      NodeBalance0932        18.897
+    RHS1      NodeBalance1003         79.09
+    RHS1      NodeBalance1018      -72.2043
+    RHS1      NodeBalance1024      -38.7382
+    RHS1      NodeBalance1134       7.61306
+    RHS1      NodeBalance1202        -29.34
+    RHS1      NodeBalance1207      -13.5442
+    RHS1      NodeBalance1228       36.3469
+    RHS1      NodeBalance1310      -73.5882
+    RHS1      NodeBalance1319      -19.0697
+    RHS1      NodeBalance1339       105.396
+    RHS1      NodeBalance1404      -44.2853
+    RHS1      NodeBalance1409       26.4994
+    RHS1      NodeBalance1414       55.5306
+    RHS1      NodeBalance1416       6.91101
+    RHS1      NodeBalance1423      -21.0754
+    RHS1      NodeBalance1429      -28.5834
+    RHS1      NodeBalance1522       92.4544
+    RHS1      NodeBalance1524       38.7382
+    RHS1      NodeBalance1534      -7.61306
+    RHS1      NodeBalance1606       3.66124
+    RHS1      NodeBalance1617       11.9376
+    RHS1      NodeBalance1626      -57.3957
+    RHS1      NodeBalance1630       20.8102
+    RHS1      NodeBalance1635      -71.0962
+    RHS1      NodeBalance1701      -53.1361
+    RHS1      NodeBalance1712      -23.0196
+    RHS1      NodeBalance1721       8.22495
+    RHS1      NodeBalance1732       -18.897
+    RHS1      NodeBalance1737      -29.3229
+    RHS1      NodeBalance1738       68.3248
+    RHS1      NodeBalance1740       12.7455
+    RHS1      NodeBalance1815      -30.2844
+    RHS1      NodeBalance1823       21.0754
+    RHS1      NodeBalance1825       43.1168
+    RHS1      NodeBalance1840      -12.7455
+    RHS1      NodeBalance1902         29.34
+    RHS1      NodeBalance1933       25.6152
+    RHS1      NodeBalance2011       31.4045
+    RHS1      NodeBalance2015       30.2844
+    RHS1      NodeBalance2016      -6.91101
+    RHS1      NodeBalance2018       72.2043
+    RHS1      NodeBalance2028      -36.3469
+    RHS1      NodeBalance2036       14.0608
+ SC Scen61    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -42.9306
+    RHS1      NodeBalance0112       19.3324
+    RHS1      NodeBalance0113       -74.263
+    RHS1      NodeBalance0130      -52.0242
+    RHS1      NodeBalance0131       23.2568
+    RHS1      NodeBalance0133       -38.007
+    RHS1      NodeBalance0135       43.7684
+    RHS1      NodeBalance0227        108.77
+    RHS1      NodeBalance0314       -78.754
+    RHS1      NodeBalance0320       54.6936
+    RHS1      NodeBalance0339      -90.1387
+    RHS1      NodeBalance0401        22.795
+    RHS1      NodeBalance0403      -47.8062
+    RHS1      NodeBalance0408       21.5784
+    RHS1      NodeBalance0410       64.4787
+    RHS1      NodeBalance0421      -13.0206
+    RHS1      NodeBalance0425      -54.3563
+    RHS1      NodeBalance0431      -23.2568
+    RHS1      NodeBalance0505      -58.9111
+    RHS1      NodeBalance0508      -21.5784
+    RHS1      NodeBalance0520      -54.6936
+    RHS1      NodeBalance0629       28.1261
+    RHS1      NodeBalance0705       58.9111
+    RHS1      NodeBalance0706      -40.8195
+    RHS1      NodeBalance0707       35.6037
+    RHS1      NodeBalance0709      -35.9539
+    RHS1      NodeBalance0722      -65.8459
+    RHS1      NodeBalance0736      -13.5228
+    RHS1      NodeBalance0817      -18.6938
+    RHS1      NodeBalance0819        20.266
+    RHS1      NodeBalance0837       30.0165
+    RHS1      NodeBalance0838      -72.7366
+    RHS1      NodeBalance0904       43.4341
+    RHS1      NodeBalance0913        74.263
+    RHS1      NodeBalance0926       85.9975
+    RHS1      NodeBalance0927       -108.77
+    RHS1      NodeBalance0932       30.5612
+    RHS1      NodeBalance1003       47.8062
+    RHS1      NodeBalance1018      -101.528
+    RHS1      NodeBalance1024       -48.438
+    RHS1      NodeBalance1134       2.24983
+    RHS1      NodeBalance1202      -26.3411
+    RHS1      NodeBalance1207      -35.6037
+    RHS1      NodeBalance1228       33.6919
+    RHS1      NodeBalance1310      -64.4787
+    RHS1      NodeBalance1319       -20.266
+    RHS1      NodeBalance1339       90.1387
+    RHS1      NodeBalance1404      -43.4341
+    RHS1      NodeBalance1409       35.9539
+    RHS1      NodeBalance1414        78.754
+    RHS1      NodeBalance1416       20.9116
+    RHS1      NodeBalance1423      -38.0391
+    RHS1      NodeBalance1429      -28.1261
+    RHS1      NodeBalance1522       65.8459
+    RHS1      NodeBalance1524        48.438
+    RHS1      NodeBalance1534      -2.24983
+    RHS1      NodeBalance1606       40.8195
+    RHS1      NodeBalance1617       18.6938
+    RHS1      NodeBalance1626      -85.9975
+    RHS1      NodeBalance1630       52.0242
+    RHS1      NodeBalance1635      -43.7684
+    RHS1      NodeBalance1701       -22.795
+    RHS1      NodeBalance1712      -19.3324
+    RHS1      NodeBalance1721       13.0206
+    RHS1      NodeBalance1732      -30.5612
+    RHS1      NodeBalance1737      -30.0165
+    RHS1      NodeBalance1738       72.7366
+    RHS1      NodeBalance1740       31.3025
+    RHS1      NodeBalance1815      -24.9019
+    RHS1      NodeBalance1823       38.0391
+    RHS1      NodeBalance1825       54.3563
+    RHS1      NodeBalance1840      -31.3025
+    RHS1      NodeBalance1902       26.3411
+    RHS1      NodeBalance1933        38.007
+    RHS1      NodeBalance2011       42.9306
+    RHS1      NodeBalance2015       24.9019
+    RHS1      NodeBalance2016      -20.9116
+    RHS1      NodeBalance2018       101.528
+    RHS1      NodeBalance2028      -33.6919
+    RHS1      NodeBalance2036       13.5228
+ SC Scen62    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -16.7801
+    RHS1      NodeBalance0112       25.4325
+    RHS1      NodeBalance0113      -78.4736
+    RHS1      NodeBalance0130      -42.1822
+    RHS1      NodeBalance0131       31.0069
+    RHS1      NodeBalance0133       -38.512
+    RHS1      NodeBalance0135       52.2195
+    RHS1      NodeBalance0227       106.859
+    RHS1      NodeBalance0314      -25.7507
+    RHS1      NodeBalance0320       11.6778
+    RHS1      NodeBalance0339      -54.8345
+    RHS1      NodeBalance0401       79.6539
+    RHS1      NodeBalance0403      -68.1702
+    RHS1      NodeBalance0408       70.1437
+    RHS1      NodeBalance0410       79.0738
+    RHS1      NodeBalance0421      -14.8889
+    RHS1      NodeBalance0425      -17.5475
+    RHS1      NodeBalance0431      -31.0069
+    RHS1      NodeBalance0505      -49.0385
+    RHS1      NodeBalance0508      -70.1437
+    RHS1      NodeBalance0520      -11.6778
+    RHS1      NodeBalance0629       43.8705
+    RHS1      NodeBalance0705       49.0385
+    RHS1      NodeBalance0706       -6.5691
+    RHS1      NodeBalance0707       23.8377
+    RHS1      NodeBalance0709      -4.95405
+    RHS1      NodeBalance0722       -68.805
+    RHS1      NodeBalance0736       -9.8545
+    RHS1      NodeBalance0817      -3.58745
+    RHS1      NodeBalance0819       15.6248
+    RHS1      NodeBalance0837       40.8674
+    RHS1      NodeBalance0838       -47.782
+    RHS1      NodeBalance0904       35.1584
+    RHS1      NodeBalance0913       78.4736
+    RHS1      NodeBalance0926       18.8138
+    RHS1      NodeBalance0927      -106.859
+    RHS1      NodeBalance0932       32.5775
+    RHS1      NodeBalance1003       68.1702
+    RHS1      NodeBalance1018      -58.0423
+    RHS1      NodeBalance1024      -84.4339
+    RHS1      NodeBalance1134       16.0871
+    RHS1      NodeBalance1202      -28.7951
+    RHS1      NodeBalance1207      -23.8377
+    RHS1      NodeBalance1228       13.8167
+    RHS1      NodeBalance1310      -79.0738
+    RHS1      NodeBalance1319      -15.6248
+    RHS1      NodeBalance1339       54.8345
+    RHS1      NodeBalance1404      -35.1584
+    RHS1      NodeBalance1409       4.95405
+    RHS1      NodeBalance1414       25.7507
+    RHS1      NodeBalance1416       36.2004
+    RHS1      NodeBalance1423      -29.4699
+    RHS1      NodeBalance1429      -43.8705
+    RHS1      NodeBalance1522        68.805
+    RHS1      NodeBalance1524       84.4339
+    RHS1      NodeBalance1534      -16.0871
+    RHS1      NodeBalance1606        6.5691
+    RHS1      NodeBalance1617       3.58745
+    RHS1      NodeBalance1626      -18.8138
+    RHS1      NodeBalance1630       42.1822
+    RHS1      NodeBalance1635      -52.2195
+    RHS1      NodeBalance1701      -79.6539
+    RHS1      NodeBalance1712      -25.4325
+    RHS1      NodeBalance1721       14.8889
+    RHS1      NodeBalance1732      -32.5775
+    RHS1      NodeBalance1737      -40.8674
+    RHS1      NodeBalance1738        47.782
+    RHS1      NodeBalance1740       21.5365
+    RHS1      NodeBalance1815      -26.8456
+    RHS1      NodeBalance1823       29.4699
+    RHS1      NodeBalance1825       17.5475
+    RHS1      NodeBalance1840      -21.5365
+    RHS1      NodeBalance1902       28.7951
+    RHS1      NodeBalance1933        38.512
+    RHS1      NodeBalance2011       16.7801
+    RHS1      NodeBalance2015       26.8456
+    RHS1      NodeBalance2016      -36.2004
+    RHS1      NodeBalance2018       58.0423
+    RHS1      NodeBalance2028      -13.8167
+    RHS1      NodeBalance2036        9.8545
+ SC Scen63    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -31.9919
+    RHS1      NodeBalance0112       11.9849
+    RHS1      NodeBalance0113      -52.0941
+    RHS1      NodeBalance0130      -54.7228
+    RHS1      NodeBalance0131       16.2706
+    RHS1      NodeBalance0133       -12.717
+    RHS1      NodeBalance0135       60.4029
+    RHS1      NodeBalance0227       74.1379
+    RHS1      NodeBalance0314      -89.3657
+    RHS1      NodeBalance0320       59.5058
+    RHS1      NodeBalance0339       -114.35
+    RHS1      NodeBalance0401       73.3167
+    RHS1      NodeBalance0403      -45.8061
+    RHS1      NodeBalance0408       60.4646
+    RHS1      NodeBalance0410       72.1139
+    RHS1      NodeBalance0421      -15.7862
+    RHS1      NodeBalance0425      -47.4022
+    RHS1      NodeBalance0431      -16.2706
+    RHS1      NodeBalance0505      -47.5178
+    RHS1      NodeBalance0508      -60.4646
+    RHS1      NodeBalance0520      -59.5058
+    RHS1      NodeBalance0629       27.7403
+    RHS1      NodeBalance0705       47.5178
+    RHS1      NodeBalance0706       -69.295
+    RHS1      NodeBalance0707         46.25
+    RHS1      NodeBalance0709      -50.3797
+    RHS1      NodeBalance0722       -15.584
+    RHS1      NodeBalance0736      -17.5749
+    RHS1      NodeBalance0817      -32.3584
+    RHS1      NodeBalance0819       10.5351
+    RHS1      NodeBalance0837       20.3411
+    RHS1      NodeBalance0838      -63.7123
+    RHS1      NodeBalance0904       43.1268
+    RHS1      NodeBalance0913       52.0941
+    RHS1      NodeBalance0926       59.1191
+    RHS1      NodeBalance0927      -74.1379
+    RHS1      NodeBalance0932       36.0554
+    RHS1      NodeBalance1003       45.8061
+    RHS1      NodeBalance1018      -105.028
+    RHS1      NodeBalance1024        -32.07
+    RHS1      NodeBalance1134       15.2434
+    RHS1      NodeBalance1202      -10.5943
+    RHS1      NodeBalance1207        -46.25
+    RHS1      NodeBalance1228       32.8617
+    RHS1      NodeBalance1310      -72.1139
+    RHS1      NodeBalance1319      -10.5351
+    RHS1      NodeBalance1339        114.35
+    RHS1      NodeBalance1404      -43.1268
+    RHS1      NodeBalance1409       50.3797
+    RHS1      NodeBalance1414       89.3657
+    RHS1      NodeBalance1416       18.3013
+    RHS1      NodeBalance1423      -37.5221
+    RHS1      NodeBalance1429      -27.7403
+    RHS1      NodeBalance1522        15.584
+    RHS1      NodeBalance1524         32.07
+    RHS1      NodeBalance1534      -15.2434
+    RHS1      NodeBalance1606        69.295
+    RHS1      NodeBalance1617       32.3584
+    RHS1      NodeBalance1626      -59.1191
+    RHS1      NodeBalance1630       54.7228
+    RHS1      NodeBalance1635      -60.4029
+    RHS1      NodeBalance1701      -73.3167
+    RHS1      NodeBalance1712      -11.9849
+    RHS1      NodeBalance1721       15.7862
+    RHS1      NodeBalance1732      -36.0554
+    RHS1      NodeBalance1737      -20.3411
+    RHS1      NodeBalance1738       63.7123
+    RHS1      NodeBalance1740       32.2096
+    RHS1      NodeBalance1815      -28.5626
+    RHS1      NodeBalance1823       37.5221
+    RHS1      NodeBalance1825       47.4022
+    RHS1      NodeBalance1840      -32.2096
+    RHS1      NodeBalance1902       10.5943
+    RHS1      NodeBalance1933        12.717
+    RHS1      NodeBalance2011       31.9919
+    RHS1      NodeBalance2015       28.5626
+    RHS1      NodeBalance2016      -18.3013
+    RHS1      NodeBalance2018       105.028
+    RHS1      NodeBalance2028      -32.8617
+    RHS1      NodeBalance2036       17.5749
+ SC Scen64    Scen1         0.015625   Stage2    
+    RHS1      NodeBalance0111      -34.3452
+    RHS1      NodeBalance0112       22.4687
+    RHS1      NodeBalance0113      -70.8418
+    RHS1      NodeBalance0130      -77.8929
+    RHS1      NodeBalance0131       22.2965
+    RHS1      NodeBalance0133      -37.1082
+    RHS1      NodeBalance0135       54.6207
+    RHS1      NodeBalance0227       91.4023
+    RHS1      NodeBalance0314      -63.1189
+    RHS1      NodeBalance0320       15.4808
+    RHS1      NodeBalance0339      -115.404
+    RHS1      NodeBalance0401       47.4645
+    RHS1      NodeBalance0403      -80.1418
+    RHS1      NodeBalance0408       55.2824
+    RHS1      NodeBalance0410       62.9336
+    RHS1      NodeBalance0421      -7.56088
+    RHS1      NodeBalance0425      -32.2707
+    RHS1      NodeBalance0431      -22.2965
+    RHS1      NodeBalance0505      -63.1485
+    RHS1      NodeBalance0508      -55.2824
+    RHS1      NodeBalance0520      -15.4808
+    RHS1      NodeBalance0629       42.8035
+    RHS1      NodeBalance0705       63.1485
+    RHS1      NodeBalance0706      -72.9016
+    RHS1      NodeBalance0707       57.0894
+    RHS1      NodeBalance0709      -52.4817
+    RHS1      NodeBalance0722      -47.8694
+    RHS1      NodeBalance0736      -15.8145
+    RHS1      NodeBalance0817       -35.311
+    RHS1      NodeBalance0819       15.3997
+    RHS1      NodeBalance0837       36.1583
+    RHS1      NodeBalance0838       -48.434
+    RHS1      NodeBalance0904       23.8336
+    RHS1      NodeBalance0913       70.8418
+    RHS1      NodeBalance0926       39.8465
+    RHS1      NodeBalance0927      -91.4023
+    RHS1      NodeBalance0932       29.3722
+    RHS1      NodeBalance1003       80.1418
+    RHS1      NodeBalance1018      -111.312
+    RHS1      NodeBalance1024      -54.9777
+    RHS1      NodeBalance1134       8.40636
+    RHS1      NodeBalance1202      -28.2746
+    RHS1      NodeBalance1207      -57.0894
+    RHS1      NodeBalance1228       12.4632
+    RHS1      NodeBalance1310      -62.9336
+    RHS1      NodeBalance1319      -15.3997
+    RHS1      NodeBalance1339       115.404
+    RHS1      NodeBalance1404      -23.8336
+    RHS1      NodeBalance1409       52.4817
+    RHS1      NodeBalance1414       63.1189
+    RHS1      NodeBalance1416       43.8962
+    RHS1      NodeBalance1423      -50.4984
+    RHS1      NodeBalance1429      -42.8035
+    RHS1      NodeBalance1522       47.8694
+    RHS1      NodeBalance1524       54.9777
+    RHS1      NodeBalance1534      -8.40636
+    RHS1      NodeBalance1606       72.9016
+    RHS1      NodeBalance1617        35.311
+    RHS1      NodeBalance1626      -39.8465
+    RHS1      NodeBalance1630       77.8929
+    RHS1      NodeBalance1635      -54.6207
+    RHS1      NodeBalance1701      -47.4645
+    RHS1      NodeBalance1712      -22.4687
+    RHS1      NodeBalance1721       7.56088
+    RHS1      NodeBalance1732      -29.3722
+    RHS1      NodeBalance1737      -36.1583
+    RHS1      NodeBalance1738        48.434
+    RHS1      NodeBalance1740       14.1555
+    RHS1      NodeBalance1815      -26.9214
+    RHS1      NodeBalance1823       50.4984
+    RHS1      NodeBalance1825       32.2707
+    RHS1      NodeBalance1840      -14.1555
+    RHS1      NodeBalance1902       28.2746
+    RHS1      NodeBalance1933       37.1082
+    RHS1      NodeBalance2011       34.3452
+    RHS1      NodeBalance2015       26.9214
+    RHS1      NodeBalance2016      -43.8962
+    RHS1      NodeBalance2018       111.312
+    RHS1      NodeBalance2028      -12.4632
+    RHS1      NodeBalance2036       15.8145
+ENDATA
+
+
