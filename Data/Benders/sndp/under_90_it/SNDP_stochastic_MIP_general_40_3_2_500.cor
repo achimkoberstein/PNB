@@ -1,0 +1,957 @@
+*   Compiled by Pavlo Glushko
+*   
+*   SNDP_stochastic_MIP_general_instances\SNDP_stochastic_MIP_general_40_3_2_500.smps
+*   
+*   Generated with the MPL Modeling System
+*   Copyright (c) 1988-2016  Maximal Software
+*   
+*   Date:               October 16, 2018
+*   Time:               18:09
+*   
+*   Constraints:        109
+*   Variables:          715
+*   Integers:           36
+*   Nonzeros:           565
+*   Density:            0.7 %
+*   
+NAME          SNDP_stochastic_general (MIN)
+ROWS
+  N Profit
+  E BOMConstr011
+  E BOMConstr012
+  E BOMConstr021
+  E BOMConstr022
+  E BOMConstr031
+  E BOMConstr032
+  E BOMConstr041
+  E BOMConstr042
+  E BOMConstr051
+  E BOMConstr052
+  E BOMConstr061
+  E BOMConstr062
+  E BOMConstr071
+  E BOMConstr072
+  E BOMConstr081
+  E BOMConstr082
+  E BOMConstr091
+  E BOMConstr092
+  E BOMConstr101
+  E BOMConstr102
+  E BOMConstr111
+  E BOMConstr112
+  E BOMConstr121
+  E BOMConstr122
+  E BOMConstr131
+  E BOMConstr132
+  E BOMConstr141
+  E BOMConstr142
+  E BOMConstr151
+  E BOMConstr152
+  E BOMConstr161
+  E BOMConstr162
+  E BOMConstr181
+  E BOMConstr182
+  E BOMConstr191
+  E BOMConstr192
+  E BOMConstr201
+  E BOMConstr202
+  E BOMConstr211
+  E BOMConstr212
+  E BOMConstr221
+  E BOMConstr222
+  E BOMConstr231
+  E BOMConstr232
+  E BOMConstr241
+  E BOMConstr242
+  E BOMConstr251
+  E BOMConstr252
+  E BOMConstr261
+  E BOMConstr262
+  E BOMConstr271
+  E BOMConstr272
+  E BOMConstr291
+  E BOMConstr292
+  E BOMConstr301
+  E BOMConstr302
+  E BOMConstr311
+  E BOMConstr312
+  E BOMConstr321
+  E BOMConstr322
+  E BOMConstr331
+  E BOMConstr332
+  E BOMConstr341
+  E BOMConstr342
+  E BOMConstr361
+  E BOMConstr362
+  E BOMConstr371
+  E BOMConstr372
+  E BOMConstr381
+  E BOMConstr382
+  E BOMConstr391
+  E BOMConstr392
+  L DemConstr
+  L PlantConstr01
+  L PlantConstr02
+  L PlantConstr03
+  L PlantConstr04
+  L PlantConstr05
+  L PlantConstr06
+  L PlantConstr07
+  L PlantConstr08
+  L PlantConstr09
+  L PlantConstr10
+  L PlantConstr11
+  L PlantConstr12
+  L PlantConstr13
+  L PlantConstr14
+  L PlantConstr15
+  L PlantConstr16
+  L PlantConstr18
+  L PlantConstr19
+  L PlantConstr20
+  L PlantConstr21
+  L PlantConstr22
+  L PlantConstr23
+  L PlantConstr24
+  L PlantConstr25
+  L PlantConstr26
+  L PlantConstr27
+  L PlantConstr29
+  L PlantConstr30
+  L PlantConstr31
+  L PlantConstr32
+  L PlantConstr33
+  L PlantConstr34
+  L PlantConstr36
+  L PlantConstr37
+  L PlantConstr38
+  L PlantConstr39
+COLUMNS
+    OpenProduction01  Profit          2000.0   PlantConstr01       -5000.0
+    OpenProduction02  Profit          2000.0   PlantConstr02       -5000.0
+    OpenProduction03  Profit          2000.0   PlantConstr03       -5000.0
+    OpenProduction04  Profit          2000.0   PlantConstr04       -5000.0
+    OpenProduction05  Profit          2000.0   PlantConstr05       -5000.0
+    OpenProduction06  Profit          2000.0   PlantConstr06       -5000.0
+    OpenProduction07  Profit          2000.0   PlantConstr07       -5000.0
+    OpenProduction08  Profit          2000.0   PlantConstr08       -5000.0
+    OpenProduction09  Profit          2000.0   PlantConstr09       -5000.0
+    OpenProduction10  Profit          2000.0   PlantConstr10       -5000.0
+    OpenProduction11  Profit          2000.0   PlantConstr11       -5000.0
+    OpenProduction12  Profit          2000.0   PlantConstr12       -5000.0
+    OpenProduction13  Profit          2000.0   PlantConstr13       -5000.0
+    OpenProduction14  Profit          2000.0   PlantConstr14       -5000.0
+    OpenProduction15  Profit          2000.0   PlantConstr15       -5000.0
+    OpenProduction16  Profit          2000.0   PlantConstr16       -5000.0
+    OpenProduction18  Profit          2000.0   PlantConstr18       -5000.0
+    OpenProduction19  Profit          2000.0   PlantConstr19       -5000.0
+    OpenProduction20  Profit          2000.0   PlantConstr20       -5000.0
+    OpenProduction21  Profit          2000.0   PlantConstr21       -5000.0
+    OpenProduction22  Profit          2000.0   PlantConstr22       -5000.0
+    OpenProduction23  Profit          2000.0   PlantConstr23       -5000.0
+    OpenProduction24  Profit          2000.0   PlantConstr24       -5000.0
+    OpenProduction25  Profit          2000.0   PlantConstr25       -5000.0
+    OpenProduction26  Profit          2000.0   PlantConstr26       -5000.0
+    OpenProduction27  Profit          2000.0   PlantConstr27       -5000.0
+    OpenProduction29  Profit          2000.0   PlantConstr29       -5000.0
+    OpenProduction30  Profit          2000.0   PlantConstr30       -5000.0
+    OpenProduction31  Profit          2000.0   PlantConstr31       -5000.0
+    OpenProduction32  Profit          2000.0   PlantConstr32       -5000.0
+    OpenProduction33  Profit          2000.0   PlantConstr33       -5000.0
+    OpenProduction34  Profit          2000.0   PlantConstr34       -5000.0
+    OpenProduction36  Profit          2000.0   PlantConstr36       -5000.0
+    OpenProduction37  Profit          2000.0   PlantConstr37       -5000.0
+    OpenProduction38  Profit          2000.0   PlantConstr38       -5000.0
+    OpenProduction39  Profit          2000.0   PlantConstr39       -5000.0
+    Ship10301  Profit            14.0   BOMConstr011          -1.0
+    Ship10302  Profit             5.0   BOMConstr021          -1.0
+    Ship10303  Profit            -0.0   BOMConstr031          -1.0
+    Ship10304  Profit             4.0   BOMConstr041          -1.0
+    Ship10305  Profit             1.0   BOMConstr051          -1.0
+    Ship10306  Profit             7.0   BOMConstr061          -1.0
+    Ship10307  Profit             8.0   BOMConstr071          -1.0
+    Ship10308  Profit             4.0   BOMConstr081          -1.0
+    Ship10309  Profit            12.0   BOMConstr091          -1.0
+    Ship10310  Profit             2.0   BOMConstr101          -1.0
+    Ship10311  Profit             4.0   BOMConstr111          -1.0
+    Ship10312  Profit             1.0   BOMConstr121          -1.0
+    Ship10313  Profit            11.0   BOMConstr131          -1.0
+    Ship10315  Profit             7.0   BOMConstr151          -1.0
+    Ship10316  Profit             6.0   BOMConstr161          -1.0
+    Ship10318  Profit             9.0   BOMConstr181          -1.0
+    Ship10319  Profit             6.0   BOMConstr191          -1.0
+    Ship10320  Profit             5.0   BOMConstr201          -1.0
+    Ship10321  Profit             8.0   BOMConstr211          -1.0
+    Ship10322  Profit             7.0   BOMConstr221          -1.0
+    Ship10326  Profit             5.0   BOMConstr261          -1.0
+    Ship10327  Profit             3.0   BOMConstr271          -1.0
+    Ship10329  Profit             9.0   BOMConstr291          -1.0
+    Ship10330  Profit             8.0   BOMConstr301          -1.0
+    Ship10331  Profit             8.0   BOMConstr311          -1.0
+    Ship10332  Profit            14.0   BOMConstr321          -1.0
+    Ship10333  Profit             7.0   BOMConstr331          -1.0
+    Ship10336  Profit             9.0   BOMConstr361          -1.0
+    Ship10337  Profit            10.0   BOMConstr371          -1.0
+    Ship10338  Profit            11.0   BOMConstr381          -1.0
+    Ship10339  Profit            11.0   BOMConstr391          -1.0
+    Ship10906  Profit            14.0   BOMConstr061          -1.0
+    Ship10907  Profit            15.0   BOMConstr071          -1.0
+    Ship10909  Profit            -0.0   BOMConstr091          -1.0
+    Ship10924  Profit             8.0   BOMConstr241          -1.0
+    Ship10930  Profit            11.0   BOMConstr301          -1.0
+    Ship10931  Profit            11.0   BOMConstr311          -1.0
+    Ship10937  Profit             3.0   BOMConstr371          -1.0
+    Ship11502  Profit            11.0   BOMConstr021          -1.0
+    Ship11505  Profit            11.0   BOMConstr051          -1.0
+    Ship11506  Profit             6.0   BOMConstr061          -1.0
+    Ship11507  Profit             5.0   BOMConstr071          -1.0
+    Ship11509  Profit            14.0   BOMConstr091          -1.0
+    Ship11510  Profit             3.0   BOMConstr101          -1.0
+    Ship11511  Profit            13.0   BOMConstr111          -1.0
+    Ship11512  Profit            11.0   BOMConstr121          -1.0
+    Ship11513  Profit             4.0   BOMConstr131          -1.0
+    Ship11514  Profit            10.0   BOMConstr141          -1.0
+    Ship11515  Profit            -0.0   BOMConstr151          -1.0
+    Ship11516  Profit            12.0   BOMConstr161          -1.0
+    Ship11518  Profit             9.0   BOMConstr181          -1.0
+    Ship11519  Profit            12.0   BOMConstr191          -1.0
+    Ship11520  Profit             1.0   BOMConstr201          -1.0
+    Ship11521  Profit             4.0   BOMConstr211          -1.0
+    Ship11522  Profit             1.0   BOMConstr221          -1.0
+    Ship11523  Profit            12.0   BOMConstr231          -1.0
+    Ship11524  Profit             5.0   BOMConstr241          -1.0
+    Ship11525  Profit            13.0   BOMConstr251          -1.0
+    Ship11526  Profit            11.0   BOMConstr261          -1.0
+    Ship11529  Profit             6.0   BOMConstr291          -1.0
+    Ship11530  Profit             8.0   BOMConstr301          -1.0
+    Ship11531  Profit             4.0   BOMConstr311          -1.0
+    Ship11532  Profit             1.0   BOMConstr321          -1.0
+    Ship11533  Profit            10.0   BOMConstr331          -1.0
+    Ship11534  Profit             8.0   BOMConstr341          -1.0
+    Ship11536  Profit            12.0   BOMConstr361          -1.0
+    Ship11537  Profit            15.0   BOMConstr371          -1.0
+    Ship11538  Profit            10.0   BOMConstr381          -1.0
+    Ship11539  Profit            11.0   BOMConstr391          -1.0
+    Ship12801  Profit            14.0   BOMConstr011          -1.0
+    Ship12802  Profit            12.0   BOMConstr021          -1.0
+    Ship12803  Profit             1.0   BOMConstr031          -1.0
+    Ship12806  Profit            13.0   BOMConstr061          -1.0
+    Ship12807  Profit            15.0   BOMConstr071          -1.0
+    Ship12810  Profit             4.0   BOMConstr101          -1.0
+    Ship12811  Profit            12.0   BOMConstr111          -1.0
+    Ship12813  Profit             4.0   BOMConstr131          -1.0
+    Ship12814  Profit            15.0   BOMConstr141          -1.0
+    Ship12816  Profit             4.0   BOMConstr161          -1.0
+    Ship12818  Profit             6.0   BOMConstr181          -1.0
+    Ship12819  Profit             9.0   BOMConstr191          -1.0
+    Ship12821  Profit             7.0   BOMConstr211          -1.0
+    Ship12822  Profit            11.0   BOMConstr221          -1.0
+    Ship12823  Profit             7.0   BOMConstr231          -1.0
+    Ship12824  Profit            14.0   BOMConstr241          -1.0
+    Ship12826  Profit             4.0   BOMConstr261          -1.0
+    Ship12827  Profit             6.0   BOMConstr271          -1.0
+    Ship12829  Profit             4.0   BOMConstr291          -1.0
+    Ship12833  Profit            14.0   BOMConstr331          -1.0
+    Ship12834  Profit            10.0   BOMConstr341          -1.0
+    Ship12836  Profit            10.0   BOMConstr361          -1.0
+    Ship12837  Profit             5.0   BOMConstr371          -1.0
+    Ship12838  Profit            13.0   BOMConstr381          -1.0
+    Ship12839  Profit            12.0   BOMConstr391          -1.0
+    Ship13201  Profit             5.0   BOMConstr011          -1.0
+    Ship13202  Profit             7.0   BOMConstr021          -1.0
+    Ship13205  Profit             1.0   BOMConstr051          -1.0
+    Ship13206  Profit             3.0   BOMConstr061          -1.0
+    Ship13207  Profit             2.0   BOMConstr071          -1.0
+    Ship13209  Profit            11.0   BOMConstr091          -1.0
+    Ship13210  Profit             4.0   BOMConstr101          -1.0
+    Ship13211  Profit             4.0   BOMConstr111          -1.0
+    Ship13212  Profit            13.0   BOMConstr121          -1.0
+    Ship13213  Profit            14.0   BOMConstr131          -1.0
+    Ship13214  Profit            11.0   BOMConstr141          -1.0
+    Ship13216  Profit            12.0   BOMConstr161          -1.0
+    Ship13219  Profit             5.0   BOMConstr191          -1.0
+    Ship13220  Profit             1.0   BOMConstr201          -1.0
+    Ship13221  Profit            13.0   BOMConstr211          -1.0
+    Ship13223  Profit             6.0   BOMConstr231          -1.0
+    Ship13224  Profit             8.0   BOMConstr241          -1.0
+    Ship13225  Profit            14.0   BOMConstr251          -1.0
+    Ship13227  Profit             8.0   BOMConstr271          -1.0
+    Ship13230  Profit            13.0   BOMConstr301          -1.0
+    Ship13231  Profit            12.0   BOMConstr311          -1.0
+    Ship13232  Profit            -0.0   BOMConstr321          -1.0
+    Ship13233  Profit             6.0   BOMConstr331          -1.0
+    Ship13236  Profit            10.0   BOMConstr361          -1.0
+    Ship13237  Profit             5.0   BOMConstr371          -1.0
+    Ship13238  Profit             2.0   BOMConstr381          -1.0
+    Ship13401  Profit            13.0   BOMConstr011          -1.0
+    Ship13407  Profit             9.0   BOMConstr071          -1.0
+    Ship13425  Profit            12.0   BOMConstr251          -1.0
+    Ship13434  Profit            -0.0   BOMConstr341          -1.0
+    Ship13807  Profit             2.0   BOMConstr071          -1.0
+    Ship13830  Profit             4.0   BOMConstr301          -1.0
+    Ship13838  Profit            -0.0   BOMConstr381          -1.0
+    Ship13901  Profit             7.0   BOMConstr011          -1.0
+    Ship13902  Profit             2.0   BOMConstr021          -1.0
+    Ship13904  Profit            15.0   BOMConstr041          -1.0
+    Ship13905  Profit             8.0   BOMConstr051          -1.0
+    Ship13906  Profit             4.0   BOMConstr061          -1.0
+    Ship13907  Profit            11.0   BOMConstr071          -1.0
+    Ship13909  Profit             2.0   BOMConstr091          -1.0
+    Ship13910  Profit            15.0   BOMConstr101          -1.0
+    Ship13911  Profit             5.0   BOMConstr111          -1.0
+    Ship13912  Profit            13.0   BOMConstr121          -1.0
+    Ship13913  Profit             4.0   BOMConstr131          -1.0
+    Ship13914  Profit             8.0   BOMConstr141          -1.0
+    Ship13916  Profit            10.0   BOMConstr161          -1.0
+    Ship13919  Profit             2.0   BOMConstr191          -1.0
+    Ship13920  Profit             8.0   BOMConstr201          -1.0
+    Ship13921  Profit            15.0   BOMConstr211          -1.0
+    Ship13923  Profit             2.0   BOMConstr231          -1.0
+    Ship13924  Profit             7.0   BOMConstr241          -1.0
+    Ship13925  Profit             4.0   BOMConstr251          -1.0
+    Ship13927  Profit             5.0   BOMConstr271          -1.0
+    Ship13929  Profit            15.0   BOMConstr291          -1.0
+    Ship13930  Profit            12.0   BOMConstr301          -1.0
+    Ship13931  Profit             9.0   BOMConstr311          -1.0
+    Ship13932  Profit             1.0   BOMConstr321          -1.0
+    Ship13933  Profit             7.0   BOMConstr331          -1.0
+    Ship13934  Profit            15.0   BOMConstr341          -1.0
+    Ship13936  Profit            10.0   BOMConstr361          -1.0
+    Ship13937  Profit            12.0   BOMConstr371          -1.0
+    Ship13938  Profit            14.0   BOMConstr381          -1.0
+    Ship13939  Profit            -0.0   BOMConstr391          -1.0
+    Ship20301  Profit            14.0   BOMConstr012          -1.0
+    Ship20302  Profit             5.0   BOMConstr022          -1.0
+    Ship20303  Profit            -0.0   BOMConstr032          -1.0
+    Ship20304  Profit             4.0   BOMConstr042          -1.0
+    Ship20305  Profit             1.0   BOMConstr052          -1.0
+    Ship20306  Profit             7.0   BOMConstr062          -1.0
+    Ship20307  Profit             8.0   BOMConstr072          -1.0
+    Ship20308  Profit             4.0   BOMConstr082          -1.0
+    Ship20309  Profit            12.0   BOMConstr092          -1.0
+    Ship20310  Profit             2.0   BOMConstr102          -1.0
+    Ship20311  Profit             4.0   BOMConstr112          -1.0
+    Ship20312  Profit             1.0   BOMConstr122          -1.0
+    Ship20313  Profit            11.0   BOMConstr132          -1.0
+    Ship20315  Profit             7.0   BOMConstr152          -1.0
+    Ship20316  Profit             6.0   BOMConstr162          -1.0
+    Ship20318  Profit             9.0   BOMConstr182          -1.0
+    Ship20319  Profit             6.0   BOMConstr192          -1.0
+    Ship20320  Profit             5.0   BOMConstr202          -1.0
+    Ship20321  Profit             8.0   BOMConstr212          -1.0
+    Ship20322  Profit             7.0   BOMConstr222          -1.0
+    Ship20326  Profit             5.0   BOMConstr262          -1.0
+    Ship20327  Profit             3.0   BOMConstr272          -1.0
+    Ship20329  Profit             9.0   BOMConstr292          -1.0
+    Ship20330  Profit             8.0   BOMConstr302          -1.0
+    Ship20331  Profit             8.0   BOMConstr312          -1.0
+    Ship20332  Profit            14.0   BOMConstr322          -1.0
+    Ship20333  Profit             7.0   BOMConstr332          -1.0
+    Ship20336  Profit             9.0   BOMConstr362          -1.0
+    Ship20337  Profit            10.0   BOMConstr372          -1.0
+    Ship20338  Profit            11.0   BOMConstr382          -1.0
+    Ship20339  Profit            11.0   BOMConstr392          -1.0
+    Ship20801  Profit             6.0   BOMConstr012          -1.0
+    Ship20802  Profit            13.0   BOMConstr022          -1.0
+    Ship20804  Profit            15.0   BOMConstr042          -1.0
+    Ship20805  Profit            13.0   BOMConstr052          -1.0
+    Ship20807  Profit             6.0   BOMConstr072          -1.0
+    Ship20808  Profit            -0.0   BOMConstr082          -1.0
+    Ship20809  Profit             3.0   BOMConstr092          -1.0
+    Ship20810  Profit             1.0   BOMConstr102          -1.0
+    Ship20811  Profit             6.0   BOMConstr112          -1.0
+    Ship20812  Profit            12.0   BOMConstr122          -1.0
+    Ship20813  Profit            10.0   BOMConstr132          -1.0
+    Ship20814  Profit             6.0   BOMConstr142          -1.0
+    Ship20815  Profit            12.0   BOMConstr152          -1.0
+    Ship20816  Profit             4.0   BOMConstr162          -1.0
+    Ship20818  Profit            10.0   BOMConstr182          -1.0
+    Ship20819  Profit             8.0   BOMConstr192          -1.0
+    Ship20820  Profit            10.0   BOMConstr202          -1.0
+    Ship20821  Profit             1.0   BOMConstr212          -1.0
+    Ship20822  Profit             3.0   BOMConstr222          -1.0
+    Ship20823  Profit            14.0   BOMConstr232          -1.0
+    Ship20824  Profit             2.0   BOMConstr242          -1.0
+    Ship20825  Profit            10.0   BOMConstr252          -1.0
+    Ship20826  Profit            13.0   BOMConstr262          -1.0
+    Ship20827  Profit             7.0   BOMConstr272          -1.0
+    Ship20829  Profit             8.0   BOMConstr292          -1.0
+    Ship20831  Profit             3.0   BOMConstr312          -1.0
+    Ship20832  Profit            15.0   BOMConstr322          -1.0
+    Ship20833  Profit             7.0   BOMConstr332          -1.0
+    Ship20834  Profit             5.0   BOMConstr342          -1.0
+    Ship20836  Profit            11.0   BOMConstr362          -1.0
+    Ship20837  Profit             8.0   BOMConstr372          -1.0
+    Ship20838  Profit             4.0   BOMConstr382          -1.0
+    Ship20839  Profit             3.0   BOMConstr392          -1.0
+    Ship21701  Profit             3.0   BOMConstr012          -1.0
+    Ship21702  Profit             4.0   BOMConstr022          -1.0
+    Ship21703  Profit             2.0   BOMConstr032          -1.0
+    Ship21704  Profit             3.0   BOMConstr042          -1.0
+    Ship21705  Profit             7.0   BOMConstr052          -1.0
+    Ship21706  Profit             6.0   BOMConstr062          -1.0
+    Ship21707  Profit             1.0   BOMConstr072          -1.0
+    Ship21708  Profit             5.0   BOMConstr082          -1.0
+    Ship21709  Profit             6.0   BOMConstr092          -1.0
+    Ship21710  Profit             2.0   BOMConstr102          -1.0
+    Ship21711  Profit            12.0   BOMConstr112          -1.0
+    Ship21712  Profit            12.0   BOMConstr122          -1.0
+    Ship21713  Profit            11.0   BOMConstr132          -1.0
+    Ship21714  Profit            14.0   BOMConstr142          -1.0
+    Ship21716  Profit             6.0   BOMConstr162          -1.0
+    Ship21718  Profit            15.0   BOMConstr182          -1.0
+    Ship21721  Profit             1.0   BOMConstr212          -1.0
+    Ship21722  Profit             4.0   BOMConstr222          -1.0
+    Ship21723  Profit             7.0   BOMConstr232          -1.0
+    Ship21724  Profit             6.0   BOMConstr242          -1.0
+    Ship21725  Profit            13.0   BOMConstr252          -1.0
+    Ship21726  Profit             4.0   BOMConstr262          -1.0
+    Ship21727  Profit            14.0   BOMConstr272          -1.0
+    Ship21729  Profit             8.0   BOMConstr292          -1.0
+    Ship21730  Profit             2.0   BOMConstr302          -1.0
+    Ship21731  Profit             2.0   BOMConstr312          -1.0
+    Ship21732  Profit            14.0   BOMConstr322          -1.0
+    Ship21733  Profit            11.0   BOMConstr332          -1.0
+    Ship21734  Profit             7.0   BOMConstr342          -1.0
+    Ship21736  Profit             1.0   BOMConstr362          -1.0
+    Ship21737  Profit             8.0   BOMConstr372          -1.0
+    Ship21739  Profit             3.0   BOMConstr392          -1.0
+    Ship21801  Profit            10.0   BOMConstr012          -1.0
+    Ship21802  Profit             4.0   BOMConstr022          -1.0
+    Ship21804  Profit             7.0   BOMConstr042          -1.0
+    Ship21805  Profit            11.0   BOMConstr052          -1.0
+    Ship21806  Profit             9.0   BOMConstr062          -1.0
+    Ship21807  Profit             4.0   BOMConstr072          -1.0
+    Ship21809  Profit            10.0   BOMConstr092          -1.0
+    Ship21810  Profit             4.0   BOMConstr102          -1.0
+    Ship21811  Profit             7.0   BOMConstr112          -1.0
+    Ship21812  Profit             1.0   BOMConstr122          -1.0
+    Ship21813  Profit             2.0   BOMConstr132          -1.0
+    Ship21814  Profit            12.0   BOMConstr142          -1.0
+    Ship21816  Profit             3.0   BOMConstr162          -1.0
+    Ship21818  Profit            -0.0   BOMConstr182          -1.0
+    Ship21819  Profit            14.0   BOMConstr192          -1.0
+    Ship21820  Profit            12.0   BOMConstr202          -1.0
+    Ship21821  Profit            12.0   BOMConstr212          -1.0
+    Ship21822  Profit            13.0   BOMConstr222          -1.0
+    Ship21823  Profit             1.0   BOMConstr232          -1.0
+    Ship21824  Profit             2.0   BOMConstr242          -1.0
+    Ship21825  Profit             2.0   BOMConstr252          -1.0
+    Ship21826  Profit             8.0   BOMConstr262          -1.0
+    Ship21827  Profit            12.0   BOMConstr272          -1.0
+    Ship21829  Profit            15.0   BOMConstr292          -1.0
+    Ship21830  Profit             9.0   BOMConstr302          -1.0
+    Ship21831  Profit            11.0   BOMConstr312          -1.0
+    Ship21832  Profit             9.0   BOMConstr322          -1.0
+    Ship21833  Profit            11.0   BOMConstr332          -1.0
+    Ship21834  Profit             2.0   BOMConstr342          -1.0
+    Ship21836  Profit            10.0   BOMConstr362          -1.0
+    Ship21837  Profit            13.0   BOMConstr372          -1.0
+    Ship21838  Profit            13.0   BOMConstr382          -1.0
+    Ship21839  Profit             5.0   BOMConstr392          -1.0
+    Ship22001  Profit             6.0   BOMConstr012          -1.0
+    Ship22002  Profit             9.0   BOMConstr022          -1.0
+    Ship22005  Profit             3.0   BOMConstr052          -1.0
+    Ship22009  Profit            14.0   BOMConstr092          -1.0
+    Ship22010  Profit             9.0   BOMConstr102          -1.0
+    Ship22012  Profit             2.0   BOMConstr122          -1.0
+    Ship22019  Profit            12.0   BOMConstr192          -1.0
+    Ship22020  Profit            -0.0   BOMConstr202          -1.0
+    Ship22022  Profit            11.0   BOMConstr222          -1.0
+    Ship22023  Profit            12.0   BOMConstr232          -1.0
+    Ship22025  Profit             1.0   BOMConstr252          -1.0
+    Ship22026  Profit            12.0   BOMConstr262          -1.0
+    Ship22027  Profit            15.0   BOMConstr272          -1.0
+    Ship22202  Profit             3.0   BOMConstr022          -1.0
+    Ship22205  Profit            12.0   BOMConstr052          -1.0
+    Ship22206  Profit             8.0   BOMConstr062          -1.0
+    Ship22207  Profit            15.0   BOMConstr072          -1.0
+    Ship22210  Profit            12.0   BOMConstr102          -1.0
+    Ship22211  Profit            13.0   BOMConstr112          -1.0
+    Ship22212  Profit             4.0   BOMConstr122          -1.0
+    Ship22213  Profit             9.0   BOMConstr132          -1.0
+    Ship22214  Profit            11.0   BOMConstr142          -1.0
+    Ship22216  Profit            11.0   BOMConstr162          -1.0
+    Ship22219  Profit            10.0   BOMConstr192          -1.0
+    Ship22221  Profit             5.0   BOMConstr212          -1.0
+    Ship22222  Profit            -0.0   BOMConstr222          -1.0
+    Ship22223  Profit             9.0   BOMConstr232          -1.0
+    Ship22224  Profit             7.0   BOMConstr242          -1.0
+    Ship22225  Profit             3.0   BOMConstr252          -1.0
+    Ship22227  Profit             5.0   BOMConstr272          -1.0
+    Ship22229  Profit            11.0   BOMConstr292          -1.0
+    Ship22230  Profit            13.0   BOMConstr302          -1.0
+    Ship22231  Profit             9.0   BOMConstr312          -1.0
+    Ship22232  Profit             5.0   BOMConstr322          -1.0
+    Ship22233  Profit             8.0   BOMConstr332          -1.0
+    Ship22234  Profit            14.0   BOMConstr342          -1.0
+    Ship22237  Profit             4.0   BOMConstr372          -1.0
+    Ship22238  Profit            15.0   BOMConstr382          -1.0
+    Ship22239  Profit            15.0   BOMConstr392          -1.0
+    Ship22403  Profit             9.0   BOMConstr032          -1.0
+    Ship22405  Profit            10.0   BOMConstr052          -1.0
+    Ship22413  Profit             2.0   BOMConstr132          -1.0
+    Ship22419  Profit            11.0   BOMConstr192          -1.0
+    Ship22424  Profit            -0.0   BOMConstr242          -1.0
+    Ship22434  Profit            14.0   BOMConstr342          -1.0
+    Ship22437  Profit            12.0   BOMConstr372          -1.0
+    Ship22601  Profit             5.0   BOMConstr012          -1.0
+    Ship22604  Profit            11.0   BOMConstr042          -1.0
+    Ship22605  Profit             4.0   BOMConstr052          -1.0
+    Ship22606  Profit            10.0   BOMConstr062          -1.0
+    Ship22607  Profit             2.0   BOMConstr072          -1.0
+    Ship22609  Profit            13.0   BOMConstr092          -1.0
+    Ship22610  Profit             7.0   BOMConstr102          -1.0
+    Ship22616  Profit            11.0   BOMConstr162          -1.0
+    Ship22621  Profit            15.0   BOMConstr212          -1.0
+    Ship22622  Profit             4.0   BOMConstr222          -1.0
+    Ship22623  Profit             5.0   BOMConstr232          -1.0
+    Ship22626  Profit            -0.0   BOMConstr262          -1.0
+    Ship22627  Profit             2.0   BOMConstr272          -1.0
+    Ship22629  Profit            13.0   BOMConstr292          -1.0
+    Ship22630  Profit            11.0   BOMConstr302          -1.0
+    Ship22631  Profit             8.0   BOMConstr312          -1.0
+    Ship22632  Profit            10.0   BOMConstr322          -1.0
+    Ship22636  Profit             5.0   BOMConstr362          -1.0
+    Ship22638  Profit            12.0   BOMConstr382          -1.0
+    Ship22639  Profit             5.0   BOMConstr392          -1.0
+    Ship23001  Profit             1.0   BOMConstr012          -1.0
+    Ship23010  Profit             5.0   BOMConstr102          -1.0
+    Ship23012  Profit             4.0   BOMConstr122          -1.0
+    Ship23024  Profit            14.0   BOMConstr242          -1.0
+    Ship23025  Profit             9.0   BOMConstr252          -1.0
+    Ship23030  Profit            -0.0   BOMConstr302          -1.0
+    Ship23031  Profit            13.0   BOMConstr312          -1.0
+    Ship23036  Profit             9.0   BOMConstr362          -1.0
+    Ship23501  Profit            12.0   BOMConstr012          -1.0
+    Ship23503  Profit             1.0   BOMConstr032          -1.0
+    Ship23504  Profit             8.0   BOMConstr042          -1.0
+    Ship23506  Profit            13.0   BOMConstr062          -1.0
+    Ship23507  Profit            10.0   BOMConstr072          -1.0
+    Ship23508  Profit             6.0   BOMConstr082          -1.0
+    Ship23509  Profit             6.0   BOMConstr092          -1.0
+    Ship23511  Profit             7.0   BOMConstr112          -1.0
+    Ship23513  Profit             1.0   BOMConstr132          -1.0
+    Ship23514  Profit             5.0   BOMConstr142          -1.0
+    Ship23518  Profit            12.0   BOMConstr182          -1.0
+    Ship23519  Profit             6.0   BOMConstr192          -1.0
+    Ship23520  Profit            13.0   BOMConstr202          -1.0
+    Ship23521  Profit             1.0   BOMConstr212          -1.0
+    Ship23522  Profit             4.0   BOMConstr222          -1.0
+    Ship23523  Profit             7.0   BOMConstr232          -1.0
+    Ship23524  Profit             2.0   BOMConstr242          -1.0
+    Ship23526  Profit            15.0   BOMConstr262          -1.0
+    Ship23527  Profit             5.0   BOMConstr272          -1.0
+    Ship23529  Profit            12.0   BOMConstr292          -1.0
+    Ship23530  Profit             1.0   BOMConstr302          -1.0
+    Ship23531  Profit            12.0   BOMConstr312          -1.0
+    Ship23536  Profit             4.0   BOMConstr362          -1.0
+    Ship23537  Profit            14.0   BOMConstr372          -1.0
+    Ship23539  Profit             4.0   BOMConstr392          -1.0
+    Ship30140  Profit            -3.0   BOMConstr011           2.0
+    Ship30140  BOMConstr012           2.0   DemConstr           1.0
+    Ship30140  PlantConstr01           1.0
+    Ship30240  Profit            -4.0   BOMConstr021           2.0
+    Ship30240  BOMConstr022           2.0   DemConstr           1.0
+    Ship30240  PlantConstr02           1.0
+    Ship30301  Profit            14.0
+    Ship30302  Profit             5.0
+    Ship30304  Profit             4.0
+    Ship30305  Profit             1.0
+    Ship30306  Profit             7.0
+    Ship30307  Profit             8.0
+    Ship30308  Profit             4.0
+    Ship30309  Profit            12.0
+    Ship30310  Profit             2.0
+    Ship30311  Profit             4.0
+    Ship30312  Profit             1.0
+    Ship30313  Profit            11.0
+    Ship30315  Profit             7.0
+    Ship30316  Profit             6.0
+    Ship30318  Profit             9.0
+    Ship30319  Profit             6.0
+    Ship30320  Profit             5.0
+    Ship30321  Profit             8.0
+    Ship30322  Profit             7.0
+    Ship30326  Profit             5.0
+    Ship30327  Profit             3.0
+    Ship30329  Profit             9.0
+    Ship30330  Profit             8.0
+    Ship30331  Profit             8.0
+    Ship30332  Profit            14.0
+    Ship30333  Profit             7.0
+    Ship30336  Profit             9.0
+    Ship30337  Profit            10.0
+    Ship30338  Profit            11.0
+    Ship30339  Profit            11.0
+    Ship30340  Profit             2.0   BOMConstr031           2.0
+    Ship30340  BOMConstr032           2.0   DemConstr           1.0
+    Ship30340  PlantConstr03           1.0
+    Ship30440  Profit            -9.0   BOMConstr041           2.0
+    Ship30440  BOMConstr042           2.0   DemConstr           1.0
+    Ship30440  PlantConstr04           1.0
+    Ship30540  Profit             1.0   BOMConstr051           2.0
+    Ship30540  BOMConstr052           2.0   DemConstr           1.0
+    Ship30540  PlantConstr05           1.0
+    Ship30640  Profit            -2.0   BOMConstr061           2.0
+    Ship30640  BOMConstr062           2.0   DemConstr           1.0
+    Ship30640  PlantConstr06           1.0
+    Ship30740  Profit             2.0   BOMConstr071           2.0
+    Ship30740  BOMConstr072           2.0   DemConstr           1.0
+    Ship30740  PlantConstr07           1.0
+    Ship30801  Profit             6.0
+    Ship30802  Profit            13.0
+    Ship30804  Profit            15.0
+    Ship30805  Profit            13.0
+    Ship30807  Profit             6.0
+    Ship30809  Profit             3.0
+    Ship30810  Profit             1.0
+    Ship30811  Profit             6.0
+    Ship30812  Profit            12.0
+    Ship30813  Profit            10.0
+    Ship30814  Profit             6.0
+    Ship30815  Profit            12.0
+    Ship30816  Profit             4.0
+    Ship30818  Profit            10.0
+    Ship30819  Profit             8.0
+    Ship30820  Profit            10.0
+    Ship30821  Profit             1.0
+    Ship30822  Profit             3.0
+    Ship30823  Profit            14.0
+    Ship30824  Profit             2.0
+    Ship30825  Profit            10.0
+    Ship30826  Profit            13.0
+    Ship30827  Profit             7.0
+    Ship30829  Profit             8.0
+    Ship30831  Profit             3.0
+    Ship30832  Profit            15.0
+    Ship30833  Profit             7.0
+    Ship30834  Profit             5.0
+    Ship30836  Profit            11.0
+    Ship30837  Profit             8.0
+    Ship30838  Profit             4.0
+    Ship30839  Profit             3.0
+    Ship30840  Profit            -5.0   BOMConstr081           2.0
+    Ship30840  BOMConstr082           2.0   DemConstr           1.0
+    Ship30840  PlantConstr08           1.0
+    Ship30906  Profit            14.0
+    Ship30907  Profit            15.0
+    Ship30924  Profit             8.0
+    Ship30930  Profit            11.0
+    Ship30931  Profit            11.0
+    Ship30937  Profit             3.0
+    Ship30940  Profit           -12.0   BOMConstr091           2.0
+    Ship30940  BOMConstr092           2.0   DemConstr           1.0
+    Ship30940  PlantConstr09           1.0
+    Ship31040  Profit            -1.0   BOMConstr101           2.0
+    Ship31040  BOMConstr102           2.0   DemConstr           1.0
+    Ship31040  PlantConstr10           1.0
+    Ship31140  Profit            -9.0   BOMConstr111           2.0
+    Ship31140  BOMConstr112           2.0   DemConstr           1.0
+    Ship31140  PlantConstr11           1.0
+    Ship31240  Profit             1.0   BOMConstr121           2.0
+    Ship31240  BOMConstr122           2.0   DemConstr           1.0
+    Ship31240  PlantConstr12           1.0
+    Ship31340  Profit           -12.0   BOMConstr131           2.0
+    Ship31340  BOMConstr132           2.0   DemConstr           1.0
+    Ship31340  PlantConstr13           1.0
+    Ship31440  Profit            -4.0   BOMConstr141           2.0
+    Ship31440  BOMConstr142           2.0   DemConstr           1.0
+    Ship31440  PlantConstr14           1.0
+    Ship31502  Profit            11.0
+    Ship31505  Profit            11.0
+    Ship31506  Profit             6.0
+    Ship31507  Profit             5.0
+    Ship31509  Profit            14.0
+    Ship31510  Profit             3.0
+    Ship31511  Profit            13.0
+    Ship31512  Profit            11.0
+    Ship31513  Profit             4.0
+    Ship31514  Profit            10.0
+    Ship31516  Profit            12.0
+    Ship31518  Profit             9.0
+    Ship31519  Profit            12.0
+    Ship31520  Profit             1.0
+    Ship31521  Profit             4.0
+    Ship31522  Profit             1.0
+    Ship31523  Profit            12.0
+    Ship31524  Profit             5.0
+    Ship31525  Profit            13.0
+    Ship31526  Profit            11.0
+    Ship31529  Profit             6.0
+    Ship31530  Profit             8.0
+    Ship31531  Profit             4.0
+    Ship31532  Profit             1.0
+    Ship31533  Profit            10.0
+    Ship31534  Profit             8.0
+    Ship31536  Profit            12.0
+    Ship31537  Profit            15.0
+    Ship31538  Profit            10.0
+    Ship31539  Profit            11.0
+    Ship31540  Profit            -6.0   BOMConstr151           2.0
+    Ship31540  BOMConstr152           2.0   DemConstr           1.0
+    Ship31540  PlantConstr15           1.0
+    Ship31640  Profit           -11.0   BOMConstr161           2.0
+    Ship31640  BOMConstr162           2.0   DemConstr           1.0
+    Ship31640  PlantConstr16           1.0
+    Ship31801  Profit            10.0
+    Ship31802  Profit             4.0
+    Ship31804  Profit             7.0
+    Ship31805  Profit            11.0
+    Ship31806  Profit             9.0
+    Ship31807  Profit             4.0
+    Ship31809  Profit            10.0
+    Ship31810  Profit             4.0
+    Ship31811  Profit             7.0
+    Ship31812  Profit             1.0
+    Ship31813  Profit             2.0
+    Ship31814  Profit            12.0
+    Ship31816  Profit             3.0
+    Ship31819  Profit            14.0
+    Ship31820  Profit            12.0
+    Ship31821  Profit            12.0
+    Ship31822  Profit            13.0
+    Ship31823  Profit             1.0
+    Ship31824  Profit             2.0
+    Ship31825  Profit             2.0
+    Ship31826  Profit             8.0
+    Ship31827  Profit            12.0
+    Ship31829  Profit            15.0
+    Ship31830  Profit             9.0
+    Ship31831  Profit            11.0
+    Ship31832  Profit             9.0
+    Ship31833  Profit            11.0
+    Ship31834  Profit             2.0
+    Ship31836  Profit            10.0
+    Ship31837  Profit            13.0
+    Ship31838  Profit            13.0
+    Ship31839  Profit             5.0
+    Ship31840  Profit            -1.0   BOMConstr181           2.0
+    Ship31840  BOMConstr182           2.0   DemConstr           1.0
+    Ship31840  PlantConstr18           1.0
+    Ship31940  Profit           -10.0   BOMConstr191           2.0
+    Ship31940  BOMConstr192           2.0   DemConstr           1.0
+    Ship31940  PlantConstr19           1.0
+    Ship32001  Profit             6.0
+    Ship32002  Profit             9.0
+    Ship32005  Profit             3.0
+    Ship32009  Profit            14.0
+    Ship32010  Profit             9.0
+    Ship32012  Profit             2.0
+    Ship32019  Profit            12.0
+    Ship32022  Profit            11.0
+    Ship32023  Profit            12.0
+    Ship32025  Profit             1.0
+    Ship32026  Profit            12.0
+    Ship32027  Profit            15.0
+    Ship32040  Profit             2.0   BOMConstr201           2.0
+    Ship32040  BOMConstr202           2.0   DemConstr           1.0
+    Ship32040  PlantConstr20           1.0
+    Ship32140  Profit            -5.0   BOMConstr211           2.0
+    Ship32140  BOMConstr212           2.0   DemConstr           1.0
+    Ship32140  PlantConstr21           1.0
+    Ship32202  Profit             3.0
+    Ship32205  Profit            12.0
+    Ship32206  Profit             8.0
+    Ship32207  Profit            15.0
+    Ship32210  Profit            12.0
+    Ship32211  Profit            13.0
+    Ship32212  Profit             4.0
+    Ship32213  Profit             9.0
+    Ship32214  Profit            11.0
+    Ship32216  Profit            11.0
+    Ship32219  Profit            10.0
+    Ship32221  Profit             5.0
+    Ship32223  Profit             9.0
+    Ship32224  Profit             7.0
+    Ship32225  Profit             3.0
+    Ship32227  Profit             5.0
+    Ship32229  Profit            11.0
+    Ship32230  Profit            13.0
+    Ship32231  Profit             9.0
+    Ship32232  Profit             5.0
+    Ship32233  Profit             8.0
+    Ship32234  Profit            14.0
+    Ship32237  Profit             4.0
+    Ship32238  Profit            15.0
+    Ship32239  Profit            15.0
+    Ship32240  Profit            -9.0   BOMConstr221           2.0
+    Ship32240  BOMConstr222           2.0   DemConstr           1.0
+    Ship32240  PlantConstr22           1.0
+    Ship32340  Profit           -10.0   BOMConstr231           2.0
+    Ship32340  BOMConstr232           2.0   DemConstr           1.0
+    Ship32340  PlantConstr23           1.0
+    Ship32403  Profit             9.0
+    Ship32405  Profit            10.0
+    Ship32413  Profit             2.0
+    Ship32419  Profit            11.0
+    Ship32434  Profit            14.0
+    Ship32437  Profit            12.0
+    Ship32440  Profit           -10.0   BOMConstr241           2.0
+    Ship32440  BOMConstr242           2.0   DemConstr           1.0
+    Ship32440  PlantConstr24           1.0
+    Ship32540  Profit            -9.0   BOMConstr251           2.0
+    Ship32540  BOMConstr252           2.0   DemConstr           1.0
+    Ship32540  PlantConstr25           1.0
+    Ship32601  Profit             5.0
+    Ship32604  Profit            11.0
+    Ship32605  Profit             4.0
+    Ship32606  Profit            10.0
+    Ship32607  Profit             2.0
+    Ship32609  Profit            13.0
+    Ship32610  Profit             7.0
+    Ship32616  Profit            11.0
+    Ship32621  Profit            15.0
+    Ship32622  Profit             4.0
+    Ship32623  Profit             5.0
+    Ship32627  Profit             2.0
+    Ship32629  Profit            13.0
+    Ship32630  Profit            11.0
+    Ship32631  Profit             8.0
+    Ship32632  Profit            10.0
+    Ship32636  Profit             5.0
+    Ship32638  Profit            12.0
+    Ship32639  Profit             5.0
+    Ship32640  Profit            -7.0   BOMConstr261           2.0
+    Ship32640  BOMConstr262           2.0   DemConstr           1.0
+    Ship32640  PlantConstr26           1.0
+    Ship32740  Profit            -6.0   BOMConstr271           2.0
+    Ship32740  BOMConstr272           2.0   DemConstr           1.0
+    Ship32740  PlantConstr27           1.0
+    Ship32940  Profit             2.0   BOMConstr291           2.0
+    Ship32940  BOMConstr292           2.0   DemConstr           1.0
+    Ship32940  PlantConstr29           1.0
+    Ship33001  Profit             1.0
+    Ship33010  Profit             5.0
+    Ship33012  Profit             4.0
+    Ship33024  Profit            14.0
+    Ship33025  Profit             9.0
+    Ship33031  Profit            13.0
+    Ship33036  Profit             9.0
+    Ship33040  Profit            -9.0   BOMConstr301           2.0
+    Ship33040  BOMConstr302           2.0   DemConstr           1.0
+    Ship33040  PlantConstr30           1.0
+    Ship33140  Profit           -12.0   BOMConstr311           2.0
+    Ship33140  BOMConstr312           2.0   DemConstr           1.0
+    Ship33140  PlantConstr31           1.0
+    Ship33201  Profit             5.0
+    Ship33202  Profit             7.0
+    Ship33205  Profit             1.0
+    Ship33206  Profit             3.0
+    Ship33207  Profit             2.0
+    Ship33209  Profit            11.0
+    Ship33210  Profit             4.0
+    Ship33211  Profit             4.0
+    Ship33212  Profit            13.0
+    Ship33213  Profit            14.0
+    Ship33214  Profit            11.0
+    Ship33216  Profit            12.0
+    Ship33219  Profit             5.0
+    Ship33220  Profit             1.0
+    Ship33221  Profit            13.0
+    Ship33223  Profit             6.0
+    Ship33224  Profit             8.0
+    Ship33225  Profit            14.0
+    Ship33227  Profit             8.0
+    Ship33230  Profit            13.0
+    Ship33231  Profit            12.0
+    Ship33233  Profit             6.0
+    Ship33236  Profit            10.0
+    Ship33237  Profit             5.0
+    Ship33238  Profit             2.0
+    Ship33240  Profit           -11.0   BOMConstr321           2.0
+    Ship33240  BOMConstr322           2.0   DemConstr           1.0
+    Ship33240  PlantConstr32           1.0
+    Ship33340  Profit           -12.0   BOMConstr331           2.0
+    Ship33340  BOMConstr332           2.0   DemConstr           1.0
+    Ship33340  PlantConstr33           1.0
+    Ship33401  Profit            13.0
+    Ship33407  Profit             9.0
+    Ship33425  Profit            12.0
+    Ship33440  Profit           -11.0   BOMConstr341           2.0
+    Ship33440  BOMConstr342           2.0   DemConstr           1.0
+    Ship33440  PlantConstr34           1.0
+    Ship33640  Profit            -0.0   BOMConstr361           2.0
+    Ship33640  BOMConstr362           2.0   DemConstr           1.0
+    Ship33640  PlantConstr36           1.0
+    Ship33740  Profit            -9.0   BOMConstr371           2.0
+    Ship33740  BOMConstr372           2.0   DemConstr           1.0
+    Ship33740  PlantConstr37           1.0
+    Ship33807  Profit             2.0
+    Ship33830  Profit             4.0
+    Ship33840  Profit            -6.0   BOMConstr381           2.0
+    Ship33840  BOMConstr382           2.0   DemConstr           1.0
+    Ship33840  PlantConstr38           1.0
+    Ship33901  Profit             7.0
+    Ship33902  Profit             2.0
+    Ship33904  Profit            15.0
+    Ship33905  Profit             8.0
+    Ship33906  Profit             4.0
+    Ship33907  Profit            11.0
+    Ship33909  Profit             2.0
+    Ship33910  Profit            15.0
+    Ship33911  Profit             5.0
+    Ship33912  Profit            13.0
+    Ship33913  Profit             4.0
+    Ship33914  Profit             8.0
+    Ship33916  Profit            10.0
+    Ship33919  Profit             2.0
+    Ship33920  Profit             8.0
+    Ship33921  Profit            15.0
+    Ship33923  Profit             2.0
+    Ship33924  Profit             7.0
+    Ship33925  Profit             4.0
+    Ship33927  Profit             5.0
+    Ship33929  Profit            15.0
+    Ship33930  Profit            12.0
+    Ship33931  Profit             9.0
+    Ship33932  Profit             1.0
+    Ship33933  Profit             7.0
+    Ship33934  Profit            15.0
+    Ship33936  Profit            10.0
+    Ship33937  Profit            12.0
+    Ship33938  Profit            14.0
+    Ship33940  Profit           -11.0   BOMConstr391           2.0
+    Ship33940  BOMConstr392           2.0   DemConstr           1.0
+    Ship33940  PlantConstr39           1.0
+RHS
+    RHS1      DemConstr       31131.0
+BOUNDS
+ BV BOUND1    OpenProduction01           1.0
+ BV BOUND1    OpenProduction02           1.0
+ BV BOUND1    OpenProduction03           1.0
+ BV BOUND1    OpenProduction04           1.0
+ BV BOUND1    OpenProduction05           1.0
+ BV BOUND1    OpenProduction06           1.0
+ BV BOUND1    OpenProduction07           1.0
+ BV BOUND1    OpenProduction08           1.0
+ BV BOUND1    OpenProduction09           1.0
+ BV BOUND1    OpenProduction10           1.0
+ BV BOUND1    OpenProduction11           1.0
+ BV BOUND1    OpenProduction12           1.0
+ BV BOUND1    OpenProduction13           1.0
+ BV BOUND1    OpenProduction14           1.0
+ BV BOUND1    OpenProduction15           1.0
+ BV BOUND1    OpenProduction16           1.0
+ BV BOUND1    OpenProduction18           1.0
+ BV BOUND1    OpenProduction19           1.0
+ BV BOUND1    OpenProduction20           1.0
+ BV BOUND1    OpenProduction21           1.0
+ BV BOUND1    OpenProduction22           1.0
+ BV BOUND1    OpenProduction23           1.0
+ BV BOUND1    OpenProduction24           1.0
+ BV BOUND1    OpenProduction25           1.0
+ BV BOUND1    OpenProduction26           1.0
+ BV BOUND1    OpenProduction27           1.0
+ BV BOUND1    OpenProduction29           1.0
+ BV BOUND1    OpenProduction30           1.0
+ BV BOUND1    OpenProduction31           1.0
+ BV BOUND1    OpenProduction32           1.0
+ BV BOUND1    OpenProduction33           1.0
+ BV BOUND1    OpenProduction34           1.0
+ BV BOUND1    OpenProduction36           1.0
+ BV BOUND1    OpenProduction37           1.0
+ BV BOUND1    OpenProduction38           1.0
+ BV BOUND1    OpenProduction39           1.0
+*
+ENDATA

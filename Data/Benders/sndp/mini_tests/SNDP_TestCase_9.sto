@@ -1,0 +1,13 @@
+STOCH         SNDP_TestCase_9 (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'             0.1   Stage1    
+    RHS1      c9             -2000.0
+ SC Scen2     Scen1              0.5   Stage2    
+    RHS1      c9             -5000.0
+ SC Scen3     Scen1             0.25   Stage2    
+    RHS1      c9             -8000.0
+ SC Scen4     Scen1             0.15   Stage2    
+    RHS1      c9            -10000.0
+ENDATA
+
+

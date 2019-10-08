@@ -1,0 +1,253 @@
+STOCH         SNDP_stochastic_general (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'           0.008   Stage1    
+    RHS1      DemConstr      604537.0
+ SC Scen2     Scen1            0.008   Stage2    
+    RHS1      DemConstr      545482.0
+ SC Scen3     Scen1            0.008   Stage2    
+    RHS1      DemConstr      560540.0
+ SC Scen4     Scen1            0.008   Stage2    
+    RHS1      DemConstr      487286.0
+ SC Scen5     Scen1            0.008   Stage2    
+    RHS1      DemConstr      775200.0
+ SC Scen6     Scen1            0.008   Stage2    
+    RHS1      DemConstr      708822.0
+ SC Scen7     Scen1            0.008   Stage2    
+    RHS1      DemConstr      623796.0
+ SC Scen8     Scen1            0.008   Stage2    
+    RHS1      DemConstr      831226.0
+ SC Scen9     Scen1            0.008   Stage2    
+    RHS1      DemConstr      882729.0
+ SC Scen10    Scen1            0.008   Stage2    
+    RHS1      DemConstr      512612.0
+ SC Scen11    Scen1            0.008   Stage2    
+    RHS1      DemConstr      675316.0
+ SC Scen12    Scen1            0.008   Stage2    
+    RHS1      DemConstr      590492.0
+ SC Scen13    Scen1            0.008   Stage2    
+    RHS1      DemConstr      838246.0
+ SC Scen14    Scen1            0.008   Stage2    
+    RHS1      DemConstr      555702.0
+ SC Scen15    Scen1            0.008   Stage2    
+    RHS1      DemConstr      523433.0
+ SC Scen16    Scen1            0.008   Stage2    
+    RHS1      DemConstr      516719.0
+ SC Scen17    Scen1            0.008   Stage2    
+    RHS1      DemConstr      676548.0
+ SC Scen18    Scen1            0.008   Stage2    
+    RHS1      DemConstr      567891.0
+ SC Scen19    Scen1            0.008   Stage2    
+    RHS1      DemConstr      746135.0
+ SC Scen20    Scen1            0.008   Stage2    
+    RHS1      DemConstr      492504.0
+ SC Scen21    Scen1            0.008   Stage2    
+    RHS1      DemConstr      492643.0
+ SC Scen22    Scen1            0.008   Stage2    
+    RHS1      DemConstr      654170.0
+ SC Scen23    Scen1            0.008   Stage2    
+    RHS1      DemConstr      749198.0
+ SC Scen24    Scen1            0.008   Stage2    
+    RHS1      DemConstr      792803.0
+ SC Scen25    Scen1            0.008   Stage2    
+    RHS1      DemConstr      630743.0
+ SC Scen26    Scen1            0.008   Stage2    
+    RHS1      DemConstr      651476.0
+ SC Scen27    Scen1            0.008   Stage2    
+    RHS1      DemConstr      829293.0
+ SC Scen28    Scen1            0.008   Stage2    
+    RHS1      DemConstr      884499.0
+ SC Scen29    Scen1            0.008   Stage2    
+    RHS1      DemConstr      606785.0
+ SC Scen30    Scen1            0.008   Stage2    
+    RHS1      DemConstr      527923.0
+ SC Scen31    Scen1            0.008   Stage2    
+    RHS1      DemConstr      496350.0
+ SC Scen32    Scen1            0.008   Stage2    
+    RHS1      DemConstr      640756.0
+ SC Scen33    Scen1            0.008   Stage2    
+    RHS1      DemConstr      793767.0
+ SC Scen34    Scen1            0.008   Stage2    
+    RHS1      DemConstr      882725.0
+ SC Scen35    Scen1            0.008   Stage2    
+    RHS1      DemConstr      934407.0
+ SC Scen36    Scen1            0.008   Stage2    
+    RHS1      DemConstr      547094.0
+ SC Scen37    Scen1            0.008   Stage2    
+    RHS1      DemConstr      730801.0
+ SC Scen38    Scen1            0.008   Stage2    
+    RHS1      DemConstr      783636.0
+ SC Scen39    Scen1            0.008   Stage2    
+    RHS1      DemConstr      899950.0
+ SC Scen40    Scen1            0.008   Stage2    
+    RHS1      DemConstr      517807.0
+ SC Scen41    Scen1            0.008   Stage2    
+    RHS1      DemConstr      747089.0
+ SC Scen42    Scen1            0.008   Stage2    
+    RHS1      DemConstr      578201.0
+ SC Scen43    Scen1            0.008   Stage2    
+    RHS1      DemConstr      740838.0
+ SC Scen44    Scen1            0.008   Stage2    
+    RHS1      DemConstr      898633.0
+ SC Scen45    Scen1            0.008   Stage2    
+    RHS1      DemConstr      592364.0
+ SC Scen46    Scen1            0.008   Stage2    
+    RHS1      DemConstr      896444.0
+ SC Scen47    Scen1            0.008   Stage2    
+    RHS1      DemConstr      574382.0
+ SC Scen48    Scen1            0.008   Stage2    
+    RHS1      DemConstr      930275.0
+ SC Scen49    Scen1            0.008   Stage2    
+    RHS1      DemConstr      551140.0
+ SC Scen50    Scen1            0.008   Stage2    
+    RHS1      DemConstr      578456.0
+ SC Scen51    Scen1            0.008   Stage2    
+    RHS1      DemConstr      726472.0
+ SC Scen52    Scen1            0.008   Stage2    
+    RHS1      DemConstr      586811.0
+ SC Scen53    Scen1            0.008   Stage2    
+    RHS1      DemConstr      609873.0
+ SC Scen54    Scen1            0.008   Stage2    
+    RHS1      DemConstr      780522.0
+ SC Scen55    Scen1            0.008   Stage2    
+    RHS1      DemConstr      646117.0
+ SC Scen56    Scen1            0.008   Stage2    
+    RHS1      DemConstr      748573.0
+ SC Scen57    Scen1            0.008   Stage2    
+    RHS1      DemConstr      945735.0
+ SC Scen58    Scen1            0.008   Stage2    
+    RHS1      DemConstr      685438.0
+ SC Scen59    Scen1            0.008   Stage2    
+    RHS1      DemConstr      875976.0
+ SC Scen60    Scen1            0.008   Stage2    
+    RHS1      DemConstr      583215.0
+ SC Scen61    Scen1            0.008   Stage2    
+    RHS1      DemConstr      549479.0
+ SC Scen62    Scen1            0.008   Stage2    
+    RHS1      DemConstr      891731.0
+ SC Scen63    Scen1            0.008   Stage2    
+    RHS1      DemConstr      563088.0
+ SC Scen64    Scen1            0.008   Stage2    
+    RHS1      DemConstr      880610.0
+ SC Scen65    Scen1            0.008   Stage2    
+    RHS1      DemConstr      777463.0
+ SC Scen66    Scen1            0.008   Stage2    
+    RHS1      DemConstr      700327.0
+ SC Scen67    Scen1            0.008   Stage2    
+    RHS1      DemConstr      714125.0
+ SC Scen68    Scen1            0.008   Stage2    
+    RHS1      DemConstr      717368.0
+ SC Scen69    Scen1            0.008   Stage2    
+    RHS1      DemConstr      508291.0
+ SC Scen70    Scen1            0.008   Stage2    
+    RHS1      DemConstr      510123.0
+ SC Scen71    Scen1            0.008   Stage2    
+    RHS1      DemConstr      536046.0
+ SC Scen72    Scen1            0.008   Stage2    
+    RHS1      DemConstr      788006.0
+ SC Scen73    Scen1            0.008   Stage2    
+    RHS1      DemConstr      727557.0
+ SC Scen74    Scen1            0.008   Stage2    
+    RHS1      DemConstr      794342.0
+ SC Scen75    Scen1            0.008   Stage2    
+    RHS1      DemConstr      711621.0
+ SC Scen76    Scen1            0.008   Stage2    
+    RHS1      DemConstr      651495.0
+ SC Scen77    Scen1            0.008   Stage2    
+    RHS1      DemConstr      525984.0
+ SC Scen78    Scen1            0.008   Stage2    
+    RHS1      DemConstr      744464.0
+ SC Scen79    Scen1            0.008   Stage2    
+    RHS1      DemConstr      611013.0
+ SC Scen80    Scen1            0.008   Stage2    
+    RHS1      DemConstr      604116.0
+ SC Scen81    Scen1            0.008   Stage2    
+    RHS1      DemConstr      726804.0
+ SC Scen82    Scen1            0.008   Stage2    
+    RHS1      DemConstr      528336.0
+ SC Scen83    Scen1            0.008   Stage2    
+    RHS1      DemConstr      538024.0
+ SC Scen84    Scen1            0.008   Stage2    
+    RHS1      DemConstr      951981.0
+ SC Scen85    Scen1            0.008   Stage2    
+    RHS1      DemConstr      537226.0
+ SC Scen86    Scen1            0.008   Stage2    
+    RHS1      DemConstr      838676.0
+ SC Scen87    Scen1            0.008   Stage2    
+    RHS1      DemConstr      488242.0
+ SC Scen88    Scen1            0.008   Stage2    
+    RHS1      DemConstr      756570.0
+ SC Scen89    Scen1            0.008   Stage2    
+    RHS1      DemConstr      745345.0
+ SC Scen90    Scen1            0.008   Stage2    
+    RHS1      DemConstr      772184.0
+ SC Scen91    Scen1            0.008   Stage2    
+    RHS1      DemConstr      654052.0
+ SC Scen92    Scen1            0.008   Stage2    
+    RHS1      DemConstr      637709.0
+ SC Scen93    Scen1            0.008   Stage2    
+    RHS1      DemConstr      693821.0
+ SC Scen94    Scen1            0.008   Stage2    
+    RHS1      DemConstr      706417.0
+ SC Scen95    Scen1            0.008   Stage2    
+    RHS1      DemConstr      750244.0
+ SC Scen96    Scen1            0.008   Stage2    
+    RHS1      DemConstr      654975.0
+ SC Scen97    Scen1            0.008   Stage2    
+    RHS1      DemConstr      685744.0
+ SC Scen98    Scen1            0.008   Stage2    
+    RHS1      DemConstr      691405.0
+ SC Scen99    Scen1            0.008   Stage2    
+    RHS1      DemConstr      821352.0
+ SC Scen100   Scen1            0.008   Stage2    
+    RHS1      DemConstr      792019.0
+ SC Scen101   Scen1            0.008   Stage2    
+    RHS1      DemConstr      818829.0
+ SC Scen102   Scen1            0.008   Stage2    
+    RHS1      DemConstr      881482.0
+ SC Scen103   Scen1            0.008   Stage2    
+    RHS1      DemConstr      662027.0
+ SC Scen104   Scen1            0.008   Stage2    
+    RHS1      DemConstr      929960.0
+ SC Scen105   Scen1            0.008   Stage2    
+    RHS1      DemConstr      941820.0
+ SC Scen106   Scen1            0.008   Stage2    
+    RHS1      DemConstr      612914.0
+ SC Scen107   Scen1            0.008   Stage2    
+    RHS1      DemConstr      677921.0
+ SC Scen108   Scen1            0.008   Stage2    
+    RHS1      DemConstr      652088.0
+ SC Scen109   Scen1            0.008   Stage2    
+    RHS1      DemConstr      843841.0
+ SC Scen110   Scen1            0.008   Stage2    
+    RHS1      DemConstr      814433.0
+ SC Scen111   Scen1            0.008   Stage2    
+    RHS1      DemConstr      956110.0
+ SC Scen112   Scen1            0.008   Stage2    
+    RHS1      DemConstr      768310.0
+ SC Scen113   Scen1            0.008   Stage2    
+    RHS1      DemConstr      748688.0
+ SC Scen114   Scen1            0.008   Stage2    
+    RHS1      DemConstr      552074.0
+ SC Scen115   Scen1            0.008   Stage2    
+    RHS1      DemConstr      545588.0
+ SC Scen116   Scen1            0.008   Stage2    
+    RHS1      DemConstr      588601.0
+ SC Scen117   Scen1            0.008   Stage2    
+    RHS1      DemConstr      490747.0
+ SC Scen118   Scen1            0.008   Stage2    
+    RHS1      DemConstr      620028.0
+ SC Scen119   Scen1            0.008   Stage2    
+    RHS1      DemConstr      636852.0
+ SC Scen120   Scen1            0.008   Stage2    
+    RHS1      DemConstr      883149.0
+ SC Scen121   Scen1            0.008   Stage2    
+    RHS1      DemConstr      868798.0
+ SC Scen122   Scen1            0.008   Stage2    
+    RHS1      DemConstr      625299.0
+ SC Scen123   Scen1            0.008   Stage2    
+    RHS1      DemConstr      721131.0
+ SC Scen124   Scen1            0.008   Stage2    
+    RHS1      DemConstr      895251.0
+ SC Scen125   Scen1            0.008   Stage2    
+    RHS1      DemConstr      652229.0
+ENDATA

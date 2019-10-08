@@ -1,0 +1,6 @@
+TIME          SNDP_TestCase_10 (MIN)
+PERIODS       IMPLICIT
+    k_c24     c1                       Stage1    
+    x_c24     c1                       Stage2    
+*
+ENDATA

@@ -1,0 +1,6 @@
+TIME          SNDP_stochastic_MIP (MIN)
+PERIODS       IMPLICIT
+    y_C2      Constr01                 Stage1    
+    x_A12     Constr01                 Stage2    
+*
+ENDATA
