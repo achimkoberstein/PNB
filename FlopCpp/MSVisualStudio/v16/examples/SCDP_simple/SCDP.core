@@ -1,0 +1,3510 @@
+NAME          SCDP      FREE
+ROWS
+ N  OBJROW
+ E  R0_0_0_0
+ E  R0_0_1_0
+ E  R0_0_2_0
+ E  R0_1_0_0
+ E  R0_1_1_0
+ E  R0_1_2_0
+ E  R0_2_0_0
+ E  R0_2_1_0
+ E  R0_2_2_0
+ E  R0_3_0_0
+ E  R0_3_1_0
+ E  R0_3_2_0
+ E  R0_4_0_0
+ E  R0_4_1_0
+ E  R0_4_2_0
+ E  R0_5_0_0
+ E  R0_5_1_0
+ E  R0_5_2_0
+ E  R0_6_0_0
+ E  R0_6_1_0
+ E  R0_6_2_0
+ E  R0_7_0_0
+ E  R0_7_1_0
+ E  R0_7_2_0
+ E  R0_8_0_0
+ E  R0_8_1_0
+ E  R0_8_2_0
+ E  R0_9_0_0
+ E  R0_9_1_0
+ E  R0_9_2_0
+ E  R0_10_0_0
+ E  R0_10_1_0
+ E  R0_10_2_0
+ E  R0_11_0_0
+ E  R0_11_1_0
+ E  R0_11_2_0
+ E  R0_12_0_0
+ E  R0_12_1_0
+ E  R0_12_2_0
+ E  R0_13_0_0
+ E  R0_13_1_0
+ E  R0_13_2_0
+ E  R0_14_0_0
+ E  R0_14_1_0
+ E  R0_14_2_0
+ E  R0_15_0_0
+ E  R0_15_1_0
+ E  R0_15_2_0
+ E  R0_16_0_0
+ E  R0_16_1_0
+ E  R0_16_2_0
+ E  R0_17_0_0
+ E  R0_17_1_0
+ E  R0_17_2_0
+ E  R0_18_0_0
+ E  R0_18_1_0
+ E  R0_18_2_0
+ E  R0_19_0_0
+ E  R0_19_1_0
+ E  R0_19_2_0
+ E  demand_fulfilment_0_0_0
+ E  demand_fulfilment_0_0_1
+ E  demand_fulfilment_0_0_2
+ L  mac_capacity_0_0_0
+ L  mac_capacity_0_1_0
+ L  mac_capacity_0_2_0
+ L  mac_capacity_1_0_0
+ L  mac_capacity_1_1_0
+ L  mac_capacity_1_2_0
+ L  mac_capacity_2_0_0
+ L  mac_capacity_2_1_0
+ L  mac_capacity_2_2_0
+ L  mac_capacity_3_0_0
+ L  mac_capacity_3_1_0
+ L  mac_capacity_3_2_0
+ L  mac_capacity_4_0_0
+ L  mac_capacity_4_1_0
+ L  mac_capacity_4_2_0
+ L  mac_capacity_5_0_0
+ L  mac_capacity_5_1_0
+ L  mac_capacity_5_2_0
+ L  mac_capacity_6_0_0
+ L  mac_capacity_6_1_0
+ L  mac_capacity_6_2_0
+ L  mac_capacity_7_0_0
+ L  mac_capacity_7_1_0
+ L  mac_capacity_7_2_0
+ L  mac_capacity_8_0_0
+ L  mac_capacity_8_1_0
+ L  mac_capacity_8_2_0
+ L  mac_capacity_9_0_0
+ L  mac_capacity_9_1_0
+ L  mac_capacity_9_2_0
+ L  mac_capacity_10_0_0
+ L  mac_capacity_10_1_0
+ L  mac_capacity_10_2_0
+ L  mac_capacity_11_0_0
+ L  mac_capacity_11_1_0
+ L  mac_capacity_11_2_0
+ L  mac_capacity_12_0_0
+ L  mac_capacity_12_1_0
+ L  mac_capacity_12_2_0
+ L  mac_capacity_13_0_0
+ L  mac_capacity_13_1_0
+ L  mac_capacity_13_2_0
+ L  mac_capacity_14_0_0
+ L  mac_capacity_14_1_0
+ L  mac_capacity_14_2_0
+ L  mac_capacity_15_0_0
+ L  mac_capacity_15_1_0
+ L  mac_capacity_15_2_0
+ L  mac_capacity_16_0_0
+ L  mac_capacity_16_1_0
+ L  mac_capacity_16_2_0
+ L  mac_capacity_17_0_0
+ L  mac_capacity_17_1_0
+ L  mac_capacity_17_2_0
+ L  mac_capacity_18_0_0
+ L  mac_capacity_18_1_0
+ L  mac_capacity_18_2_0
+ L  mac_capacity_19_0_0
+ L  mac_capacity_19_1_0
+ L  mac_capacity_19_2_0
+ E  prod_cost_0_0
+ E  prod_cost_1_0
+ E  prod_cost_2_0
+ E  prod_cost_3_0
+ E  prod_cost_4_0
+ E  prod_cost_5_0
+ E  prod_cost_6_0
+ E  prod_cost_7_0
+ E  prod_cost_8_0
+ E  prod_cost_9_0
+ E  prod_cost_10_0
+ E  prod_cost_11_0
+ E  prod_cost_12_0
+ E  prod_cost_13_0
+ E  prod_cost_14_0
+ E  prod_cost_15_0
+ E  prod_cost_16_0
+ E  prod_cost_17_0
+ E  prod_cost_18_0
+ E  prod_cost_19_0
+ E  transportation_cost_0_0
+ E  transportation_cost_1_0
+ E  transportation_cost_2_0
+ E  transportation_cost_3_0
+ E  transportation_cost_4_0
+ E  transportation_cost_5_0
+ E  transportation_cost_6_0
+ E  transportation_cost_7_0
+ E  transportation_cost_8_0
+ E  transportation_cost_9_0
+ E  transportation_cost_10_0
+ E  transportation_cost_11_0
+ E  transportation_cost_12_0
+ E  transportation_cost_13_0
+ E  transportation_cost_14_0
+ E  transportation_cost_15_0
+ E  transportation_cost_16_0
+ E  transportation_cost_17_0
+ E  transportation_cost_18_0
+ E  transportation_cost_19_0
+ E  revenue_in_market_0_0
+ E  line_building_cost_0
+ E  line_building_cost_1
+ E  line_operating_cost_0
+ E  line_operating_cost_1
+ E  R3_0_0
+ E  R3_1_0
+ E  production_cashflow_0_0
+ E  production_cashflow_1_0
+ E  fix_fcost0_0_0
+ E  fix_fcost0_0_1
+ E  fix_fcost0_0_2
+ E  fix_fcost0_0_3
+ E  fix_fcost0_0_4
+ E  fix_fcost0_0_5
+ E  fix_fcost0_1_0
+ E  fix_fcost0_1_1
+ E  fix_fcost0_1_2
+ E  fix_fcost0_1_3
+ E  fix_fcost0_1_4
+ E  fix_fcost0_1_5
+ E  fix_frev0_0_0
+ E  fix_frev0_0_1
+ E  fix_frev0_0_2
+ E  fix_frev0_0_3
+ E  fix_frev0_0_4
+ E  fix_frev0_0_5
+ E  fix_frev0_1_0
+ E  fix_frev0_1_1
+ E  fix_frev0_1_2
+ E  fix_frev0_1_3
+ E  fix_frev0_1_4
+ E  fix_frev0_1_5
+ E  option_cost_0
+ E  fix_call_b0_0_0
+ E  fix_call_b0_0_1
+ E  fix_call_b0_0_2
+ E  fix_call_b0_0_3
+ E  fix_call_b0_0_4
+ E  fix_call_b0_0_5
+ E  fix_call_b0_1_0
+ E  fix_call_b0_1_1
+ E  fix_call_b0_1_2
+ E  fix_call_b0_1_3
+ E  fix_call_b0_1_4
+ E  fix_call_b0_1_5
+ E  fix_put_b0_0_0
+ E  fix_put_b0_0_1
+ E  fix_put_b0_0_2
+ E  fix_put_b0_0_3
+ E  fix_put_b0_0_4
+ E  fix_put_b0_0_5
+ E  fix_put_b0_1_0
+ E  fix_put_b0_1_1
+ E  fix_put_b0_1_2
+ E  fix_put_b0_1_3
+ E  fix_put_b0_1_4
+ E  fix_put_b0_1_5
+ E  cf_p_c_0_0
+ E  cf_p_c_1_0
+ E  cf_ref_c_0
+ E  first_stage_fix_0
+ E  R1_0_0_1
+ E  R1_0_1_1
+ E  R1_0_2_1
+ E  R1_1_0_1
+ E  R1_1_1_1
+ E  R1_1_2_1
+ E  R1_2_0_1
+ E  R1_2_1_1
+ E  R1_2_2_1
+ E  R1_3_0_1
+ E  R1_3_1_1
+ E  R1_3_2_1
+ E  R1_4_0_1
+ E  R1_4_1_1
+ E  R1_4_2_1
+ E  R1_5_0_1
+ E  R1_5_1_1
+ E  R1_5_2_1
+ E  R1_6_0_1
+ E  R1_6_1_1
+ E  R1_6_2_1
+ E  R1_7_0_1
+ E  R1_7_1_1
+ E  R1_7_2_1
+ E  R1_8_0_1
+ E  R1_8_1_1
+ E  R1_8_2_1
+ E  R1_9_0_1
+ E  R1_9_1_1
+ E  R1_9_2_1
+ E  R1_10_0_1
+ E  R1_10_1_1
+ E  R1_10_2_1
+ E  R1_11_0_1
+ E  R1_11_1_1
+ E  R1_11_2_1
+ E  R1_12_0_1
+ E  R1_12_1_1
+ E  R1_12_2_1
+ E  R1_13_0_1
+ E  R1_13_1_1
+ E  R1_13_2_1
+ E  R1_14_0_1
+ E  R1_14_1_1
+ E  R1_14_2_1
+ E  R1_15_0_1
+ E  R1_15_1_1
+ E  R1_15_2_1
+ E  R1_16_0_1
+ E  R1_16_1_1
+ E  R1_16_2_1
+ E  R1_17_0_1
+ E  R1_17_1_1
+ E  R1_17_2_1
+ E  R1_18_0_1
+ E  R1_18_1_1
+ E  R1_18_2_1
+ E  R1_19_0_1
+ E  R1_19_1_1
+ E  R1_19_2_1
+ E  demand_fulfilment_0_1_0
+ E  demand_fulfilment_0_1_1
+ E  demand_fulfilment_0_1_2
+ L  mac_capacity_0_0_1
+ L  mac_capacity_0_1_1
+ L  mac_capacity_0_2_1
+ L  mac_capacity_1_0_1
+ L  mac_capacity_1_1_1
+ L  mac_capacity_1_2_1
+ L  mac_capacity_2_0_1
+ L  mac_capacity_2_1_1
+ L  mac_capacity_2_2_1
+ L  mac_capacity_3_0_1
+ L  mac_capacity_3_1_1
+ L  mac_capacity_3_2_1
+ L  mac_capacity_4_0_1
+ L  mac_capacity_4_1_1
+ L  mac_capacity_4_2_1
+ L  mac_capacity_5_0_1
+ L  mac_capacity_5_1_1
+ L  mac_capacity_5_2_1
+ L  mac_capacity_6_0_1
+ L  mac_capacity_6_1_1
+ L  mac_capacity_6_2_1
+ L  mac_capacity_7_0_1
+ L  mac_capacity_7_1_1
+ L  mac_capacity_7_2_1
+ L  mac_capacity_8_0_1
+ L  mac_capacity_8_1_1
+ L  mac_capacity_8_2_1
+ L  mac_capacity_9_0_1
+ L  mac_capacity_9_1_1
+ L  mac_capacity_9_2_1
+ L  mac_capacity_10_0_1
+ L  mac_capacity_10_1_1
+ L  mac_capacity_10_2_1
+ L  mac_capacity_11_0_1
+ L  mac_capacity_11_1_1
+ L  mac_capacity_11_2_1
+ L  mac_capacity_12_0_1
+ L  mac_capacity_12_1_1
+ L  mac_capacity_12_2_1
+ L  mac_capacity_13_0_1
+ L  mac_capacity_13_1_1
+ L  mac_capacity_13_2_1
+ L  mac_capacity_14_0_1
+ L  mac_capacity_14_1_1
+ L  mac_capacity_14_2_1
+ L  mac_capacity_15_0_1
+ L  mac_capacity_15_1_1
+ L  mac_capacity_15_2_1
+ L  mac_capacity_16_0_1
+ L  mac_capacity_16_1_1
+ L  mac_capacity_16_2_1
+ L  mac_capacity_17_0_1
+ L  mac_capacity_17_1_1
+ L  mac_capacity_17_2_1
+ L  mac_capacity_18_0_1
+ L  mac_capacity_18_1_1
+ L  mac_capacity_18_2_1
+ L  mac_capacity_19_0_1
+ L  mac_capacity_19_1_1
+ L  mac_capacity_19_2_1
+ E  prod_cost_0_1
+ E  prod_cost_1_1
+ E  prod_cost_2_1
+ E  prod_cost_3_1
+ E  prod_cost_4_1
+ E  prod_cost_5_1
+ E  prod_cost_6_1
+ E  prod_cost_7_1
+ E  prod_cost_8_1
+ E  prod_cost_9_1
+ E  prod_cost_10_1
+ E  prod_cost_11_1
+ E  prod_cost_12_1
+ E  prod_cost_13_1
+ E  prod_cost_14_1
+ E  prod_cost_15_1
+ E  prod_cost_16_1
+ E  prod_cost_17_1
+ E  prod_cost_18_1
+ E  prod_cost_19_1
+ E  transportation_cost_0_1
+ E  transportation_cost_1_1
+ E  transportation_cost_2_1
+ E  transportation_cost_3_1
+ E  transportation_cost_4_1
+ E  transportation_cost_5_1
+ E  transportation_cost_6_1
+ E  transportation_cost_7_1
+ E  transportation_cost_8_1
+ E  transportation_cost_9_1
+ E  transportation_cost_10_1
+ E  transportation_cost_11_1
+ E  transportation_cost_12_1
+ E  transportation_cost_13_1
+ E  transportation_cost_14_1
+ E  transportation_cost_15_1
+ E  transportation_cost_16_1
+ E  transportation_cost_17_1
+ E  transportation_cost_18_1
+ E  transportation_cost_19_1
+ E  revenue_in_market_0_1
+ E  R2_0_1
+ E  R2_1_1
+ E  production_cashflow_0_1
+ E  production_cashflow_1_1
+ G  hege_rate_r_0_1
+ G  hege_rate_r_1_1
+ L  hedge_rate_c_0_1
+ L  hedge_rate_c_1_1
+ E  option_cost_1
+ L  call_limit_0_1_0
+ L  call_limit_1_1_0
+ L  put_limit_0_1_0
+ L  put_limit_1_1_0
+ E  cf_p_c_0_1
+ E  cf_p_c_1_1
+ E  cf_ref_c_1
+ E  calculate_npv_1
+ E  first_stage_loop_1
+ E  npv_stage_fix_1
+ E  R1_0_0_2
+ E  R1_0_1_2
+ E  R1_0_2_2
+ E  R1_1_0_2
+ E  R1_1_1_2
+ E  R1_1_2_2
+ E  R1_2_0_2
+ E  R1_2_1_2
+ E  R1_2_2_2
+ E  R1_3_0_2
+ E  R1_3_1_2
+ E  R1_3_2_2
+ E  R1_4_0_2
+ E  R1_4_1_2
+ E  R1_4_2_2
+ E  R1_5_0_2
+ E  R1_5_1_2
+ E  R1_5_2_2
+ E  R1_6_0_2
+ E  R1_6_1_2
+ E  R1_6_2_2
+ E  R1_7_0_2
+ E  R1_7_1_2
+ E  R1_7_2_2
+ E  R1_8_0_2
+ E  R1_8_1_2
+ E  R1_8_2_2
+ E  R1_9_0_2
+ E  R1_9_1_2
+ E  R1_9_2_2
+ E  R1_10_0_2
+ E  R1_10_1_2
+ E  R1_10_2_2
+ E  R1_11_0_2
+ E  R1_11_1_2
+ E  R1_11_2_2
+ E  R1_12_0_2
+ E  R1_12_1_2
+ E  R1_12_2_2
+ E  R1_13_0_2
+ E  R1_13_1_2
+ E  R1_13_2_2
+ E  R1_14_0_2
+ E  R1_14_1_2
+ E  R1_14_2_2
+ E  R1_15_0_2
+ E  R1_15_1_2
+ E  R1_15_2_2
+ E  R1_16_0_2
+ E  R1_16_1_2
+ E  R1_16_2_2
+ E  R1_17_0_2
+ E  R1_17_1_2
+ E  R1_17_2_2
+ E  R1_18_0_2
+ E  R1_18_1_2
+ E  R1_18_2_2
+ E  R1_19_0_2
+ E  R1_19_1_2
+ E  R1_19_2_2
+ E  demand_fulfilment_0_2_0
+ E  demand_fulfilment_0_2_1
+ E  demand_fulfilment_0_2_2
+ L  mac_capacity_0_0_2
+ L  mac_capacity_0_1_2
+ L  mac_capacity_0_2_2
+ L  mac_capacity_1_0_2
+ L  mac_capacity_1_1_2
+ L  mac_capacity_1_2_2
+ L  mac_capacity_2_0_2
+ L  mac_capacity_2_1_2
+ L  mac_capacity_2_2_2
+ L  mac_capacity_3_0_2
+ L  mac_capacity_3_1_2
+ L  mac_capacity_3_2_2
+ L  mac_capacity_4_0_2
+ L  mac_capacity_4_1_2
+ L  mac_capacity_4_2_2
+ L  mac_capacity_5_0_2
+ L  mac_capacity_5_1_2
+ L  mac_capacity_5_2_2
+ L  mac_capacity_6_0_2
+ L  mac_capacity_6_1_2
+ L  mac_capacity_6_2_2
+ L  mac_capacity_7_0_2
+ L  mac_capacity_7_1_2
+ L  mac_capacity_7_2_2
+ L  mac_capacity_8_0_2
+ L  mac_capacity_8_1_2
+ L  mac_capacity_8_2_2
+ L  mac_capacity_9_0_2
+ L  mac_capacity_9_1_2
+ L  mac_capacity_9_2_2
+ L  mac_capacity_10_0_2
+ L  mac_capacity_10_1_2
+ L  mac_capacity_10_2_2
+ L  mac_capacity_11_0_2
+ L  mac_capacity_11_1_2
+ L  mac_capacity_11_2_2
+ L  mac_capacity_12_0_2
+ L  mac_capacity_12_1_2
+ L  mac_capacity_12_2_2
+ L  mac_capacity_13_0_2
+ L  mac_capacity_13_1_2
+ L  mac_capacity_13_2_2
+ L  mac_capacity_14_0_2
+ L  mac_capacity_14_1_2
+ L  mac_capacity_14_2_2
+ L  mac_capacity_15_0_2
+ L  mac_capacity_15_1_2
+ L  mac_capacity_15_2_2
+ L  mac_capacity_16_0_2
+ L  mac_capacity_16_1_2
+ L  mac_capacity_16_2_2
+ L  mac_capacity_17_0_2
+ L  mac_capacity_17_1_2
+ L  mac_capacity_17_2_2
+ L  mac_capacity_18_0_2
+ L  mac_capacity_18_1_2
+ L  mac_capacity_18_2_2
+ L  mac_capacity_19_0_2
+ L  mac_capacity_19_1_2
+ L  mac_capacity_19_2_2
+ E  prod_cost_0_2
+ E  prod_cost_1_2
+ E  prod_cost_2_2
+ E  prod_cost_3_2
+ E  prod_cost_4_2
+ E  prod_cost_5_2
+ E  prod_cost_6_2
+ E  prod_cost_7_2
+ E  prod_cost_8_2
+ E  prod_cost_9_2
+ E  prod_cost_10_2
+ E  prod_cost_11_2
+ E  prod_cost_12_2
+ E  prod_cost_13_2
+ E  prod_cost_14_2
+ E  prod_cost_15_2
+ E  prod_cost_16_2
+ E  prod_cost_17_2
+ E  prod_cost_18_2
+ E  prod_cost_19_2
+ E  transportation_cost_0_2
+ E  transportation_cost_1_2
+ E  transportation_cost_2_2
+ E  transportation_cost_3_2
+ E  transportation_cost_4_2
+ E  transportation_cost_5_2
+ E  transportation_cost_6_2
+ E  transportation_cost_7_2
+ E  transportation_cost_8_2
+ E  transportation_cost_9_2
+ E  transportation_cost_10_2
+ E  transportation_cost_11_2
+ E  transportation_cost_12_2
+ E  transportation_cost_13_2
+ E  transportation_cost_14_2
+ E  transportation_cost_15_2
+ E  transportation_cost_16_2
+ E  transportation_cost_17_2
+ E  transportation_cost_18_2
+ E  transportation_cost_19_2
+ E  revenue_in_market_0_2
+ E  R2_0_2
+ E  R2_1_2
+ E  production_cashflow_0_2
+ E  production_cashflow_1_2
+ G  hege_rate_r_0_2
+ G  hege_rate_r_1_2
+ L  hedge_rate_c_0_2
+ L  hedge_rate_c_1_2
+ E  option_cost_2
+ L  call_limit_0_2_1
+ L  call_limit_1_2_1
+ L  put_limit_0_2_1
+ L  put_limit_1_2_1
+ E  cf_p_c_0_2
+ E  cf_p_c_1_2
+ E  cf_ref_c_2
+ E  calculate_npv_2
+ E  first_stage_loop_2
+ E  npv_stage_loop_2
+ E  R1_0_0_3
+ E  R1_0_1_3
+ E  R1_0_2_3
+ E  R1_1_0_3
+ E  R1_1_1_3
+ E  R1_1_2_3
+ E  R1_2_0_3
+ E  R1_2_1_3
+ E  R1_2_2_3
+ E  R1_3_0_3
+ E  R1_3_1_3
+ E  R1_3_2_3
+ E  R1_4_0_3
+ E  R1_4_1_3
+ E  R1_4_2_3
+ E  R1_5_0_3
+ E  R1_5_1_3
+ E  R1_5_2_3
+ E  R1_6_0_3
+ E  R1_6_1_3
+ E  R1_6_2_3
+ E  R1_7_0_3
+ E  R1_7_1_3
+ E  R1_7_2_3
+ E  R1_8_0_3
+ E  R1_8_1_3
+ E  R1_8_2_3
+ E  R1_9_0_3
+ E  R1_9_1_3
+ E  R1_9_2_3
+ E  R1_10_0_3
+ E  R1_10_1_3
+ E  R1_10_2_3
+ E  R1_11_0_3
+ E  R1_11_1_3
+ E  R1_11_2_3
+ E  R1_12_0_3
+ E  R1_12_1_3
+ E  R1_12_2_3
+ E  R1_13_0_3
+ E  R1_13_1_3
+ E  R1_13_2_3
+ E  R1_14_0_3
+ E  R1_14_1_3
+ E  R1_14_2_3
+ E  R1_15_0_3
+ E  R1_15_1_3
+ E  R1_15_2_3
+ E  R1_16_0_3
+ E  R1_16_1_3
+ E  R1_16_2_3
+ E  R1_17_0_3
+ E  R1_17_1_3
+ E  R1_17_2_3
+ E  R1_18_0_3
+ E  R1_18_1_3
+ E  R1_18_2_3
+ E  R1_19_0_3
+ E  R1_19_1_3
+ E  R1_19_2_3
+ E  demand_fulfilment_0_3_0
+ E  demand_fulfilment_0_3_1
+ E  demand_fulfilment_0_3_2
+ L  mac_capacity_0_0_3
+ L  mac_capacity_0_1_3
+ L  mac_capacity_0_2_3
+ L  mac_capacity_1_0_3
+ L  mac_capacity_1_1_3
+ L  mac_capacity_1_2_3
+ L  mac_capacity_2_0_3
+ L  mac_capacity_2_1_3
+ L  mac_capacity_2_2_3
+ L  mac_capacity_3_0_3
+ L  mac_capacity_3_1_3
+ L  mac_capacity_3_2_3
+ L  mac_capacity_4_0_3
+ L  mac_capacity_4_1_3
+ L  mac_capacity_4_2_3
+ L  mac_capacity_5_0_3
+ L  mac_capacity_5_1_3
+ L  mac_capacity_5_2_3
+ L  mac_capacity_6_0_3
+ L  mac_capacity_6_1_3
+ L  mac_capacity_6_2_3
+ L  mac_capacity_7_0_3
+ L  mac_capacity_7_1_3
+ L  mac_capacity_7_2_3
+ L  mac_capacity_8_0_3
+ L  mac_capacity_8_1_3
+ L  mac_capacity_8_2_3
+ L  mac_capacity_9_0_3
+ L  mac_capacity_9_1_3
+ L  mac_capacity_9_2_3
+ L  mac_capacity_10_0_3
+ L  mac_capacity_10_1_3
+ L  mac_capacity_10_2_3
+ L  mac_capacity_11_0_3
+ L  mac_capacity_11_1_3
+ L  mac_capacity_11_2_3
+ L  mac_capacity_12_0_3
+ L  mac_capacity_12_1_3
+ L  mac_capacity_12_2_3
+ L  mac_capacity_13_0_3
+ L  mac_capacity_13_1_3
+ L  mac_capacity_13_2_3
+ L  mac_capacity_14_0_3
+ L  mac_capacity_14_1_3
+ L  mac_capacity_14_2_3
+ L  mac_capacity_15_0_3
+ L  mac_capacity_15_1_3
+ L  mac_capacity_15_2_3
+ L  mac_capacity_16_0_3
+ L  mac_capacity_16_1_3
+ L  mac_capacity_16_2_3
+ L  mac_capacity_17_0_3
+ L  mac_capacity_17_1_3
+ L  mac_capacity_17_2_3
+ L  mac_capacity_18_0_3
+ L  mac_capacity_18_1_3
+ L  mac_capacity_18_2_3
+ L  mac_capacity_19_0_3
+ L  mac_capacity_19_1_3
+ L  mac_capacity_19_2_3
+ E  prod_cost_0_3
+ E  prod_cost_1_3
+ E  prod_cost_2_3
+ E  prod_cost_3_3
+ E  prod_cost_4_3
+ E  prod_cost_5_3
+ E  prod_cost_6_3
+ E  prod_cost_7_3
+ E  prod_cost_8_3
+ E  prod_cost_9_3
+ E  prod_cost_10_3
+ E  prod_cost_11_3
+ E  prod_cost_12_3
+ E  prod_cost_13_3
+ E  prod_cost_14_3
+ E  prod_cost_15_3
+ E  prod_cost_16_3
+ E  prod_cost_17_3
+ E  prod_cost_18_3
+ E  prod_cost_19_3
+ E  transportation_cost_0_3
+ E  transportation_cost_1_3
+ E  transportation_cost_2_3
+ E  transportation_cost_3_3
+ E  transportation_cost_4_3
+ E  transportation_cost_5_3
+ E  transportation_cost_6_3
+ E  transportation_cost_7_3
+ E  transportation_cost_8_3
+ E  transportation_cost_9_3
+ E  transportation_cost_10_3
+ E  transportation_cost_11_3
+ E  transportation_cost_12_3
+ E  transportation_cost_13_3
+ E  transportation_cost_14_3
+ E  transportation_cost_15_3
+ E  transportation_cost_16_3
+ E  transportation_cost_17_3
+ E  transportation_cost_18_3
+ E  transportation_cost_19_3
+ E  revenue_in_market_0_3
+ E  R2_0_3
+ E  R2_1_3
+ E  production_cashflow_0_3
+ E  production_cashflow_1_3
+ G  hege_rate_r_0_3
+ G  hege_rate_r_1_3
+ L  hedge_rate_c_0_3
+ L  hedge_rate_c_1_3
+ E  option_cost_3
+ L  call_limit_0_3_2
+ L  call_limit_1_3_2
+ L  put_limit_0_3_2
+ L  put_limit_1_3_2
+ E  cf_p_c_0_3
+ E  cf_p_c_1_3
+ E  cf_ref_c_3
+ E  calculate_npv_3
+ E  first_stage_loop_3
+ E  npv_stage_loop_3
+ E  R1_0_0_4
+ E  R1_0_1_4
+ E  R1_0_2_4
+ E  R1_1_0_4
+ E  R1_1_1_4
+ E  R1_1_2_4
+ E  R1_2_0_4
+ E  R1_2_1_4
+ E  R1_2_2_4
+ E  R1_3_0_4
+ E  R1_3_1_4
+ E  R1_3_2_4
+ E  R1_4_0_4
+ E  R1_4_1_4
+ E  R1_4_2_4
+ E  R1_5_0_4
+ E  R1_5_1_4
+ E  R1_5_2_4
+ E  R1_6_0_4
+ E  R1_6_1_4
+ E  R1_6_2_4
+ E  R1_7_0_4
+ E  R1_7_1_4
+ E  R1_7_2_4
+ E  R1_8_0_4
+ E  R1_8_1_4
+ E  R1_8_2_4
+ E  R1_9_0_4
+ E  R1_9_1_4
+ E  R1_9_2_4
+ E  R1_10_0_4
+ E  R1_10_1_4
+ E  R1_10_2_4
+ E  R1_11_0_4
+ E  R1_11_1_4
+ E  R1_11_2_4
+ E  R1_12_0_4
+ E  R1_12_1_4
+ E  R1_12_2_4
+ E  R1_13_0_4
+ E  R1_13_1_4
+ E  R1_13_2_4
+ E  R1_14_0_4
+ E  R1_14_1_4
+ E  R1_14_2_4
+ E  R1_15_0_4
+ E  R1_15_1_4
+ E  R1_15_2_4
+ E  R1_16_0_4
+ E  R1_16_1_4
+ E  R1_16_2_4
+ E  R1_17_0_4
+ E  R1_17_1_4
+ E  R1_17_2_4
+ E  R1_18_0_4
+ E  R1_18_1_4
+ E  R1_18_2_4
+ E  R1_19_0_4
+ E  R1_19_1_4
+ E  R1_19_2_4
+ E  demand_fulfilment_0_4_0
+ E  demand_fulfilment_0_4_1
+ E  demand_fulfilment_0_4_2
+ L  mac_capacity_0_0_4
+ L  mac_capacity_0_1_4
+ L  mac_capacity_0_2_4
+ L  mac_capacity_1_0_4
+ L  mac_capacity_1_1_4
+ L  mac_capacity_1_2_4
+ L  mac_capacity_2_0_4
+ L  mac_capacity_2_1_4
+ L  mac_capacity_2_2_4
+ L  mac_capacity_3_0_4
+ L  mac_capacity_3_1_4
+ L  mac_capacity_3_2_4
+ L  mac_capacity_4_0_4
+ L  mac_capacity_4_1_4
+ L  mac_capacity_4_2_4
+ L  mac_capacity_5_0_4
+ L  mac_capacity_5_1_4
+ L  mac_capacity_5_2_4
+ L  mac_capacity_6_0_4
+ L  mac_capacity_6_1_4
+ L  mac_capacity_6_2_4
+ L  mac_capacity_7_0_4
+ L  mac_capacity_7_1_4
+ L  mac_capacity_7_2_4
+ L  mac_capacity_8_0_4
+ L  mac_capacity_8_1_4
+ L  mac_capacity_8_2_4
+ L  mac_capacity_9_0_4
+ L  mac_capacity_9_1_4
+ L  mac_capacity_9_2_4
+ L  mac_capacity_10_0_4
+ L  mac_capacity_10_1_4
+ L  mac_capacity_10_2_4
+ L  mac_capacity_11_0_4
+ L  mac_capacity_11_1_4
+ L  mac_capacity_11_2_4
+ L  mac_capacity_12_0_4
+ L  mac_capacity_12_1_4
+ L  mac_capacity_12_2_4
+ L  mac_capacity_13_0_4
+ L  mac_capacity_13_1_4
+ L  mac_capacity_13_2_4
+ L  mac_capacity_14_0_4
+ L  mac_capacity_14_1_4
+ L  mac_capacity_14_2_4
+ L  mac_capacity_15_0_4
+ L  mac_capacity_15_1_4
+ L  mac_capacity_15_2_4
+ L  mac_capacity_16_0_4
+ L  mac_capacity_16_1_4
+ L  mac_capacity_16_2_4
+ L  mac_capacity_17_0_4
+ L  mac_capacity_17_1_4
+ L  mac_capacity_17_2_4
+ L  mac_capacity_18_0_4
+ L  mac_capacity_18_1_4
+ L  mac_capacity_18_2_4
+ L  mac_capacity_19_0_4
+ L  mac_capacity_19_1_4
+ L  mac_capacity_19_2_4
+ E  prod_cost_0_4
+ E  prod_cost_1_4
+ E  prod_cost_2_4
+ E  prod_cost_3_4
+ E  prod_cost_4_4
+ E  prod_cost_5_4
+ E  prod_cost_6_4
+ E  prod_cost_7_4
+ E  prod_cost_8_4
+ E  prod_cost_9_4
+ E  prod_cost_10_4
+ E  prod_cost_11_4
+ E  prod_cost_12_4
+ E  prod_cost_13_4
+ E  prod_cost_14_4
+ E  prod_cost_15_4
+ E  prod_cost_16_4
+ E  prod_cost_17_4
+ E  prod_cost_18_4
+ E  prod_cost_19_4
+ E  transportation_cost_0_4
+ E  transportation_cost_1_4
+ E  transportation_cost_2_4
+ E  transportation_cost_3_4
+ E  transportation_cost_4_4
+ E  transportation_cost_5_4
+ E  transportation_cost_6_4
+ E  transportation_cost_7_4
+ E  transportation_cost_8_4
+ E  transportation_cost_9_4
+ E  transportation_cost_10_4
+ E  transportation_cost_11_4
+ E  transportation_cost_12_4
+ E  transportation_cost_13_4
+ E  transportation_cost_14_4
+ E  transportation_cost_15_4
+ E  transportation_cost_16_4
+ E  transportation_cost_17_4
+ E  transportation_cost_18_4
+ E  transportation_cost_19_4
+ E  revenue_in_market_0_4
+ E  R2_0_4
+ E  R2_1_4
+ E  production_cashflow_0_4
+ E  production_cashflow_1_4
+ G  hege_rate_r_0_4
+ G  hege_rate_r_1_4
+ L  hedge_rate_c_0_4
+ L  hedge_rate_c_1_4
+ E  option_cost_4
+ L  call_limit_0_4_3
+ L  call_limit_1_4_3
+ L  put_limit_0_4_3
+ L  put_limit_1_4_3
+ E  cf_p_c_0_4
+ E  cf_p_c_1_4
+ E  cf_ref_c_4
+ E  calculate_npv_4
+ E  first_stage_loop_4
+ E  npv_stage_loop_4
+ E  R1_0_0_5
+ E  R1_0_1_5
+ E  R1_0_2_5
+ E  R1_1_0_5
+ E  R1_1_1_5
+ E  R1_1_2_5
+ E  R1_2_0_5
+ E  R1_2_1_5
+ E  R1_2_2_5
+ E  R1_3_0_5
+ E  R1_3_1_5
+ E  R1_3_2_5
+ E  R1_4_0_5
+ E  R1_4_1_5
+ E  R1_4_2_5
+ E  R1_5_0_5
+ E  R1_5_1_5
+ E  R1_5_2_5
+ E  R1_6_0_5
+ E  R1_6_1_5
+ E  R1_6_2_5
+ E  R1_7_0_5
+ E  R1_7_1_5
+ E  R1_7_2_5
+ E  R1_8_0_5
+ E  R1_8_1_5
+ E  R1_8_2_5
+ E  R1_9_0_5
+ E  R1_9_1_5
+ E  R1_9_2_5
+ E  R1_10_0_5
+ E  R1_10_1_5
+ E  R1_10_2_5
+ E  R1_11_0_5
+ E  R1_11_1_5
+ E  R1_11_2_5
+ E  R1_12_0_5
+ E  R1_12_1_5
+ E  R1_12_2_5
+ E  R1_13_0_5
+ E  R1_13_1_5
+ E  R1_13_2_5
+ E  R1_14_0_5
+ E  R1_14_1_5
+ E  R1_14_2_5
+ E  R1_15_0_5
+ E  R1_15_1_5
+ E  R1_15_2_5
+ E  R1_16_0_5
+ E  R1_16_1_5
+ E  R1_16_2_5
+ E  R1_17_0_5
+ E  R1_17_1_5
+ E  R1_17_2_5
+ E  R1_18_0_5
+ E  R1_18_1_5
+ E  R1_18_2_5
+ E  R1_19_0_5
+ E  R1_19_1_5
+ E  R1_19_2_5
+ E  demand_fulfilment_0_5_0
+ E  demand_fulfilment_0_5_1
+ E  demand_fulfilment_0_5_2
+ L  mac_capacity_0_0_5
+ L  mac_capacity_0_1_5
+ L  mac_capacity_0_2_5
+ L  mac_capacity_1_0_5
+ L  mac_capacity_1_1_5
+ L  mac_capacity_1_2_5
+ L  mac_capacity_2_0_5
+ L  mac_capacity_2_1_5
+ L  mac_capacity_2_2_5
+ L  mac_capacity_3_0_5
+ L  mac_capacity_3_1_5
+ L  mac_capacity_3_2_5
+ L  mac_capacity_4_0_5
+ L  mac_capacity_4_1_5
+ L  mac_capacity_4_2_5
+ L  mac_capacity_5_0_5
+ L  mac_capacity_5_1_5
+ L  mac_capacity_5_2_5
+ L  mac_capacity_6_0_5
+ L  mac_capacity_6_1_5
+ L  mac_capacity_6_2_5
+ L  mac_capacity_7_0_5
+ L  mac_capacity_7_1_5
+ L  mac_capacity_7_2_5
+ L  mac_capacity_8_0_5
+ L  mac_capacity_8_1_5
+ L  mac_capacity_8_2_5
+ L  mac_capacity_9_0_5
+ L  mac_capacity_9_1_5
+ L  mac_capacity_9_2_5
+ L  mac_capacity_10_0_5
+ L  mac_capacity_10_1_5
+ L  mac_capacity_10_2_5
+ L  mac_capacity_11_0_5
+ L  mac_capacity_11_1_5
+ L  mac_capacity_11_2_5
+ L  mac_capacity_12_0_5
+ L  mac_capacity_12_1_5
+ L  mac_capacity_12_2_5
+ L  mac_capacity_13_0_5
+ L  mac_capacity_13_1_5
+ L  mac_capacity_13_2_5
+ L  mac_capacity_14_0_5
+ L  mac_capacity_14_1_5
+ L  mac_capacity_14_2_5
+ L  mac_capacity_15_0_5
+ L  mac_capacity_15_1_5
+ L  mac_capacity_15_2_5
+ L  mac_capacity_16_0_5
+ L  mac_capacity_16_1_5
+ L  mac_capacity_16_2_5
+ L  mac_capacity_17_0_5
+ L  mac_capacity_17_1_5
+ L  mac_capacity_17_2_5
+ L  mac_capacity_18_0_5
+ L  mac_capacity_18_1_5
+ L  mac_capacity_18_2_5
+ L  mac_capacity_19_0_5
+ L  mac_capacity_19_1_5
+ L  mac_capacity_19_2_5
+ E  prod_cost_0_5
+ E  prod_cost_1_5
+ E  prod_cost_2_5
+ E  prod_cost_3_5
+ E  prod_cost_4_5
+ E  prod_cost_5_5
+ E  prod_cost_6_5
+ E  prod_cost_7_5
+ E  prod_cost_8_5
+ E  prod_cost_9_5
+ E  prod_cost_10_5
+ E  prod_cost_11_5
+ E  prod_cost_12_5
+ E  prod_cost_13_5
+ E  prod_cost_14_5
+ E  prod_cost_15_5
+ E  prod_cost_16_5
+ E  prod_cost_17_5
+ E  prod_cost_18_5
+ E  prod_cost_19_5
+ E  transportation_cost_0_5
+ E  transportation_cost_1_5
+ E  transportation_cost_2_5
+ E  transportation_cost_3_5
+ E  transportation_cost_4_5
+ E  transportation_cost_5_5
+ E  transportation_cost_6_5
+ E  transportation_cost_7_5
+ E  transportation_cost_8_5
+ E  transportation_cost_9_5
+ E  transportation_cost_10_5
+ E  transportation_cost_11_5
+ E  transportation_cost_12_5
+ E  transportation_cost_13_5
+ E  transportation_cost_14_5
+ E  transportation_cost_15_5
+ E  transportation_cost_16_5
+ E  transportation_cost_17_5
+ E  transportation_cost_18_5
+ E  transportation_cost_19_5
+ E  revenue_in_market_0_5
+ E  R2_0_5
+ E  R2_1_5
+ E  production_cashflow_0_5
+ E  production_cashflow_1_5
+ G  hege_rate_r_0_5
+ G  hege_rate_r_1_5
+ L  hedge_rate_c_0_5
+ L  hedge_rate_c_1_5
+ E  option_cost_5
+ L  call_limit_0_5_4
+ L  call_limit_1_5_4
+ L  put_limit_0_5_4
+ L  put_limit_1_5_4
+ E  cf_p_c_0_5
+ E  cf_p_c_1_5
+ E  cf_ref_c_5
+ E  calculate_npv_5
+ E  first_stage_loop_5
+ E  npv_stage_loop_5
+COLUMNS
+    y_build_0_0 R0_0_0_0 -1 line_building_cost_0 -250000
+    y_build_0_0 line_operating_cost_0 -50000
+    y_build_0_1 R0_0_1_0 -1 line_building_cost_0 -250000
+    y_build_0_1 line_operating_cost_0 -50000
+    y_build_0_2 R0_0_2_0 -1 line_building_cost_0 -250000
+    y_build_0_2 line_operating_cost_0 -50000
+    y_build_1_0 R0_1_0_0 -1 line_building_cost_0 -250000
+    y_build_1_0 line_operating_cost_0 -50000
+    y_build_1_1 R0_1_1_0 -1 line_building_cost_0 -250000
+    y_build_1_1 line_operating_cost_0 -50000
+    y_build_1_2 R0_1_2_0 -1 line_building_cost_0 -250000
+    y_build_1_2 line_operating_cost_0 -50000
+    y_build_2_0 R0_2_0_0 -1 line_building_cost_0 -250000
+    y_build_2_0 line_operating_cost_0 -50000
+    y_build_2_1 R0_2_1_0 -1 line_building_cost_0 -250000
+    y_build_2_1 line_operating_cost_0 -50000
+    y_build_2_2 R0_2_2_0 -1 line_building_cost_0 -250000
+    y_build_2_2 line_operating_cost_0 -50000
+    y_build_3_0 R0_3_0_0 -1 line_building_cost_0 -250000
+    y_build_3_0 line_operating_cost_0 -50000
+    y_build_3_1 R0_3_1_0 -1 line_building_cost_0 -250000
+    y_build_3_1 line_operating_cost_0 -50000
+    y_build_3_2 R0_3_2_0 -1 line_building_cost_0 -250000
+    y_build_3_2 line_operating_cost_0 -50000
+    y_build_4_0 R0_4_0_0 -1 line_building_cost_0 -250000
+    y_build_4_0 line_operating_cost_0 -50000
+    y_build_4_1 R0_4_1_0 -1 line_building_cost_0 -250000
+    y_build_4_1 line_operating_cost_0 -50000
+    y_build_4_2 R0_4_2_0 -1 line_building_cost_0 -250000
+    y_build_4_2 line_operating_cost_0 -50000
+    y_build_5_0 R0_5_0_0 -1 line_building_cost_0 -250000
+    y_build_5_0 line_operating_cost_0 -50000
+    y_build_5_1 R0_5_1_0 -1 line_building_cost_0 -250000
+    y_build_5_1 line_operating_cost_0 -50000
+    y_build_5_2 R0_5_2_0 -1 line_building_cost_0 -250000
+    y_build_5_2 line_operating_cost_0 -50000
+    y_build_6_0 R0_6_0_0 -1 line_building_cost_0 -250000
+    y_build_6_0 line_operating_cost_0 -50000
+    y_build_6_1 R0_6_1_0 -1 line_building_cost_0 -250000
+    y_build_6_1 line_operating_cost_0 -50000
+    y_build_6_2 R0_6_2_0 -1 line_building_cost_0 -250000
+    y_build_6_2 line_operating_cost_0 -50000
+    y_build_7_0 R0_7_0_0 -1 line_building_cost_0 -250000
+    y_build_7_0 line_operating_cost_0 -50000
+    y_build_7_1 R0_7_1_0 -1 line_building_cost_0 -250000
+    y_build_7_1 line_operating_cost_0 -50000
+    y_build_7_2 R0_7_2_0 -1 line_building_cost_0 -250000
+    y_build_7_2 line_operating_cost_0 -50000
+    y_build_8_0 R0_8_0_0 -1 line_building_cost_0 -250000
+    y_build_8_0 line_operating_cost_0 -50000
+    y_build_8_1 R0_8_1_0 -1 line_building_cost_0 -250000
+    y_build_8_1 line_operating_cost_0 -50000
+    y_build_8_2 R0_8_2_0 -1 line_building_cost_0 -250000
+    y_build_8_2 line_operating_cost_0 -50000
+    y_build_9_0 R0_9_0_0 -1 line_building_cost_0 -250000
+    y_build_9_0 line_operating_cost_0 -50000
+    y_build_9_1 R0_9_1_0 -1 line_building_cost_0 -250000
+    y_build_9_1 line_operating_cost_0 -50000
+    y_build_9_2 R0_9_2_0 -1 line_building_cost_0 -250000
+    y_build_9_2 line_operating_cost_0 -50000
+    y_build_10_0 R0_10_0_0 -1 line_building_cost_1 -250000
+    y_build_10_0 line_operating_cost_1 -50000
+    y_build_10_1 R0_10_1_0 -1 line_building_cost_1 -250000
+    y_build_10_1 line_operating_cost_1 -50000
+    y_build_10_2 R0_10_2_0 -1 line_building_cost_1 -250000
+    y_build_10_2 line_operating_cost_1 -50000
+    y_build_11_0 R0_11_0_0 -1 line_building_cost_1 -250000
+    y_build_11_0 line_operating_cost_1 -50000
+    y_build_11_1 R0_11_1_0 -1 line_building_cost_1 -250000
+    y_build_11_1 line_operating_cost_1 -50000
+    y_build_11_2 R0_11_2_0 -1 line_building_cost_1 -250000
+    y_build_11_2 line_operating_cost_1 -50000
+    y_build_12_0 R0_12_0_0 -1 line_building_cost_1 -250000
+    y_build_12_0 line_operating_cost_1 -50000
+    y_build_12_1 R0_12_1_0 -1 line_building_cost_1 -250000
+    y_build_12_1 line_operating_cost_1 -50000
+    y_build_12_2 R0_12_2_0 -1 line_building_cost_1 -250000
+    y_build_12_2 line_operating_cost_1 -50000
+    y_build_13_0 R0_13_0_0 -1 line_building_cost_1 -250000
+    y_build_13_0 line_operating_cost_1 -50000
+    y_build_13_1 R0_13_1_0 -1 line_building_cost_1 -250000
+    y_build_13_1 line_operating_cost_1 -50000
+    y_build_13_2 R0_13_2_0 -1 line_building_cost_1 -250000
+    y_build_13_2 line_operating_cost_1 -50000
+    y_build_14_0 R0_14_0_0 -1 line_building_cost_1 -250000
+    y_build_14_0 line_operating_cost_1 -50000
+    y_build_14_1 R0_14_1_0 -1 line_building_cost_1 -250000
+    y_build_14_1 line_operating_cost_1 -50000
+    y_build_14_2 R0_14_2_0 -1 line_building_cost_1 -250000
+    y_build_14_2 line_operating_cost_1 -50000
+    y_build_15_0 R0_15_0_0 -1 line_building_cost_1 -250000
+    y_build_15_0 line_operating_cost_1 -50000
+    y_build_15_1 R0_15_1_0 -1 line_building_cost_1 -250000
+    y_build_15_1 line_operating_cost_1 -50000
+    y_build_15_2 R0_15_2_0 -1 line_building_cost_1 -250000
+    y_build_15_2 line_operating_cost_1 -50000
+    y_build_16_0 R0_16_0_0 -1 line_building_cost_1 -250000
+    y_build_16_0 line_operating_cost_1 -50000
+    y_build_16_1 R0_16_1_0 -1 line_building_cost_1 -250000
+    y_build_16_1 line_operating_cost_1 -50000
+    y_build_16_2 R0_16_2_0 -1 line_building_cost_1 -250000
+    y_build_16_2 line_operating_cost_1 -50000
+    y_build_17_0 R0_17_0_0 -1 line_building_cost_1 -250000
+    y_build_17_0 line_operating_cost_1 -50000
+    y_build_17_1 R0_17_1_0 -1 line_building_cost_1 -250000
+    y_build_17_1 line_operating_cost_1 -50000
+    y_build_17_2 R0_17_2_0 -1 line_building_cost_1 -250000
+    y_build_17_2 line_operating_cost_1 -50000
+    y_build_18_0 R0_18_0_0 -1 line_building_cost_1 -250000
+    y_build_18_0 line_operating_cost_1 -50000
+    y_build_18_1 R0_18_1_0 -1 line_building_cost_1 -250000
+    y_build_18_1 line_operating_cost_1 -50000
+    y_build_18_2 R0_18_2_0 -1 line_building_cost_1 -250000
+    y_build_18_2 line_operating_cost_1 -50000
+    y_build_19_0 R0_19_0_0 -1 line_building_cost_1 -250000
+    y_build_19_0 line_operating_cost_1 -50000
+    y_build_19_1 R0_19_1_0 -1 line_building_cost_1 -250000
+    y_build_19_1 line_operating_cost_1 -50000
+    y_build_19_2 R0_19_2_0 -1 line_building_cost_1 -250000
+    y_build_19_2 line_operating_cost_1 -50000
+    x2_0_0_0 demand_fulfilment_0_0_0 1 revenue_in_market_0_0 20
+    x2_0_1_0 demand_fulfilment_0_0_1 1 revenue_in_market_0_0 35
+    x2_0_2_0 demand_fulfilment_0_0_2 1 revenue_in_market_0_0 70
+    x_0_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_0_0_0 2.5
+    x_0_0_0_0 prod_cost_0_0 -7 transportation_cost_0_0 -0.2
+    x_0_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_0_1_0 3
+    x_0_0_1_0 prod_cost_0_0 -12.5 transportation_cost_0_0 -0.22
+    x_0_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_0_2_0 3.75
+    x_0_0_2_0 prod_cost_0_0 -17 transportation_cost_0_0 -0.25
+    x_1_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_1_0_0 2.5
+    x_1_0_0_0 prod_cost_1_0 -7 transportation_cost_1_0 -0.2
+    x_1_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_1_1_0 3
+    x_1_0_1_0 prod_cost_1_0 -12.5 transportation_cost_1_0 -0.22
+    x_1_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_1_2_0 3.75
+    x_1_0_2_0 prod_cost_1_0 -17 transportation_cost_1_0 -0.25
+    x_2_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_2_0_0 2.5
+    x_2_0_0_0 prod_cost_2_0 -7 transportation_cost_2_0 -0.2
+    x_2_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_2_1_0 3
+    x_2_0_1_0 prod_cost_2_0 -12.5 transportation_cost_2_0 -0.22
+    x_2_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_2_2_0 3.75
+    x_2_0_2_0 prod_cost_2_0 -17 transportation_cost_2_0 -0.25
+    x_3_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_3_0_0 2.5
+    x_3_0_0_0 prod_cost_3_0 -7 transportation_cost_3_0 -0.2
+    x_3_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_3_1_0 3
+    x_3_0_1_0 prod_cost_3_0 -12.5 transportation_cost_3_0 -0.22
+    x_3_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_3_2_0 3.75
+    x_3_0_2_0 prod_cost_3_0 -17 transportation_cost_3_0 -0.25
+    x_4_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_4_0_0 2.5
+    x_4_0_0_0 prod_cost_4_0 -7 transportation_cost_4_0 -0.2
+    x_4_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_4_1_0 3
+    x_4_0_1_0 prod_cost_4_0 -12.5 transportation_cost_4_0 -0.22
+    x_4_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_4_2_0 3.75
+    x_4_0_2_0 prod_cost_4_0 -17 transportation_cost_4_0 -0.25
+    x_5_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_5_0_0 2.5
+    x_5_0_0_0 prod_cost_5_0 -7 transportation_cost_5_0 -0.2
+    x_5_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_5_1_0 3
+    x_5_0_1_0 prod_cost_5_0 -12.5 transportation_cost_5_0 -0.22
+    x_5_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_5_2_0 3.75
+    x_5_0_2_0 prod_cost_5_0 -17 transportation_cost_5_0 -0.25
+    x_6_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_6_0_0 2.5
+    x_6_0_0_0 prod_cost_6_0 -7 transportation_cost_6_0 -0.2
+    x_6_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_6_1_0 3
+    x_6_0_1_0 prod_cost_6_0 -12.5 transportation_cost_6_0 -0.22
+    x_6_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_6_2_0 3.75
+    x_6_0_2_0 prod_cost_6_0 -17 transportation_cost_6_0 -0.25
+    x_7_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_7_0_0 2.5
+    x_7_0_0_0 prod_cost_7_0 -7 transportation_cost_7_0 -0.2
+    x_7_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_7_1_0 3
+    x_7_0_1_0 prod_cost_7_0 -12.5 transportation_cost_7_0 -0.22
+    x_7_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_7_2_0 3.75
+    x_7_0_2_0 prod_cost_7_0 -17 transportation_cost_7_0 -0.25
+    x_8_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_8_0_0 2.5
+    x_8_0_0_0 prod_cost_8_0 -7 transportation_cost_8_0 -0.2
+    x_8_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_8_1_0 3
+    x_8_0_1_0 prod_cost_8_0 -12.5 transportation_cost_8_0 -0.22
+    x_8_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_8_2_0 3.75
+    x_8_0_2_0 prod_cost_8_0 -17 transportation_cost_8_0 -0.25
+    x_9_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_9_0_0 2.5
+    x_9_0_0_0 prod_cost_9_0 -7 transportation_cost_9_0 -0.2
+    x_9_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_9_1_0 3
+    x_9_0_1_0 prod_cost_9_0 -12.5 transportation_cost_9_0 -0.22
+    x_9_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_9_2_0 3.75
+    x_9_0_2_0 prod_cost_9_0 -17 transportation_cost_9_0 -0.25
+    x_10_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_10_0_0 2.5
+    x_10_0_0_0 prod_cost_10_0 -5 transportation_cost_10_0 -0.8
+    x_10_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_10_1_0 3
+    x_10_0_1_0 prod_cost_10_0 -9 transportation_cost_10_0 -1
+    x_10_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_10_2_0 3.75
+    x_10_0_2_0 prod_cost_10_0 -13 transportation_cost_10_0 -1.2
+    x_11_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_11_0_0 2.5
+    x_11_0_0_0 prod_cost_11_0 -5 transportation_cost_11_0 -0.8
+    x_11_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_11_1_0 3
+    x_11_0_1_0 prod_cost_11_0 -9 transportation_cost_11_0 -1
+    x_11_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_11_2_0 3.75
+    x_11_0_2_0 prod_cost_11_0 -13 transportation_cost_11_0 -1.2
+    x_12_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_12_0_0 2.5
+    x_12_0_0_0 prod_cost_12_0 -5 transportation_cost_12_0 -0.8
+    x_12_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_12_1_0 3
+    x_12_0_1_0 prod_cost_12_0 -9 transportation_cost_12_0 -1
+    x_12_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_12_2_0 3.75
+    x_12_0_2_0 prod_cost_12_0 -13 transportation_cost_12_0 -1.2
+    x_13_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_13_0_0 2.5
+    x_13_0_0_0 prod_cost_13_0 -5 transportation_cost_13_0 -0.8
+    x_13_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_13_1_0 3
+    x_13_0_1_0 prod_cost_13_0 -9 transportation_cost_13_0 -1
+    x_13_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_13_2_0 3.75
+    x_13_0_2_0 prod_cost_13_0 -13 transportation_cost_13_0 -1.2
+    x_14_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_14_0_0 2.5
+    x_14_0_0_0 prod_cost_14_0 -5 transportation_cost_14_0 -0.8
+    x_14_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_14_1_0 3
+    x_14_0_1_0 prod_cost_14_0 -9 transportation_cost_14_0 -1
+    x_14_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_14_2_0 3.75
+    x_14_0_2_0 prod_cost_14_0 -13 transportation_cost_14_0 -1.2
+    x_15_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_15_0_0 2.5
+    x_15_0_0_0 prod_cost_15_0 -5 transportation_cost_15_0 -0.8
+    x_15_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_15_1_0 3
+    x_15_0_1_0 prod_cost_15_0 -9 transportation_cost_15_0 -1
+    x_15_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_15_2_0 3.75
+    x_15_0_2_0 prod_cost_15_0 -13 transportation_cost_15_0 -1.2
+    x_16_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_16_0_0 2.5
+    x_16_0_0_0 prod_cost_16_0 -5 transportation_cost_16_0 -0.8
+    x_16_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_16_1_0 3
+    x_16_0_1_0 prod_cost_16_0 -9 transportation_cost_16_0 -1
+    x_16_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_16_2_0 3.75
+    x_16_0_2_0 prod_cost_16_0 -13 transportation_cost_16_0 -1.2
+    x_17_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_17_0_0 2.5
+    x_17_0_0_0 prod_cost_17_0 -5 transportation_cost_17_0 -0.8
+    x_17_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_17_1_0 3
+    x_17_0_1_0 prod_cost_17_0 -9 transportation_cost_17_0 -1
+    x_17_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_17_2_0 3.75
+    x_17_0_2_0 prod_cost_17_0 -13 transportation_cost_17_0 -1.2
+    x_18_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_18_0_0 2.5
+    x_18_0_0_0 prod_cost_18_0 -5 transportation_cost_18_0 -0.8
+    x_18_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_18_1_0 3
+    x_18_0_1_0 prod_cost_18_0 -9 transportation_cost_18_0 -1
+    x_18_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_18_2_0 3.75
+    x_18_0_2_0 prod_cost_18_0 -13 transportation_cost_18_0 -1.2
+    x_19_0_0_0 demand_fulfilment_0_0_0 1 mac_capacity_19_0_0 2.5
+    x_19_0_0_0 prod_cost_19_0 -5 transportation_cost_19_0 -0.8
+    x_19_0_1_0 demand_fulfilment_0_0_1 1 mac_capacity_19_1_0 3
+    x_19_0_1_0 prod_cost_19_0 -9 transportation_cost_19_0 -1
+    x_19_0_2_0 demand_fulfilment_0_0_2 1 mac_capacity_19_2_0 3.75
+    x_19_0_2_0 prod_cost_19_0 -13 transportation_cost_19_0 -1.2
+    f_rev_0_0_0 fix_frev0_0_0 1
+    f_rev_0_0_1 fix_frev0_0_1 1 hege_rate_r_0_1 1
+    f_rev_0_0_1 cf_p_c_0_1 -1 cf_ref_c_1 0.9999999999999997
+    f_rev_0_0_2 fix_frev0_0_2 1
+    f_rev_0_0_3 fix_frev0_0_3 1
+    f_rev_0_0_4 fix_frev0_0_4 1
+    f_rev_0_0_5 fix_frev0_0_5 1
+    f_rev_1_0_0 fix_frev0_1_0 1
+    f_rev_1_0_1 fix_frev0_1_1 1 hege_rate_r_1_1 1
+    f_rev_1_0_1 cf_p_c_1_1 -1 cf_ref_c_1 0.9999999999999997
+    f_rev_1_0_2 fix_frev0_1_2 1
+    f_rev_1_0_3 fix_frev0_1_3 1
+    f_rev_1_0_4 fix_frev0_1_4 1
+    f_rev_1_0_5 fix_frev0_1_5 1
+    f_cost_0_0_0 fix_fcost0_0_0 1
+    f_cost_0_0_1 fix_fcost0_0_1 1 hedge_rate_c_0_1 1
+    f_cost_0_0_1 cf_p_c_0_1 -1 cf_ref_c_1 0.9999999999999997
+    f_cost_0_0_2 fix_fcost0_0_2 1
+    f_cost_0_0_3 fix_fcost0_0_3 1
+    f_cost_0_0_4 fix_fcost0_0_4 1
+    f_cost_0_0_5 fix_fcost0_0_5 1
+    f_cost_1_0_0 fix_fcost0_1_0 1
+    f_cost_1_0_1 fix_fcost0_1_1 1 hedge_rate_c_1_1 1
+    f_cost_1_0_1 cf_p_c_1_1 -1 cf_ref_c_1 0.9999999999999997
+    f_cost_1_0_2 fix_fcost0_1_2 1
+    f_cost_1_0_3 fix_fcost0_1_3 1
+    f_cost_1_0_4 fix_fcost0_1_4 1
+    f_cost_1_0_5 fix_fcost0_1_5 1
+    call_b_0_0_0 fix_call_b0_0_0 1
+    call_b_0_0_1 fix_call_b0_0_1 1 call_limit_0_1_0 -1
+    call_b_0_0_2 fix_call_b0_0_2 1
+    call_b_0_0_3 fix_call_b0_0_3 1
+    call_b_0_0_4 fix_call_b0_0_4 1
+    call_b_0_0_5 fix_call_b0_0_5 1
+    call_b_1_0_0 fix_call_b0_1_0 1
+    call_b_1_0_1 fix_call_b0_1_1 1 call_limit_1_1_0 -1
+    call_b_1_0_2 fix_call_b0_1_2 1
+    call_b_1_0_3 fix_call_b0_1_3 1
+    call_b_1_0_4 fix_call_b0_1_4 1
+    call_b_1_0_5 fix_call_b0_1_5 1
+    put_b_0_0_0 fix_put_b0_0_0 1
+    put_b_0_0_1 fix_put_b0_0_1 1 put_limit_0_1_0 -1
+    put_b_0_0_2 fix_put_b0_0_2 1
+    put_b_0_0_3 fix_put_b0_0_3 1
+    put_b_0_0_4 fix_put_b0_0_4 1
+    put_b_0_0_5 fix_put_b0_0_5 1
+    put_b_1_0_0 fix_put_b0_1_0 1
+    put_b_1_0_1 fix_put_b0_1_1 1 put_limit_1_1_0 -1
+    put_b_1_0_2 fix_put_b0_1_2 1
+    put_b_1_0_3 fix_put_b0_1_3 1
+    put_b_1_0_4 fix_put_b0_1_4 1
+    put_b_1_0_5 fix_put_b0_1_5 1
+    cost_prod_0_0 prod_cost_0_0 1 production_cashflow_0_0 1
+    cost_prod_1_0 prod_cost_1_0 1 production_cashflow_0_0 1
+    cost_prod_2_0 prod_cost_2_0 1 production_cashflow_0_0 1
+    cost_prod_3_0 prod_cost_3_0 1 production_cashflow_0_0 1
+    cost_prod_4_0 prod_cost_4_0 1 production_cashflow_0_0 1
+    cost_prod_5_0 prod_cost_5_0 1 production_cashflow_0_0 1
+    cost_prod_6_0 prod_cost_6_0 1 production_cashflow_0_0 1
+    cost_prod_7_0 prod_cost_7_0 1 production_cashflow_0_0 1
+    cost_prod_8_0 prod_cost_8_0 1 production_cashflow_0_0 1
+    cost_prod_9_0 prod_cost_9_0 1 production_cashflow_0_0 1
+    cost_prod_10_0 prod_cost_10_0 1 production_cashflow_1_0 1
+    cost_prod_11_0 prod_cost_11_0 1 production_cashflow_1_0 1
+    cost_prod_12_0 prod_cost_12_0 1 production_cashflow_1_0 1
+    cost_prod_13_0 prod_cost_13_0 1 production_cashflow_1_0 1
+    cost_prod_14_0 prod_cost_14_0 1 production_cashflow_1_0 1
+    cost_prod_15_0 prod_cost_15_0 1 production_cashflow_1_0 1
+    cost_prod_16_0 prod_cost_16_0 1 production_cashflow_1_0 1
+    cost_prod_17_0 prod_cost_17_0 1 production_cashflow_1_0 1
+    cost_prod_18_0 prod_cost_18_0 1 production_cashflow_1_0 1
+    cost_prod_19_0 prod_cost_19_0 1 production_cashflow_1_0 1
+    cost_trans_0_0 transportation_cost_0_0 1 production_cashflow_0_0 1
+    cost_trans_1_0 transportation_cost_1_0 1 production_cashflow_0_0 1
+    cost_trans_2_0 transportation_cost_2_0 1 production_cashflow_0_0 1
+    cost_trans_3_0 transportation_cost_3_0 1 production_cashflow_0_0 1
+    cost_trans_4_0 transportation_cost_4_0 1 production_cashflow_0_0 1
+    cost_trans_5_0 transportation_cost_5_0 1 production_cashflow_0_0 1
+    cost_trans_6_0 transportation_cost_6_0 1 production_cashflow_0_0 1
+    cost_trans_7_0 transportation_cost_7_0 1 production_cashflow_0_0 1
+    cost_trans_8_0 transportation_cost_8_0 1 production_cashflow_0_0 1
+    cost_trans_9_0 transportation_cost_9_0 1 production_cashflow_0_0 1
+    cost_trans_10_0 transportation_cost_10_0 1 production_cashflow_1_0 1
+    cost_trans_11_0 transportation_cost_11_0 1 production_cashflow_1_0 1
+    cost_trans_12_0 transportation_cost_12_0 1 production_cashflow_1_0 1
+    cost_trans_13_0 transportation_cost_13_0 1 production_cashflow_1_0 1
+    cost_trans_14_0 transportation_cost_14_0 1 production_cashflow_1_0 1
+    cost_trans_15_0 transportation_cost_15_0 1 production_cashflow_1_0 1
+    cost_trans_16_0 transportation_cost_16_0 1 production_cashflow_1_0 1
+    cost_trans_17_0 transportation_cost_17_0 1 production_cashflow_1_0 1
+    cost_trans_18_0 transportation_cost_18_0 1 production_cashflow_1_0 1
+    cost_trans_19_0 transportation_cost_19_0 1 production_cashflow_1_0 1
+    cost_optionbuy_0 option_cost_0 1 cf_ref_c_0 1
+    revenue_0_0 revenue_in_market_0_0 1 production_cashflow_0_0 -1
+    cost_linebuild_0 OBJROW 1 line_building_cost_0 1
+    cost_linebuild_0 first_stage_fix_0 -1
+    cost_linebuild_1 OBJROW 1 line_building_cost_1 1
+    cost_linebuild_1 first_stage_fix_0 -1
+    cost_lineoperate_0 line_operating_cost_0 1 R3_0_0 -1
+    cost_lineoperate_1 line_operating_cost_1 1 R3_1_0 -1
+    cfp_0_0 production_cashflow_0_0 1 cf_p_c_0_0 -1
+    cfp_1_0 production_cashflow_1_0 1 cf_p_c_1_0 -1
+    cf_0_0 cf_p_c_0_0 1 cf_ref_c_0 -1
+    cf_1_0 cf_p_c_1_0 1 cf_ref_c_0 -1
+    cf_ref_0 cf_ref_c_0 1
+    V0_0_0_0 R0_0_0_0 1 mac_capacity_0_0_0 -75000
+    V0_0_0_0 R1_0_0_1 -1
+    V0_0_1_0 R0_0_1_0 1 mac_capacity_0_1_0 -75000
+    V0_0_1_0 R1_0_1_1 -1
+    V0_0_2_0 R0_0_2_0 1 mac_capacity_0_2_0 -75000
+    V0_0_2_0 R1_0_2_1 -1
+    V0_1_0_0 R0_1_0_0 1 mac_capacity_1_0_0 -75000
+    V0_1_0_0 R1_1_0_1 -1
+    V0_1_1_0 R0_1_1_0 1 mac_capacity_1_1_0 -75000
+    V0_1_1_0 R1_1_1_1 -1
+    V0_1_2_0 R0_1_2_0 1 mac_capacity_1_2_0 -75000
+    V0_1_2_0 R1_1_2_1 -1
+    V0_2_0_0 R0_2_0_0 1 mac_capacity_2_0_0 -75000
+    V0_2_0_0 R1_2_0_1 -1
+    V0_2_1_0 R0_2_1_0 1 mac_capacity_2_1_0 -75000
+    V0_2_1_0 R1_2_1_1 -1
+    V0_2_2_0 R0_2_2_0 1 mac_capacity_2_2_0 -75000
+    V0_2_2_0 R1_2_2_1 -1
+    V0_3_0_0 R0_3_0_0 1 mac_capacity_3_0_0 -75000
+    V0_3_0_0 R1_3_0_1 -1
+    V0_3_1_0 R0_3_1_0 1 mac_capacity_3_1_0 -75000
+    V0_3_1_0 R1_3_1_1 -1
+    V0_3_2_0 R0_3_2_0 1 mac_capacity_3_2_0 -75000
+    V0_3_2_0 R1_3_2_1 -1
+    V0_4_0_0 R0_4_0_0 1 mac_capacity_4_0_0 -75000
+    V0_4_0_0 R1_4_0_1 -1
+    V0_4_1_0 R0_4_1_0 1 mac_capacity_4_1_0 -75000
+    V0_4_1_0 R1_4_1_1 -1
+    V0_4_2_0 R0_4_2_0 1 mac_capacity_4_2_0 -75000
+    V0_4_2_0 R1_4_2_1 -1
+    V0_5_0_0 R0_5_0_0 1 mac_capacity_5_0_0 -75000
+    V0_5_0_0 R1_5_0_1 -1
+    V0_5_1_0 R0_5_1_0 1 mac_capacity_5_1_0 -75000
+    V0_5_1_0 R1_5_1_1 -1
+    V0_5_2_0 R0_5_2_0 1 mac_capacity_5_2_0 -75000
+    V0_5_2_0 R1_5_2_1 -1
+    V0_6_0_0 R0_6_0_0 1 mac_capacity_6_0_0 -75000
+    V0_6_0_0 R1_6_0_1 -1
+    V0_6_1_0 R0_6_1_0 1 mac_capacity_6_1_0 -75000
+    V0_6_1_0 R1_6_1_1 -1
+    V0_6_2_0 R0_6_2_0 1 mac_capacity_6_2_0 -75000
+    V0_6_2_0 R1_6_2_1 -1
+    V0_7_0_0 R0_7_0_0 1 mac_capacity_7_0_0 -75000
+    V0_7_0_0 R1_7_0_1 -1
+    V0_7_1_0 R0_7_1_0 1 mac_capacity_7_1_0 -75000
+    V0_7_1_0 R1_7_1_1 -1
+    V0_7_2_0 R0_7_2_0 1 mac_capacity_7_2_0 -75000
+    V0_7_2_0 R1_7_2_1 -1
+    V0_8_0_0 R0_8_0_0 1 mac_capacity_8_0_0 -75000
+    V0_8_0_0 R1_8_0_1 -1
+    V0_8_1_0 R0_8_1_0 1 mac_capacity_8_1_0 -75000
+    V0_8_1_0 R1_8_1_1 -1
+    V0_8_2_0 R0_8_2_0 1 mac_capacity_8_2_0 -75000
+    V0_8_2_0 R1_8_2_1 -1
+    V0_9_0_0 R0_9_0_0 1 mac_capacity_9_0_0 -75000
+    V0_9_0_0 R1_9_0_1 -1
+    V0_9_1_0 R0_9_1_0 1 mac_capacity_9_1_0 -75000
+    V0_9_1_0 R1_9_1_1 -1
+    V0_9_2_0 R0_9_2_0 1 mac_capacity_9_2_0 -75000
+    V0_9_2_0 R1_9_2_1 -1
+    V0_10_0_0 R0_10_0_0 1 mac_capacity_10_0_0 -75000
+    V0_10_0_0 R1_10_0_1 -1
+    V0_10_1_0 R0_10_1_0 1 mac_capacity_10_1_0 -75000
+    V0_10_1_0 R1_10_1_1 -1
+    V0_10_2_0 R0_10_2_0 1 mac_capacity_10_2_0 -75000
+    V0_10_2_0 R1_10_2_1 -1
+    V0_11_0_0 R0_11_0_0 1 mac_capacity_11_0_0 -75000
+    V0_11_0_0 R1_11_0_1 -1
+    V0_11_1_0 R0_11_1_0 1 mac_capacity_11_1_0 -75000
+    V0_11_1_0 R1_11_1_1 -1
+    V0_11_2_0 R0_11_2_0 1 mac_capacity_11_2_0 -75000
+    V0_11_2_0 R1_11_2_1 -1
+    V0_12_0_0 R0_12_0_0 1 mac_capacity_12_0_0 -75000
+    V0_12_0_0 R1_12_0_1 -1
+    V0_12_1_0 R0_12_1_0 1 mac_capacity_12_1_0 -75000
+    V0_12_1_0 R1_12_1_1 -1
+    V0_12_2_0 R0_12_2_0 1 mac_capacity_12_2_0 -75000
+    V0_12_2_0 R1_12_2_1 -1
+    V0_13_0_0 R0_13_0_0 1 mac_capacity_13_0_0 -75000
+    V0_13_0_0 R1_13_0_1 -1
+    V0_13_1_0 R0_13_1_0 1 mac_capacity_13_1_0 -75000
+    V0_13_1_0 R1_13_1_1 -1
+    V0_13_2_0 R0_13_2_0 1 mac_capacity_13_2_0 -75000
+    V0_13_2_0 R1_13_2_1 -1
+    V0_14_0_0 R0_14_0_0 1 mac_capacity_14_0_0 -75000
+    V0_14_0_0 R1_14_0_1 -1
+    V0_14_1_0 R0_14_1_0 1 mac_capacity_14_1_0 -75000
+    V0_14_1_0 R1_14_1_1 -1
+    V0_14_2_0 R0_14_2_0 1 mac_capacity_14_2_0 -75000
+    V0_14_2_0 R1_14_2_1 -1
+    V0_15_0_0 R0_15_0_0 1 mac_capacity_15_0_0 -75000
+    V0_15_0_0 R1_15_0_1 -1
+    V0_15_1_0 R0_15_1_0 1 mac_capacity_15_1_0 -75000
+    V0_15_1_0 R1_15_1_1 -1
+    V0_15_2_0 R0_15_2_0 1 mac_capacity_15_2_0 -75000
+    V0_15_2_0 R1_15_2_1 -1
+    V0_16_0_0 R0_16_0_0 1 mac_capacity_16_0_0 -75000
+    V0_16_0_0 R1_16_0_1 -1
+    V0_16_1_0 R0_16_1_0 1 mac_capacity_16_1_0 -75000
+    V0_16_1_0 R1_16_1_1 -1
+    V0_16_2_0 R0_16_2_0 1 mac_capacity_16_2_0 -75000
+    V0_16_2_0 R1_16_2_1 -1
+    V0_17_0_0 R0_17_0_0 1 mac_capacity_17_0_0 -75000
+    V0_17_0_0 R1_17_0_1 -1
+    V0_17_1_0 R0_17_1_0 1 mac_capacity_17_1_0 -75000
+    V0_17_1_0 R1_17_1_1 -1
+    V0_17_2_0 R0_17_2_0 1 mac_capacity_17_2_0 -75000
+    V0_17_2_0 R1_17_2_1 -1
+    V0_18_0_0 R0_18_0_0 1 mac_capacity_18_0_0 -75000
+    V0_18_0_0 R1_18_0_1 -1
+    V0_18_1_0 R0_18_1_0 1 mac_capacity_18_1_0 -75000
+    V0_18_1_0 R1_18_1_1 -1
+    V0_18_2_0 R0_18_2_0 1 mac_capacity_18_2_0 -75000
+    V0_18_2_0 R1_18_2_1 -1
+    V0_19_0_0 R0_19_0_0 1 mac_capacity_19_0_0 -75000
+    V0_19_0_0 R1_19_0_1 -1
+    V0_19_1_0 R0_19_1_0 1 mac_capacity_19_1_0 -75000
+    V0_19_1_0 R1_19_1_1 -1
+    V0_19_2_0 R0_19_2_0 1 mac_capacity_19_2_0 -75000
+    V0_19_2_0 R1_19_2_1 -1
+    V1_0_0 R3_0_0 1 production_cashflow_0_0 1
+    V1_0_0 R2_0_1 -1
+    V1_1_0 R3_1_0 1 production_cashflow_1_0 1
+    V1_1_0 R2_1_1 -1
+    V2_0 first_stage_fix_0 1 first_stage_loop_1 -1
+    npv_stage_1 OBJROW -1 calculate_npv_1 1
+    npv_stage_1 npv_stage_fix_1 -1
+    x2_0_0_1 demand_fulfilment_0_1_0 1 revenue_in_market_0_1 20
+    x2_0_1_1 demand_fulfilment_0_1_1 1 revenue_in_market_0_1 35
+    x2_0_2_1 demand_fulfilment_0_1_2 1 revenue_in_market_0_1 70
+    x_0_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_0_0_1 2.5
+    x_0_0_0_1 prod_cost_0_1 -7 transportation_cost_0_1 -0.2
+    x_0_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_0_1_1 3
+    x_0_0_1_1 prod_cost_0_1 -12.5 transportation_cost_0_1 -0.22
+    x_0_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_0_2_1 3.75
+    x_0_0_2_1 prod_cost_0_1 -17 transportation_cost_0_1 -0.25
+    x_1_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_1_0_1 2.5
+    x_1_0_0_1 prod_cost_1_1 -7 transportation_cost_1_1 -0.2
+    x_1_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_1_1_1 3
+    x_1_0_1_1 prod_cost_1_1 -12.5 transportation_cost_1_1 -0.22
+    x_1_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_1_2_1 3.75
+    x_1_0_2_1 prod_cost_1_1 -17 transportation_cost_1_1 -0.25
+    x_2_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_2_0_1 2.5
+    x_2_0_0_1 prod_cost_2_1 -7 transportation_cost_2_1 -0.2
+    x_2_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_2_1_1 3
+    x_2_0_1_1 prod_cost_2_1 -12.5 transportation_cost_2_1 -0.22
+    x_2_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_2_2_1 3.75
+    x_2_0_2_1 prod_cost_2_1 -17 transportation_cost_2_1 -0.25
+    x_3_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_3_0_1 2.5
+    x_3_0_0_1 prod_cost_3_1 -7 transportation_cost_3_1 -0.2
+    x_3_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_3_1_1 3
+    x_3_0_1_1 prod_cost_3_1 -12.5 transportation_cost_3_1 -0.22
+    x_3_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_3_2_1 3.75
+    x_3_0_2_1 prod_cost_3_1 -17 transportation_cost_3_1 -0.25
+    x_4_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_4_0_1 2.5
+    x_4_0_0_1 prod_cost_4_1 -7 transportation_cost_4_1 -0.2
+    x_4_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_4_1_1 3
+    x_4_0_1_1 prod_cost_4_1 -12.5 transportation_cost_4_1 -0.22
+    x_4_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_4_2_1 3.75
+    x_4_0_2_1 prod_cost_4_1 -17 transportation_cost_4_1 -0.25
+    x_5_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_5_0_1 2.5
+    x_5_0_0_1 prod_cost_5_1 -7 transportation_cost_5_1 -0.2
+    x_5_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_5_1_1 3
+    x_5_0_1_1 prod_cost_5_1 -12.5 transportation_cost_5_1 -0.22
+    x_5_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_5_2_1 3.75
+    x_5_0_2_1 prod_cost_5_1 -17 transportation_cost_5_1 -0.25
+    x_6_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_6_0_1 2.5
+    x_6_0_0_1 prod_cost_6_1 -7 transportation_cost_6_1 -0.2
+    x_6_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_6_1_1 3
+    x_6_0_1_1 prod_cost_6_1 -12.5 transportation_cost_6_1 -0.22
+    x_6_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_6_2_1 3.75
+    x_6_0_2_1 prod_cost_6_1 -17 transportation_cost_6_1 -0.25
+    x_7_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_7_0_1 2.5
+    x_7_0_0_1 prod_cost_7_1 -7 transportation_cost_7_1 -0.2
+    x_7_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_7_1_1 3
+    x_7_0_1_1 prod_cost_7_1 -12.5 transportation_cost_7_1 -0.22
+    x_7_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_7_2_1 3.75
+    x_7_0_2_1 prod_cost_7_1 -17 transportation_cost_7_1 -0.25
+    x_8_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_8_0_1 2.5
+    x_8_0_0_1 prod_cost_8_1 -7 transportation_cost_8_1 -0.2
+    x_8_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_8_1_1 3
+    x_8_0_1_1 prod_cost_8_1 -12.5 transportation_cost_8_1 -0.22
+    x_8_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_8_2_1 3.75
+    x_8_0_2_1 prod_cost_8_1 -17 transportation_cost_8_1 -0.25
+    x_9_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_9_0_1 2.5
+    x_9_0_0_1 prod_cost_9_1 -7 transportation_cost_9_1 -0.2
+    x_9_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_9_1_1 3
+    x_9_0_1_1 prod_cost_9_1 -12.5 transportation_cost_9_1 -0.22
+    x_9_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_9_2_1 3.75
+    x_9_0_2_1 prod_cost_9_1 -17 transportation_cost_9_1 -0.25
+    x_10_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_10_0_1 2.5
+    x_10_0_0_1 prod_cost_10_1 -5 transportation_cost_10_1 -0.8
+    x_10_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_10_1_1 3
+    x_10_0_1_1 prod_cost_10_1 -9 transportation_cost_10_1 -1
+    x_10_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_10_2_1 3.75
+    x_10_0_2_1 prod_cost_10_1 -13 transportation_cost_10_1 -1.2
+    x_11_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_11_0_1 2.5
+    x_11_0_0_1 prod_cost_11_1 -5 transportation_cost_11_1 -0.8
+    x_11_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_11_1_1 3
+    x_11_0_1_1 prod_cost_11_1 -9 transportation_cost_11_1 -1
+    x_11_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_11_2_1 3.75
+    x_11_0_2_1 prod_cost_11_1 -13 transportation_cost_11_1 -1.2
+    x_12_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_12_0_1 2.5
+    x_12_0_0_1 prod_cost_12_1 -5 transportation_cost_12_1 -0.8
+    x_12_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_12_1_1 3
+    x_12_0_1_1 prod_cost_12_1 -9 transportation_cost_12_1 -1
+    x_12_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_12_2_1 3.75
+    x_12_0_2_1 prod_cost_12_1 -13 transportation_cost_12_1 -1.2
+    x_13_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_13_0_1 2.5
+    x_13_0_0_1 prod_cost_13_1 -5 transportation_cost_13_1 -0.8
+    x_13_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_13_1_1 3
+    x_13_0_1_1 prod_cost_13_1 -9 transportation_cost_13_1 -1
+    x_13_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_13_2_1 3.75
+    x_13_0_2_1 prod_cost_13_1 -13 transportation_cost_13_1 -1.2
+    x_14_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_14_0_1 2.5
+    x_14_0_0_1 prod_cost_14_1 -5 transportation_cost_14_1 -0.8
+    x_14_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_14_1_1 3
+    x_14_0_1_1 prod_cost_14_1 -9 transportation_cost_14_1 -1
+    x_14_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_14_2_1 3.75
+    x_14_0_2_1 prod_cost_14_1 -13 transportation_cost_14_1 -1.2
+    x_15_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_15_0_1 2.5
+    x_15_0_0_1 prod_cost_15_1 -5 transportation_cost_15_1 -0.8
+    x_15_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_15_1_1 3
+    x_15_0_1_1 prod_cost_15_1 -9 transportation_cost_15_1 -1
+    x_15_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_15_2_1 3.75
+    x_15_0_2_1 prod_cost_15_1 -13 transportation_cost_15_1 -1.2
+    x_16_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_16_0_1 2.5
+    x_16_0_0_1 prod_cost_16_1 -5 transportation_cost_16_1 -0.8
+    x_16_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_16_1_1 3
+    x_16_0_1_1 prod_cost_16_1 -9 transportation_cost_16_1 -1
+    x_16_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_16_2_1 3.75
+    x_16_0_2_1 prod_cost_16_1 -13 transportation_cost_16_1 -1.2
+    x_17_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_17_0_1 2.5
+    x_17_0_0_1 prod_cost_17_1 -5 transportation_cost_17_1 -0.8
+    x_17_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_17_1_1 3
+    x_17_0_1_1 prod_cost_17_1 -9 transportation_cost_17_1 -1
+    x_17_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_17_2_1 3.75
+    x_17_0_2_1 prod_cost_17_1 -13 transportation_cost_17_1 -1.2
+    x_18_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_18_0_1 2.5
+    x_18_0_0_1 prod_cost_18_1 -5 transportation_cost_18_1 -0.8
+    x_18_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_18_1_1 3
+    x_18_0_1_1 prod_cost_18_1 -9 transportation_cost_18_1 -1
+    x_18_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_18_2_1 3.75
+    x_18_0_2_1 prod_cost_18_1 -13 transportation_cost_18_1 -1.2
+    x_19_0_0_1 demand_fulfilment_0_1_0 1 mac_capacity_19_0_1 2.5
+    x_19_0_0_1 prod_cost_19_1 -5 transportation_cost_19_1 -0.8
+    x_19_0_1_1 demand_fulfilment_0_1_1 1 mac_capacity_19_1_1 3
+    x_19_0_1_1 prod_cost_19_1 -9 transportation_cost_19_1 -1
+    x_19_0_2_1 demand_fulfilment_0_1_2 1 mac_capacity_19_2_1 3.75
+    x_19_0_2_1 prod_cost_19_1 -13 transportation_cost_19_1 -1.2
+    f_rev_0_1_2 hege_rate_r_0_2 1 cf_p_c_0_2 -1
+    f_rev_0_1_2 cf_ref_c_2 0.9999999999999997
+    f_rev_1_1_2 hege_rate_r_1_2 1 cf_p_c_1_2 -1
+    f_rev_1_1_2 cf_ref_c_2 0.9999999999999999
+    f_cost_0_1_2 hedge_rate_c_0_2 1 cf_p_c_0_2 -1
+    f_cost_0_1_2 cf_ref_c_2 0.9999999999999997
+    f_cost_1_1_2 hedge_rate_c_1_2 1 cf_p_c_1_2 -1
+    f_cost_1_1_2 cf_ref_c_2 0.9999999999999999
+    call_b_0_1_2 option_cost_1 -0.1714423883180669 call_limit_0_2_1 -1
+    call_b_1_1_2 option_cost_1 -0.1714423883180665 call_limit_1_2_1 -1
+    put_b_0_1_2 option_cost_1 -0.1714423883180669 put_limit_0_2_1 -1
+    put_b_1_1_2 option_cost_1 -0.1714423883180665 put_limit_1_2_1 -1
+    call_e_0_0_1 hedge_rate_c_0_1 1 call_limit_0_1_0 1
+    call_e_0_0_1 cf_p_c_0_1 -1 cf_ref_c_1 0.9999999999999997
+    call_e_1_0_1 hedge_rate_c_1_1 1 call_limit_1_1_0 1
+    call_e_1_0_1 cf_p_c_1_1 -1 cf_ref_c_1 0.9999999999999997
+    put_e_0_0_1 hege_rate_r_0_1 -1 put_limit_0_1_0 1
+    put_e_0_0_1 cf_p_c_0_1 1 cf_ref_c_1 -0.9999999999999997
+    put_e_1_0_1 hege_rate_r_1_1 -1 put_limit_1_1_0 1
+    put_e_1_0_1 cf_p_c_1_1 1 cf_ref_c_1 -0.9999999999999997
+    cost_prod_0_1 prod_cost_0_1 1 production_cashflow_0_1 1
+    cost_prod_0_1 hedge_rate_c_0_1 -1
+    cost_prod_1_1 prod_cost_1_1 1 production_cashflow_0_1 1
+    cost_prod_1_1 hedge_rate_c_0_1 -1
+    cost_prod_2_1 prod_cost_2_1 1 production_cashflow_0_1 1
+    cost_prod_2_1 hedge_rate_c_0_1 -1
+    cost_prod_3_1 prod_cost_3_1 1 production_cashflow_0_1 1
+    cost_prod_3_1 hedge_rate_c_0_1 -1
+    cost_prod_4_1 prod_cost_4_1 1 production_cashflow_0_1 1
+    cost_prod_4_1 hedge_rate_c_0_1 -1
+    cost_prod_5_1 prod_cost_5_1 1 production_cashflow_0_1 1
+    cost_prod_5_1 hedge_rate_c_0_1 -1
+    cost_prod_6_1 prod_cost_6_1 1 production_cashflow_0_1 1
+    cost_prod_6_1 hedge_rate_c_0_1 -1
+    cost_prod_7_1 prod_cost_7_1 1 production_cashflow_0_1 1
+    cost_prod_7_1 hedge_rate_c_0_1 -1
+    cost_prod_8_1 prod_cost_8_1 1 production_cashflow_0_1 1
+    cost_prod_8_1 hedge_rate_c_0_1 -1
+    cost_prod_9_1 prod_cost_9_1 1 production_cashflow_0_1 1
+    cost_prod_9_1 hedge_rate_c_0_1 -1
+    cost_prod_10_1 prod_cost_10_1 1 production_cashflow_1_1 1
+    cost_prod_10_1 hedge_rate_c_1_1 -1
+    cost_prod_11_1 prod_cost_11_1 1 production_cashflow_1_1 1
+    cost_prod_11_1 hedge_rate_c_1_1 -1
+    cost_prod_12_1 prod_cost_12_1 1 production_cashflow_1_1 1
+    cost_prod_12_1 hedge_rate_c_1_1 -1
+    cost_prod_13_1 prod_cost_13_1 1 production_cashflow_1_1 1
+    cost_prod_13_1 hedge_rate_c_1_1 -1
+    cost_prod_14_1 prod_cost_14_1 1 production_cashflow_1_1 1
+    cost_prod_14_1 hedge_rate_c_1_1 -1
+    cost_prod_15_1 prod_cost_15_1 1 production_cashflow_1_1 1
+    cost_prod_15_1 hedge_rate_c_1_1 -1
+    cost_prod_16_1 prod_cost_16_1 1 production_cashflow_1_1 1
+    cost_prod_16_1 hedge_rate_c_1_1 -1
+    cost_prod_17_1 prod_cost_17_1 1 production_cashflow_1_1 1
+    cost_prod_17_1 hedge_rate_c_1_1 -1
+    cost_prod_18_1 prod_cost_18_1 1 production_cashflow_1_1 1
+    cost_prod_18_1 hedge_rate_c_1_1 -1
+    cost_prod_19_1 prod_cost_19_1 1 production_cashflow_1_1 1
+    cost_prod_19_1 hedge_rate_c_1_1 -1
+    cost_trans_0_1 transportation_cost_0_1 1 production_cashflow_0_1 1
+    cost_trans_0_1 hedge_rate_c_0_1 -1
+    cost_trans_1_1 transportation_cost_1_1 1 production_cashflow_0_1 1
+    cost_trans_1_1 hedge_rate_c_0_1 -1
+    cost_trans_2_1 transportation_cost_2_1 1 production_cashflow_0_1 1
+    cost_trans_2_1 hedge_rate_c_0_1 -1
+    cost_trans_3_1 transportation_cost_3_1 1 production_cashflow_0_1 1
+    cost_trans_3_1 hedge_rate_c_0_1 -1
+    cost_trans_4_1 transportation_cost_4_1 1 production_cashflow_0_1 1
+    cost_trans_4_1 hedge_rate_c_0_1 -1
+    cost_trans_5_1 transportation_cost_5_1 1 production_cashflow_0_1 1
+    cost_trans_5_1 hedge_rate_c_0_1 -1
+    cost_trans_6_1 transportation_cost_6_1 1 production_cashflow_0_1 1
+    cost_trans_6_1 hedge_rate_c_0_1 -1
+    cost_trans_7_1 transportation_cost_7_1 1 production_cashflow_0_1 1
+    cost_trans_7_1 hedge_rate_c_0_1 -1
+    cost_trans_8_1 transportation_cost_8_1 1 production_cashflow_0_1 1
+    cost_trans_8_1 hedge_rate_c_0_1 -1
+    cost_trans_9_1 transportation_cost_9_1 1 production_cashflow_0_1 1
+    cost_trans_9_1 hedge_rate_c_0_1 -1
+    cost_trans_10_1 transportation_cost_10_1 1 production_cashflow_1_1 1
+    cost_trans_10_1 hedge_rate_c_1_1 -1
+    cost_trans_11_1 transportation_cost_11_1 1 production_cashflow_1_1 1
+    cost_trans_11_1 hedge_rate_c_1_1 -1
+    cost_trans_12_1 transportation_cost_12_1 1 production_cashflow_1_1 1
+    cost_trans_12_1 hedge_rate_c_1_1 -1
+    cost_trans_13_1 transportation_cost_13_1 1 production_cashflow_1_1 1
+    cost_trans_13_1 hedge_rate_c_1_1 -1
+    cost_trans_14_1 transportation_cost_14_1 1 production_cashflow_1_1 1
+    cost_trans_14_1 hedge_rate_c_1_1 -1
+    cost_trans_15_1 transportation_cost_15_1 1 production_cashflow_1_1 1
+    cost_trans_15_1 hedge_rate_c_1_1 -1
+    cost_trans_16_1 transportation_cost_16_1 1 production_cashflow_1_1 1
+    cost_trans_16_1 hedge_rate_c_1_1 -1
+    cost_trans_17_1 transportation_cost_17_1 1 production_cashflow_1_1 1
+    cost_trans_17_1 hedge_rate_c_1_1 -1
+    cost_trans_18_1 transportation_cost_18_1 1 production_cashflow_1_1 1
+    cost_trans_18_1 hedge_rate_c_1_1 -1
+    cost_trans_19_1 transportation_cost_19_1 1 production_cashflow_1_1 1
+    cost_trans_19_1 hedge_rate_c_1_1 -1
+    cost_optionbuy_1 option_cost_1 1 cf_ref_c_1 1
+    revenue_0_1 revenue_in_market_0_1 1 production_cashflow_0_1 -1
+    revenue_0_1 hege_rate_r_0_1 1
+    cfp_0_1 production_cashflow_0_1 1 cf_p_c_0_1 -1
+    cfp_1_1 production_cashflow_1_1 1 cf_p_c_1_1 -1
+    cf_0_1 cf_p_c_0_1 1 cf_ref_c_1 -0.9999999999999997
+    cf_1_1 cf_p_c_1_1 1 cf_ref_c_1 -0.9999999999999999
+    cf_ref_1 cf_ref_c_1 1 calculate_npv_1 -0.9259259259259258
+    V0_0_0_1 R1_0_0_1 1 mac_capacity_0_0_1 -75000
+    V0_0_0_1 R1_0_0_2 -1
+    V0_0_1_1 R1_0_1_1 1 mac_capacity_0_1_1 -75000
+    V0_0_1_1 R1_0_1_2 -1
+    V0_0_2_1 R1_0_2_1 1 mac_capacity_0_2_1 -75000
+    V0_0_2_1 R1_0_2_2 -1
+    V0_1_0_1 R1_1_0_1 1 mac_capacity_1_0_1 -75000
+    V0_1_0_1 R1_1_0_2 -1
+    V0_1_1_1 R1_1_1_1 1 mac_capacity_1_1_1 -75000
+    V0_1_1_1 R1_1_1_2 -1
+    V0_1_2_1 R1_1_2_1 1 mac_capacity_1_2_1 -75000
+    V0_1_2_1 R1_1_2_2 -1
+    V0_2_0_1 R1_2_0_1 1 mac_capacity_2_0_1 -75000
+    V0_2_0_1 R1_2_0_2 -1
+    V0_2_1_1 R1_2_1_1 1 mac_capacity_2_1_1 -75000
+    V0_2_1_1 R1_2_1_2 -1
+    V0_2_2_1 R1_2_2_1 1 mac_capacity_2_2_1 -75000
+    V0_2_2_1 R1_2_2_2 -1
+    V0_3_0_1 R1_3_0_1 1 mac_capacity_3_0_1 -75000
+    V0_3_0_1 R1_3_0_2 -1
+    V0_3_1_1 R1_3_1_1 1 mac_capacity_3_1_1 -75000
+    V0_3_1_1 R1_3_1_2 -1
+    V0_3_2_1 R1_3_2_1 1 mac_capacity_3_2_1 -75000
+    V0_3_2_1 R1_3_2_2 -1
+    V0_4_0_1 R1_4_0_1 1 mac_capacity_4_0_1 -75000
+    V0_4_0_1 R1_4_0_2 -1
+    V0_4_1_1 R1_4_1_1 1 mac_capacity_4_1_1 -75000
+    V0_4_1_1 R1_4_1_2 -1
+    V0_4_2_1 R1_4_2_1 1 mac_capacity_4_2_1 -75000
+    V0_4_2_1 R1_4_2_2 -1
+    V0_5_0_1 R1_5_0_1 1 mac_capacity_5_0_1 -75000
+    V0_5_0_1 R1_5_0_2 -1
+    V0_5_1_1 R1_5_1_1 1 mac_capacity_5_1_1 -75000
+    V0_5_1_1 R1_5_1_2 -1
+    V0_5_2_1 R1_5_2_1 1 mac_capacity_5_2_1 -75000
+    V0_5_2_1 R1_5_2_2 -1
+    V0_6_0_1 R1_6_0_1 1 mac_capacity_6_0_1 -75000
+    V0_6_0_1 R1_6_0_2 -1
+    V0_6_1_1 R1_6_1_1 1 mac_capacity_6_1_1 -75000
+    V0_6_1_1 R1_6_1_2 -1
+    V0_6_2_1 R1_6_2_1 1 mac_capacity_6_2_1 -75000
+    V0_6_2_1 R1_6_2_2 -1
+    V0_7_0_1 R1_7_0_1 1 mac_capacity_7_0_1 -75000
+    V0_7_0_1 R1_7_0_2 -1
+    V0_7_1_1 R1_7_1_1 1 mac_capacity_7_1_1 -75000
+    V0_7_1_1 R1_7_1_2 -1
+    V0_7_2_1 R1_7_2_1 1 mac_capacity_7_2_1 -75000
+    V0_7_2_1 R1_7_2_2 -1
+    V0_8_0_1 R1_8_0_1 1 mac_capacity_8_0_1 -75000
+    V0_8_0_1 R1_8_0_2 -1
+    V0_8_1_1 R1_8_1_1 1 mac_capacity_8_1_1 -75000
+    V0_8_1_1 R1_8_1_2 -1
+    V0_8_2_1 R1_8_2_1 1 mac_capacity_8_2_1 -75000
+    V0_8_2_1 R1_8_2_2 -1
+    V0_9_0_1 R1_9_0_1 1 mac_capacity_9_0_1 -75000
+    V0_9_0_1 R1_9_0_2 -1
+    V0_9_1_1 R1_9_1_1 1 mac_capacity_9_1_1 -75000
+    V0_9_1_1 R1_9_1_2 -1
+    V0_9_2_1 R1_9_2_1 1 mac_capacity_9_2_1 -75000
+    V0_9_2_1 R1_9_2_2 -1
+    V0_10_0_1 R1_10_0_1 1 mac_capacity_10_0_1 -75000
+    V0_10_0_1 R1_10_0_2 -1
+    V0_10_1_1 R1_10_1_1 1 mac_capacity_10_1_1 -75000
+    V0_10_1_1 R1_10_1_2 -1
+    V0_10_2_1 R1_10_2_1 1 mac_capacity_10_2_1 -75000
+    V0_10_2_1 R1_10_2_2 -1
+    V0_11_0_1 R1_11_0_1 1 mac_capacity_11_0_1 -75000
+    V0_11_0_1 R1_11_0_2 -1
+    V0_11_1_1 R1_11_1_1 1 mac_capacity_11_1_1 -75000
+    V0_11_1_1 R1_11_1_2 -1
+    V0_11_2_1 R1_11_2_1 1 mac_capacity_11_2_1 -75000
+    V0_11_2_1 R1_11_2_2 -1
+    V0_12_0_1 R1_12_0_1 1 mac_capacity_12_0_1 -75000
+    V0_12_0_1 R1_12_0_2 -1
+    V0_12_1_1 R1_12_1_1 1 mac_capacity_12_1_1 -75000
+    V0_12_1_1 R1_12_1_2 -1
+    V0_12_2_1 R1_12_2_1 1 mac_capacity_12_2_1 -75000
+    V0_12_2_1 R1_12_2_2 -1
+    V0_13_0_1 R1_13_0_1 1 mac_capacity_13_0_1 -75000
+    V0_13_0_1 R1_13_0_2 -1
+    V0_13_1_1 R1_13_1_1 1 mac_capacity_13_1_1 -75000
+    V0_13_1_1 R1_13_1_2 -1
+    V0_13_2_1 R1_13_2_1 1 mac_capacity_13_2_1 -75000
+    V0_13_2_1 R1_13_2_2 -1
+    V0_14_0_1 R1_14_0_1 1 mac_capacity_14_0_1 -75000
+    V0_14_0_1 R1_14_0_2 -1
+    V0_14_1_1 R1_14_1_1 1 mac_capacity_14_1_1 -75000
+    V0_14_1_1 R1_14_1_2 -1
+    V0_14_2_1 R1_14_2_1 1 mac_capacity_14_2_1 -75000
+    V0_14_2_1 R1_14_2_2 -1
+    V0_15_0_1 R1_15_0_1 1 mac_capacity_15_0_1 -75000
+    V0_15_0_1 R1_15_0_2 -1
+    V0_15_1_1 R1_15_1_1 1 mac_capacity_15_1_1 -75000
+    V0_15_1_1 R1_15_1_2 -1
+    V0_15_2_1 R1_15_2_1 1 mac_capacity_15_2_1 -75000
+    V0_15_2_1 R1_15_2_2 -1
+    V0_16_0_1 R1_16_0_1 1 mac_capacity_16_0_1 -75000
+    V0_16_0_1 R1_16_0_2 -1
+    V0_16_1_1 R1_16_1_1 1 mac_capacity_16_1_1 -75000
+    V0_16_1_1 R1_16_1_2 -1
+    V0_16_2_1 R1_16_2_1 1 mac_capacity_16_2_1 -75000
+    V0_16_2_1 R1_16_2_2 -1
+    V0_17_0_1 R1_17_0_1 1 mac_capacity_17_0_1 -75000
+    V0_17_0_1 R1_17_0_2 -1
+    V0_17_1_1 R1_17_1_1 1 mac_capacity_17_1_1 -75000
+    V0_17_1_1 R1_17_1_2 -1
+    V0_17_2_1 R1_17_2_1 1 mac_capacity_17_2_1 -75000
+    V0_17_2_1 R1_17_2_2 -1
+    V0_18_0_1 R1_18_0_1 1 mac_capacity_18_0_1 -75000
+    V0_18_0_1 R1_18_0_2 -1
+    V0_18_1_1 R1_18_1_1 1 mac_capacity_18_1_1 -75000
+    V0_18_1_1 R1_18_1_2 -1
+    V0_18_2_1 R1_18_2_1 1 mac_capacity_18_2_1 -75000
+    V0_18_2_1 R1_18_2_2 -1
+    V0_19_0_1 R1_19_0_1 1 mac_capacity_19_0_1 -75000
+    V0_19_0_1 R1_19_0_2 -1
+    V0_19_1_1 R1_19_1_1 1 mac_capacity_19_1_1 -75000
+    V0_19_1_1 R1_19_1_2 -1
+    V0_19_2_1 R1_19_2_1 1 mac_capacity_19_2_1 -75000
+    V0_19_2_1 R1_19_2_2 -1
+    V1_0_1 R2_0_1 1 production_cashflow_0_1 1
+    V1_0_1 hedge_rate_c_0_1 -1 R2_0_2 -1
+    V1_1_1 R2_1_1 1 production_cashflow_1_1 1
+    V1_1_1 hedge_rate_c_1_1 -1 R2_1_2 -1
+    V2_1 first_stage_loop_1 1 first_stage_loop_2 -1
+    V3_1 npv_stage_fix_1 1 npv_stage_loop_2 -1
+    npv_stage_2 OBJROW -1 calculate_npv_2 1
+    npv_stage_2 npv_stage_loop_2 -1
+    x2_0_0_2 demand_fulfilment_0_2_0 1 revenue_in_market_0_2 20
+    x2_0_1_2 demand_fulfilment_0_2_1 1 revenue_in_market_0_2 35
+    x2_0_2_2 demand_fulfilment_0_2_2 1 revenue_in_market_0_2 70
+    x_0_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_0_0_2 2.5
+    x_0_0_0_2 prod_cost_0_2 -7 transportation_cost_0_2 -0.2
+    x_0_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_0_1_2 3
+    x_0_0_1_2 prod_cost_0_2 -12.5 transportation_cost_0_2 -0.22
+    x_0_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_0_2_2 3.75
+    x_0_0_2_2 prod_cost_0_2 -17 transportation_cost_0_2 -0.25
+    x_1_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_1_0_2 2.5
+    x_1_0_0_2 prod_cost_1_2 -7 transportation_cost_1_2 -0.2
+    x_1_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_1_1_2 3
+    x_1_0_1_2 prod_cost_1_2 -12.5 transportation_cost_1_2 -0.22
+    x_1_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_1_2_2 3.75
+    x_1_0_2_2 prod_cost_1_2 -17 transportation_cost_1_2 -0.25
+    x_2_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_2_0_2 2.5
+    x_2_0_0_2 prod_cost_2_2 -7 transportation_cost_2_2 -0.2
+    x_2_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_2_1_2 3
+    x_2_0_1_2 prod_cost_2_2 -12.5 transportation_cost_2_2 -0.22
+    x_2_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_2_2_2 3.75
+    x_2_0_2_2 prod_cost_2_2 -17 transportation_cost_2_2 -0.25
+    x_3_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_3_0_2 2.5
+    x_3_0_0_2 prod_cost_3_2 -7 transportation_cost_3_2 -0.2
+    x_3_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_3_1_2 3
+    x_3_0_1_2 prod_cost_3_2 -12.5 transportation_cost_3_2 -0.22
+    x_3_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_3_2_2 3.75
+    x_3_0_2_2 prod_cost_3_2 -17 transportation_cost_3_2 -0.25
+    x_4_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_4_0_2 2.5
+    x_4_0_0_2 prod_cost_4_2 -7 transportation_cost_4_2 -0.2
+    x_4_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_4_1_2 3
+    x_4_0_1_2 prod_cost_4_2 -12.5 transportation_cost_4_2 -0.22
+    x_4_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_4_2_2 3.75
+    x_4_0_2_2 prod_cost_4_2 -17 transportation_cost_4_2 -0.25
+    x_5_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_5_0_2 2.5
+    x_5_0_0_2 prod_cost_5_2 -7 transportation_cost_5_2 -0.2
+    x_5_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_5_1_2 3
+    x_5_0_1_2 prod_cost_5_2 -12.5 transportation_cost_5_2 -0.22
+    x_5_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_5_2_2 3.75
+    x_5_0_2_2 prod_cost_5_2 -17 transportation_cost_5_2 -0.25
+    x_6_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_6_0_2 2.5
+    x_6_0_0_2 prod_cost_6_2 -7 transportation_cost_6_2 -0.2
+    x_6_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_6_1_2 3
+    x_6_0_1_2 prod_cost_6_2 -12.5 transportation_cost_6_2 -0.22
+    x_6_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_6_2_2 3.75
+    x_6_0_2_2 prod_cost_6_2 -17 transportation_cost_6_2 -0.25
+    x_7_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_7_0_2 2.5
+    x_7_0_0_2 prod_cost_7_2 -7 transportation_cost_7_2 -0.2
+    x_7_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_7_1_2 3
+    x_7_0_1_2 prod_cost_7_2 -12.5 transportation_cost_7_2 -0.22
+    x_7_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_7_2_2 3.75
+    x_7_0_2_2 prod_cost_7_2 -17 transportation_cost_7_2 -0.25
+    x_8_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_8_0_2 2.5
+    x_8_0_0_2 prod_cost_8_2 -7 transportation_cost_8_2 -0.2
+    x_8_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_8_1_2 3
+    x_8_0_1_2 prod_cost_8_2 -12.5 transportation_cost_8_2 -0.22
+    x_8_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_8_2_2 3.75
+    x_8_0_2_2 prod_cost_8_2 -17 transportation_cost_8_2 -0.25
+    x_9_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_9_0_2 2.5
+    x_9_0_0_2 prod_cost_9_2 -7 transportation_cost_9_2 -0.2
+    x_9_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_9_1_2 3
+    x_9_0_1_2 prod_cost_9_2 -12.5 transportation_cost_9_2 -0.22
+    x_9_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_9_2_2 3.75
+    x_9_0_2_2 prod_cost_9_2 -17 transportation_cost_9_2 -0.25
+    x_10_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_10_0_2 2.5
+    x_10_0_0_2 prod_cost_10_2 -5 transportation_cost_10_2 -0.8
+    x_10_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_10_1_2 3
+    x_10_0_1_2 prod_cost_10_2 -9 transportation_cost_10_2 -1
+    x_10_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_10_2_2 3.75
+    x_10_0_2_2 prod_cost_10_2 -13 transportation_cost_10_2 -1.2
+    x_11_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_11_0_2 2.5
+    x_11_0_0_2 prod_cost_11_2 -5 transportation_cost_11_2 -0.8
+    x_11_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_11_1_2 3
+    x_11_0_1_2 prod_cost_11_2 -9 transportation_cost_11_2 -1
+    x_11_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_11_2_2 3.75
+    x_11_0_2_2 prod_cost_11_2 -13 transportation_cost_11_2 -1.2
+    x_12_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_12_0_2 2.5
+    x_12_0_0_2 prod_cost_12_2 -5 transportation_cost_12_2 -0.8
+    x_12_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_12_1_2 3
+    x_12_0_1_2 prod_cost_12_2 -9 transportation_cost_12_2 -1
+    x_12_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_12_2_2 3.75
+    x_12_0_2_2 prod_cost_12_2 -13 transportation_cost_12_2 -1.2
+    x_13_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_13_0_2 2.5
+    x_13_0_0_2 prod_cost_13_2 -5 transportation_cost_13_2 -0.8
+    x_13_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_13_1_2 3
+    x_13_0_1_2 prod_cost_13_2 -9 transportation_cost_13_2 -1
+    x_13_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_13_2_2 3.75
+    x_13_0_2_2 prod_cost_13_2 -13 transportation_cost_13_2 -1.2
+    x_14_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_14_0_2 2.5
+    x_14_0_0_2 prod_cost_14_2 -5 transportation_cost_14_2 -0.8
+    x_14_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_14_1_2 3
+    x_14_0_1_2 prod_cost_14_2 -9 transportation_cost_14_2 -1
+    x_14_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_14_2_2 3.75
+    x_14_0_2_2 prod_cost_14_2 -13 transportation_cost_14_2 -1.2
+    x_15_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_15_0_2 2.5
+    x_15_0_0_2 prod_cost_15_2 -5 transportation_cost_15_2 -0.8
+    x_15_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_15_1_2 3
+    x_15_0_1_2 prod_cost_15_2 -9 transportation_cost_15_2 -1
+    x_15_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_15_2_2 3.75
+    x_15_0_2_2 prod_cost_15_2 -13 transportation_cost_15_2 -1.2
+    x_16_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_16_0_2 2.5
+    x_16_0_0_2 prod_cost_16_2 -5 transportation_cost_16_2 -0.8
+    x_16_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_16_1_2 3
+    x_16_0_1_2 prod_cost_16_2 -9 transportation_cost_16_2 -1
+    x_16_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_16_2_2 3.75
+    x_16_0_2_2 prod_cost_16_2 -13 transportation_cost_16_2 -1.2
+    x_17_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_17_0_2 2.5
+    x_17_0_0_2 prod_cost_17_2 -5 transportation_cost_17_2 -0.8
+    x_17_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_17_1_2 3
+    x_17_0_1_2 prod_cost_17_2 -9 transportation_cost_17_2 -1
+    x_17_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_17_2_2 3.75
+    x_17_0_2_2 prod_cost_17_2 -13 transportation_cost_17_2 -1.2
+    x_18_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_18_0_2 2.5
+    x_18_0_0_2 prod_cost_18_2 -5 transportation_cost_18_2 -0.8
+    x_18_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_18_1_2 3
+    x_18_0_1_2 prod_cost_18_2 -9 transportation_cost_18_2 -1
+    x_18_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_18_2_2 3.75
+    x_18_0_2_2 prod_cost_18_2 -13 transportation_cost_18_2 -1.2
+    x_19_0_0_2 demand_fulfilment_0_2_0 1 mac_capacity_19_0_2 2.5
+    x_19_0_0_2 prod_cost_19_2 -5 transportation_cost_19_2 -0.8
+    x_19_0_1_2 demand_fulfilment_0_2_1 1 mac_capacity_19_1_2 3
+    x_19_0_1_2 prod_cost_19_2 -9 transportation_cost_19_2 -1
+    x_19_0_2_2 demand_fulfilment_0_2_2 1 mac_capacity_19_2_2 3.75
+    x_19_0_2_2 prod_cost_19_2 -13 transportation_cost_19_2 -1.2
+    f_rev_0_2_3 hege_rate_r_0_3 1 cf_p_c_0_3 -1
+    f_rev_0_2_3 cf_ref_c_3 0.9999999999999997
+    f_rev_1_2_3 hege_rate_r_1_3 1 cf_p_c_1_3 -1
+    f_rev_1_2_3 cf_ref_c_3 1
+    f_cost_0_2_3 hedge_rate_c_0_3 1 cf_p_c_0_3 -1
+    f_cost_0_2_3 cf_ref_c_3 0.9999999999999997
+    f_cost_1_2_3 hedge_rate_c_1_3 1 cf_p_c_1_3 -1
+    f_cost_1_2_3 cf_ref_c_3 1
+    call_b_0_2_3 option_cost_2 -0.1714423883180669 call_limit_0_3_2 -1
+    call_b_1_2_3 option_cost_2 -0.1714423883180665 call_limit_1_3_2 -1
+    put_b_0_2_3 option_cost_2 -0.1714423883180669 put_limit_0_3_2 -1
+    put_b_1_2_3 option_cost_2 -0.1714423883180665 put_limit_1_3_2 -1
+    call_e_0_1_2 hedge_rate_c_0_2 1 call_limit_0_2_1 1
+    call_e_0_1_2 cf_p_c_0_2 -1 cf_ref_c_2 0.9999999999999997
+    call_e_1_1_2 hedge_rate_c_1_2 1 call_limit_1_2_1 1
+    call_e_1_1_2 cf_p_c_1_2 -1 cf_ref_c_2 0.9999999999999999
+    put_e_0_1_2 hege_rate_r_0_2 -1 put_limit_0_2_1 1
+    put_e_0_1_2 cf_p_c_0_2 1 cf_ref_c_2 -0.9999999999999997
+    put_e_1_1_2 hege_rate_r_1_2 -1 put_limit_1_2_1 1
+    put_e_1_1_2 cf_p_c_1_2 1 cf_ref_c_2 -0.9999999999999999
+    cost_prod_0_2 prod_cost_0_2 1 production_cashflow_0_2 1
+    cost_prod_0_2 hedge_rate_c_0_2 -1
+    cost_prod_1_2 prod_cost_1_2 1 production_cashflow_0_2 1
+    cost_prod_1_2 hedge_rate_c_0_2 -1
+    cost_prod_2_2 prod_cost_2_2 1 production_cashflow_0_2 1
+    cost_prod_2_2 hedge_rate_c_0_2 -1
+    cost_prod_3_2 prod_cost_3_2 1 production_cashflow_0_2 1
+    cost_prod_3_2 hedge_rate_c_0_2 -1
+    cost_prod_4_2 prod_cost_4_2 1 production_cashflow_0_2 1
+    cost_prod_4_2 hedge_rate_c_0_2 -1
+    cost_prod_5_2 prod_cost_5_2 1 production_cashflow_0_2 1
+    cost_prod_5_2 hedge_rate_c_0_2 -1
+    cost_prod_6_2 prod_cost_6_2 1 production_cashflow_0_2 1
+    cost_prod_6_2 hedge_rate_c_0_2 -1
+    cost_prod_7_2 prod_cost_7_2 1 production_cashflow_0_2 1
+    cost_prod_7_2 hedge_rate_c_0_2 -1
+    cost_prod_8_2 prod_cost_8_2 1 production_cashflow_0_2 1
+    cost_prod_8_2 hedge_rate_c_0_2 -1
+    cost_prod_9_2 prod_cost_9_2 1 production_cashflow_0_2 1
+    cost_prod_9_2 hedge_rate_c_0_2 -1
+    cost_prod_10_2 prod_cost_10_2 1 production_cashflow_1_2 1
+    cost_prod_10_2 hedge_rate_c_1_2 -1
+    cost_prod_11_2 prod_cost_11_2 1 production_cashflow_1_2 1
+    cost_prod_11_2 hedge_rate_c_1_2 -1
+    cost_prod_12_2 prod_cost_12_2 1 production_cashflow_1_2 1
+    cost_prod_12_2 hedge_rate_c_1_2 -1
+    cost_prod_13_2 prod_cost_13_2 1 production_cashflow_1_2 1
+    cost_prod_13_2 hedge_rate_c_1_2 -1
+    cost_prod_14_2 prod_cost_14_2 1 production_cashflow_1_2 1
+    cost_prod_14_2 hedge_rate_c_1_2 -1
+    cost_prod_15_2 prod_cost_15_2 1 production_cashflow_1_2 1
+    cost_prod_15_2 hedge_rate_c_1_2 -1
+    cost_prod_16_2 prod_cost_16_2 1 production_cashflow_1_2 1
+    cost_prod_16_2 hedge_rate_c_1_2 -1
+    cost_prod_17_2 prod_cost_17_2 1 production_cashflow_1_2 1
+    cost_prod_17_2 hedge_rate_c_1_2 -1
+    cost_prod_18_2 prod_cost_18_2 1 production_cashflow_1_2 1
+    cost_prod_18_2 hedge_rate_c_1_2 -1
+    cost_prod_19_2 prod_cost_19_2 1 production_cashflow_1_2 1
+    cost_prod_19_2 hedge_rate_c_1_2 -1
+    cost_trans_0_2 transportation_cost_0_2 1 production_cashflow_0_2 1
+    cost_trans_0_2 hedge_rate_c_0_2 -1
+    cost_trans_1_2 transportation_cost_1_2 1 production_cashflow_0_2 1
+    cost_trans_1_2 hedge_rate_c_0_2 -1
+    cost_trans_2_2 transportation_cost_2_2 1 production_cashflow_0_2 1
+    cost_trans_2_2 hedge_rate_c_0_2 -1
+    cost_trans_3_2 transportation_cost_3_2 1 production_cashflow_0_2 1
+    cost_trans_3_2 hedge_rate_c_0_2 -1
+    cost_trans_4_2 transportation_cost_4_2 1 production_cashflow_0_2 1
+    cost_trans_4_2 hedge_rate_c_0_2 -1
+    cost_trans_5_2 transportation_cost_5_2 1 production_cashflow_0_2 1
+    cost_trans_5_2 hedge_rate_c_0_2 -1
+    cost_trans_6_2 transportation_cost_6_2 1 production_cashflow_0_2 1
+    cost_trans_6_2 hedge_rate_c_0_2 -1
+    cost_trans_7_2 transportation_cost_7_2 1 production_cashflow_0_2 1
+    cost_trans_7_2 hedge_rate_c_0_2 -1
+    cost_trans_8_2 transportation_cost_8_2 1 production_cashflow_0_2 1
+    cost_trans_8_2 hedge_rate_c_0_2 -1
+    cost_trans_9_2 transportation_cost_9_2 1 production_cashflow_0_2 1
+    cost_trans_9_2 hedge_rate_c_0_2 -1
+    cost_trans_10_2 transportation_cost_10_2 1 production_cashflow_1_2 1
+    cost_trans_10_2 hedge_rate_c_1_2 -1
+    cost_trans_11_2 transportation_cost_11_2 1 production_cashflow_1_2 1
+    cost_trans_11_2 hedge_rate_c_1_2 -1
+    cost_trans_12_2 transportation_cost_12_2 1 production_cashflow_1_2 1
+    cost_trans_12_2 hedge_rate_c_1_2 -1
+    cost_trans_13_2 transportation_cost_13_2 1 production_cashflow_1_2 1
+    cost_trans_13_2 hedge_rate_c_1_2 -1
+    cost_trans_14_2 transportation_cost_14_2 1 production_cashflow_1_2 1
+    cost_trans_14_2 hedge_rate_c_1_2 -1
+    cost_trans_15_2 transportation_cost_15_2 1 production_cashflow_1_2 1
+    cost_trans_15_2 hedge_rate_c_1_2 -1
+    cost_trans_16_2 transportation_cost_16_2 1 production_cashflow_1_2 1
+    cost_trans_16_2 hedge_rate_c_1_2 -1
+    cost_trans_17_2 transportation_cost_17_2 1 production_cashflow_1_2 1
+    cost_trans_17_2 hedge_rate_c_1_2 -1
+    cost_trans_18_2 transportation_cost_18_2 1 production_cashflow_1_2 1
+    cost_trans_18_2 hedge_rate_c_1_2 -1
+    cost_trans_19_2 transportation_cost_19_2 1 production_cashflow_1_2 1
+    cost_trans_19_2 hedge_rate_c_1_2 -1
+    cost_optionbuy_2 option_cost_2 1 cf_ref_c_2 1
+    revenue_0_2 revenue_in_market_0_2 1 production_cashflow_0_2 -1
+    revenue_0_2 hege_rate_r_0_2 1
+    cfp_0_2 production_cashflow_0_2 1 cf_p_c_0_2 -1
+    cfp_1_2 production_cashflow_1_2 1 cf_p_c_1_2 -1
+    cf_0_2 cf_p_c_0_2 1 cf_ref_c_2 -0.9999999999999997
+    cf_1_2 cf_p_c_1_2 1 cf_ref_c_2 -1
+    cf_ref_2 cf_ref_c_2 1 calculate_npv_2 -0.8573388203017832
+    V0_0_0_2 R1_0_0_2 1 mac_capacity_0_0_2 -75000
+    V0_0_0_2 R1_0_0_3 -1
+    V0_0_1_2 R1_0_1_2 1 mac_capacity_0_1_2 -75000
+    V0_0_1_2 R1_0_1_3 -1
+    V0_0_2_2 R1_0_2_2 1 mac_capacity_0_2_2 -75000
+    V0_0_2_2 R1_0_2_3 -1
+    V0_1_0_2 R1_1_0_2 1 mac_capacity_1_0_2 -75000
+    V0_1_0_2 R1_1_0_3 -1
+    V0_1_1_2 R1_1_1_2 1 mac_capacity_1_1_2 -75000
+    V0_1_1_2 R1_1_1_3 -1
+    V0_1_2_2 R1_1_2_2 1 mac_capacity_1_2_2 -75000
+    V0_1_2_2 R1_1_2_3 -1
+    V0_2_0_2 R1_2_0_2 1 mac_capacity_2_0_2 -75000
+    V0_2_0_2 R1_2_0_3 -1
+    V0_2_1_2 R1_2_1_2 1 mac_capacity_2_1_2 -75000
+    V0_2_1_2 R1_2_1_3 -1
+    V0_2_2_2 R1_2_2_2 1 mac_capacity_2_2_2 -75000
+    V0_2_2_2 R1_2_2_3 -1
+    V0_3_0_2 R1_3_0_2 1 mac_capacity_3_0_2 -75000
+    V0_3_0_2 R1_3_0_3 -1
+    V0_3_1_2 R1_3_1_2 1 mac_capacity_3_1_2 -75000
+    V0_3_1_2 R1_3_1_3 -1
+    V0_3_2_2 R1_3_2_2 1 mac_capacity_3_2_2 -75000
+    V0_3_2_2 R1_3_2_3 -1
+    V0_4_0_2 R1_4_0_2 1 mac_capacity_4_0_2 -75000
+    V0_4_0_2 R1_4_0_3 -1
+    V0_4_1_2 R1_4_1_2 1 mac_capacity_4_1_2 -75000
+    V0_4_1_2 R1_4_1_3 -1
+    V0_4_2_2 R1_4_2_2 1 mac_capacity_4_2_2 -75000
+    V0_4_2_2 R1_4_2_3 -1
+    V0_5_0_2 R1_5_0_2 1 mac_capacity_5_0_2 -75000
+    V0_5_0_2 R1_5_0_3 -1
+    V0_5_1_2 R1_5_1_2 1 mac_capacity_5_1_2 -75000
+    V0_5_1_2 R1_5_1_3 -1
+    V0_5_2_2 R1_5_2_2 1 mac_capacity_5_2_2 -75000
+    V0_5_2_2 R1_5_2_3 -1
+    V0_6_0_2 R1_6_0_2 1 mac_capacity_6_0_2 -75000
+    V0_6_0_2 R1_6_0_3 -1
+    V0_6_1_2 R1_6_1_2 1 mac_capacity_6_1_2 -75000
+    V0_6_1_2 R1_6_1_3 -1
+    V0_6_2_2 R1_6_2_2 1 mac_capacity_6_2_2 -75000
+    V0_6_2_2 R1_6_2_3 -1
+    V0_7_0_2 R1_7_0_2 1 mac_capacity_7_0_2 -75000
+    V0_7_0_2 R1_7_0_3 -1
+    V0_7_1_2 R1_7_1_2 1 mac_capacity_7_1_2 -75000
+    V0_7_1_2 R1_7_1_3 -1
+    V0_7_2_2 R1_7_2_2 1 mac_capacity_7_2_2 -75000
+    V0_7_2_2 R1_7_2_3 -1
+    V0_8_0_2 R1_8_0_2 1 mac_capacity_8_0_2 -75000
+    V0_8_0_2 R1_8_0_3 -1
+    V0_8_1_2 R1_8_1_2 1 mac_capacity_8_1_2 -75000
+    V0_8_1_2 R1_8_1_3 -1
+    V0_8_2_2 R1_8_2_2 1 mac_capacity_8_2_2 -75000
+    V0_8_2_2 R1_8_2_3 -1
+    V0_9_0_2 R1_9_0_2 1 mac_capacity_9_0_2 -75000
+    V0_9_0_2 R1_9_0_3 -1
+    V0_9_1_2 R1_9_1_2 1 mac_capacity_9_1_2 -75000
+    V0_9_1_2 R1_9_1_3 -1
+    V0_9_2_2 R1_9_2_2 1 mac_capacity_9_2_2 -75000
+    V0_9_2_2 R1_9_2_3 -1
+    V0_10_0_2 R1_10_0_2 1 mac_capacity_10_0_2 -75000
+    V0_10_0_2 R1_10_0_3 -1
+    V0_10_1_2 R1_10_1_2 1 mac_capacity_10_1_2 -75000
+    V0_10_1_2 R1_10_1_3 -1
+    V0_10_2_2 R1_10_2_2 1 mac_capacity_10_2_2 -75000
+    V0_10_2_2 R1_10_2_3 -1
+    V0_11_0_2 R1_11_0_2 1 mac_capacity_11_0_2 -75000
+    V0_11_0_2 R1_11_0_3 -1
+    V0_11_1_2 R1_11_1_2 1 mac_capacity_11_1_2 -75000
+    V0_11_1_2 R1_11_1_3 -1
+    V0_11_2_2 R1_11_2_2 1 mac_capacity_11_2_2 -75000
+    V0_11_2_2 R1_11_2_3 -1
+    V0_12_0_2 R1_12_0_2 1 mac_capacity_12_0_2 -75000
+    V0_12_0_2 R1_12_0_3 -1
+    V0_12_1_2 R1_12_1_2 1 mac_capacity_12_1_2 -75000
+    V0_12_1_2 R1_12_1_3 -1
+    V0_12_2_2 R1_12_2_2 1 mac_capacity_12_2_2 -75000
+    V0_12_2_2 R1_12_2_3 -1
+    V0_13_0_2 R1_13_0_2 1 mac_capacity_13_0_2 -75000
+    V0_13_0_2 R1_13_0_3 -1
+    V0_13_1_2 R1_13_1_2 1 mac_capacity_13_1_2 -75000
+    V0_13_1_2 R1_13_1_3 -1
+    V0_13_2_2 R1_13_2_2 1 mac_capacity_13_2_2 -75000
+    V0_13_2_2 R1_13_2_3 -1
+    V0_14_0_2 R1_14_0_2 1 mac_capacity_14_0_2 -75000
+    V0_14_0_2 R1_14_0_3 -1
+    V0_14_1_2 R1_14_1_2 1 mac_capacity_14_1_2 -75000
+    V0_14_1_2 R1_14_1_3 -1
+    V0_14_2_2 R1_14_2_2 1 mac_capacity_14_2_2 -75000
+    V0_14_2_2 R1_14_2_3 -1
+    V0_15_0_2 R1_15_0_2 1 mac_capacity_15_0_2 -75000
+    V0_15_0_2 R1_15_0_3 -1
+    V0_15_1_2 R1_15_1_2 1 mac_capacity_15_1_2 -75000
+    V0_15_1_2 R1_15_1_3 -1
+    V0_15_2_2 R1_15_2_2 1 mac_capacity_15_2_2 -75000
+    V0_15_2_2 R1_15_2_3 -1
+    V0_16_0_2 R1_16_0_2 1 mac_capacity_16_0_2 -75000
+    V0_16_0_2 R1_16_0_3 -1
+    V0_16_1_2 R1_16_1_2 1 mac_capacity_16_1_2 -75000
+    V0_16_1_2 R1_16_1_3 -1
+    V0_16_2_2 R1_16_2_2 1 mac_capacity_16_2_2 -75000
+    V0_16_2_2 R1_16_2_3 -1
+    V0_17_0_2 R1_17_0_2 1 mac_capacity_17_0_2 -75000
+    V0_17_0_2 R1_17_0_3 -1
+    V0_17_1_2 R1_17_1_2 1 mac_capacity_17_1_2 -75000
+    V0_17_1_2 R1_17_1_3 -1
+    V0_17_2_2 R1_17_2_2 1 mac_capacity_17_2_2 -75000
+    V0_17_2_2 R1_17_2_3 -1
+    V0_18_0_2 R1_18_0_2 1 mac_capacity_18_0_2 -75000
+    V0_18_0_2 R1_18_0_3 -1
+    V0_18_1_2 R1_18_1_2 1 mac_capacity_18_1_2 -75000
+    V0_18_1_2 R1_18_1_3 -1
+    V0_18_2_2 R1_18_2_2 1 mac_capacity_18_2_2 -75000
+    V0_18_2_2 R1_18_2_3 -1
+    V0_19_0_2 R1_19_0_2 1 mac_capacity_19_0_2 -75000
+    V0_19_0_2 R1_19_0_3 -1
+    V0_19_1_2 R1_19_1_2 1 mac_capacity_19_1_2 -75000
+    V0_19_1_2 R1_19_1_3 -1
+    V0_19_2_2 R1_19_2_2 1 mac_capacity_19_2_2 -75000
+    V0_19_2_2 R1_19_2_3 -1
+    V1_0_2 R2_0_2 1 production_cashflow_0_2 1
+    V1_0_2 hedge_rate_c_0_2 -1 R2_0_3 -1
+    V1_1_2 R2_1_2 1 production_cashflow_1_2 1
+    V1_1_2 hedge_rate_c_1_2 -1 R2_1_3 -1
+    V2_2 first_stage_loop_2 1 first_stage_loop_3 -1
+    V3_2 npv_stage_loop_2 1 npv_stage_loop_3 -1
+    npv_stage_3 OBJROW -1 calculate_npv_3 1
+    npv_stage_3 npv_stage_loop_3 -1
+    x2_0_0_3 demand_fulfilment_0_3_0 1 revenue_in_market_0_3 20
+    x2_0_1_3 demand_fulfilment_0_3_1 1 revenue_in_market_0_3 35
+    x2_0_2_3 demand_fulfilment_0_3_2 1 revenue_in_market_0_3 70
+    x_0_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_0_0_3 2.5
+    x_0_0_0_3 prod_cost_0_3 -7 transportation_cost_0_3 -0.2
+    x_0_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_0_1_3 3
+    x_0_0_1_3 prod_cost_0_3 -12.5 transportation_cost_0_3 -0.22
+    x_0_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_0_2_3 3.75
+    x_0_0_2_3 prod_cost_0_3 -17 transportation_cost_0_3 -0.25
+    x_1_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_1_0_3 2.5
+    x_1_0_0_3 prod_cost_1_3 -7 transportation_cost_1_3 -0.2
+    x_1_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_1_1_3 3
+    x_1_0_1_3 prod_cost_1_3 -12.5 transportation_cost_1_3 -0.22
+    x_1_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_1_2_3 3.75
+    x_1_0_2_3 prod_cost_1_3 -17 transportation_cost_1_3 -0.25
+    x_2_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_2_0_3 2.5
+    x_2_0_0_3 prod_cost_2_3 -7 transportation_cost_2_3 -0.2
+    x_2_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_2_1_3 3
+    x_2_0_1_3 prod_cost_2_3 -12.5 transportation_cost_2_3 -0.22
+    x_2_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_2_2_3 3.75
+    x_2_0_2_3 prod_cost_2_3 -17 transportation_cost_2_3 -0.25
+    x_3_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_3_0_3 2.5
+    x_3_0_0_3 prod_cost_3_3 -7 transportation_cost_3_3 -0.2
+    x_3_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_3_1_3 3
+    x_3_0_1_3 prod_cost_3_3 -12.5 transportation_cost_3_3 -0.22
+    x_3_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_3_2_3 3.75
+    x_3_0_2_3 prod_cost_3_3 -17 transportation_cost_3_3 -0.25
+    x_4_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_4_0_3 2.5
+    x_4_0_0_3 prod_cost_4_3 -7 transportation_cost_4_3 -0.2
+    x_4_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_4_1_3 3
+    x_4_0_1_3 prod_cost_4_3 -12.5 transportation_cost_4_3 -0.22
+    x_4_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_4_2_3 3.75
+    x_4_0_2_3 prod_cost_4_3 -17 transportation_cost_4_3 -0.25
+    x_5_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_5_0_3 2.5
+    x_5_0_0_3 prod_cost_5_3 -7 transportation_cost_5_3 -0.2
+    x_5_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_5_1_3 3
+    x_5_0_1_3 prod_cost_5_3 -12.5 transportation_cost_5_3 -0.22
+    x_5_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_5_2_3 3.75
+    x_5_0_2_3 prod_cost_5_3 -17 transportation_cost_5_3 -0.25
+    x_6_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_6_0_3 2.5
+    x_6_0_0_3 prod_cost_6_3 -7 transportation_cost_6_3 -0.2
+    x_6_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_6_1_3 3
+    x_6_0_1_3 prod_cost_6_3 -12.5 transportation_cost_6_3 -0.22
+    x_6_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_6_2_3 3.75
+    x_6_0_2_3 prod_cost_6_3 -17 transportation_cost_6_3 -0.25
+    x_7_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_7_0_3 2.5
+    x_7_0_0_3 prod_cost_7_3 -7 transportation_cost_7_3 -0.2
+    x_7_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_7_1_3 3
+    x_7_0_1_3 prod_cost_7_3 -12.5 transportation_cost_7_3 -0.22
+    x_7_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_7_2_3 3.75
+    x_7_0_2_3 prod_cost_7_3 -17 transportation_cost_7_3 -0.25
+    x_8_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_8_0_3 2.5
+    x_8_0_0_3 prod_cost_8_3 -7 transportation_cost_8_3 -0.2
+    x_8_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_8_1_3 3
+    x_8_0_1_3 prod_cost_8_3 -12.5 transportation_cost_8_3 -0.22
+    x_8_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_8_2_3 3.75
+    x_8_0_2_3 prod_cost_8_3 -17 transportation_cost_8_3 -0.25
+    x_9_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_9_0_3 2.5
+    x_9_0_0_3 prod_cost_9_3 -7 transportation_cost_9_3 -0.2
+    x_9_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_9_1_3 3
+    x_9_0_1_3 prod_cost_9_3 -12.5 transportation_cost_9_3 -0.22
+    x_9_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_9_2_3 3.75
+    x_9_0_2_3 prod_cost_9_3 -17 transportation_cost_9_3 -0.25
+    x_10_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_10_0_3 2.5
+    x_10_0_0_3 prod_cost_10_3 -5 transportation_cost_10_3 -0.8
+    x_10_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_10_1_3 3
+    x_10_0_1_3 prod_cost_10_3 -9 transportation_cost_10_3 -1
+    x_10_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_10_2_3 3.75
+    x_10_0_2_3 prod_cost_10_3 -13 transportation_cost_10_3 -1.2
+    x_11_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_11_0_3 2.5
+    x_11_0_0_3 prod_cost_11_3 -5 transportation_cost_11_3 -0.8
+    x_11_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_11_1_3 3
+    x_11_0_1_3 prod_cost_11_3 -9 transportation_cost_11_3 -1
+    x_11_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_11_2_3 3.75
+    x_11_0_2_3 prod_cost_11_3 -13 transportation_cost_11_3 -1.2
+    x_12_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_12_0_3 2.5
+    x_12_0_0_3 prod_cost_12_3 -5 transportation_cost_12_3 -0.8
+    x_12_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_12_1_3 3
+    x_12_0_1_3 prod_cost_12_3 -9 transportation_cost_12_3 -1
+    x_12_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_12_2_3 3.75
+    x_12_0_2_3 prod_cost_12_3 -13 transportation_cost_12_3 -1.2
+    x_13_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_13_0_3 2.5
+    x_13_0_0_3 prod_cost_13_3 -5 transportation_cost_13_3 -0.8
+    x_13_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_13_1_3 3
+    x_13_0_1_3 prod_cost_13_3 -9 transportation_cost_13_3 -1
+    x_13_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_13_2_3 3.75
+    x_13_0_2_3 prod_cost_13_3 -13 transportation_cost_13_3 -1.2
+    x_14_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_14_0_3 2.5
+    x_14_0_0_3 prod_cost_14_3 -5 transportation_cost_14_3 -0.8
+    x_14_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_14_1_3 3
+    x_14_0_1_3 prod_cost_14_3 -9 transportation_cost_14_3 -1
+    x_14_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_14_2_3 3.75
+    x_14_0_2_3 prod_cost_14_3 -13 transportation_cost_14_3 -1.2
+    x_15_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_15_0_3 2.5
+    x_15_0_0_3 prod_cost_15_3 -5 transportation_cost_15_3 -0.8
+    x_15_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_15_1_3 3
+    x_15_0_1_3 prod_cost_15_3 -9 transportation_cost_15_3 -1
+    x_15_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_15_2_3 3.75
+    x_15_0_2_3 prod_cost_15_3 -13 transportation_cost_15_3 -1.2
+    x_16_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_16_0_3 2.5
+    x_16_0_0_3 prod_cost_16_3 -5 transportation_cost_16_3 -0.8
+    x_16_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_16_1_3 3
+    x_16_0_1_3 prod_cost_16_3 -9 transportation_cost_16_3 -1
+    x_16_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_16_2_3 3.75
+    x_16_0_2_3 prod_cost_16_3 -13 transportation_cost_16_3 -1.2
+    x_17_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_17_0_3 2.5
+    x_17_0_0_3 prod_cost_17_3 -5 transportation_cost_17_3 -0.8
+    x_17_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_17_1_3 3
+    x_17_0_1_3 prod_cost_17_3 -9 transportation_cost_17_3 -1
+    x_17_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_17_2_3 3.75
+    x_17_0_2_3 prod_cost_17_3 -13 transportation_cost_17_3 -1.2
+    x_18_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_18_0_3 2.5
+    x_18_0_0_3 prod_cost_18_3 -5 transportation_cost_18_3 -0.8
+    x_18_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_18_1_3 3
+    x_18_0_1_3 prod_cost_18_3 -9 transportation_cost_18_3 -1
+    x_18_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_18_2_3 3.75
+    x_18_0_2_3 prod_cost_18_3 -13 transportation_cost_18_3 -1.2
+    x_19_0_0_3 demand_fulfilment_0_3_0 1 mac_capacity_19_0_3 2.5
+    x_19_0_0_3 prod_cost_19_3 -5 transportation_cost_19_3 -0.8
+    x_19_0_1_3 demand_fulfilment_0_3_1 1 mac_capacity_19_1_3 3
+    x_19_0_1_3 prod_cost_19_3 -9 transportation_cost_19_3 -1
+    x_19_0_2_3 demand_fulfilment_0_3_2 1 mac_capacity_19_2_3 3.75
+    x_19_0_2_3 prod_cost_19_3 -13 transportation_cost_19_3 -1.2
+    f_rev_0_3_4 hege_rate_r_0_4 1 cf_p_c_0_4 -1
+    f_rev_0_3_4 cf_ref_c_4 0.9999999999999997
+    f_rev_1_3_4 hege_rate_r_1_4 1 cf_p_c_1_4 -1
+    f_rev_1_3_4 cf_ref_c_4 1
+    f_cost_0_3_4 hedge_rate_c_0_4 1 cf_p_c_0_4 -1
+    f_cost_0_3_4 cf_ref_c_4 0.9999999999999997
+    f_cost_1_3_4 hedge_rate_c_1_4 1 cf_p_c_1_4 -1
+    f_cost_1_3_4 cf_ref_c_4 1
+    call_b_0_3_4 option_cost_3 -0.1714423883180669 call_limit_0_4_3 -1
+    call_b_1_3_4 option_cost_3 -0.1714423883180665 call_limit_1_4_3 -1
+    put_b_0_3_4 option_cost_3 -0.1714423883180669 put_limit_0_4_3 -1
+    put_b_1_3_4 option_cost_3 -0.1714423883180665 put_limit_1_4_3 -1
+    call_e_0_2_3 hedge_rate_c_0_3 1 call_limit_0_3_2 1
+    call_e_0_2_3 cf_p_c_0_3 -1 cf_ref_c_3 0.9999999999999997
+    call_e_1_2_3 hedge_rate_c_1_3 1 call_limit_1_3_2 1
+    call_e_1_2_3 cf_p_c_1_3 -1 cf_ref_c_3 1
+    put_e_0_2_3 hege_rate_r_0_3 -1 put_limit_0_3_2 1
+    put_e_0_2_3 cf_p_c_0_3 1 cf_ref_c_3 -0.9999999999999997
+    put_e_1_2_3 hege_rate_r_1_3 -1 put_limit_1_3_2 1
+    put_e_1_2_3 cf_p_c_1_3 1 cf_ref_c_3 -1
+    cost_prod_0_3 prod_cost_0_3 1 production_cashflow_0_3 1
+    cost_prod_0_3 hedge_rate_c_0_3 -1
+    cost_prod_1_3 prod_cost_1_3 1 production_cashflow_0_3 1
+    cost_prod_1_3 hedge_rate_c_0_3 -1
+    cost_prod_2_3 prod_cost_2_3 1 production_cashflow_0_3 1
+    cost_prod_2_3 hedge_rate_c_0_3 -1
+    cost_prod_3_3 prod_cost_3_3 1 production_cashflow_0_3 1
+    cost_prod_3_3 hedge_rate_c_0_3 -1
+    cost_prod_4_3 prod_cost_4_3 1 production_cashflow_0_3 1
+    cost_prod_4_3 hedge_rate_c_0_3 -1
+    cost_prod_5_3 prod_cost_5_3 1 production_cashflow_0_3 1
+    cost_prod_5_3 hedge_rate_c_0_3 -1
+    cost_prod_6_3 prod_cost_6_3 1 production_cashflow_0_3 1
+    cost_prod_6_3 hedge_rate_c_0_3 -1
+    cost_prod_7_3 prod_cost_7_3 1 production_cashflow_0_3 1
+    cost_prod_7_3 hedge_rate_c_0_3 -1
+    cost_prod_8_3 prod_cost_8_3 1 production_cashflow_0_3 1
+    cost_prod_8_3 hedge_rate_c_0_3 -1
+    cost_prod_9_3 prod_cost_9_3 1 production_cashflow_0_3 1
+    cost_prod_9_3 hedge_rate_c_0_3 -1
+    cost_prod_10_3 prod_cost_10_3 1 production_cashflow_1_3 1
+    cost_prod_10_3 hedge_rate_c_1_3 -1
+    cost_prod_11_3 prod_cost_11_3 1 production_cashflow_1_3 1
+    cost_prod_11_3 hedge_rate_c_1_3 -1
+    cost_prod_12_3 prod_cost_12_3 1 production_cashflow_1_3 1
+    cost_prod_12_3 hedge_rate_c_1_3 -1
+    cost_prod_13_3 prod_cost_13_3 1 production_cashflow_1_3 1
+    cost_prod_13_3 hedge_rate_c_1_3 -1
+    cost_prod_14_3 prod_cost_14_3 1 production_cashflow_1_3 1
+    cost_prod_14_3 hedge_rate_c_1_3 -1
+    cost_prod_15_3 prod_cost_15_3 1 production_cashflow_1_3 1
+    cost_prod_15_3 hedge_rate_c_1_3 -1
+    cost_prod_16_3 prod_cost_16_3 1 production_cashflow_1_3 1
+    cost_prod_16_3 hedge_rate_c_1_3 -1
+    cost_prod_17_3 prod_cost_17_3 1 production_cashflow_1_3 1
+    cost_prod_17_3 hedge_rate_c_1_3 -1
+    cost_prod_18_3 prod_cost_18_3 1 production_cashflow_1_3 1
+    cost_prod_18_3 hedge_rate_c_1_3 -1
+    cost_prod_19_3 prod_cost_19_3 1 production_cashflow_1_3 1
+    cost_prod_19_3 hedge_rate_c_1_3 -1
+    cost_trans_0_3 transportation_cost_0_3 1 production_cashflow_0_3 1
+    cost_trans_0_3 hedge_rate_c_0_3 -1
+    cost_trans_1_3 transportation_cost_1_3 1 production_cashflow_0_3 1
+    cost_trans_1_3 hedge_rate_c_0_3 -1
+    cost_trans_2_3 transportation_cost_2_3 1 production_cashflow_0_3 1
+    cost_trans_2_3 hedge_rate_c_0_3 -1
+    cost_trans_3_3 transportation_cost_3_3 1 production_cashflow_0_3 1
+    cost_trans_3_3 hedge_rate_c_0_3 -1
+    cost_trans_4_3 transportation_cost_4_3 1 production_cashflow_0_3 1
+    cost_trans_4_3 hedge_rate_c_0_3 -1
+    cost_trans_5_3 transportation_cost_5_3 1 production_cashflow_0_3 1
+    cost_trans_5_3 hedge_rate_c_0_3 -1
+    cost_trans_6_3 transportation_cost_6_3 1 production_cashflow_0_3 1
+    cost_trans_6_3 hedge_rate_c_0_3 -1
+    cost_trans_7_3 transportation_cost_7_3 1 production_cashflow_0_3 1
+    cost_trans_7_3 hedge_rate_c_0_3 -1
+    cost_trans_8_3 transportation_cost_8_3 1 production_cashflow_0_3 1
+    cost_trans_8_3 hedge_rate_c_0_3 -1
+    cost_trans_9_3 transportation_cost_9_3 1 production_cashflow_0_3 1
+    cost_trans_9_3 hedge_rate_c_0_3 -1
+    cost_trans_10_3 transportation_cost_10_3 1 production_cashflow_1_3 1
+    cost_trans_10_3 hedge_rate_c_1_3 -1
+    cost_trans_11_3 transportation_cost_11_3 1 production_cashflow_1_3 1
+    cost_trans_11_3 hedge_rate_c_1_3 -1
+    cost_trans_12_3 transportation_cost_12_3 1 production_cashflow_1_3 1
+    cost_trans_12_3 hedge_rate_c_1_3 -1
+    cost_trans_13_3 transportation_cost_13_3 1 production_cashflow_1_3 1
+    cost_trans_13_3 hedge_rate_c_1_3 -1
+    cost_trans_14_3 transportation_cost_14_3 1 production_cashflow_1_3 1
+    cost_trans_14_3 hedge_rate_c_1_3 -1
+    cost_trans_15_3 transportation_cost_15_3 1 production_cashflow_1_3 1
+    cost_trans_15_3 hedge_rate_c_1_3 -1
+    cost_trans_16_3 transportation_cost_16_3 1 production_cashflow_1_3 1
+    cost_trans_16_3 hedge_rate_c_1_3 -1
+    cost_trans_17_3 transportation_cost_17_3 1 production_cashflow_1_3 1
+    cost_trans_17_3 hedge_rate_c_1_3 -1
+    cost_trans_18_3 transportation_cost_18_3 1 production_cashflow_1_3 1
+    cost_trans_18_3 hedge_rate_c_1_3 -1
+    cost_trans_19_3 transportation_cost_19_3 1 production_cashflow_1_3 1
+    cost_trans_19_3 hedge_rate_c_1_3 -1
+    cost_optionbuy_3 option_cost_3 1 cf_ref_c_3 1
+    revenue_0_3 revenue_in_market_0_3 1 production_cashflow_0_3 -1
+    revenue_0_3 hege_rate_r_0_3 1
+    cfp_0_3 production_cashflow_0_3 1 cf_p_c_0_3 -1
+    cfp_1_3 production_cashflow_1_3 1 cf_p_c_1_3 -1
+    cf_0_3 cf_p_c_0_3 1 cf_ref_c_3 -0.9999999999999997
+    cf_1_3 cf_p_c_1_3 1 cf_ref_c_3 -1
+    cf_ref_3 cf_ref_c_3 1 calculate_npv_3 -1
+    V0_0_0_3 R1_0_0_3 1 mac_capacity_0_0_3 -75000
+    V0_0_0_3 R1_0_0_4 -1
+    V0_0_1_3 R1_0_1_3 1 mac_capacity_0_1_3 -75000
+    V0_0_1_3 R1_0_1_4 -1
+    V0_0_2_3 R1_0_2_3 1 mac_capacity_0_2_3 -75000
+    V0_0_2_3 R1_0_2_4 -1
+    V0_1_0_3 R1_1_0_3 1 mac_capacity_1_0_3 -75000
+    V0_1_0_3 R1_1_0_4 -1
+    V0_1_1_3 R1_1_1_3 1 mac_capacity_1_1_3 -75000
+    V0_1_1_3 R1_1_1_4 -1
+    V0_1_2_3 R1_1_2_3 1 mac_capacity_1_2_3 -75000
+    V0_1_2_3 R1_1_2_4 -1
+    V0_2_0_3 R1_2_0_3 1 mac_capacity_2_0_3 -75000
+    V0_2_0_3 R1_2_0_4 -1
+    V0_2_1_3 R1_2_1_3 1 mac_capacity_2_1_3 -75000
+    V0_2_1_3 R1_2_1_4 -1
+    V0_2_2_3 R1_2_2_3 1 mac_capacity_2_2_3 -75000
+    V0_2_2_3 R1_2_2_4 -1
+    V0_3_0_3 R1_3_0_3 1 mac_capacity_3_0_3 -75000
+    V0_3_0_3 R1_3_0_4 -1
+    V0_3_1_3 R1_3_1_3 1 mac_capacity_3_1_3 -75000
+    V0_3_1_3 R1_3_1_4 -1
+    V0_3_2_3 R1_3_2_3 1 mac_capacity_3_2_3 -75000
+    V0_3_2_3 R1_3_2_4 -1
+    V0_4_0_3 R1_4_0_3 1 mac_capacity_4_0_3 -75000
+    V0_4_0_3 R1_4_0_4 -1
+    V0_4_1_3 R1_4_1_3 1 mac_capacity_4_1_3 -75000
+    V0_4_1_3 R1_4_1_4 -1
+    V0_4_2_3 R1_4_2_3 1 mac_capacity_4_2_3 -75000
+    V0_4_2_3 R1_4_2_4 -1
+    V0_5_0_3 R1_5_0_3 1 mac_capacity_5_0_3 -75000
+    V0_5_0_3 R1_5_0_4 -1
+    V0_5_1_3 R1_5_1_3 1 mac_capacity_5_1_3 -75000
+    V0_5_1_3 R1_5_1_4 -1
+    V0_5_2_3 R1_5_2_3 1 mac_capacity_5_2_3 -75000
+    V0_5_2_3 R1_5_2_4 -1
+    V0_6_0_3 R1_6_0_3 1 mac_capacity_6_0_3 -75000
+    V0_6_0_3 R1_6_0_4 -1
+    V0_6_1_3 R1_6_1_3 1 mac_capacity_6_1_3 -75000
+    V0_6_1_3 R1_6_1_4 -1
+    V0_6_2_3 R1_6_2_3 1 mac_capacity_6_2_3 -75000
+    V0_6_2_3 R1_6_2_4 -1
+    V0_7_0_3 R1_7_0_3 1 mac_capacity_7_0_3 -75000
+    V0_7_0_3 R1_7_0_4 -1
+    V0_7_1_3 R1_7_1_3 1 mac_capacity_7_1_3 -75000
+    V0_7_1_3 R1_7_1_4 -1
+    V0_7_2_3 R1_7_2_3 1 mac_capacity_7_2_3 -75000
+    V0_7_2_3 R1_7_2_4 -1
+    V0_8_0_3 R1_8_0_3 1 mac_capacity_8_0_3 -75000
+    V0_8_0_3 R1_8_0_4 -1
+    V0_8_1_3 R1_8_1_3 1 mac_capacity_8_1_3 -75000
+    V0_8_1_3 R1_8_1_4 -1
+    V0_8_2_3 R1_8_2_3 1 mac_capacity_8_2_3 -75000
+    V0_8_2_3 R1_8_2_4 -1
+    V0_9_0_3 R1_9_0_3 1 mac_capacity_9_0_3 -75000
+    V0_9_0_3 R1_9_0_4 -1
+    V0_9_1_3 R1_9_1_3 1 mac_capacity_9_1_3 -75000
+    V0_9_1_3 R1_9_1_4 -1
+    V0_9_2_3 R1_9_2_3 1 mac_capacity_9_2_3 -75000
+    V0_9_2_3 R1_9_2_4 -1
+    V0_10_0_3 R1_10_0_3 1 mac_capacity_10_0_3 -75000
+    V0_10_0_3 R1_10_0_4 -1
+    V0_10_1_3 R1_10_1_3 1 mac_capacity_10_1_3 -75000
+    V0_10_1_3 R1_10_1_4 -1
+    V0_10_2_3 R1_10_2_3 1 mac_capacity_10_2_3 -75000
+    V0_10_2_3 R1_10_2_4 -1
+    V0_11_0_3 R1_11_0_3 1 mac_capacity_11_0_3 -75000
+    V0_11_0_3 R1_11_0_4 -1
+    V0_11_1_3 R1_11_1_3 1 mac_capacity_11_1_3 -75000
+    V0_11_1_3 R1_11_1_4 -1
+    V0_11_2_3 R1_11_2_3 1 mac_capacity_11_2_3 -75000
+    V0_11_2_3 R1_11_2_4 -1
+    V0_12_0_3 R1_12_0_3 1 mac_capacity_12_0_3 -75000
+    V0_12_0_3 R1_12_0_4 -1
+    V0_12_1_3 R1_12_1_3 1 mac_capacity_12_1_3 -75000
+    V0_12_1_3 R1_12_1_4 -1
+    V0_12_2_3 R1_12_2_3 1 mac_capacity_12_2_3 -75000
+    V0_12_2_3 R1_12_2_4 -1
+    V0_13_0_3 R1_13_0_3 1 mac_capacity_13_0_3 -75000
+    V0_13_0_3 R1_13_0_4 -1
+    V0_13_1_3 R1_13_1_3 1 mac_capacity_13_1_3 -75000
+    V0_13_1_3 R1_13_1_4 -1
+    V0_13_2_3 R1_13_2_3 1 mac_capacity_13_2_3 -75000
+    V0_13_2_3 R1_13_2_4 -1
+    V0_14_0_3 R1_14_0_3 1 mac_capacity_14_0_3 -75000
+    V0_14_0_3 R1_14_0_4 -1
+    V0_14_1_3 R1_14_1_3 1 mac_capacity_14_1_3 -75000
+    V0_14_1_3 R1_14_1_4 -1
+    V0_14_2_3 R1_14_2_3 1 mac_capacity_14_2_3 -75000
+    V0_14_2_3 R1_14_2_4 -1
+    V0_15_0_3 R1_15_0_3 1 mac_capacity_15_0_3 -75000
+    V0_15_0_3 R1_15_0_4 -1
+    V0_15_1_3 R1_15_1_3 1 mac_capacity_15_1_3 -75000
+    V0_15_1_3 R1_15_1_4 -1
+    V0_15_2_3 R1_15_2_3 1 mac_capacity_15_2_3 -75000
+    V0_15_2_3 R1_15_2_4 -1
+    V0_16_0_3 R1_16_0_3 1 mac_capacity_16_0_3 -75000
+    V0_16_0_3 R1_16_0_4 -1
+    V0_16_1_3 R1_16_1_3 1 mac_capacity_16_1_3 -75000
+    V0_16_1_3 R1_16_1_4 -1
+    V0_16_2_3 R1_16_2_3 1 mac_capacity_16_2_3 -75000
+    V0_16_2_3 R1_16_2_4 -1
+    V0_17_0_3 R1_17_0_3 1 mac_capacity_17_0_3 -75000
+    V0_17_0_3 R1_17_0_4 -1
+    V0_17_1_3 R1_17_1_3 1 mac_capacity_17_1_3 -75000
+    V0_17_1_3 R1_17_1_4 -1
+    V0_17_2_3 R1_17_2_3 1 mac_capacity_17_2_3 -75000
+    V0_17_2_3 R1_17_2_4 -1
+    V0_18_0_3 R1_18_0_3 1 mac_capacity_18_0_3 -75000
+    V0_18_0_3 R1_18_0_4 -1
+    V0_18_1_3 R1_18_1_3 1 mac_capacity_18_1_3 -75000
+    V0_18_1_3 R1_18_1_4 -1
+    V0_18_2_3 R1_18_2_3 1 mac_capacity_18_2_3 -75000
+    V0_18_2_3 R1_18_2_4 -1
+    V0_19_0_3 R1_19_0_3 1 mac_capacity_19_0_3 -75000
+    V0_19_0_3 R1_19_0_4 -1
+    V0_19_1_3 R1_19_1_3 1 mac_capacity_19_1_3 -75000
+    V0_19_1_3 R1_19_1_4 -1
+    V0_19_2_3 R1_19_2_3 1 mac_capacity_19_2_3 -75000
+    V0_19_2_3 R1_19_2_4 -1
+    V1_0_3 R2_0_3 1 production_cashflow_0_3 1
+    V1_0_3 hedge_rate_c_0_3 -1 R2_0_4 -1
+    V1_1_3 R2_1_3 1 production_cashflow_1_3 1
+    V1_1_3 hedge_rate_c_1_3 -1 R2_1_4 -1
+    V2_3 first_stage_loop_3 1 first_stage_loop_4 -1
+    V3_3 npv_stage_loop_3 1 npv_stage_loop_4 -1
+    npv_stage_4 OBJROW -1 calculate_npv_4 1
+    npv_stage_4 npv_stage_loop_4 -1
+    x2_0_0_4 demand_fulfilment_0_4_0 1 revenue_in_market_0_4 20
+    x2_0_1_4 demand_fulfilment_0_4_1 1 revenue_in_market_0_4 35
+    x2_0_2_4 demand_fulfilment_0_4_2 1 revenue_in_market_0_4 70
+    x_0_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_0_0_4 2.5
+    x_0_0_0_4 prod_cost_0_4 -7 transportation_cost_0_4 -0.2
+    x_0_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_0_1_4 3
+    x_0_0_1_4 prod_cost_0_4 -12.5 transportation_cost_0_4 -0.22
+    x_0_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_0_2_4 3.75
+    x_0_0_2_4 prod_cost_0_4 -17 transportation_cost_0_4 -0.25
+    x_1_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_1_0_4 2.5
+    x_1_0_0_4 prod_cost_1_4 -7 transportation_cost_1_4 -0.2
+    x_1_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_1_1_4 3
+    x_1_0_1_4 prod_cost_1_4 -12.5 transportation_cost_1_4 -0.22
+    x_1_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_1_2_4 3.75
+    x_1_0_2_4 prod_cost_1_4 -17 transportation_cost_1_4 -0.25
+    x_2_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_2_0_4 2.5
+    x_2_0_0_4 prod_cost_2_4 -7 transportation_cost_2_4 -0.2
+    x_2_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_2_1_4 3
+    x_2_0_1_4 prod_cost_2_4 -12.5 transportation_cost_2_4 -0.22
+    x_2_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_2_2_4 3.75
+    x_2_0_2_4 prod_cost_2_4 -17 transportation_cost_2_4 -0.25
+    x_3_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_3_0_4 2.5
+    x_3_0_0_4 prod_cost_3_4 -7 transportation_cost_3_4 -0.2
+    x_3_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_3_1_4 3
+    x_3_0_1_4 prod_cost_3_4 -12.5 transportation_cost_3_4 -0.22
+    x_3_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_3_2_4 3.75
+    x_3_0_2_4 prod_cost_3_4 -17 transportation_cost_3_4 -0.25
+    x_4_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_4_0_4 2.5
+    x_4_0_0_4 prod_cost_4_4 -7 transportation_cost_4_4 -0.2
+    x_4_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_4_1_4 3
+    x_4_0_1_4 prod_cost_4_4 -12.5 transportation_cost_4_4 -0.22
+    x_4_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_4_2_4 3.75
+    x_4_0_2_4 prod_cost_4_4 -17 transportation_cost_4_4 -0.25
+    x_5_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_5_0_4 2.5
+    x_5_0_0_4 prod_cost_5_4 -7 transportation_cost_5_4 -0.2
+    x_5_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_5_1_4 3
+    x_5_0_1_4 prod_cost_5_4 -12.5 transportation_cost_5_4 -0.22
+    x_5_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_5_2_4 3.75
+    x_5_0_2_4 prod_cost_5_4 -17 transportation_cost_5_4 -0.25
+    x_6_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_6_0_4 2.5
+    x_6_0_0_4 prod_cost_6_4 -7 transportation_cost_6_4 -0.2
+    x_6_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_6_1_4 3
+    x_6_0_1_4 prod_cost_6_4 -12.5 transportation_cost_6_4 -0.22
+    x_6_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_6_2_4 3.75
+    x_6_0_2_4 prod_cost_6_4 -17 transportation_cost_6_4 -0.25
+    x_7_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_7_0_4 2.5
+    x_7_0_0_4 prod_cost_7_4 -7 transportation_cost_7_4 -0.2
+    x_7_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_7_1_4 3
+    x_7_0_1_4 prod_cost_7_4 -12.5 transportation_cost_7_4 -0.22
+    x_7_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_7_2_4 3.75
+    x_7_0_2_4 prod_cost_7_4 -17 transportation_cost_7_4 -0.25
+    x_8_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_8_0_4 2.5
+    x_8_0_0_4 prod_cost_8_4 -7 transportation_cost_8_4 -0.2
+    x_8_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_8_1_4 3
+    x_8_0_1_4 prod_cost_8_4 -12.5 transportation_cost_8_4 -0.22
+    x_8_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_8_2_4 3.75
+    x_8_0_2_4 prod_cost_8_4 -17 transportation_cost_8_4 -0.25
+    x_9_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_9_0_4 2.5
+    x_9_0_0_4 prod_cost_9_4 -7 transportation_cost_9_4 -0.2
+    x_9_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_9_1_4 3
+    x_9_0_1_4 prod_cost_9_4 -12.5 transportation_cost_9_4 -0.22
+    x_9_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_9_2_4 3.75
+    x_9_0_2_4 prod_cost_9_4 -17 transportation_cost_9_4 -0.25
+    x_10_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_10_0_4 2.5
+    x_10_0_0_4 prod_cost_10_4 -5 transportation_cost_10_4 -0.8
+    x_10_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_10_1_4 3
+    x_10_0_1_4 prod_cost_10_4 -9 transportation_cost_10_4 -1
+    x_10_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_10_2_4 3.75
+    x_10_0_2_4 prod_cost_10_4 -13 transportation_cost_10_4 -1.2
+    x_11_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_11_0_4 2.5
+    x_11_0_0_4 prod_cost_11_4 -5 transportation_cost_11_4 -0.8
+    x_11_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_11_1_4 3
+    x_11_0_1_4 prod_cost_11_4 -9 transportation_cost_11_4 -1
+    x_11_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_11_2_4 3.75
+    x_11_0_2_4 prod_cost_11_4 -13 transportation_cost_11_4 -1.2
+    x_12_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_12_0_4 2.5
+    x_12_0_0_4 prod_cost_12_4 -5 transportation_cost_12_4 -0.8
+    x_12_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_12_1_4 3
+    x_12_0_1_4 prod_cost_12_4 -9 transportation_cost_12_4 -1
+    x_12_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_12_2_4 3.75
+    x_12_0_2_4 prod_cost_12_4 -13 transportation_cost_12_4 -1.2
+    x_13_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_13_0_4 2.5
+    x_13_0_0_4 prod_cost_13_4 -5 transportation_cost_13_4 -0.8
+    x_13_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_13_1_4 3
+    x_13_0_1_4 prod_cost_13_4 -9 transportation_cost_13_4 -1
+    x_13_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_13_2_4 3.75
+    x_13_0_2_4 prod_cost_13_4 -13 transportation_cost_13_4 -1.2
+    x_14_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_14_0_4 2.5
+    x_14_0_0_4 prod_cost_14_4 -5 transportation_cost_14_4 -0.8
+    x_14_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_14_1_4 3
+    x_14_0_1_4 prod_cost_14_4 -9 transportation_cost_14_4 -1
+    x_14_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_14_2_4 3.75
+    x_14_0_2_4 prod_cost_14_4 -13 transportation_cost_14_4 -1.2
+    x_15_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_15_0_4 2.5
+    x_15_0_0_4 prod_cost_15_4 -5 transportation_cost_15_4 -0.8
+    x_15_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_15_1_4 3
+    x_15_0_1_4 prod_cost_15_4 -9 transportation_cost_15_4 -1
+    x_15_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_15_2_4 3.75
+    x_15_0_2_4 prod_cost_15_4 -13 transportation_cost_15_4 -1.2
+    x_16_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_16_0_4 2.5
+    x_16_0_0_4 prod_cost_16_4 -5 transportation_cost_16_4 -0.8
+    x_16_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_16_1_4 3
+    x_16_0_1_4 prod_cost_16_4 -9 transportation_cost_16_4 -1
+    x_16_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_16_2_4 3.75
+    x_16_0_2_4 prod_cost_16_4 -13 transportation_cost_16_4 -1.2
+    x_17_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_17_0_4 2.5
+    x_17_0_0_4 prod_cost_17_4 -5 transportation_cost_17_4 -0.8
+    x_17_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_17_1_4 3
+    x_17_0_1_4 prod_cost_17_4 -9 transportation_cost_17_4 -1
+    x_17_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_17_2_4 3.75
+    x_17_0_2_4 prod_cost_17_4 -13 transportation_cost_17_4 -1.2
+    x_18_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_18_0_4 2.5
+    x_18_0_0_4 prod_cost_18_4 -5 transportation_cost_18_4 -0.8
+    x_18_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_18_1_4 3
+    x_18_0_1_4 prod_cost_18_4 -9 transportation_cost_18_4 -1
+    x_18_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_18_2_4 3.75
+    x_18_0_2_4 prod_cost_18_4 -13 transportation_cost_18_4 -1.2
+    x_19_0_0_4 demand_fulfilment_0_4_0 1 mac_capacity_19_0_4 2.5
+    x_19_0_0_4 prod_cost_19_4 -5 transportation_cost_19_4 -0.8
+    x_19_0_1_4 demand_fulfilment_0_4_1 1 mac_capacity_19_1_4 3
+    x_19_0_1_4 prod_cost_19_4 -9 transportation_cost_19_4 -1
+    x_19_0_2_4 demand_fulfilment_0_4_2 1 mac_capacity_19_2_4 3.75
+    x_19_0_2_4 prod_cost_19_4 -13 transportation_cost_19_4 -1.2
+    f_rev_0_4_5 hege_rate_r_0_5 1 cf_p_c_0_5 -1
+    f_rev_0_4_5 cf_ref_c_5 0.9999999999999997
+    f_rev_1_4_5 hege_rate_r_1_5 1 cf_p_c_1_5 -1
+    f_rev_1_4_5 cf_ref_c_5 1
+    f_cost_0_4_5 hedge_rate_c_0_5 1 cf_p_c_0_5 -1
+    f_cost_0_4_5 cf_ref_c_5 0.9999999999999997
+    f_cost_1_4_5 hedge_rate_c_1_5 1 cf_p_c_1_5 -1
+    f_cost_1_4_5 cf_ref_c_5 1
+    call_b_0_4_5 option_cost_4 -0.1714423883180669 call_limit_0_5_4 -1
+    call_b_1_4_5 option_cost_4 -0.1714423883180664 call_limit_1_5_4 -1
+    put_b_0_4_5 option_cost_4 -0.1714423883180669 put_limit_0_5_4 -1
+    put_b_1_4_5 option_cost_4 -0.1714423883180664 put_limit_1_5_4 -1
+    call_e_0_3_4 hedge_rate_c_0_4 1 call_limit_0_4_3 1
+    call_e_0_3_4 cf_p_c_0_4 -1 cf_ref_c_4 0.9999999999999997
+    call_e_1_3_4 hedge_rate_c_1_4 1 call_limit_1_4_3 1
+    call_e_1_3_4 cf_p_c_1_4 -1 cf_ref_c_4 1
+    put_e_0_3_4 hege_rate_r_0_4 -1 put_limit_0_4_3 1
+    put_e_0_3_4 cf_p_c_0_4 1 cf_ref_c_4 -0.9999999999999997
+    put_e_1_3_4 hege_rate_r_1_4 -1 put_limit_1_4_3 1
+    put_e_1_3_4 cf_p_c_1_4 1 cf_ref_c_4 -1
+    cost_prod_0_4 prod_cost_0_4 1 production_cashflow_0_4 1
+    cost_prod_0_4 hedge_rate_c_0_4 -1
+    cost_prod_1_4 prod_cost_1_4 1 production_cashflow_0_4 1
+    cost_prod_1_4 hedge_rate_c_0_4 -1
+    cost_prod_2_4 prod_cost_2_4 1 production_cashflow_0_4 1
+    cost_prod_2_4 hedge_rate_c_0_4 -1
+    cost_prod_3_4 prod_cost_3_4 1 production_cashflow_0_4 1
+    cost_prod_3_4 hedge_rate_c_0_4 -1
+    cost_prod_4_4 prod_cost_4_4 1 production_cashflow_0_4 1
+    cost_prod_4_4 hedge_rate_c_0_4 -1
+    cost_prod_5_4 prod_cost_5_4 1 production_cashflow_0_4 1
+    cost_prod_5_4 hedge_rate_c_0_4 -1
+    cost_prod_6_4 prod_cost_6_4 1 production_cashflow_0_4 1
+    cost_prod_6_4 hedge_rate_c_0_4 -1
+    cost_prod_7_4 prod_cost_7_4 1 production_cashflow_0_4 1
+    cost_prod_7_4 hedge_rate_c_0_4 -1
+    cost_prod_8_4 prod_cost_8_4 1 production_cashflow_0_4 1
+    cost_prod_8_4 hedge_rate_c_0_4 -1
+    cost_prod_9_4 prod_cost_9_4 1 production_cashflow_0_4 1
+    cost_prod_9_4 hedge_rate_c_0_4 -1
+    cost_prod_10_4 prod_cost_10_4 1 production_cashflow_1_4 1
+    cost_prod_10_4 hedge_rate_c_1_4 -1
+    cost_prod_11_4 prod_cost_11_4 1 production_cashflow_1_4 1
+    cost_prod_11_4 hedge_rate_c_1_4 -1
+    cost_prod_12_4 prod_cost_12_4 1 production_cashflow_1_4 1
+    cost_prod_12_4 hedge_rate_c_1_4 -1
+    cost_prod_13_4 prod_cost_13_4 1 production_cashflow_1_4 1
+    cost_prod_13_4 hedge_rate_c_1_4 -1
+    cost_prod_14_4 prod_cost_14_4 1 production_cashflow_1_4 1
+    cost_prod_14_4 hedge_rate_c_1_4 -1
+    cost_prod_15_4 prod_cost_15_4 1 production_cashflow_1_4 1
+    cost_prod_15_4 hedge_rate_c_1_4 -1
+    cost_prod_16_4 prod_cost_16_4 1 production_cashflow_1_4 1
+    cost_prod_16_4 hedge_rate_c_1_4 -1
+    cost_prod_17_4 prod_cost_17_4 1 production_cashflow_1_4 1
+    cost_prod_17_4 hedge_rate_c_1_4 -1
+    cost_prod_18_4 prod_cost_18_4 1 production_cashflow_1_4 1
+    cost_prod_18_4 hedge_rate_c_1_4 -1
+    cost_prod_19_4 prod_cost_19_4 1 production_cashflow_1_4 1
+    cost_prod_19_4 hedge_rate_c_1_4 -1
+    cost_trans_0_4 transportation_cost_0_4 1 production_cashflow_0_4 1
+    cost_trans_0_4 hedge_rate_c_0_4 -1
+    cost_trans_1_4 transportation_cost_1_4 1 production_cashflow_0_4 1
+    cost_trans_1_4 hedge_rate_c_0_4 -1
+    cost_trans_2_4 transportation_cost_2_4 1 production_cashflow_0_4 1
+    cost_trans_2_4 hedge_rate_c_0_4 -1
+    cost_trans_3_4 transportation_cost_3_4 1 production_cashflow_0_4 1
+    cost_trans_3_4 hedge_rate_c_0_4 -1
+    cost_trans_4_4 transportation_cost_4_4 1 production_cashflow_0_4 1
+    cost_trans_4_4 hedge_rate_c_0_4 -1
+    cost_trans_5_4 transportation_cost_5_4 1 production_cashflow_0_4 1
+    cost_trans_5_4 hedge_rate_c_0_4 -1
+    cost_trans_6_4 transportation_cost_6_4 1 production_cashflow_0_4 1
+    cost_trans_6_4 hedge_rate_c_0_4 -1
+    cost_trans_7_4 transportation_cost_7_4 1 production_cashflow_0_4 1
+    cost_trans_7_4 hedge_rate_c_0_4 -1
+    cost_trans_8_4 transportation_cost_8_4 1 production_cashflow_0_4 1
+    cost_trans_8_4 hedge_rate_c_0_4 -1
+    cost_trans_9_4 transportation_cost_9_4 1 production_cashflow_0_4 1
+    cost_trans_9_4 hedge_rate_c_0_4 -1
+    cost_trans_10_4 transportation_cost_10_4 1 production_cashflow_1_4 1
+    cost_trans_10_4 hedge_rate_c_1_4 -1
+    cost_trans_11_4 transportation_cost_11_4 1 production_cashflow_1_4 1
+    cost_trans_11_4 hedge_rate_c_1_4 -1
+    cost_trans_12_4 transportation_cost_12_4 1 production_cashflow_1_4 1
+    cost_trans_12_4 hedge_rate_c_1_4 -1
+    cost_trans_13_4 transportation_cost_13_4 1 production_cashflow_1_4 1
+    cost_trans_13_4 hedge_rate_c_1_4 -1
+    cost_trans_14_4 transportation_cost_14_4 1 production_cashflow_1_4 1
+    cost_trans_14_4 hedge_rate_c_1_4 -1
+    cost_trans_15_4 transportation_cost_15_4 1 production_cashflow_1_4 1
+    cost_trans_15_4 hedge_rate_c_1_4 -1
+    cost_trans_16_4 transportation_cost_16_4 1 production_cashflow_1_4 1
+    cost_trans_16_4 hedge_rate_c_1_4 -1
+    cost_trans_17_4 transportation_cost_17_4 1 production_cashflow_1_4 1
+    cost_trans_17_4 hedge_rate_c_1_4 -1
+    cost_trans_18_4 transportation_cost_18_4 1 production_cashflow_1_4 1
+    cost_trans_18_4 hedge_rate_c_1_4 -1
+    cost_trans_19_4 transportation_cost_19_4 1 production_cashflow_1_4 1
+    cost_trans_19_4 hedge_rate_c_1_4 -1
+    cost_optionbuy_4 option_cost_4 1 cf_ref_c_4 1
+    revenue_0_4 revenue_in_market_0_4 1 production_cashflow_0_4 -1
+    revenue_0_4 hege_rate_r_0_4 1
+    cfp_0_4 production_cashflow_0_4 1 cf_p_c_0_4 -1
+    cfp_1_4 production_cashflow_1_4 1 cf_p_c_1_4 -1
+    cf_0_4 cf_p_c_0_4 1 cf_ref_c_4 -0.9999999999999997
+    cf_1_4 cf_p_c_1_4 1 cf_ref_c_4 -1
+    cf_ref_4 cf_ref_c_4 1 calculate_npv_4 -1
+    V0_0_0_4 R1_0_0_4 1 mac_capacity_0_0_4 -75000
+    V0_0_0_4 R1_0_0_5 -1
+    V0_0_1_4 R1_0_1_4 1 mac_capacity_0_1_4 -75000
+    V0_0_1_4 R1_0_1_5 -1
+    V0_0_2_4 R1_0_2_4 1 mac_capacity_0_2_4 -75000
+    V0_0_2_4 R1_0_2_5 -1
+    V0_1_0_4 R1_1_0_4 1 mac_capacity_1_0_4 -75000
+    V0_1_0_4 R1_1_0_5 -1
+    V0_1_1_4 R1_1_1_4 1 mac_capacity_1_1_4 -75000
+    V0_1_1_4 R1_1_1_5 -1
+    V0_1_2_4 R1_1_2_4 1 mac_capacity_1_2_4 -75000
+    V0_1_2_4 R1_1_2_5 -1
+    V0_2_0_4 R1_2_0_4 1 mac_capacity_2_0_4 -75000
+    V0_2_0_4 R1_2_0_5 -1
+    V0_2_1_4 R1_2_1_4 1 mac_capacity_2_1_4 -75000
+    V0_2_1_4 R1_2_1_5 -1
+    V0_2_2_4 R1_2_2_4 1 mac_capacity_2_2_4 -75000
+    V0_2_2_4 R1_2_2_5 -1
+    V0_3_0_4 R1_3_0_4 1 mac_capacity_3_0_4 -75000
+    V0_3_0_4 R1_3_0_5 -1
+    V0_3_1_4 R1_3_1_4 1 mac_capacity_3_1_4 -75000
+    V0_3_1_4 R1_3_1_5 -1
+    V0_3_2_4 R1_3_2_4 1 mac_capacity_3_2_4 -75000
+    V0_3_2_4 R1_3_2_5 -1
+    V0_4_0_4 R1_4_0_4 1 mac_capacity_4_0_4 -75000
+    V0_4_0_4 R1_4_0_5 -1
+    V0_4_1_4 R1_4_1_4 1 mac_capacity_4_1_4 -75000
+    V0_4_1_4 R1_4_1_5 -1
+    V0_4_2_4 R1_4_2_4 1 mac_capacity_4_2_4 -75000
+    V0_4_2_4 R1_4_2_5 -1
+    V0_5_0_4 R1_5_0_4 1 mac_capacity_5_0_4 -75000
+    V0_5_0_4 R1_5_0_5 -1
+    V0_5_1_4 R1_5_1_4 1 mac_capacity_5_1_4 -75000
+    V0_5_1_4 R1_5_1_5 -1
+    V0_5_2_4 R1_5_2_4 1 mac_capacity_5_2_4 -75000
+    V0_5_2_4 R1_5_2_5 -1
+    V0_6_0_4 R1_6_0_4 1 mac_capacity_6_0_4 -75000
+    V0_6_0_4 R1_6_0_5 -1
+    V0_6_1_4 R1_6_1_4 1 mac_capacity_6_1_4 -75000
+    V0_6_1_4 R1_6_1_5 -1
+    V0_6_2_4 R1_6_2_4 1 mac_capacity_6_2_4 -75000
+    V0_6_2_4 R1_6_2_5 -1
+    V0_7_0_4 R1_7_0_4 1 mac_capacity_7_0_4 -75000
+    V0_7_0_4 R1_7_0_5 -1
+    V0_7_1_4 R1_7_1_4 1 mac_capacity_7_1_4 -75000
+    V0_7_1_4 R1_7_1_5 -1
+    V0_7_2_4 R1_7_2_4 1 mac_capacity_7_2_4 -75000
+    V0_7_2_4 R1_7_2_5 -1
+    V0_8_0_4 R1_8_0_4 1 mac_capacity_8_0_4 -75000
+    V0_8_0_4 R1_8_0_5 -1
+    V0_8_1_4 R1_8_1_4 1 mac_capacity_8_1_4 -75000
+    V0_8_1_4 R1_8_1_5 -1
+    V0_8_2_4 R1_8_2_4 1 mac_capacity_8_2_4 -75000
+    V0_8_2_4 R1_8_2_5 -1
+    V0_9_0_4 R1_9_0_4 1 mac_capacity_9_0_4 -75000
+    V0_9_0_4 R1_9_0_5 -1
+    V0_9_1_4 R1_9_1_4 1 mac_capacity_9_1_4 -75000
+    V0_9_1_4 R1_9_1_5 -1
+    V0_9_2_4 R1_9_2_4 1 mac_capacity_9_2_4 -75000
+    V0_9_2_4 R1_9_2_5 -1
+    V0_10_0_4 R1_10_0_4 1 mac_capacity_10_0_4 -75000
+    V0_10_0_4 R1_10_0_5 -1
+    V0_10_1_4 R1_10_1_4 1 mac_capacity_10_1_4 -75000
+    V0_10_1_4 R1_10_1_5 -1
+    V0_10_2_4 R1_10_2_4 1 mac_capacity_10_2_4 -75000
+    V0_10_2_4 R1_10_2_5 -1
+    V0_11_0_4 R1_11_0_4 1 mac_capacity_11_0_4 -75000
+    V0_11_0_4 R1_11_0_5 -1
+    V0_11_1_4 R1_11_1_4 1 mac_capacity_11_1_4 -75000
+    V0_11_1_4 R1_11_1_5 -1
+    V0_11_2_4 R1_11_2_4 1 mac_capacity_11_2_4 -75000
+    V0_11_2_4 R1_11_2_5 -1
+    V0_12_0_4 R1_12_0_4 1 mac_capacity_12_0_4 -75000
+    V0_12_0_4 R1_12_0_5 -1
+    V0_12_1_4 R1_12_1_4 1 mac_capacity_12_1_4 -75000
+    V0_12_1_4 R1_12_1_5 -1
+    V0_12_2_4 R1_12_2_4 1 mac_capacity_12_2_4 -75000
+    V0_12_2_4 R1_12_2_5 -1
+    V0_13_0_4 R1_13_0_4 1 mac_capacity_13_0_4 -75000
+    V0_13_0_4 R1_13_0_5 -1
+    V0_13_1_4 R1_13_1_4 1 mac_capacity_13_1_4 -75000
+    V0_13_1_4 R1_13_1_5 -1
+    V0_13_2_4 R1_13_2_4 1 mac_capacity_13_2_4 -75000
+    V0_13_2_4 R1_13_2_5 -1
+    V0_14_0_4 R1_14_0_4 1 mac_capacity_14_0_4 -75000
+    V0_14_0_4 R1_14_0_5 -1
+    V0_14_1_4 R1_14_1_4 1 mac_capacity_14_1_4 -75000
+    V0_14_1_4 R1_14_1_5 -1
+    V0_14_2_4 R1_14_2_4 1 mac_capacity_14_2_4 -75000
+    V0_14_2_4 R1_14_2_5 -1
+    V0_15_0_4 R1_15_0_4 1 mac_capacity_15_0_4 -75000
+    V0_15_0_4 R1_15_0_5 -1
+    V0_15_1_4 R1_15_1_4 1 mac_capacity_15_1_4 -75000
+    V0_15_1_4 R1_15_1_5 -1
+    V0_15_2_4 R1_15_2_4 1 mac_capacity_15_2_4 -75000
+    V0_15_2_4 R1_15_2_5 -1
+    V0_16_0_4 R1_16_0_4 1 mac_capacity_16_0_4 -75000
+    V0_16_0_4 R1_16_0_5 -1
+    V0_16_1_4 R1_16_1_4 1 mac_capacity_16_1_4 -75000
+    V0_16_1_4 R1_16_1_5 -1
+    V0_16_2_4 R1_16_2_4 1 mac_capacity_16_2_4 -75000
+    V0_16_2_4 R1_16_2_5 -1
+    V0_17_0_4 R1_17_0_4 1 mac_capacity_17_0_4 -75000
+    V0_17_0_4 R1_17_0_5 -1
+    V0_17_1_4 R1_17_1_4 1 mac_capacity_17_1_4 -75000
+    V0_17_1_4 R1_17_1_5 -1
+    V0_17_2_4 R1_17_2_4 1 mac_capacity_17_2_4 -75000
+    V0_17_2_4 R1_17_2_5 -1
+    V0_18_0_4 R1_18_0_4 1 mac_capacity_18_0_4 -75000
+    V0_18_0_4 R1_18_0_5 -1
+    V0_18_1_4 R1_18_1_4 1 mac_capacity_18_1_4 -75000
+    V0_18_1_4 R1_18_1_5 -1
+    V0_18_2_4 R1_18_2_4 1 mac_capacity_18_2_4 -75000
+    V0_18_2_4 R1_18_2_5 -1
+    V0_19_0_4 R1_19_0_4 1 mac_capacity_19_0_4 -75000
+    V0_19_0_4 R1_19_0_5 -1
+    V0_19_1_4 R1_19_1_4 1 mac_capacity_19_1_4 -75000
+    V0_19_1_4 R1_19_1_5 -1
+    V0_19_2_4 R1_19_2_4 1 mac_capacity_19_2_4 -75000
+    V0_19_2_4 R1_19_2_5 -1
+    V1_0_4 R2_0_4 1 production_cashflow_0_4 1
+    V1_0_4 hedge_rate_c_0_4 -1 R2_0_5 -1
+    V1_1_4 R2_1_4 1 production_cashflow_1_4 1
+    V1_1_4 hedge_rate_c_1_4 -1 R2_1_5 -1
+    V2_4 first_stage_loop_4 1 first_stage_loop_5 -1
+    V3_4 npv_stage_loop_4 1 npv_stage_loop_5 -1
+    npv_stage_5 OBJROW -1 calculate_npv_5 1
+    npv_stage_5 npv_stage_loop_5 -1
+    x2_0_0_5 demand_fulfilment_0_5_0 1 revenue_in_market_0_5 20
+    x2_0_1_5 demand_fulfilment_0_5_1 1 revenue_in_market_0_5 35
+    x2_0_2_5 demand_fulfilment_0_5_2 1 revenue_in_market_0_5 70
+    x_0_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_0_0_5 2.5
+    x_0_0_0_5 prod_cost_0_5 -7 transportation_cost_0_5 -0.2
+    x_0_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_0_1_5 3
+    x_0_0_1_5 prod_cost_0_5 -12.5 transportation_cost_0_5 -0.22
+    x_0_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_0_2_5 3.75
+    x_0_0_2_5 prod_cost_0_5 -17 transportation_cost_0_5 -0.25
+    x_1_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_1_0_5 2.5
+    x_1_0_0_5 prod_cost_1_5 -7 transportation_cost_1_5 -0.2
+    x_1_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_1_1_5 3
+    x_1_0_1_5 prod_cost_1_5 -12.5 transportation_cost_1_5 -0.22
+    x_1_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_1_2_5 3.75
+    x_1_0_2_5 prod_cost_1_5 -17 transportation_cost_1_5 -0.25
+    x_2_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_2_0_5 2.5
+    x_2_0_0_5 prod_cost_2_5 -7 transportation_cost_2_5 -0.2
+    x_2_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_2_1_5 3
+    x_2_0_1_5 prod_cost_2_5 -12.5 transportation_cost_2_5 -0.22
+    x_2_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_2_2_5 3.75
+    x_2_0_2_5 prod_cost_2_5 -17 transportation_cost_2_5 -0.25
+    x_3_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_3_0_5 2.5
+    x_3_0_0_5 prod_cost_3_5 -7 transportation_cost_3_5 -0.2
+    x_3_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_3_1_5 3
+    x_3_0_1_5 prod_cost_3_5 -12.5 transportation_cost_3_5 -0.22
+    x_3_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_3_2_5 3.75
+    x_3_0_2_5 prod_cost_3_5 -17 transportation_cost_3_5 -0.25
+    x_4_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_4_0_5 2.5
+    x_4_0_0_5 prod_cost_4_5 -7 transportation_cost_4_5 -0.2
+    x_4_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_4_1_5 3
+    x_4_0_1_5 prod_cost_4_5 -12.5 transportation_cost_4_5 -0.22
+    x_4_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_4_2_5 3.75
+    x_4_0_2_5 prod_cost_4_5 -17 transportation_cost_4_5 -0.25
+    x_5_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_5_0_5 2.5
+    x_5_0_0_5 prod_cost_5_5 -7 transportation_cost_5_5 -0.2
+    x_5_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_5_1_5 3
+    x_5_0_1_5 prod_cost_5_5 -12.5 transportation_cost_5_5 -0.22
+    x_5_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_5_2_5 3.75
+    x_5_0_2_5 prod_cost_5_5 -17 transportation_cost_5_5 -0.25
+    x_6_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_6_0_5 2.5
+    x_6_0_0_5 prod_cost_6_5 -7 transportation_cost_6_5 -0.2
+    x_6_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_6_1_5 3
+    x_6_0_1_5 prod_cost_6_5 -12.5 transportation_cost_6_5 -0.22
+    x_6_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_6_2_5 3.75
+    x_6_0_2_5 prod_cost_6_5 -17 transportation_cost_6_5 -0.25
+    x_7_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_7_0_5 2.5
+    x_7_0_0_5 prod_cost_7_5 -7 transportation_cost_7_5 -0.2
+    x_7_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_7_1_5 3
+    x_7_0_1_5 prod_cost_7_5 -12.5 transportation_cost_7_5 -0.22
+    x_7_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_7_2_5 3.75
+    x_7_0_2_5 prod_cost_7_5 -17 transportation_cost_7_5 -0.25
+    x_8_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_8_0_5 2.5
+    x_8_0_0_5 prod_cost_8_5 -7 transportation_cost_8_5 -0.2
+    x_8_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_8_1_5 3
+    x_8_0_1_5 prod_cost_8_5 -12.5 transportation_cost_8_5 -0.22
+    x_8_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_8_2_5 3.75
+    x_8_0_2_5 prod_cost_8_5 -17 transportation_cost_8_5 -0.25
+    x_9_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_9_0_5 2.5
+    x_9_0_0_5 prod_cost_9_5 -7 transportation_cost_9_5 -0.2
+    x_9_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_9_1_5 3
+    x_9_0_1_5 prod_cost_9_5 -12.5 transportation_cost_9_5 -0.22
+    x_9_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_9_2_5 3.75
+    x_9_0_2_5 prod_cost_9_5 -17 transportation_cost_9_5 -0.25
+    x_10_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_10_0_5 2.5
+    x_10_0_0_5 prod_cost_10_5 -5 transportation_cost_10_5 -0.8
+    x_10_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_10_1_5 3
+    x_10_0_1_5 prod_cost_10_5 -9 transportation_cost_10_5 -1
+    x_10_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_10_2_5 3.75
+    x_10_0_2_5 prod_cost_10_5 -13 transportation_cost_10_5 -1.2
+    x_11_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_11_0_5 2.5
+    x_11_0_0_5 prod_cost_11_5 -5 transportation_cost_11_5 -0.8
+    x_11_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_11_1_5 3
+    x_11_0_1_5 prod_cost_11_5 -9 transportation_cost_11_5 -1
+    x_11_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_11_2_5 3.75
+    x_11_0_2_5 prod_cost_11_5 -13 transportation_cost_11_5 -1.2
+    x_12_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_12_0_5 2.5
+    x_12_0_0_5 prod_cost_12_5 -5 transportation_cost_12_5 -0.8
+    x_12_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_12_1_5 3
+    x_12_0_1_5 prod_cost_12_5 -9 transportation_cost_12_5 -1
+    x_12_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_12_2_5 3.75
+    x_12_0_2_5 prod_cost_12_5 -13 transportation_cost_12_5 -1.2
+    x_13_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_13_0_5 2.5
+    x_13_0_0_5 prod_cost_13_5 -5 transportation_cost_13_5 -0.8
+    x_13_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_13_1_5 3
+    x_13_0_1_5 prod_cost_13_5 -9 transportation_cost_13_5 -1
+    x_13_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_13_2_5 3.75
+    x_13_0_2_5 prod_cost_13_5 -13 transportation_cost_13_5 -1.2
+    x_14_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_14_0_5 2.5
+    x_14_0_0_5 prod_cost_14_5 -5 transportation_cost_14_5 -0.8
+    x_14_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_14_1_5 3
+    x_14_0_1_5 prod_cost_14_5 -9 transportation_cost_14_5 -1
+    x_14_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_14_2_5 3.75
+    x_14_0_2_5 prod_cost_14_5 -13 transportation_cost_14_5 -1.2
+    x_15_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_15_0_5 2.5
+    x_15_0_0_5 prod_cost_15_5 -5 transportation_cost_15_5 -0.8
+    x_15_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_15_1_5 3
+    x_15_0_1_5 prod_cost_15_5 -9 transportation_cost_15_5 -1
+    x_15_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_15_2_5 3.75
+    x_15_0_2_5 prod_cost_15_5 -13 transportation_cost_15_5 -1.2
+    x_16_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_16_0_5 2.5
+    x_16_0_0_5 prod_cost_16_5 -5 transportation_cost_16_5 -0.8
+    x_16_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_16_1_5 3
+    x_16_0_1_5 prod_cost_16_5 -9 transportation_cost_16_5 -1
+    x_16_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_16_2_5 3.75
+    x_16_0_2_5 prod_cost_16_5 -13 transportation_cost_16_5 -1.2
+    x_17_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_17_0_5 2.5
+    x_17_0_0_5 prod_cost_17_5 -5 transportation_cost_17_5 -0.8
+    x_17_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_17_1_5 3
+    x_17_0_1_5 prod_cost_17_5 -9 transportation_cost_17_5 -1
+    x_17_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_17_2_5 3.75
+    x_17_0_2_5 prod_cost_17_5 -13 transportation_cost_17_5 -1.2
+    x_18_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_18_0_5 2.5
+    x_18_0_0_5 prod_cost_18_5 -5 transportation_cost_18_5 -0.8
+    x_18_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_18_1_5 3
+    x_18_0_1_5 prod_cost_18_5 -9 transportation_cost_18_5 -1
+    x_18_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_18_2_5 3.75
+    x_18_0_2_5 prod_cost_18_5 -13 transportation_cost_18_5 -1.2
+    x_19_0_0_5 demand_fulfilment_0_5_0 1 mac_capacity_19_0_5 2.5
+    x_19_0_0_5 prod_cost_19_5 -5 transportation_cost_19_5 -0.8
+    x_19_0_1_5 demand_fulfilment_0_5_1 1 mac_capacity_19_1_5 3
+    x_19_0_1_5 prod_cost_19_5 -9 transportation_cost_19_5 -1
+    x_19_0_2_5 demand_fulfilment_0_5_2 1 mac_capacity_19_2_5 3.75
+    x_19_0_2_5 prod_cost_19_5 -13 transportation_cost_19_5 -1.2
+    call_e_0_4_5 hedge_rate_c_0_5 1 call_limit_0_5_4 1
+    call_e_0_4_5 cf_p_c_0_5 -1 cf_ref_c_5 0.9999999999999997
+    call_e_1_4_5 hedge_rate_c_1_5 1 call_limit_1_5_4 1
+    call_e_1_4_5 cf_p_c_1_5 -1 cf_ref_c_5 1
+    put_e_0_4_5 hege_rate_r_0_5 -1 put_limit_0_5_4 1
+    put_e_0_4_5 cf_p_c_0_5 1 cf_ref_c_5 -0.9999999999999997
+    put_e_1_4_5 hege_rate_r_1_5 -1 put_limit_1_5_4 1
+    put_e_1_4_5 cf_p_c_1_5 1 cf_ref_c_5 -1
+    cost_prod_0_5 prod_cost_0_5 1 production_cashflow_0_5 1
+    cost_prod_0_5 hedge_rate_c_0_5 -1
+    cost_prod_1_5 prod_cost_1_5 1 production_cashflow_0_5 1
+    cost_prod_1_5 hedge_rate_c_0_5 -1
+    cost_prod_2_5 prod_cost_2_5 1 production_cashflow_0_5 1
+    cost_prod_2_5 hedge_rate_c_0_5 -1
+    cost_prod_3_5 prod_cost_3_5 1 production_cashflow_0_5 1
+    cost_prod_3_5 hedge_rate_c_0_5 -1
+    cost_prod_4_5 prod_cost_4_5 1 production_cashflow_0_5 1
+    cost_prod_4_5 hedge_rate_c_0_5 -1
+    cost_prod_5_5 prod_cost_5_5 1 production_cashflow_0_5 1
+    cost_prod_5_5 hedge_rate_c_0_5 -1
+    cost_prod_6_5 prod_cost_6_5 1 production_cashflow_0_5 1
+    cost_prod_6_5 hedge_rate_c_0_5 -1
+    cost_prod_7_5 prod_cost_7_5 1 production_cashflow_0_5 1
+    cost_prod_7_5 hedge_rate_c_0_5 -1
+    cost_prod_8_5 prod_cost_8_5 1 production_cashflow_0_5 1
+    cost_prod_8_5 hedge_rate_c_0_5 -1
+    cost_prod_9_5 prod_cost_9_5 1 production_cashflow_0_5 1
+    cost_prod_9_5 hedge_rate_c_0_5 -1
+    cost_prod_10_5 prod_cost_10_5 1 production_cashflow_1_5 1
+    cost_prod_10_5 hedge_rate_c_1_5 -1
+    cost_prod_11_5 prod_cost_11_5 1 production_cashflow_1_5 1
+    cost_prod_11_5 hedge_rate_c_1_5 -1
+    cost_prod_12_5 prod_cost_12_5 1 production_cashflow_1_5 1
+    cost_prod_12_5 hedge_rate_c_1_5 -1
+    cost_prod_13_5 prod_cost_13_5 1 production_cashflow_1_5 1
+    cost_prod_13_5 hedge_rate_c_1_5 -1
+    cost_prod_14_5 prod_cost_14_5 1 production_cashflow_1_5 1
+    cost_prod_14_5 hedge_rate_c_1_5 -1
+    cost_prod_15_5 prod_cost_15_5 1 production_cashflow_1_5 1
+    cost_prod_15_5 hedge_rate_c_1_5 -1
+    cost_prod_16_5 prod_cost_16_5 1 production_cashflow_1_5 1
+    cost_prod_16_5 hedge_rate_c_1_5 -1
+    cost_prod_17_5 prod_cost_17_5 1 production_cashflow_1_5 1
+    cost_prod_17_5 hedge_rate_c_1_5 -1
+    cost_prod_18_5 prod_cost_18_5 1 production_cashflow_1_5 1
+    cost_prod_18_5 hedge_rate_c_1_5 -1
+    cost_prod_19_5 prod_cost_19_5 1 production_cashflow_1_5 1
+    cost_prod_19_5 hedge_rate_c_1_5 -1
+    cost_trans_0_5 transportation_cost_0_5 1 production_cashflow_0_5 1
+    cost_trans_0_5 hedge_rate_c_0_5 -1
+    cost_trans_1_5 transportation_cost_1_5 1 production_cashflow_0_5 1
+    cost_trans_1_5 hedge_rate_c_0_5 -1
+    cost_trans_2_5 transportation_cost_2_5 1 production_cashflow_0_5 1
+    cost_trans_2_5 hedge_rate_c_0_5 -1
+    cost_trans_3_5 transportation_cost_3_5 1 production_cashflow_0_5 1
+    cost_trans_3_5 hedge_rate_c_0_5 -1
+    cost_trans_4_5 transportation_cost_4_5 1 production_cashflow_0_5 1
+    cost_trans_4_5 hedge_rate_c_0_5 -1
+    cost_trans_5_5 transportation_cost_5_5 1 production_cashflow_0_5 1
+    cost_trans_5_5 hedge_rate_c_0_5 -1
+    cost_trans_6_5 transportation_cost_6_5 1 production_cashflow_0_5 1
+    cost_trans_6_5 hedge_rate_c_0_5 -1
+    cost_trans_7_5 transportation_cost_7_5 1 production_cashflow_0_5 1
+    cost_trans_7_5 hedge_rate_c_0_5 -1
+    cost_trans_8_5 transportation_cost_8_5 1 production_cashflow_0_5 1
+    cost_trans_8_5 hedge_rate_c_0_5 -1
+    cost_trans_9_5 transportation_cost_9_5 1 production_cashflow_0_5 1
+    cost_trans_9_5 hedge_rate_c_0_5 -1
+    cost_trans_10_5 transportation_cost_10_5 1 production_cashflow_1_5 1
+    cost_trans_10_5 hedge_rate_c_1_5 -1
+    cost_trans_11_5 transportation_cost_11_5 1 production_cashflow_1_5 1
+    cost_trans_11_5 hedge_rate_c_1_5 -1
+    cost_trans_12_5 transportation_cost_12_5 1 production_cashflow_1_5 1
+    cost_trans_12_5 hedge_rate_c_1_5 -1
+    cost_trans_13_5 transportation_cost_13_5 1 production_cashflow_1_5 1
+    cost_trans_13_5 hedge_rate_c_1_5 -1
+    cost_trans_14_5 transportation_cost_14_5 1 production_cashflow_1_5 1
+    cost_trans_14_5 hedge_rate_c_1_5 -1
+    cost_trans_15_5 transportation_cost_15_5 1 production_cashflow_1_5 1
+    cost_trans_15_5 hedge_rate_c_1_5 -1
+    cost_trans_16_5 transportation_cost_16_5 1 production_cashflow_1_5 1
+    cost_trans_16_5 hedge_rate_c_1_5 -1
+    cost_trans_17_5 transportation_cost_17_5 1 production_cashflow_1_5 1
+    cost_trans_17_5 hedge_rate_c_1_5 -1
+    cost_trans_18_5 transportation_cost_18_5 1 production_cashflow_1_5 1
+    cost_trans_18_5 hedge_rate_c_1_5 -1
+    cost_trans_19_5 transportation_cost_19_5 1 production_cashflow_1_5 1
+    cost_trans_19_5 hedge_rate_c_1_5 -1
+    cost_optionbuy_5 option_cost_5 1 cf_ref_c_5 1
+    revenue_0_5 revenue_in_market_0_5 1 production_cashflow_0_5 -1
+    revenue_0_5 hege_rate_r_0_5 1
+    cfp_0_5 production_cashflow_0_5 1 cf_p_c_0_5 -1
+    cfp_1_5 production_cashflow_1_5 1 cf_p_c_1_5 -1
+    cf_0_5 cf_p_c_0_5 1 cf_ref_c_5 -0.9999999999999997
+    cf_1_5 cf_p_c_1_5 1 cf_ref_c_5 -1
+    cf_ref_5 cf_ref_c_5 1 calculate_npv_5 -1
+    V0_0_0_5 R1_0_0_5 1 mac_capacity_0_0_5 -75000
+    V0_0_1_5 R1_0_1_5 1 mac_capacity_0_1_5 -75000
+    V0_0_2_5 R1_0_2_5 1 mac_capacity_0_2_5 -75000
+    V0_1_0_5 R1_1_0_5 1 mac_capacity_1_0_5 -75000
+    V0_1_1_5 R1_1_1_5 1 mac_capacity_1_1_5 -75000
+    V0_1_2_5 R1_1_2_5 1 mac_capacity_1_2_5 -75000
+    V0_2_0_5 R1_2_0_5 1 mac_capacity_2_0_5 -75000
+    V0_2_1_5 R1_2_1_5 1 mac_capacity_2_1_5 -75000
+    V0_2_2_5 R1_2_2_5 1 mac_capacity_2_2_5 -75000
+    V0_3_0_5 R1_3_0_5 1 mac_capacity_3_0_5 -75000
+    V0_3_1_5 R1_3_1_5 1 mac_capacity_3_1_5 -75000
+    V0_3_2_5 R1_3_2_5 1 mac_capacity_3_2_5 -75000
+    V0_4_0_5 R1_4_0_5 1 mac_capacity_4_0_5 -75000
+    V0_4_1_5 R1_4_1_5 1 mac_capacity_4_1_5 -75000
+    V0_4_2_5 R1_4_2_5 1 mac_capacity_4_2_5 -75000
+    V0_5_0_5 R1_5_0_5 1 mac_capacity_5_0_5 -75000
+    V0_5_1_5 R1_5_1_5 1 mac_capacity_5_1_5 -75000
+    V0_5_2_5 R1_5_2_5 1 mac_capacity_5_2_5 -75000
+    V0_6_0_5 R1_6_0_5 1 mac_capacity_6_0_5 -75000
+    V0_6_1_5 R1_6_1_5 1 mac_capacity_6_1_5 -75000
+    V0_6_2_5 R1_6_2_5 1 mac_capacity_6_2_5 -75000
+    V0_7_0_5 R1_7_0_5 1 mac_capacity_7_0_5 -75000
+    V0_7_1_5 R1_7_1_5 1 mac_capacity_7_1_5 -75000
+    V0_7_2_5 R1_7_2_5 1 mac_capacity_7_2_5 -75000
+    V0_8_0_5 R1_8_0_5 1 mac_capacity_8_0_5 -75000
+    V0_8_1_5 R1_8_1_5 1 mac_capacity_8_1_5 -75000
+    V0_8_2_5 R1_8_2_5 1 mac_capacity_8_2_5 -75000
+    V0_9_0_5 R1_9_0_5 1 mac_capacity_9_0_5 -75000
+    V0_9_1_5 R1_9_1_5 1 mac_capacity_9_1_5 -75000
+    V0_9_2_5 R1_9_2_5 1 mac_capacity_9_2_5 -75000
+    V0_10_0_5 R1_10_0_5 1 mac_capacity_10_0_5 -75000
+    V0_10_1_5 R1_10_1_5 1 mac_capacity_10_1_5 -75000
+    V0_10_2_5 R1_10_2_5 1 mac_capacity_10_2_5 -75000
+    V0_11_0_5 R1_11_0_5 1 mac_capacity_11_0_5 -75000
+    V0_11_1_5 R1_11_1_5 1 mac_capacity_11_1_5 -75000
+    V0_11_2_5 R1_11_2_5 1 mac_capacity_11_2_5 -75000
+    V0_12_0_5 R1_12_0_5 1 mac_capacity_12_0_5 -75000
+    V0_12_1_5 R1_12_1_5 1 mac_capacity_12_1_5 -75000
+    V0_12_2_5 R1_12_2_5 1 mac_capacity_12_2_5 -75000
+    V0_13_0_5 R1_13_0_5 1 mac_capacity_13_0_5 -75000
+    V0_13_1_5 R1_13_1_5 1 mac_capacity_13_1_5 -75000
+    V0_13_2_5 R1_13_2_5 1 mac_capacity_13_2_5 -75000
+    V0_14_0_5 R1_14_0_5 1 mac_capacity_14_0_5 -75000
+    V0_14_1_5 R1_14_1_5 1 mac_capacity_14_1_5 -75000
+    V0_14_2_5 R1_14_2_5 1 mac_capacity_14_2_5 -75000
+    V0_15_0_5 R1_15_0_5 1 mac_capacity_15_0_5 -75000
+    V0_15_1_5 R1_15_1_5 1 mac_capacity_15_1_5 -75000
+    V0_15_2_5 R1_15_2_5 1 mac_capacity_15_2_5 -75000
+    V0_16_0_5 R1_16_0_5 1 mac_capacity_16_0_5 -75000
+    V0_16_1_5 R1_16_1_5 1 mac_capacity_16_1_5 -75000
+    V0_16_2_5 R1_16_2_5 1 mac_capacity_16_2_5 -75000
+    V0_17_0_5 R1_17_0_5 1 mac_capacity_17_0_5 -75000
+    V0_17_1_5 R1_17_1_5 1 mac_capacity_17_1_5 -75000
+    V0_17_2_5 R1_17_2_5 1 mac_capacity_17_2_5 -75000
+    V0_18_0_5 R1_18_0_5 1 mac_capacity_18_0_5 -75000
+    V0_18_1_5 R1_18_1_5 1 mac_capacity_18_1_5 -75000
+    V0_18_2_5 R1_18_2_5 1 mac_capacity_18_2_5 -75000
+    V0_19_0_5 R1_19_0_5 1 mac_capacity_19_0_5 -75000
+    V0_19_1_5 R1_19_1_5 1 mac_capacity_19_1_5 -75000
+    V0_19_2_5 R1_19_2_5 1 mac_capacity_19_2_5 -75000
+    V1_0_5 R2_0_5 1 production_cashflow_0_5 1
+    V1_0_5 hedge_rate_c_0_5 -1
+    V1_1_5 R2_1_5 1 production_cashflow_1_5 1
+    V1_1_5 hedge_rate_c_1_5 -1
+    V2_5 first_stage_loop_5 1
+    V3_5 npv_stage_loop_5 1
+RHS
+    RHS demand_fulfilment_0_1_0 340106.2500000007 demand_fulfilment_0_1_2 41224.99999999982
+    RHS revenue_in_market_0_1 9687875.000000011 demand_fulfilment_0_2_0 350522.0039062529
+    RHS demand_fulfilment_0_2_2 127462.5468749998 revenue_in_market_0_2 15932818.35937504
+    RHS demand_fulfilment_0_3_0 295573.6965893561 demand_fulfilment_0_3_2 175154.7831640615
+    RHS revenue_in_market_0_3 18172308.75327152 demand_fulfilment_0_4_0 225648.6229980778
+    RHS demand_fulfilment_0_4_1 135389.1737988463 demand_fulfilment_0_4_2 203083.76069827
+    RHS revenue_in_market_0_4 23467456.79180005 demand_fulfilment_0_5_0 139535.4672464361
+    RHS demand_fulfilment_0_5_1 279070.9344928723 demand_fulfilment_0_5_2 209303.2008696538
+    RHS revenue_in_market_0_5 27209416.11305497
+BOUNDS
+ BV BOUND y_build_0_0 1
+ BV BOUND y_build_0_1 1
+ BV BOUND y_build_0_2 1
+ BV BOUND y_build_1_0 1
+ BV BOUND y_build_1_1 1
+ BV BOUND y_build_1_2 1
+ BV BOUND y_build_2_0 1
+ BV BOUND y_build_2_1 1
+ BV BOUND y_build_2_2 1
+ BV BOUND y_build_3_0 1
+ BV BOUND y_build_3_1 1
+ BV BOUND y_build_3_2 1
+ BV BOUND y_build_4_0 1
+ BV BOUND y_build_4_1 1
+ BV BOUND y_build_4_2 1
+ BV BOUND y_build_5_0 1
+ BV BOUND y_build_5_1 1
+ BV BOUND y_build_5_2 1
+ BV BOUND y_build_6_0 1
+ BV BOUND y_build_6_1 1
+ BV BOUND y_build_6_2 1
+ BV BOUND y_build_7_0 1
+ BV BOUND y_build_7_1 1
+ BV BOUND y_build_7_2 1
+ BV BOUND y_build_8_0 1
+ BV BOUND y_build_8_1 1
+ BV BOUND y_build_8_2 1
+ BV BOUND y_build_9_0 1
+ BV BOUND y_build_9_1 1
+ BV BOUND y_build_9_2 1
+ BV BOUND y_build_10_0 1
+ BV BOUND y_build_10_1 1
+ BV BOUND y_build_10_2 1
+ BV BOUND y_build_11_0 1
+ BV BOUND y_build_11_1 1
+ BV BOUND y_build_11_2 1
+ BV BOUND y_build_12_0 1
+ BV BOUND y_build_12_1 1
+ BV BOUND y_build_12_2 1
+ BV BOUND y_build_13_0 1
+ BV BOUND y_build_13_1 1
+ BV BOUND y_build_13_2 1
+ BV BOUND y_build_14_0 1
+ BV BOUND y_build_14_1 1
+ BV BOUND y_build_14_2 1
+ BV BOUND y_build_15_0 1
+ BV BOUND y_build_15_1 1
+ BV BOUND y_build_15_2 1
+ BV BOUND y_build_16_0 1
+ BV BOUND y_build_16_1 1
+ BV BOUND y_build_16_2 1
+ BV BOUND y_build_17_0 1
+ BV BOUND y_build_17_1 1
+ BV BOUND y_build_17_2 1
+ BV BOUND y_build_18_0 1
+ BV BOUND y_build_18_1 1
+ BV BOUND y_build_18_2 1
+ BV BOUND y_build_19_0 1
+ BV BOUND y_build_19_1 1
+ BV BOUND y_build_19_2 1
+ MI BOUND f_rev_0_0_0 -1e+030
+ UP BOUND f_rev_0_0_0 0
+ MI BOUND f_rev_0_0_1 -1e+030
+ UP BOUND f_rev_0_0_1 0
+ MI BOUND f_rev_0_0_2 -1e+030
+ UP BOUND f_rev_0_0_2 0
+ MI BOUND f_rev_0_0_3 -1e+030
+ UP BOUND f_rev_0_0_3 0
+ MI BOUND f_rev_0_0_4 -1e+030
+ UP BOUND f_rev_0_0_4 0
+ MI BOUND f_rev_0_0_5 -1e+030
+ UP BOUND f_rev_0_0_5 0
+ MI BOUND f_rev_1_0_0 -1e+030
+ UP BOUND f_rev_1_0_0 0
+ MI BOUND f_rev_1_0_1 -1e+030
+ UP BOUND f_rev_1_0_1 0
+ MI BOUND f_rev_1_0_2 -1e+030
+ UP BOUND f_rev_1_0_2 0
+ MI BOUND f_rev_1_0_3 -1e+030
+ UP BOUND f_rev_1_0_3 0
+ MI BOUND f_rev_1_0_4 -1e+030
+ UP BOUND f_rev_1_0_4 0
+ MI BOUND f_rev_1_0_5 -1e+030
+ UP BOUND f_rev_1_0_5 0
+ FR BOUND cfp_0_0 1e+030
+ FR BOUND cfp_1_0 1e+030
+ FR BOUND cf_0_0 1e+030
+ FR BOUND cf_1_0 1e+030
+ FR BOUND cf_ref_0 1e+030
+ FR BOUND V1_0_0 1e+030
+ FR BOUND V1_1_0 1e+030
+ FR BOUND V2_0 1e+030
+ FR BOUND npv_stage_1 1e+030
+ MI BOUND f_rev_0_1_2 -1e+030
+ UP BOUND f_rev_0_1_2 0
+ MI BOUND f_rev_1_1_2 -1e+030
+ UP BOUND f_rev_1_1_2 0
+ FR BOUND cfp_0_1 1e+030
+ FR BOUND cfp_1_1 1e+030
+ FR BOUND cf_0_1 1e+030
+ FR BOUND cf_1_1 1e+030
+ FR BOUND cf_ref_1 1e+030
+ FR BOUND V1_0_1 1e+030
+ FR BOUND V1_1_1 1e+030
+ FR BOUND V2_1 1e+030
+ FR BOUND V3_1 1e+030
+ FR BOUND npv_stage_2 1e+030
+ MI BOUND f_rev_0_2_3 -1e+030
+ UP BOUND f_rev_0_2_3 0
+ MI BOUND f_rev_1_2_3 -1e+030
+ UP BOUND f_rev_1_2_3 0
+ FR BOUND cfp_0_2 1e+030
+ FR BOUND cfp_1_2 1e+030
+ FR BOUND cf_0_2 1e+030
+ FR BOUND cf_1_2 1e+030
+ FR BOUND cf_ref_2 1e+030
+ FR BOUND V1_0_2 1e+030
+ FR BOUND V1_1_2 1e+030
+ FR BOUND V2_2 1e+030
+ FR BOUND V3_2 1e+030
+ FR BOUND npv_stage_3 1e+030
+ MI BOUND f_rev_0_3_4 -1e+030
+ UP BOUND f_rev_0_3_4 0
+ MI BOUND f_rev_1_3_4 -1e+030
+ UP BOUND f_rev_1_3_4 0
+ FR BOUND cfp_0_3 1e+030
+ FR BOUND cfp_1_3 1e+030
+ FR BOUND cf_0_3 1e+030
+ FR BOUND cf_1_3 1e+030
+ FR BOUND cf_ref_3 1e+030
+ FR BOUND V1_0_3 1e+030
+ FR BOUND V1_1_3 1e+030
+ FR BOUND V2_3 1e+030
+ FR BOUND V3_3 1e+030
+ FR BOUND npv_stage_4 1e+030
+ MI BOUND f_rev_0_4_5 -1e+030
+ UP BOUND f_rev_0_4_5 0
+ MI BOUND f_rev_1_4_5 -1e+030
+ UP BOUND f_rev_1_4_5 0
+ FR BOUND cfp_0_4 1e+030
+ FR BOUND cfp_1_4 1e+030
+ FR BOUND cf_0_4 1e+030
+ FR BOUND cf_1_4 1e+030
+ FR BOUND cf_ref_4 1e+030
+ FR BOUND V1_0_4 1e+030
+ FR BOUND V1_1_4 1e+030
+ FR BOUND V2_4 1e+030
+ FR BOUND V3_4 1e+030
+ FR BOUND npv_stage_5 1e+030
+ FR BOUND cfp_0_5 1e+030
+ FR BOUND cfp_1_5 1e+030
+ FR BOUND cf_0_5 1e+030
+ FR BOUND cf_1_5 1e+030
+ FR BOUND cf_ref_5 1e+030
+ FR BOUND V1_0_5 1e+030
+ FR BOUND V1_1_5 1e+030
+ FR BOUND V2_5 1e+030
+ FR BOUND V3_5 1e+030
+ENDATA
