@@ -1,0 +1,12 @@
+STOCH         MCFNDSD  (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'         0.33333   Stage1    
+    RHS1      NodeBalance11          15.0
+    RHS1      NodeBalance41         -15.0
+ SC Scen2     Scen1          0.33333   Stage2    
+    RHS1      NodeBalance11          10.0
+    RHS1      NodeBalance41         -10.0
+ SC Scen3     Scen1          0.33333   Stage2    
+    RHS1      NodeBalance11          20.0
+    RHS1      NodeBalance41         -20.0
+ENDATA

@@ -1,0 +1,6 @@
+TIME          MCFNDSD  (MIN)
+PERIODS       IMPLICIT
+    y12       NodeBalance11                 Stage1    
+    x121      NodeBalance11                 Stage2    
+*
+ENDATA
