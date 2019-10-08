@@ -1,0 +1,53 @@
+STOCH         SNDP_stochastic_general (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'            0.04   Stage1    
+    RHS1      DemConstr     1288664.0
+ SC Scen2     Scen1             0.04   Stage2    
+    RHS1      DemConstr     1033239.0
+ SC Scen3     Scen1             0.04   Stage2    
+    RHS1      DemConstr     1137955.0
+ SC Scen4     Scen1             0.04   Stage2    
+    RHS1      DemConstr     1227847.0
+ SC Scen5     Scen1             0.04   Stage2    
+    RHS1      DemConstr     1451328.0
+ SC Scen6     Scen1             0.04   Stage2    
+    RHS1      DemConstr     1680803.0
+ SC Scen7     Scen1             0.04   Stage2    
+    RHS1      DemConstr     1630048.0
+ SC Scen8     Scen1             0.04   Stage2    
+    RHS1      DemConstr     1662284.0
+ SC Scen9     Scen1             0.04   Stage2    
+    RHS1      DemConstr     1364644.0
+ SC Scen10    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1285714.0
+ SC Scen11    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1911669.0
+ SC Scen12    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1442621.0
+ SC Scen13    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1287192.0
+ SC Scen14    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1245368.0
+ SC Scen15    Scen1             0.04   Stage2    
+    RHS1      DemConstr      983594.0
+ SC Scen16    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1425790.0
+ SC Scen17    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1824953.0
+ SC Scen18    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1038375.0
+ SC Scen19    Scen1             0.04   Stage2    
+    RHS1      DemConstr      996268.0
+ SC Scen20    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1161755.0
+ SC Scen21    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1732554.0
+ SC Scen22    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1183756.0
+ SC Scen23    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1492773.0
+ SC Scen24    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1672634.0
+ SC Scen25    Scen1             0.04   Stage2    
+    RHS1      DemConstr     1831888.0
+ENDATA

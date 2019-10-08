@@ -1,0 +1,5 @@
+STOCH         SNDP_stochastic_general (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'             1.0   Stage1    
+    RHS1      DemConstr       58080.0
+ENDATA
