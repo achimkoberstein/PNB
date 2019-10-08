@@ -1,0 +1,9 @@
+TIME          SCDP    
+PERIODS
+    y_build_0_0 R0_0_0_0                 STAGE_0
+    npv_stage_1 R1_0_0_1                 STAGE_1
+    npv_stage_2 R1_0_0_2                 STAGE_2
+    npv_stage_3 R1_0_0_3                 STAGE_3
+    npv_stage_4 R1_0_0_4                 STAGE_4
+    npv_stage_5 R1_0_0_5                 STAGE_5
+ENDATA

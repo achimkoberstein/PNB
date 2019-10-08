@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C18DAD9B-417E-40EC-8DF4-B7142FBDB384}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>SCDP_simple</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\Koberstein\Documents\Forschung\Papers\2014 Vigo SWMP\SFlopC++\ParallelNestedBenders\src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../../../ThirdParty/glog/src/windows;../../../../../ThirdParty/boost;../../../../../ThirdParty/gtest/include;../../../../../CoinUtils/src;../../../../../BuildTools/headers;../../../../../Clp/src/OsiClp;../../../../../Osi/src/OsiCpx;../../../../../Cbc/src/OsiCbc;../../../../../Clp/src;../../../../../Cbc/src;../../../../../FlopCpp/src;../../../../../Osi/src/Osi;../../../../../ParallelNestedBenders/src;../../../../../Smi/src;../../../../../ThirdParty/cplex/cplex124/include/ilcplex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>../../../../../ThirdParty/boost/stage/lib64;../../../../../ThirdParty/cplex/cplex124/lib/x86;../../../../../ThirdParty/boost/stage/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../../../ThirdParty/glog/src/windows;../../../../../ThirdParty/boost;../../../../../ThirdParty/gtest/include;../../../../../CoinUtils/src;../../../../../BuildTools/headers;../../../../../Clp/src/OsiClp;../../../../../Osi/src/OsiCpx;../../../../../Cbc/src/OsiCbc;../../../../../Clp/src;../../../../../Cbc/src;../../../../../FlopCpp/src;../../../../../Osi/src/Osi;../../../../../ParallelNestedBenders/src;../../../../../Smi/src;../../../../../ThirdParty/cplex/cplex124/include/ilcplex;../../../../../ThirdParty/threadpool;../../../../../ThirdParty/json_spirit/json_spirit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>../../LibsX64Debug;../../../../../ThirdParty/boost/stage/lib64;../../../../../ThirdParty/cplex/cplex124/lib/x64;../../../../../ThirdParty/boost/stage/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cplex124.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Cbc\MSVisualStudio\v11\libCbc\libCbc.vcxproj">
+      <Project>{363ba154-fec9-4e1e-bc23-93cec58ab785}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Cbc\MSVisualStudio\v11\libOsiCbc\libOsiCbc.vcxproj">
+      <Project>{431ed9c6-fdf6-4836-8b33-be4ec5378640}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Cgl\MSVisualStudio\v11\libCgl\libCgl.vcxproj">
+      <Project>{dbea3904-f0b8-408a-9e1a-6497febe8c42}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Clp\MSVisualStudio\v11\libClp\libClp.vcxproj">
+      <Project>{4f8f7d1c-3a9e-444d-8ee9-77f33fa05994}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Clp\MSVisualStudio\v11\libOsiClp\libOsiClp.vcxproj">
+      <Project>{02d45875-a8cf-41b9-990b-3699c0ecfe10}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj">
+      <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Osi\MSVisualStudio\v11\libOsiCpx\libOsiCpx.vcxproj">
+      <Project>{d984cc99-8a07-4ee0-8654-5c03459b2b37}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Osi\MSVisualStudio\v11\libOsi\libOsi.vcxproj">
+      <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Smi\MSVisualStudio\v11\libSmi\smiLib.vcxproj">
+      <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\ThirdParty\glog\vsprojects\libglog_static\libglog_static.vcxproj">
+      <Project>{772c2111-bbbf-49e6-b912-198a7f7a88e5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\ThirdParty\gtest\msvc\gtest.vcxproj">
+      <Project>{c8f6c172-56f2-4e76-b5fa-c3b423b31be7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\ThirdParty\json_spirit\json_spirit\json_spirit.vcxproj">
+      <Project>{be262a86-cc26-4b25-a877-883ed2688cec}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libflopcpp\libflopc.vcxproj">
+      <Project>{98885124-894a-48bf-9c20-d9f389c92275}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Osi\src\OsiCpx\OsiCpxSolverInterface.hpp" />
+    <ClInclude Include="..\..\..\..\..\ParallelNestedBenders\src\BendersNodeData.hpp" />
+    <ClInclude Include="..\..\..\..\..\ParallelNestedBenders\src\OsiBenStochasticSolverInterface.hpp" />
+    <ClInclude Include="..\..\..\..\..\ParallelNestedBenders\src\OsiNeosStochasticSolverInterface.hpp" />
+    <ClInclude Include="..\..\..\..\..\ParallelNestedBenders\src\OsiPnbStochasticSolverInterface.hpp" />
+    <ClInclude Include="..\..\..\..\..\ParallelNestedBenders\src\OsiStochasticSolverInterface.hpp" />
+    <ClInclude Include="..\..\..\..\..\ParallelNestedBenders\src\ParallelNestedBenders.hpp" />
+    <ClInclude Include="..\..\..\..\..\ParallelNestedBenders\src\PseudoRandomGenerator.hpp" />
+    <ClInclude Include="..\..\..\..\..\ParallelNestedBenders\src\stdafx.h" />
+    <ClInclude Include="..\..\..\..\..\ThirdParty\json_spirit\json_spirit\json_spirit.h" />
+    <ClInclude Include="..\..\..\..\..\ThirdParty\threadpool\boost\threadpool.hpp" />
+    <ClInclude Include="Enum_declaration.hpp" />
+    <ClInclude Include="enum_factory.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BikeSharing.cpp" />
+    <ClCompile Include="Enum_declaration.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
