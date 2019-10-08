@@ -1,0 +1,9 @@
+STOCH         DakotaModel_implicit_simple_x_constrained (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'             0.6   Stage1    
+    RHS1      DemandConstraDes          50.0
+    RHS1      DemandConstraTab          20.0
+ SC Scen2     Scen1              0.4   Stage2    
+    RHS1      DemandConstraDes         150.0
+    RHS1      DemandConstraTab         110.0
+ENDATA
