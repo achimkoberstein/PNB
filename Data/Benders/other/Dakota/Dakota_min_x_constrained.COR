@@ -1,0 +1,47 @@
+*   
+*   DakotaModel_implicit_x_constrained.mps
+*   
+*   Generated with the MPL Modeling System
+*   Copyright (c) 1988-2015  Maximal Software
+*   
+*   Date:               March 23, 2016
+*   Time:               21:51
+*   
+*   Constraints:        9
+*   Variables:          6
+*   Nonzeros:           18
+*   Density:            33 %
+*   
+NAME          DakotaModel_implicit_x_constrained (MIN)
+ROWS
+  N Profit
+  L ResourceUBConLum
+  L ResourceUBConFin
+  L ResourceUBConCar
+  L ResourceConstLum
+  L ResourceConstFin
+  L ResourceConstCar
+  L DemandConstraDes
+  L DemandConstraTab
+  L DemandConstraCha
+COLUMNS
+    PurchaseLum  Profit             2.0   ResourceUBConLum           1.0
+    PurchaseLum  ResourceConstLum          -1.0
+    PurchaseFin  Profit             4.0   ResourceUBConFin           1.0
+    PurchaseFin  ResourceConstFin          -1.0
+    PurchaseCar  Profit             5.2   ResourceUBConCar           1.0
+    PurchaseCar  ResourceConstCar          -1.0
+    ProductionDes  Profit           -60.0   ResourceConstLum           8.0
+    ProductionDes  ResourceConstFin           4.0   ResourceConstCar           2.0
+    ProductionDes  DemandConstraDes           1.0
+    ProductionTab  Profit           -40.0   ResourceConstLum           6.0
+    ProductionTab  ResourceConstFin           2.0   ResourceConstCar           1.5
+    ProductionTab  DemandConstraTab           1.0
+    ProductionCha  Profit           -10.0   ResourceConstLum           1.0
+    ProductionCha  ResourceConstFin           1.5   ResourceConstCar           0.5
+    ProductionCha  DemandConstraCha           1.0
+RHS
+    RHS1      ResourceUBConLum        3500.0   ResourceUBConFin        1500.0
+    RHS1      ResourceUBConCar         875.0   DemandConstraDes          50.0
+    RHS1      DemandConstraTab          20.0   DemandConstraCha         200.0
+ENDATA
