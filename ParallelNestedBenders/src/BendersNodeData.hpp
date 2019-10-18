@@ -26,7 +26,7 @@ class SmiNodeData;
 namespace parallel_benders{
 
     // Parameter names go in here. We use std::string as parameter
-    // IMPORTANT: If you add a new string here, also set the default value in the init() method of Parameter class
+    // IMPORTANT: If you add a new string here, also set the default value in the Init() method of Parameter class and to ParallelNestedBenders class definitition/declaration
     // We start with integer parameters
     const std::string PNB_PRINT_SUBPROBLEMS = "PNB_PRINT_SUBPROBLEMS";
 	const std::string PNB_BENDERS = "PNB_BENDERS";          //
@@ -57,6 +57,9 @@ namespace parallel_benders{
     const std::string PNB_ODA_KAPPA = "PNB_ODA_KAPPA";
     const std::string PNB_ODA_AGGREGATES = "PNB_ODA_AGGREGATES";
     const std::string PNB_STAGE_LEVEL = "PNB_STAGE_LEVEL";
+	const std::string PNB_LP_ROUNDS_LIMIT = "PNB_LP_ROUNDS_LIMIT";
+	const std::string PNB_LP_SWITCHES_LIMIT = "PNB_LP_SWITCHES_LIMIT";
+	const std::string PNB_LP_MAJOR_IT_LIMIT = "PNB_LP_MAJOR_IT_LIMIT";
 
 
     // Here come the double parameters
@@ -256,6 +259,7 @@ public:
     // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
     typedef std::list<std::shared_ptr<CutStuff> > cut_container;
     cut_container optimality_cuts_;
+	cut_container lift_and_project_cuts_;
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
     cut_container::iterator last_iteration_start_feasibility_;
@@ -362,6 +366,7 @@ struct BendersStageData {
     bool changed_aggregation_level_;
 
 	std::atomic_int added_optimality_cuts_;
+	std::atomic_int added_lift_and_project_cuts_;
 	std::atomic_int added_feasibility_cuts_;
 
     // D^2C^3 stuff

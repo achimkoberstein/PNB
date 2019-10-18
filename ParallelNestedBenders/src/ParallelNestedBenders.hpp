@@ -82,7 +82,9 @@ private:
 
 	bool GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+	void AggregateLiftAndProjectCuts();
 
     void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -119,6 +121,7 @@ private:
     void HandleInitialSolutionProcedures();
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
     void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
+	void AddLiftAndProjectCutToContainer( std::shared_ptr<CutStuff> cut_stuff);
     void SetSolverByThread();
 
 	bool CheckForSameCut(const CutStuff& cut_to_check, const BendersNodeData::cut_container & container);
@@ -144,9 +147,8 @@ private:
     int num_stages_;
     int num_scenarios_;
     double infinity_;
-    bool contains_integer_;
     // Integer information is still stored in the core file.
-    boost::dynamic_bitset<> integer_problems_; // Stagewise
+    boost::dynamic_bitset<> integer_problems_; // Stagewise, binary / integer / MIP
 
     // Parameter map:
     Parameter parameter_;
@@ -380,6 +382,17 @@ private:
     // Handle numerical issues!
     std::vector<double> old_discrepancies_;
     
+	//LiftAndProject cuts
+	int lp_rounds_limit_;
+	int lp_switches_limit_;
+	int lp_major_it_limit_;
+	int lp_round_;
+	int lp_switch_counter_;
+	bool generate_lp_cuts_;
+	int next_lp_rounds_iteration_;
+	std::map<double, std::pair<int, double>> fractional_variables_; //<fractional part, <var index, var value> > ordered ascending by int violation
+	std::vector<std::vector<double>> lp_current_cuts_coefficients_; // TODO: erase this stuff later in the iteration
+	std::vector<double> lp_current_cuts_rhs_;
 
     // TODO: REMOVE AGAIN
     int optimality_cut_counter_;
