@@ -1097,7 +1097,78 @@ protected:
 
 // Integer problems (second stage mixed-integer)
 class NestedBendersTestInteger: public NestedBendersTest
-{};
+{
+protected:
+	NestedBendersTestInteger() { // override parameter_strings_
+		parameter_strings_.clear();
+		parameter_strings_.push_back("{}"); // default parameters
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\" }");
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1 }"); // single cut (default)
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }"); // multi cut
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 5 }");
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\" }"); // not working for MIP
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\" }"); // not working for MIP
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }");
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\" }"); // not working for MIP
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\" }");  // not working for MIP
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\" }");  // not working for MIP
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\" }");  // not working for MIP
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\" }");  // not working for MIP
+	}
+};
+
+// Tests set for L&P cuts (relaxation from stage 2)
+class LiftAndProjectCutsTest: public NestedBendersTest
+{
+protected:
+	LiftAndProjectCutsTest() { // override parameter_strings_
+		parameter_strings_.clear();
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_WARM_START\" : 0, \"PNB_USE_START_SOLUTION\" : \"PNB_INT_NO_START_SOLUTION\" }");
+		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 4, \"PNB_WARM_START\" : 0, \"PNB_USE_START_SOLUTION\" : \"PNB_INT_NO_START_SOLUTION\" }");
+		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 0, \"PNB_WARM_START\" : 0, \"PNB_USE_START_SOLUTION\" : \"PNB_INT_NO_START_SOLUTION\" }");
+		// TODO: what is with BOUNDS_IN_MATRIX parameter
+	}
+};
+
+class CVaRTest : public NestedBendersTest
+{
+protected:
+	CVaRTest() { // override parameter_strings_
+		parameter_strings_.clear();
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA\" }");
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA\" }");
+	}
+};
+
+// Integer problems with the integer variables relaxed on all stages
+class RelaxationTest : public NestedBendersTest
+{
+protected:
+	RelaxationTest() { // override parameter_strings_
+		parameter_strings_.clear();
+		parameter_strings_.push_back("{ \"PNB_RELAXATION\" : 1, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\" }");
+		parameter_strings_.push_back("{ \"PNB_RELAXATION\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 4 }");
+		parameter_strings_.push_back("{ \"PNB_RELAXATION\" : 1, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }"); // multicut
+		parameter_strings_.push_back("{ \"PNB_RELAXATION\" : 1, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1 }"); // single cut
+		parameter_strings_.push_back("{ \"PNB_RELAXATION\" : 1, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 5 }"); // in between
+		parameter_strings_.push_back("{ \"PNB_RELAXATION\" : 1, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\" }");
+	}
+};
+
+class DetEqTest : public NestedBendersTest
+{
+protected:
+	DetEqTest() { // override parameter_strings_
+		parameter_strings_.clear();
+		parameter_strings_.push_back("{ \"PNB_RELAXATION\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\" }");
+		parameter_strings_.push_back("{ \"PNB_RELAXATION\" : 100, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\" }"); // relaxation starting from stage 100, i.e., equivalent to no relaxation
+	}
+};
 
 // Problems that need/generate feasibility cuts
 class NestedBendersTestFeasibility: public NestedBendersTest
