@@ -20,6 +20,7 @@
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/range/adaptor/map.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 #include "OsiCpxSolverInterface.hpp"
 //#include "OsiGrbSolverInterface.hpp"
@@ -43,6 +44,7 @@ class NestedBendersTest: public ::testing::Test { // this is the Test set, e.g.,
 public:
 
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
+	std::vector<parallel_benders::Parameter> parameter_sets_; // Used to store different combinations (Parameter instances) of parameters
 	std::string testbed_log_file_string_;
     std::string testbed_aggregated_log_file_string_;
 	std::string parameter_name_string_;
@@ -208,6 +210,7 @@ public:
         int num_childs_first_stage = 1;
 
         parallel_benders::Parameter param(benders_parameter_); // Copy parameter!
+		updateParameterSets();
 
         int read_in_smps_file = 1; 
         int num_aggregates_by_magic = 0;
@@ -464,26 +467,10 @@ public:
 		//	aggregates.push_back(num_aggregates_by_magic);
 		//}
 
-
-        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name)); // solve with default parameters
-		benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        
+		for (auto const& parameter_set : parameter_sets_) {
+			benders_parameter_ = parameter_set;
+			solutions.push_back(solveProblemWithParameters(core_name, time_name, stoch_name));
+		}      
 
 
         // Compare solution values
@@ -672,6 +659,15 @@ protected:
         use_multi_cut_ = true;
         generate_initial_solution_ = false;
         compute_statistics_ = false;
+
+		parameter_strings_.push_back("{}");
+		parameter_strings_.push_back("{ \"PNB_LP_METHOD\" : \"PNB_INT_BARRIER\", \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_LP_METHOD\" : \"PNB_INT_DUAL_SIMPLEX\", \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_LP_METHOD\" : \"PNB_INT_DUAL_SIMPLEX\", \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA\" }");
+		parameter_strings_.push_back("{ \"PNB_LP_METHOD\" : \"PNB_INT_DUAL_SIMPLEX\", \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_LP_METHOD\" : \"PNB_INT_DUAL_SIMPLEX\", \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA\" }");
+		parameter_strings_.push_back("{ \"PNB_LP_METHOD\" : \"PNB_INT_DUAL_SIMPLEX\", \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_RISK\" }");
+		parameter_strings_.push_back("{ \"PNB_LP_METHOD\" : \"PNB_INT_DUAL_SIMPLEX\", \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA_RISK\" }");
     }
     virtual ~NestedBendersTest(){}
     virtual void SetUp(){ // this is also the fixture that is called for every test, e.g., TEST(NestedBendersTest, test)
@@ -731,7 +727,7 @@ protected:
         if ( line != parameter_name_string_ ){
             LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file " << testbed_aggregated_log_file_string_ << " before proceeding!.";
         }
-		
+	
 	}
     virtual void TearDown(){}
 
@@ -985,6 +981,18 @@ protected:
         return values_map[objective_value_string];
     }
 
+	void updateParameterSets() {	
+				
+		parameter_sets_.clear();
+		
+		for (std::string json_string : parameter_strings_) {
+			parallel_benders::Parameter param(benders_parameter_); // based on benders_parameter_ which normally has default values unless changed in TEST_F(){...}
+			param.update_from_json_string(json_string);
+			parameter_sets_.push_back(param);
+		}
+	}
+
+	std::vector<std::string> parameter_strings_;
     boost::shared_array<double> first_stage_solution_;
     boost::shared_array<double> current_start_solution_;
     boost::shared_array<double> best_case_solution_;
