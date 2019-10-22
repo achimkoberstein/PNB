@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include <sstream>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "CoinTime.hpp"
 #include "CoinHelperFunctions.hpp"
@@ -199,6 +200,77 @@ void Parameter::init()
     parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
     parameter_.put(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
     parameter_.put(PNB_COMPUTE_OBJECTIVE_VALUES,false);
+
+	// Fill in constants
+	// PNB_BENDERS
+	consts_["PNB_INT_ALGORITHM_DETEQ"] = PNB_INT_ALGORITHM_DETEQ;
+	consts_["PNB_INT_ALGORITHM_BENDERS"] = PNB_INT_ALGORITHM_BENDERS;
+	consts_["PNB_INT_ALGORITHM_REGULARIZATION"] = PNB_INT_ALGORITHM_REGULARIZATION;
+	consts_["PNB_INT_ALGORITHM_LEVEL"] = PNB_INT_ALGORITHM_LEVEL;
+	consts_["PNB_INT_ALGORITHM_LEVEL_ODA"] = PNB_INT_ALGORITHM_LEVEL_ODA;
+	consts_["PNB_INT_ALGORITHM_BENDERS_ODA"] = PNB_INT_ALGORITHM_BENDERS_ODA;
+	consts_["PNB_INT_ALGORITHM_REGULARIZATION_ODA"] = PNB_INT_ALGORITHM_REGULARIZATION_ODA;
+	consts_["PNB_INT_ALGORITHM_LEVEL_MANHATTAN"] = PNB_INT_ALGORITHM_LEVEL_MANHATTAN;
+	consts_["PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA"] = PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA;
+	consts_["PNB_INT_ALGORITHM_LEVEL_INFINITY"] = PNB_INT_ALGORITHM_LEVEL_INFINITY;
+	consts_["PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA"] = PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA;
+
+	// Variants with CVaR risk constraint
+	consts_["PNB_INT_ALGORITHM_DETEQ_RISK"] = PNB_INT_ALGORITHM_DETEQ_RISK;
+	consts_["PNB_INT_ALGORITHM_BENDERS_RISK"] = PNB_INT_ALGORITHM_BENDERS_RISK;
+	consts_["PNB_INT_ALGORITHM_LEVEL_RISK"] = PNB_INT_ALGORITHM_LEVEL_RISK;
+	consts_["PNB_INT_ALGORITHM_BENDERS_ODA_RISK"] = PNB_INT_ALGORITHM_BENDERS_ODA_RISK;
+	consts_["PNB_INT_ALGORITHM_LEVEL_ODA_RISK"] = PNB_INT_ALGORITHM_LEVEL_ODA_RISK;
+	consts_["PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA"] = PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA;
+	consts_["PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA"] = PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA;
+		
+	// PNB_LP_METHOD
+	consts_["PNB_INT_PRIMAL_SIMPLEX"] = PNB_INT_PRIMAL_SIMPLEX;
+	consts_["PNB_INT_DUAL_SIMPLEX"] = PNB_INT_DUAL_SIMPLEX;
+	consts_["PNB_INT_BARRIER"] = PNB_INT_BARRIER;
+	consts_["PNB_INT_BARRIER_WITH_CROSSOVER"] = PNB_INT_BARRIER_WITH_CROSSOVER;
+	consts_["PNB_INT_CONCURRENT_MASTER_STANDARD"] = PNB_INT_CONCURRENT_MASTER_STANDARD;
+	
+	//PNB_USE_START_SOLUTION
+	consts_["PNB_INT_NO_START_SOLUTION"] = PNB_INT_NO_START_SOLUTION;
+	consts_["PNB_INT_COMPUTE_EV_SOLUTION"] = PNB_INT_COMPUTE_EV_SOLUTION;
+	consts_["PNB_INT_USE_EV_SOLUTION"] = PNB_INT_USE_EV_SOLUTION;
+	consts_["PNB_INT_USE_SUPPLIED_SOLUTION"] = PNB_INT_USE_SUPPLIED_SOLUTION;
+}
+
+void Parameter::update_from_json_string( std::string json_string ) {
+
+	std::stringstream ss(json_string);
+	boost::property_tree::ptree temp;
+	boost::property_tree::read_json(ss, temp);
+	
+	bool smth;
+	for (auto leaf : temp) {
+		
+		std::string value = leaf.second.data();
+
+		// Get (if any) int / bool value of the const string
+		unordered_map<string, int>::iterator it = consts_.find(value);
+		if (it != consts_.end())
+			leaf.second.put_value(it->second);
+		// convert booleans
+		else if ( value == "true" )
+			leaf.second.put_value(true);
+		else if ( value == "false" )
+			leaf.second.put_value(false);
+		// else the value should be int
+		else {
+			try
+			{
+				leaf.second.put_value(stoi(value));
+			}
+			catch (std::invalid_argument& e)
+			{
+				assert(false && "Values in parameter_ should be int or bool. Check Parameter::consts_");
+			}
+		}
+		parameter_.put_child(leaf.first, leaf.second);
+	}
 }
 
 void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut, int oda_aggregates )

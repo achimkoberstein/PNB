@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <atomic>
+#include <unordered_map>
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -111,7 +112,7 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_LEVEL_INFINITY = 9;
     const int PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA = 10;
 
-	// AK: variants with CVaR risk constraint
+	// Variants with CVaR risk constraint
 	const int PNB_INT_ALGORITHM_DETEQ_RISK = 11;
 	const int PNB_INT_ALGORITHM_BENDERS_RISK = 12;
 	const int PNB_INT_ALGORITHM_LEVEL_RISK = 13;
@@ -119,9 +120,8 @@ namespace parallel_benders{
 	const int PNB_INT_ALGORITHM_LEVEL_ODA_RISK = 15;
     const int PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA = 16;
     const int PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA = 17;
-
-
-    const int PNB_INT_WRITE_PROBLEM = 9;
+	
+	// LP methods
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
     const int PNB_INT_DUAL_SIMPLEX = 11;
     const int PNB_INT_BARRIER = 12;
@@ -441,14 +441,27 @@ struct Parameter {
     // Set default values for all strings we have..
     void init();
 
+	void update_from_json_string(std::string json_string);
 
-    //// Set values you want to set
-    //void SetParameterValue(std::string parameter, double value){
-    //    parameter_map_[parameter] = value;
-    //}
-    //double GetParameterValue(std::string parameter){
-    //    return parameter_map_[parameter];
-    //}
+    // Set and get values
+    void SetParameterValue(const std::string parameter, double value){
+        parameter_.put(parameter, value);
+    }
+	void SetParameterValue(const std::string parameter, int value) {
+		parameter_.put(parameter, value);
+	}
+    int GetIntParamValue(std::string parameter) const {
+        return parameter_.get<int>(parameter);
+    }
+	double GetDblParamValue(std::string parameter) const {
+		return parameter_.get<double>(parameter);
+	}
+	bool GetBoolParamValue(std::string parameter) const {
+		return parameter_.get<bool>(parameter);
+	}
+
+	// Constant names and their value for dynamic access
+	std::unordered_map<std::string, int> consts_;
 
     // Stores every parameter as a std::string with a value that is stored as either double or int..
     boost::property_tree::ptree parameter_;
