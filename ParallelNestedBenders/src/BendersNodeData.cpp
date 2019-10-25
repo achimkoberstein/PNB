@@ -154,7 +154,7 @@ void Parameter::init()
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
 	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
-    parameter_.put(PNB_RELAXATION, 1); // Give stage from which we should solve the relaxed problem! (Standard is: Allow integers in first-stage, but relax later stages!)
+    parameter_.put(PNB_RELAXATION, 2); // Give stage from which we should solve the relaxed problem! (Standard is: Allow integers in first-stage, but relax later stages!)
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)
@@ -186,7 +186,7 @@ void Parameter::init()
     parameter_.put(PNB_ODA_KAPPA,0.5);
     parameter_.put(PNB_ODA_AGGREGATES,1); // 1 Aggregates is single-cut case (default), 0 is same number of aggregates as number of aggregates, and some number inbetween is also OK.
     parameter_.put(PNB_STAGE_LEVEL,0); // Up to which stage should we solve level problems? default is only the first stage (parameter holds also for regularization)
-    //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver
+    //// Tolerances: We should use the same integer and zero tolerances as the underlying LP-solver
     parameter_.put(PNB_TOLERANCE_ZERO, 1e-06);
 	parameter_.put(PNB_TOLERANCE_INTEGER,  1e-06); 
     parameter_.put(PNB_EPSILON_ABSOLUTE,  1e-06);

@@ -71,7 +71,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             // We have no scenarios
             LOG(ERROR) << "No scenarios available.";
         }
-        int relaxation = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_RELAXATION,false);
+        int relaxation = nested_benders_->parameter_.GetIntParamValue(parallel_benders::PNB_RELAXATION);
         // Model statistics
         std::cout << "Variables: " << osi_->getNumCols() << " Rows: " << osi_->getNumRows() << " Elements: " << osi_->getNumElements() << " Integer: " << osi_->getNumIntegers() << std::endl;
         solution_time.Stop(1);
@@ -100,11 +100,25 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
                 return;
             }
 
-			// Wee need to differentiate between integer and not
-			if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
+			// We need to differentiate between integer and not
+			int num_ints = nested_benders_->smi_->getIntegerLen();
+			if (num_ints && (!relaxation || relaxation > nested_benders_->core_->getNumStages() )){ // no relaxation
 				osi_->branchAndBound();
 			}
-			else {
+			else if ( num_ints && relaxation > 1) { // relax integers for stages starting from PNB_RELAXATION stage			
+				int relaxation_int_start = 0;
+				for (int stage_index = 0; stage_index < relaxation - 1; stage_index++) {
+					relaxation_int_start += nested_benders_->core_->getIntCols(stage_index).size();
+				}
+				int num_ints_relax = num_ints - relaxation_int_start;
+				if ( num_ints_relax ) {
+					const std::vector<int>& int_indices = nested_benders_->smi_->getIntIndices();
+					osi_->setContinuous(&int_indices[relaxation_int_start], int_indices.size() - relaxation_int_start);
+					LOG(INFO) << "We solve the LP relaxation for stages starting from stage " << relaxation << ".";
+				}
+				osi_->branchAndBound();
+			}
+			else { // not integer (nor binary) or we relax all stages
 				if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_BARRIER){
 					CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,2); // Do not use crossover
 					CPXbaropt(envPtr,lpPtr);

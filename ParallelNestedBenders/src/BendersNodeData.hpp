@@ -135,7 +135,7 @@ namespace parallel_benders{
     const int PNB_INT_SOLUTION_DUAL_ALL = -1;
 
     // Relaxed problem
-    const int PNB_INT_NO_RELAXATION = -1;
+    const int PNB_INT_NO_RELAXATION = 0;
 
     // Solution code
     const int PNB_SOLUTION_OPTIMAL = 0;
