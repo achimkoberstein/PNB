@@ -302,7 +302,7 @@ namespace parallel_benders {
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
         cvar_constr_decomp_(false),current_second_stage_approximation_(),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),cvar_feasible_first_stage_solution_(false),cvar_next_iterate_problem_(false),change_cvar_alpha_(false),stop_cvar_(false),osi_stopping_criterion_solver_(nullptr),
-        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),print_subproblems_(false),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
+        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(2),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),print_subproblems_(false),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
     }
@@ -411,6 +411,7 @@ namespace parallel_benders {
 
         // Choice of algorithm
         int algorithm = param.get(PNB_BENDERS,PNB_INT_ALGORITHM_BENDERS); // Use Benders as default
+		LOG_IF(FATAL, algorithm == PNB_INT_ALGORITHM_DETEQ) << "PNB_BENDERS parameter should have the value different from 0 (solve deterministic eqivalent).";
         if ( algorithm == PNB_INT_ALGORITHM_REGULARIZATION )
             regularization_ = true;
         if ( algorithm == PNB_INT_ALGORITHM_REGULARIZATION_ODA ){
@@ -658,7 +659,7 @@ namespace parallel_benders {
         }
 
         // Solve LP relaxation instead IP problem?
-        solve_relaxation_ = param.get(PNB_RELAXATION,PNB_INT_NO_RELAXATION);
+        solve_relaxation_ = param.get(PNB_RELAXATION,2);
 
         // Set numerical issue handling for sequencing protocols
         old_discrepancies_.resize(num_stages_,infinity_);
@@ -712,13 +713,15 @@ namespace parallel_benders {
             assert( !non_staircase_stochastic_problem_);
             LOG(INFO)<< "Done.";
         }
-        if ( integer_problems_[0] && solve_relaxation_ == 0 )
-            integer_problems_[0] = false;
+		if (integer_problems_[0] && solve_relaxation_ == 1) { // stages are indexed as 0,1,2...
+			integer_problems_[0] = false;
+			LOG(INFO) << "We solve the LP relaxation for stage 1.";
+		}
         for (int i = 1; i < num_stages_;i++){
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ".";
-            if ( solve_relaxation_ >= i && integer_problems_[i]){
+            if (solve_relaxation_ != 0 && solve_relaxation_ - 1 <= i && integer_problems_[i]){
                 integer_problems_[i] = false; // Ensure we do solve the LP relaxation! (for second stage?)
-                LOG(INFO) << "We solve the LP relaxation for stage"  << i << ".";
+                LOG(INFO) << "We solve the LP relaxation for stage "  << i+1 << ".";
             }
 
             // TODO: If we want D_square_ we have to remove the && false statement
@@ -738,7 +741,7 @@ namespace parallel_benders {
                 }
                 else {
                     // We have a problem with first-stage mixed-integer and second stage integers. We can not solve such a problem!
-                    LOG(ERROR) << "You tried to solve a problem with mixed-integer or pure integer first stage and mixed-integers at another stage. We can not solve this, only the relaxation. You can specify the stage from which you would like to relax the integer constraints with param PNB_RELAXATION. First Stage = 0";
+                    LOG(ERROR) << "You tried to solve a problem with mixed-integer or pure integer first stage and mixed-integers at another stage. We can not solve this, only the relaxation. You can specify the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
                     solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
                     return;
                 }
