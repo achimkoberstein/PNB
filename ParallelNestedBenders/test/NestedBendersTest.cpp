@@ -655,6 +655,7 @@ public:
 protected:
     NestedBendersTest() { // this is the fixture that is called for every test, e.g., TEST(NestedBendersTest, test)
         benders_parameter_.init();
+		write_xml("default_param.xml", benders_parameter_.parameter_);
         repetitions_ = 1; 
         use_multi_cut_ = true;
         generate_initial_solution_ = false;

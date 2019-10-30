@@ -56,7 +56,7 @@ int main(int argc,  char* argv[])
     // Parameter file
     parallel_benders::Parameter param;
     param.init();
-    write_xml("param.xml",param.parameter_);
+    write_xml("default_param.xml",param.parameter_);
 
     if ( vm.count("parameter")){
         // reading file.xml
