@@ -304,7 +304,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const
     nested_benders_->setWarmUpSolution(solution,num_cols);
 }
 
-void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( const char* filename )
+void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( const char* filename ) const
 {
 	if ( nested_benders_->compute_primal_solutions_for_stage_ < 0 )
 		return;

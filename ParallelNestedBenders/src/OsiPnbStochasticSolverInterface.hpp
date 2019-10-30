@@ -29,7 +29,7 @@ public:
     //const double * getFirstStageDuals();
     //const double * getDualsByNodeAndStage(int node_number, int stage) const;
 
-	void printSolutionToFile(const char* filename);
+	void printSolutionToFile(const char* filename) const;
 
     void fixFirstStageVariables(const double* solution);
     void giveStartSolution(const double* solution, int num_cols_given = 0);
