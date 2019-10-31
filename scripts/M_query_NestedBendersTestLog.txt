@@ -1,0 +1,27 @@
+// this query is used in TestStatistics.xlsx report
+
+let
+    // get the path to statistics .csv file
+    Params = Excel.CurrentWorkbook(){[Name=tblSettings]}[Content],
+    #Changed Type = Table.TransformColumnTypes(Params,{{Parameter, type text}, {Value, type text}, {Description, type text}}),
+    testLogFilePath = #Changed Type{1}[Value],
+
+    // read the file   
+    Source = Xml.Tables(File.Contents(testLogFilePath)),
+    #Removed Columns = try Table.RemoveColumns(Source,{Attributetests, Attributefailures, Attributedisabled, Attributeerrors, Attributetime, Attributename}),   returns a record [HasError truefalse, Value table]
+    FileNotFound = #Removed Columns[HasError],
+    
+    #Expanded testsuite = Table.ExpandTableColumn(#Removed Columns[Value], testsuite, {testcase, Attributename}, {testsuite.testcase, testsuite.Attributename}),
+    #Expanded testsuite.testcase = Table.ExpandTableColumn(#Expanded testsuite, testsuite.testcase, {failure, Attributename, Attributestatus, Attributetime}, {testsuite.testcase.failure, testsuite.testcase.Attributename, testsuite.testcase.Attributestatus, testsuite.testcase.Attributetime}),
+    #Expanded testsuite.testcase.failure = Table.ExpandTableColumn(#Expanded testsuite.testcase, testsuite.testcase.failure, {Attributemessage}, {testsuite.testcase.failure.Attributemessage}),
+    #Reordered Columns = Table.ReorderColumns(#Expanded testsuite.testcase.failure,{testsuite.Attributename, testsuite.testcase.Attributename, testsuite.testcase.Attributestatus, testsuite.testcase.Attributetime, testsuite.testcase.failure.Attributemessage}),
+    #Renamed Columns = Table.RenameColumns(#Reordered Columns,{{testsuite.testcase.Attributetime, Test Case Time}, {testsuite.Attributename, Test Suite}, {testsuite.testcase.Attributestatus, Run}, {testsuite.testcase.Attributename, Test Case}, {testsuite.testcase.failure.Attributemessage, Failures}}),
+    // Run to binary
+    #Substitutions for run = [#run = true, #notrun = false],
+    Substituted = Table.TransformColumns(#Renamed Columns, {{Run, each Record.FieldOrDefault( #Substitutions for run, _, _)}}),
+    #. to comma = Table.ReplaceValue(Substituted,.,,,Replacer.ReplaceText,{Test Case Time}),
+    #Changed Cols Type = Table.TransformColumnTypes(#. to comma,{{Test Case, type text}, {Run, type logical}, {Test Case Time, type number}, {Failures, type text}}),
+    
+    Result = if FileNotFound then error The .xml file with the test logs not found. Check the testLogFilePath on Settings tab. else #Changed Cols Type
+in
+    Result
