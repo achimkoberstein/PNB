@@ -66,6 +66,11 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             bool cvar_first_stage = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_CVAR_WITH_FIRST_STAGE,false);
             nested_benders_->smi_->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage,false);
         }
+
+		if (nested_benders_->parameter_.GetBoolParamValue(parallel_benders::PNB_BOUNDS_IN_MATRIX)) {
+			nested_benders_->smi_->moveBoundsIntoMatrix(); // TODO: what does it do?
+		}
+
         osi_ = nested_benders_->smi_->loadOsiSolverData();
         if ( nested_benders_->smi_->getNumScenarios() == 0){
             // We have no scenarios
@@ -95,11 +100,6 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             CPXsetdblparam(envPtr,CPX_PARAM_EPRHS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_TOLERANCE_ZERO,1e-06));
             //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
 
-            if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_WRITE_PROBLEM) == parallel_benders::PNB_INT_WRITE_PROBLEM){
-                CPXwriteprob(envPtr,lpPtr,"deteq.lp","lp");
-                return;
-            }
-
 			// We need to differentiate between integer and not
 			int num_ints = nested_benders_->smi_->getIntegerLen();
 			if (num_ints && (!relaxation || relaxation > nested_benders_->core_->getNumStages() )){ // no relaxation
@@ -119,22 +119,29 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 				osi_->branchAndBound();
 			}
 			else { // not integer (nor binary) or we relax all stages
-				if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_BARRIER){
+				int lp_method = nested_benders_->parameter_.GetIntParamValue(parallel_benders::PNB_LP_METHOD);
+				if (lp_method == parallel_benders::PNB_INT_BARRIER){
+					osi_solver_->setHintParam(OsiDoDualInInitial, true, OsiHintIgnore); // barrier and barrier w crossover
+					osi_solver_->setHintParam(OsiDoDualInResolve, true, OsiHintIgnore);
 					CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,2); // Do not use crossover
 					CPXbaropt(envPtr,lpPtr);
 				}
-				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_DUAL_SIMPLEX){
+				else if (lp_method == parallel_benders::PNB_INT_DUAL_SIMPLEX){
 					CPXdualopt(envPtr,lpPtr);
 				}
-				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_PRIMAL_SIMPLEX){
+				else if (lp_method == parallel_benders::PNB_INT_PRIMAL_SIMPLEX){
 					CPXprimopt(envPtr,lpPtr);
 				}
-				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER) == parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER){
-                    CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,0); // Choose to use crossover
+				else if (lp_method == parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER){
+					osi_solver_->setHintParam(OsiDoDualInInitial, true, OsiHintIgnore);
+					osi_solver_->setHintParam(OsiDoDualInResolve, true, OsiHintIgnore);
+					CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,0); // Choose to use crossover
 					CPXbaropt(envPtr,lpPtr);
 				}
-				
-
+				else if (lp_method == parallel_benders::PNB_INT_CONCURRENT_MASTER_STANDARD) {
+					CPXsetintparam(envPtr, CPX_PARAM_LPMETHOD, CPX_ALG_CONCURRENT);
+					CPXdualopt(envPtr, lpPtr);
+				}
 			}
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
