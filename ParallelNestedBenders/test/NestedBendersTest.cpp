@@ -2204,8 +2204,9 @@ int main(int argc, char *argv[]) {
     //_CrtSetReportMode(_CRT_ASSERT,_CRTDBG_MODE_WNDW);
     int result = 0;
 
-    ::testing::InitGoogleTest(&argc, argv); // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
-    //::testing::GTEST_FLAG(filter) = "UnitTest.*";
+	::testing::GTEST_FLAG(output) = "xml:NestedBendersTestLog.xml"; // store results in xml file //
+	//::testing::GTEST_FLAG(filter) = "UnitTest.*";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
+    ::testing::InitGoogleTest(&argc, argv);
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
