@@ -1277,9 +1277,9 @@ TEST_F(DetEqTest, fast) {
 
 	// Integer 2 stages
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.87, 0.4); // TODO: PNB_SOLUTION_SUBSOLVER_PROBLEM
-	EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224434.32, 1758.0); // TODO: PNB_SOLUTION_SUBSOLVER_PROBLEM
-	EXPECT_NEAR(solveSMPS("sslp-ntaimo/sslp_5_25_50a"), -121.6, 42.0); // TODO: PNB_SOLUTION_SUBSOLVER_PROBLEM
+	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.87, 0.4);
+	EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224434.32, 1758.0);
+	EXPECT_NEAR(solveSMPS("sslp-ntaimo/sslp_5_25_50a"), -121.6, 42.0);
 
 	// Multi stage
 	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
