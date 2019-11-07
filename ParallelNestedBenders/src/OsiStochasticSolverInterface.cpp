@@ -116,7 +116,7 @@ int OsiStochasticDetEqSolverInterface::getSolutionCode() const
 	CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
 	int CPXresult = CPXgetstat(env_ptr, lp_ptr);
 
-	if ( osi_solver_->isProvenOptimal() ) {
+	if ( osi_solver_->isProvenOptimal() || CPXresult == CPX_STAT_OPTIMAL) {
 		return parallel_benders::PNB_SOLUTION_OPTIMAL;
 	}
 	else if( osi_solver_->isAbandoned() ) { // can have multiple reasons

@@ -144,16 +144,37 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 				}
 			}
             // Check for errors
-            int result = CPXgetstat(envPtr,lpPtr);
-            if ( result ){
-                LOG_IF(INFO,result!= 1) << "Cplex returned with status code " << result;
-                if ( result == CPX_STAT_INFEASIBLE )
-                    nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
-                else if ( result == CPX_STAT_UNBOUNDED )
-                    nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_UNBOUNDED;
-                else if ( result != CPX_STAT_OPTIMAL  )
-                    nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
-            }
+			int CPXresult = CPXgetstat(envPtr, lpPtr);
+			if (osi_solver_->isProvenOptimal()) {
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
+			}
+			// sometimes isProvenOptimal() does not work correct and returns false when it should be true. Check it "manually"
+			else if (CPXresult == CPX_STAT_OPTIMAL || CPXresult == CPX_STAT_OPTIMAL_INFEAS || CPXresult == CPXMIP_OPTIMAL || CPXresult == CPXMIP_OPTIMAL_TOL) {
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
+			}
+			else if (osi_solver_->isAbandoned()) { // can have multiple reasons
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
+			}
+			else if (osi_solver_->isProvenPrimalInfeasible() || osi_solver_->isProvenDualInfeasible()) {
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
+			}
+			else if (osi_solver_->isDualObjectiveLimitReached() || osi_solver_->isProvenDualInfeasible()) {
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
+			}
+			else if (osi_solver_->isIterationLimitReached()) {
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_ITERATION_LIMIT;
+			}
+			else if (CPXresult == CPX_STAT_UNBOUNDED || CPXresult == CPXMIP_UNBOUNDED) {
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_UNBOUNDED;
+			}
+			else if (CPXresult == CPX_STAT_ABORT_TIME_LIM || CPXresult == CPXMIP_TIME_LIM_FEAS || CPXresult == CPXMIP_TIME_LIM_INFEAS) {
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_TIME_LIMIT;
+			}
+			else {
+				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
+			}
+			LOG_IF(INFO, nested_benders_->solution_code_ != parallel_benders::PNB_SOLUTION_OPTIMAL) << "Cplex returned with status code " << CPXresult;
+
             double obj;
             CPXgetobjval(envPtr,lpPtr,&obj);
         }
