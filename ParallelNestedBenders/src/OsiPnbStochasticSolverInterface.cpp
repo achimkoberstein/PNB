@@ -71,6 +71,8 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 			nested_benders_->smi_->moveBoundsIntoMatrix(); // TODO: what does it do?
 		}
 
+		LOG_IF(WARNING, nested_benders_->parameter_.GetIntParamValue(parallel_benders::PNB_USE_START_SOLUTION)) << "Start solution is not implemented for deteq.";
+
         osi_ = nested_benders_->smi_->loadOsiSolverData();
         if ( nested_benders_->smi_->getNumScenarios() == 0){
             // We have no scenarios
@@ -97,8 +99,22 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             //CPXsetintparam(envPtr,CPX_PARAM_PREIND,0);
             // We may want to set a start solution!
 
-            CPXsetdblparam(envPtr,CPX_PARAM_EPRHS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_TOLERANCE_ZERO,1e-06));
+			//PNB_TOLERANCE_ZERO
+            CPXsetdblparam(envPtr,CPX_PARAM_EPRHS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_TOLERANCE_ZERO,1e-06)); // Feasibility tolerance
             //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
+
+			//PNB_TOLERANCE_INTEGER
+			CPXsetdblparam(envPtr, CPX_PARAM_EPINT, nested_benders_->parameter_.GetDblParamValue(parallel_benders::PNB_TOLERANCE_INTEGER));
+			
+			//PNB_EPSILON_ABSOLUTE
+			double absolute_epsilon = nested_benders_->parameter_.GetDblParamValue(parallel_benders::PNB_EPSILON_ABSOLUTE);
+			CPXsetdblparam(envPtr, CPX_PARAM_EPOPT, absolute_epsilon); //Optimality tolerance
+			CPXsetdblparam(envPtr, CPX_PARAM_BAREPCOMP, absolute_epsilon); //Convergence tolerance for LP and QP problems
+			CPXsetdblparam(envPtr, CPX_PARAM_EPAGAP, absolute_epsilon); //Absolute mipgap tolerance
+			CPXsetdblparam(envPtr, CPX_PARAM_NETEPOPT, absolute_epsilon); //Optimality tolerance for network optimization
+
+			//PNB_EPSILON_RELATIVE
+			CPXsetdblparam(envPtr, CPX_PARAM_EPGAP, nested_benders_->parameter_.GetDblParamValue(parallel_benders::PNB_EPSILON_RELATIVE)); //Relative MIP gap tolerance
 
 			// We need to differentiate between integer and not
 			int num_ints = nested_benders_->smi_->getIntegerLen();
@@ -143,6 +159,11 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 					CPXdualopt(envPtr, lpPtr);
 				}
 			}
+
+			if (nested_benders_->parameter_.GetBoolParamValue(parallel_benders::PNB_PRINT_SUBPROBLEMS)) {
+				CPXwriteprob(envPtr, lpPtr, "modeloutput.lp", "lp");
+			}
+
             // Check for errors
 			int CPXresult = CPXgetstat(envPtr, lpPtr);
 			if (osi_solver_->isProvenOptimal()) {
