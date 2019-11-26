@@ -2653,7 +2653,12 @@ void CbcModel::branchAndBound(int doStatistics)
         CPXLPptr lpPtr = cpxSolver.getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
         cpxSolver.switchToMIP();
         if (bestSolution_) {
-            CPXcopymipstart(env, lpPtr, numberIntegers_, setVar, setSol);
+#if 0 // depreciated, took from the new version of Cbc
+			CPXcopymipstart(env, lpPtr, numberIntegers_, setVar, setSol);
+#else
+			int zero = 0;
+			CPXaddmipstarts(env, lpPtr, 1, numberIntegers_, &zero, setVar, setSol, NULL, NULL);
+#endif
         }
         if (clpSolver->getNumRows() > continuousSolver_->getNumRows() && false) {
             // add cuts
@@ -13991,7 +13996,12 @@ CbcModel::doOneNode(CbcModel * baseModel, CbcNode * & node, CbcNode * & newNode)
                         CPXLPptr lpPtr = cpxSolver.getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                         cpxSolver.switchToMIP();
                         if (bestSolution_) {
-                            CPXcopymipstart(env, lpPtr, numberIntegers_, setVar, setSol);
+#if 0 // depreciated, took from the new version of Cbc
+							CPXcopymipstart(env, lpPtr, numberIntegers_, setVar, setSol);
+#else
+							int zero = 0;
+							CPXaddmipstarts(env, lpPtr, 1, numberIntegers_, &zero, setVar, setSol, NULL, NULL);
+#endif
                         }
                         if (getCutoff() < 1.0e50) {
                             double useCutoff = getCutoff() + offset;
