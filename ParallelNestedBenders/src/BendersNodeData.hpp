@@ -455,6 +455,9 @@ struct Parameter {
 	void SetParameterValue(const std::string parameter, int value) {
 		parameter_.put(parameter, value);
 	}
+	void SetParameterValue(const std::string parameter, bool value) {
+		parameter_.put(parameter, value);
+	}
     int GetIntParamValue(std::string parameter) const {
         return parameter_.get<int>(parameter);
     }
