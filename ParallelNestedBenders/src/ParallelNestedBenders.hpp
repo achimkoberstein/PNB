@@ -175,6 +175,7 @@ private:
     double upper_bound_;
     double old_lower_bound_;
     std::vector<double> old_first_stage_solution_;
+	std::vector<std::pair<double, double>> ub_lb_for_iteration_;
 
     int current_stage_;
     // Characteristic of problem
