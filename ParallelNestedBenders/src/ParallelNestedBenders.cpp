@@ -1760,13 +1760,12 @@ namespace parallel_benders {
                     }
                 }
                 else if ( current_stage_ == 0){
-					if (!generate_lp_cuts_) {
-						std::cout << "Lower Bound:  " << lower_bound_ << "\n";
-						std::cout << "Upper Bound:  " << upper_bound_ << "\n";
-						std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_, lower_bound_) << std::endl;
-						ub_lb_for_iteration_.push_back(make_pair(upper_bound_, lower_bound_));
-					}
+                    std::cout << "Lower Bound:  " << lower_bound_ << "\n";
+                    std::cout << "Upper Bound:  " << upper_bound_ << "\n";
+                    std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_,lower_bound_) << std::endl;
+					ub_lb_for_iteration_.push_back(make_pair(upper_bound_, lower_bound_));
                 }
+
             }
 
             // If we had unbounded problems, we have to stop the algorithm.

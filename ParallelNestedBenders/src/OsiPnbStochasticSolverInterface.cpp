@@ -49,6 +49,18 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterat
 {
     return nested_benders_->insubstantial_iteration_;
 }
+double OsiStochasticParallelNestedBendersSolverInterface::getUbForIteration(int iteration) const
+{
+	LOG_IF(FATAL, iteration <= 0 || iteration > this->getNumIterations()) << "iteration arg in getUbForIteration() should be between 1 and number of iterations.";
+	
+	return nested_benders_->ub_lb_for_iteration_[iteration - 1].first;
+}
+double OsiStochasticParallelNestedBendersSolverInterface::getLbForIteration(int iteration) const
+{
+	LOG_IF(FATAL, iteration <= 0 || iteration > this->getNumIterations()) << "iteration arg in getLbForIteration() should be between 1 and number of iterations.";
+
+	return nested_benders_->ub_lb_for_iteration_[iteration - 1].second;
+}
 void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 {
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ || nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK ){

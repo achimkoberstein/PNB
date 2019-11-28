@@ -187,6 +187,32 @@ public:
 		benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
     }
 
+	bool checkConvergence(const char* core_name, const char* time_name, const char* stoch_name, const std::vector<std::pair<double,double>>& ub_lb_list) {
+
+		solveProblemWithParameters(core_name, time_name, stoch_name, NULL, false);
+		bool result = true;
+
+		assert(ub_lb_list.size() == ub_for_iteration_.size() && ub_lb_list.size() == lb_for_iteration_.size());
+		for (int i = 0; i < ub_lb_list.size(); i++) {
+			// UB
+			if (!parallel_benders::CompareForEquality(ub_lb_list[i].first, ub_for_iteration_[i], benders_parameter_.GetDblParamValue(parallel_benders::PNB_TOLERANCE_ZERO))) {
+				result = false;
+				LOG(INFO) << "Iteration " << i + 1 << " Target UB: " << ub_lb_list[i].first << " != UB: " << ub_for_iteration_[i];
+			}
+
+			// LB
+			if (!parallel_benders::CompareForEquality(ub_lb_list[i].second, lb_for_iteration_[i], benders_parameter_.GetDblParamValue(parallel_benders::PNB_TOLERANCE_ZERO))) {
+				result = false;
+				LOG(INFO) << "Iteration " << i + 1 << " Target LB: " << ub_lb_list[i].second << " != LB: " << lb_for_iteration_[i];
+			}		
+		}
+		return result;
+	}
+
+	double checkConvergence(const char* name, const std::vector<std::pair<double, double>>& ub_lb_list) {
+		return checkConvergence(name, name, name, ub_lb_list);
+	}
+
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Start with single cut and Benders
         std::vector<double> solutions;
@@ -735,7 +761,7 @@ protected:
 	}
     virtual void TearDown(){}
 
-    double solveProblemWithParameters( const char* core_name, const char* time_name, const char* stoch_name, double * supplied_solution = NULL){
+    double solveProblemWithParameters( const char* core_name, const char* time_name, const char* stoch_name, double * supplied_solution = NULL, bool stats_to_file = true){
         // We set the correct folder here: All files are in Benders/instances
         std::string folder("../../../../Data/Benders/");
 #if _M_X64 || __x86_64__ // Works only on windows i suppose
@@ -873,6 +899,13 @@ protected:
             values_map[critical_iterations_string] += nested_benders.getNumCriticalIteration();
             values_map[critical_iteration_sequence_length_string] += nested_benders.getMaximalLengthOfCriticalIterationSequence();
 
+			ub_for_iteration_.clear();
+			lb_for_iteration_.clear();
+			for (int i = 0; i < nested_benders.getNumIterations(); i++) {
+				ub_for_iteration_.push_back(nested_benders.getUbForIteration(i+1));
+				lb_for_iteration_.push_back(nested_benders.getLbForIteration(i+1));
+			}
+
             // Write parameter values
             // Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
             BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
@@ -915,10 +948,12 @@ protected:
             s << "\n";
 
             // Write to testbed log file
-            ofstream testbed_log_file;
-            testbed_log_file.open(testbed_log_file_string_.c_str(),ios::app | ios::out);
-            testbed_log_file << s.str();
-            testbed_log_file.close();
+			if (stats_to_file) {
+				ofstream testbed_log_file;
+				testbed_log_file.open(testbed_log_file_string_.c_str(), ios::app | ios::out);
+				testbed_log_file << s.str();
+				testbed_log_file.close();
+			}
             if ( nested_benders.getSolutionCode() == parallel_benders::PNB_SOLUTION_TIME_LIMIT && loop_counter == 0 ){
                 repetitions_ = 1;
                 values_map[solver_time_string] = nested_benders.getParameters().parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600);
@@ -974,10 +1009,12 @@ protected:
 
         // Write string to file
         // Write to testbed log file
-        ofstream testbed_aggregated_log_file;
-        testbed_aggregated_log_file.open(testbed_aggregated_log_file_string_.c_str(),ios::app | ios::out);
-        testbed_aggregated_log_file << aggregated_s.str();
-        testbed_aggregated_log_file.close();
+		if (stats_to_file) {
+			ofstream testbed_aggregated_log_file;
+			testbed_aggregated_log_file.open(testbed_aggregated_log_file_string_.c_str(), ios::app | ios::out);
+			testbed_aggregated_log_file << aggregated_s.str();
+			testbed_aggregated_log_file.close();
+		}
 
         repetitions_ = orig_repetitions;
         
@@ -1001,6 +1038,8 @@ protected:
     boost::shared_array<double> current_start_solution_;
     boost::shared_array<double> best_case_solution_;
     boost::shared_array<double> worst_case_solution_;
+	std::vector<double> ub_for_iteration_;
+	std::vector<double> lb_for_iteration_;
     int num_stages_;
     int num_single_scenario_cols_;
 	int special_case_solution_length_;
@@ -1217,6 +1256,22 @@ TEST_F(LiftAndProjectCutsTest, fast) {
 	// Multi stage (>= 2nd stage vars are cont or relaxed)
 	// generate feasibility cuts:
 	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
+
+	// Check the convergance of UB and LB
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 0);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_WARM_START, 0);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_USE_START_SOLUTION, 0);
+	
+	std::array<double, 18> ub = { 1.0e+20,  53106.83999999,  19.61999999, -30.86621118, -78.90000000, -78.90000000, -78.90000000, -78.90000000, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999 };
+	std::array<double, 18> lb = {-1.0e+20,-886618.16000000,-215.37999999,-208.38000000,-195.38000000,-195.38000000,-187.38000000,-168.38000000, -155.38000000, -155.38000000, -148.38000000, -148.38000000, -147.38000000, -140.38000000, -135.38000000, -127.38000000, -127.38000000, -121.59999999 };
+	std::vector<std::pair<double, double>> target_list;
+	for (int i = 0; i < 18; i++) {
+		target_list.push_back(make_pair(ub[i], lb[i]));
+	}
+	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", target_list));
+
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 4);
+	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", target_list));
 }
 
 TEST_F(NestedBendersTest, fast) {
