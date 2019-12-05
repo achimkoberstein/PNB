@@ -796,6 +796,9 @@ namespace parallel_benders {
         int gap_counter = 0;
         int gap_counter_maximum = 1000;
 
+		double temporary_stage_upper_bound = infinity_;
+		double temporary_stage_lower_bound = -infinity_;
+
         // Variables needed for dynamic strategy PNB_INT_FASTPASS_WITH_FASTBACK
         double threshold = 1;
         bool time_not_measured = true;
@@ -2702,7 +2705,85 @@ namespace parallel_benders {
             }
             delete [] t_array;
         }
-        // Load the basic problem
+
+		//	Modifications for L&P CGP MP
+		if (lp_fract_var_index_ != -1 && current_stage_ == 0) {
+			int num_cols = stage_pointer->num_columns_;
+			int num_rows = stage_pointer->num_rows_;
+			
+			//*** A matrix rows
+			// A matrix -> A' and A"
+			CoinPackedMatrix* a_matrix = benders_node_pointer->matrix_; // RowOrdered
+			assert(!node_pointer->hasMatrix() && "1st stage can not have stochastic matrix");
+			assert(!stage_pointer->stochastic_matrix_w_);
+			assert(a_matrix->getNumRows() == num_rows);
+			assert(a_matrix->getNumCols() == num_cols);
+
+			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(*a_matrix); // this is the matrix we put in the solver 
+			// add empty rows at the bottom of it.
+			assert(problem_matrix->getNumRows() == 0 && "Never tested the lines below with problems that have matrix A");
+			problem_matrix->setDimensions(num_rows * 2, num_cols);
+			// double prime side
+			CoinPackedMatrix double_prime_cols;
+			double_prime_cols.reverseOrdering(); // RowOrdered now
+			double_prime_cols.setDimensions(num_rows, num_cols); // set empty matrix to original a_matrix dimensions
+			double_prime_cols.bottomAppendPackedMatrix(*a_matrix); // new cols => empty top half, A-matrix in second half	
+			problem_matrix->rightAppendPackedMatrix(double_prime_cols);
+
+			//*** (1-lambda) * x' + lambda * x"  TODO: is it correct with continuous variables, do we need to move bounds in matrix?
+			std::vector<int> rows_n_cols(num_cols);
+			std::iota(rows_n_cols.begin(), rows_n_cols.end(), 0); // 0,1,2,3...
+			std::vector<double> prime_elems(num_cols, 1 - (*lp_main_loop_col_solution_)[lp_fract_var_index_]); // 1 - lambda
+			std::vector<double> double_prime_elems(num_cols, (*lp_main_loop_col_solution_)[lp_fract_var_index_]); // lambda
+			CoinPackedMatrix last_line(true, rows_n_cols.data(), rows_n_cols.data(), prime_elems.data(), num_cols); // ColOrdered, matrix constructor copies the data
+			CoinPackedMatrix double_prime_diag_matrix(true, rows_n_cols.data(), rows_n_cols.data(), double_prime_elems.data(), num_cols);
+			last_line.rightAppendPackedMatrix(double_prime_diag_matrix);
+			last_line.reverseOrdering(); // RowOrdered now
+			problem_matrix->bottomAppendPackedMatrix(last_line);
+
+			// reassign
+			delete a_matrix; // no longer needed
+			benders_node_pointer->matrix_ = problem_matrix;
+			benders_node_pointer->cols_ = problem_matrix->getNumCols();
+			benders_node_pointer->rows_ = problem_matrix->getNumRows();
+
+			//*** Col Lower and Upper bounds (bounds) TODO: is it correct with continuous variables, do we need to move bounds in matrix?
+			// duplicate bounds for double-prime columns, we stick to the dynamic arrays here
+			double* problem_column_lower = new double[num_cols*2]; // prime, double prime
+			memcpy(problem_column_lower, benders_node_pointer->column_lower_, num_cols*sizeof(double)); // prime
+			assert(CompareWithZero(problem_column_lower[lp_fract_var_index_]) && "LB for the fract var (bin) should should be 0");
+			memcpy(&problem_column_lower[num_cols], benders_node_pointer->column_lower_, num_cols * sizeof(double)); // double prime
+			problem_column_lower[lp_fract_var_index_ + num_cols] = 1;
+			benders_node_pointer->column_lower_ = problem_column_lower;
+
+			double* problem_column_upper = new double[num_cols*2]; // prime, double prime
+			memcpy(problem_column_upper, benders_node_pointer->column_upper_, num_cols * sizeof(double)); // prime
+			problem_column_upper[lp_fract_var_index_] = 0;
+			memcpy(&problem_column_upper[num_cols], benders_node_pointer->column_upper_, num_cols * sizeof(double)); // double prime
+			assert(CompareForEquality(problem_column_lower[lp_fract_var_index_ + num_cols], 1.0, integer_tolerance_) && "UB for the fract var (bin) should should be 1");
+			benders_node_pointer->column_upper_ = problem_column_upper;
+
+			//*** Objective coefs (done above)
+
+			//*** Row Lower and Upper bounds (RHS)
+			// duplicate rhs for double-prime rows
+			double* problem_row_lower = new double[num_rows*2 + num_cols]; // prime, double prime, last line
+			memcpy(problem_row_lower, benders_node_pointer->row_lower_, num_rows * sizeof(double)); // prime
+			memcpy(&problem_row_lower[num_rows], benders_node_pointer->row_lower_, num_rows * sizeof(double)); // double prime
+			memcpy(&problem_row_lower[num_rows*2], lp_main_loop_col_solution_->data(), num_cols * sizeof(double)); // (1-lambda) * x' + lambda * x" = fract_solution
+			benders_node_pointer->row_lower_ = problem_row_lower;
+
+			double* problem_row_upper = new double[num_rows*2 + num_cols]; // prime, double prime, last line
+			memcpy(problem_row_upper, benders_node_pointer->row_upper_, num_rows * sizeof(double)); // prime
+			memcpy(&problem_row_upper[num_rows], benders_node_pointer->row_upper_, num_rows * sizeof(double)); // double prime
+			memcpy(&problem_row_upper[num_rows * 2], lp_main_loop_col_solution_->data(), num_cols * sizeof(double)); // (1-lambda) * x' + lambda * x" = fract_solution
+			benders_node_pointer->row_upper_ = problem_row_upper;			
+
+			//TODO: now dimensions in benders_node_ponter do not correspond to values in node_pointer and deterministic_node_pointer...
+			// in particular stage_data_[current_stage_]->num_columns_
+		}
+		
+		// Load the basic problem
         // We call this method if we just constructed the matrix for the first time
         if ( !reuse_solver ){
             if ( !benders_node_pointer->unbounded_problem_  )
@@ -4102,6 +4183,8 @@ namespace parallel_benders {
             if ((*it)->getParent() != nullptr && (*it)->getParent()->getScenarioIndex() != (*it)->getScenarioIndex()) {
                 node->branch_scenario_ = (*it)->getParent()->getScenarioIndex();
             }
+			node->cols_ = (*it)->getNumCols();
+			node->rows_ = (*it)->getNumRows();
             nodeVec[(*it)->getScenarioIndex()].push_back(node);
             it++;
         }
@@ -5498,6 +5581,9 @@ namespace parallel_benders {
         if ( num_theta == 0 ){
             num_theta = getNumThetasByStage(benders_tree_node_pointer);
         }
+		if (lp_fract_var_index_ != -1) { // L&P CGP
+			num_theta *= 2; // prime and double prime
+		}
         int extra_columns = 0;
         if ( level_decomp_ && level_manhattan_)
             extra_columns += stage_data_[current_stage_]->num_columns_;
@@ -5506,8 +5592,8 @@ namespace parallel_benders {
         if ( cvar_constr_decomp_ )
             extra_columns++;
         // We need an objective function variable that is added to the problem for level decomp!
-		if ( osi_solver->getNumCols() < stage_data_[current_stage_]->num_columns_+num_theta + (cvar_constr_decomp_ ? 1: 0)) { // We need to add the theta variables!
-			int num_cols = num_theta+ (cvar_constr_decomp_ ? 1: 0);
+		if ( osi_solver->getNumCols() < benders_node_pointer->cols_ + num_theta + (cvar_constr_decomp_ ? 1: 0)) { // We need to add the theta variables!
+			int num_cols = num_theta + (cvar_constr_decomp_ ? 1: 0);
 			assert( num_cols > 0);
 			std::vector<double> lower(num_cols,-infinity_);
 			std::vector<double> upper(num_cols,infinity_);
@@ -5516,12 +5602,19 @@ namespace parallel_benders {
                 upper[num_cols-1] = 0.0;
             }
 			double term = 0.0;
-			if (!benders_node_pointer->optimality_cuts_.empty() )
+			if (!benders_node_pointer->optimality_cuts_.empty() || !benders_node_pointer->lift_and_project_cuts_.empty())
 				term = 1.0;
-			if ( term == 0.0 ){
-				assert(benders_node_pointer->lift_and_project_cuts_.empty()); // Is it an error?
-			}
 			std::vector<double> objective(num_cols,term); 
+			if (lp_fract_var_index_ != -1) { // L&P cuts CGP MP
+				assert(!cvar_constr_decomp_ && "Never tested before");
+				int i = 0;
+				for (; i < num_theta/2; i++) { // (1-lambda) on prime side
+					objective[i] -= (*lp_main_loop_col_solution_)[lp_fract_var_index_];
+				}
+				for (; i < num_theta; i++) { // lambda on double-prime side
+					objective[i] = (*lp_main_loop_col_solution_)[lp_fract_var_index_];
+				}
+			}
             if ( cvar_constr_decomp_ )
                 objective[objective.size()-1] = 0.0;
 			CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
@@ -5529,14 +5622,16 @@ namespace parallel_benders {
 				coin_vector[i] = new CoinShallowPackedVector(0,nullptr,nullptr,false);
 			}
 			osi_solver->addCols(num_cols,coin_vector,&lower[0],&upper[0],&objective[0]);
-			LOG_IF(FATAL,osi_solver->getNumCols() != stage_pointer->num_columns_+num_cols) << osi_solver->getNumCols();
+			LOG_IF(FATAL,osi_solver->getNumCols() != benders_node_pointer->cols_+num_cols) << osi_solver->getNumCols();
 			for (int i = 0; i < num_cols; i++){
 				delete coin_vector[i];
 			}
 			delete [] coin_vector;
 		}
-		else if ( benders_node_pointer->changed_aggregation_level_ && osi_solver->getNumCols() > stage_data_[current_stage_]->num_columns_+num_theta +extra_columns){
+		else if ( benders_node_pointer->changed_aggregation_level_ && osi_solver->getNumCols() > benders_node_pointer->cols_+num_theta+extra_columns){
 			// We have more cols than we should have! We must remove the theta columns we have too much of!
+			assert(!generate_lp_cuts_ && "This case is not tested.");
+			assert(lp_fract_var_index_ == -1 && "This case is not tested.");
 			int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_-extra_columns;
 			assert( cols_to_remove < num_theta );
 			std::vector<int> remove_indices;
@@ -5550,11 +5645,14 @@ namespace parallel_benders {
 			// We need to activate the theta variables!
 			for (int i = 0; i < benders_node_pointer->num_thetas_; i++){
 				osi_solver->setObjCoeff(stage_data_[current_stage_]->num_columns_+i,benders_node_pointer->active_aggregates_[i] ? 1.0 : 0.0);
+				LOG_IF(FATAL, lp_rounds_limit_ && !benders_node_pointer->active_aggregates_[i] && "What happens when theta for L&P cuts is not active?");
             }
 		}
 
         // We need to add num_columns_ many columns to the problem
         if ( level_decomp_ && (level_manhattan_ || level_infinity_) && current_stage_ < num_stages_-1 && current_stage_ <= level_stage_){
+			assert(!generate_lp_cuts_ && "This case is not tested.");
+			assert(lp_fract_var_index_ == -1 && "This case is not tested.");
 
             if ( !seperate_first_stage_solver_ ){
                 regularized_initialized_cols_ = false;
