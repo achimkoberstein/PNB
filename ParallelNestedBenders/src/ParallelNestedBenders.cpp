@@ -2316,6 +2316,7 @@ namespace parallel_benders {
 				}
 				lp_round_ = 0;
 			}
+			LOG_IF(FATAL, generate_lp_cuts_ && current_iteration_ == 1 && "Never tested - in the first it. all vars were always int and we built no L&P cuts. Does active_aggregates_[i] works correct? Check!");
 		}
 
         // Copy theta variables
