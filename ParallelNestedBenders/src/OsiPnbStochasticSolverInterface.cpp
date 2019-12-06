@@ -53,13 +53,13 @@ double OsiStochasticParallelNestedBendersSolverInterface::getUbForIteration(int 
 {
 	LOG_IF(FATAL, iteration <= 0 || iteration > this->getNumIterations()) << "iteration arg in getUbForIteration() should be between 1 and number of iterations.";
 	
-	return nested_benders_->ub_lb_for_iteration_[iteration - 1].first;
+	return nested_benders_->iteration_u_and_l_bounds_[iteration - 1].first;
 }
 double OsiStochasticParallelNestedBendersSolverInterface::getLbForIteration(int iteration) const
 {
 	LOG_IF(FATAL, iteration <= 0 || iteration > this->getNumIterations()) << "iteration arg in getLbForIteration() should be between 1 and number of iterations.";
 
-	return nested_benders_->ub_lb_for_iteration_[iteration - 1].second;
+	return nested_benders_->iteration_u_and_l_bounds_[iteration - 1].second;
 }
 void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 {

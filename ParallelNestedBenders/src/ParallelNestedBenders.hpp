@@ -84,7 +84,7 @@ private:
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
-	void AggregateLiftAndProjectCuts();
+	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
     void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -121,7 +121,7 @@ private:
     void HandleInitialSolutionProcedures();
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
     void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
-	void AddLiftAndProjectCutToContainer( std::shared_ptr<CutStuff> cut_stuff);
+	void AddLiftAndProjectCutToContainer(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
     void SetSolverByThread();
 
 	bool CheckForSameCut(const CutStuff& cut_to_check, const BendersNodeData::cut_container & container);
@@ -175,7 +175,7 @@ private:
     double upper_bound_;
     double old_lower_bound_;
     std::vector<double> old_first_stage_solution_;
-	std::vector<std::pair<double, double>> ub_lb_for_iteration_;
+	std::vector<std::pair<double, double>> iteration_u_and_l_bounds_;
 
     int current_stage_;
     // Characteristic of problem
