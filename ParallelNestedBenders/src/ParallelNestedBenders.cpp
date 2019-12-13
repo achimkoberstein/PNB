@@ -3567,8 +3567,6 @@ namespace parallel_benders {
     }
 
 	void ParallelNestedBenders::GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable) {
-		// TODO: decide depending on num_cuts the thread pool for sub PNB
-		// thread pool size for every sub pnb = (hardware_concurrency()/num_cuts)
 		LOG(INFO) << "Generating L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
 
 		// see HandleInitialSolutionProcedures for example
@@ -3594,13 +3592,15 @@ namespace parallel_benders {
 		int threads_per_CGP = 1; // TODO: threads are expensive, let us first try the simplest case. Easier for debugging
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_CPU_USED, threads_per_CGP);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
-		cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
+		cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // TODO: change it to 1
 
 		//we do not compute solutions and objectives since they should somehow be stored from prime and double prime subproblems
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, PNB_INT_SOLUTION_PRIMAL_NO);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS, PNB_INT_SOLUTION_DUAL_NO);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES, false);
-		cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
+#ifdef TEST
+		cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, true);
+#endif
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_WARM_START, 0);
 		//parameter_.SetParameterValue(parallel_benders::PNB_BOUNDS_IN_MATRIX, true); //what is this?
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_USE_START_SOLUTION, 0);
@@ -3610,13 +3610,10 @@ namespace parallel_benders {
 		ParallelNestedBenders* cgp_pnb = new ParallelNestedBenders(smi_); 
 		cgp_pnb->parameter_ = cgp_parameter;
 		cgp_pnb->Init();
-		//cgp_pnb->upper_bound_ = upper_bound_; // TODO: will it be valid when we implement the algorithm, do we need it
-		cgp_pnb->lp_fract_var_index_ = fractional_variable.first;
-		cgp_pnb->lp_main_loop_col_solution_ = &tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
-		cgp_pnb->lp_main_loop_iteration_round_ = std::make_pair(current_iteration_, lp_round_);
+		cgp_pnb->upper_bound_ = upper_bound_; // TODO: will it be valid when we implement the algorithm
 		SmiTreeNode<BendersNodeData*>* cgp_first_stage_node = cgp_pnb->tree_nodes_by_stage_[0][0];
 		
-		//Add optimality and L&P cuts from the main loop
+		//Add optimality cuts from the main loop
 		// something similar is done in HandleInitialSolutionProcedures()
 		BendersNodeData::cut_container::iterator it = tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.begin();
 		for (; it != tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end(); ++it) {
@@ -3624,6 +3621,8 @@ namespace parallel_benders {
 			cut.cut_creation_iteration_ = 0;
 			AddOptimalityCutToContainer(cgp_first_stage_node, std::make_shared<CutStuff>(cut));
 		}
+
+		//Add L&P cuts from the main loop
 		it = tree_nodes_by_stage_[0][0]->getDataPtr()->lift_and_project_cuts_.begin();
 		for (; it != tree_nodes_by_stage_[0][0]->getDataPtr()->lift_and_project_cuts_.end(); ++it) {		
 			CutStuff cut = *it->get();
@@ -3631,38 +3630,19 @@ namespace parallel_benders {
 			// we add L&P cuts to CGP as optimality cuts. Adding them as L&P cuts would generaly also work
 			AddOptimalityCutToContainer(cgp_first_stage_node, std::make_shared<CutStuff>(cut));
 		}
+
 		// TODO: Add feasibility cuts from the main loop
+		LOG_IF(FATAL, !tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.empty()) << "feasibility cuts not implemented for CGP";
 
 		cgp_pnb->Solve();
-
-		if (cgp_pnb->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND) {
-			// it happened before
-			LOG(WARNING) << "UB < LB in L&P CGP";
-			LOG_IF(FATAL, ComputeRelativeGap(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_) > 0.00001) << "Relative gap in CGP is too big.";
-		}
-		else if (cgp_pnb->solution_code_ != PNB_SOLUTION_OPTIMAL) {
-			LOG(FATAL) << "L&P CGP is not solved to optimality. Is it an ERROR?";
-		}
-
-		if (cgp_pnb->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND) {
-			// it happened before
-			LOG(WARNING) << "UB < LB in L&P CGP";
-			LOG_IF(FATAL, ComputeRelativeGap(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_) > 0.00001) << "Relative gap in CGP is too big.";
-		}
-		else if (cgp_pnb->solution_code_ != PNB_SOLUTION_OPTIMAL) {
-			LOG(FATAL) << "L&P CGP is not solved to optimality. Is it an ERROR?";
-		}
 
 		//TODO: we could also solve deteq of CGP for now
 		
 		delete cgp_pnb;
 
-		// see GenerateOptimalityCut() for examples with bounds etc.
-
-		// Precomputed values (for SNDP_TestCase_0)
-		int fract_var_index = fractional_variable.first;
-		float fract_var_value = fractional_variable.second;
-		if (current_iteration_ == 3 && lp_round_ == 1 && fract_var_index == 1 && CompareForEquality(fract_var_value, 0.96, 0.01)) {
+#ifdef TEST
+		// Store computed values (for SNDP_TestCase_0)
+		if (current_iteration_ == 3 && lp_round_ == 1) {
 			lp_current_cuts_coefficients_[lp_cut_index] = std::vector<double>{ 25000.0, 17000.0 };
 			lp_current_cuts_rhs_[lp_cut_index] = 0.0;
 		}
