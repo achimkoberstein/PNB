@@ -383,17 +383,21 @@ private:
     // Handle numerical issues!
     std::vector<double> old_discrepancies_;
     
-	//LiftAndProject cuts
+	//LiftAndProject cuts TODO: is not it too much variables
 	int lp_rounds_limit_;
 	int lp_switches_limit_;
 	int lp_major_it_limit_;
-	int lp_round_;
+	int lp_round_; // TODO: get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
 	int lp_switch_counter_;
 	bool generate_lp_cuts_;
 	int next_lp_rounds_iteration_;
 	std::map<double, std::pair<int, double>> fractional_variables_; //<fractional part, <var index, var value> > ordered ascending by int violation
 	std::vector<std::vector<double>> lp_current_cuts_coefficients_; // TODO: erase this stuff later in the iteration
 	std::vector<double> lp_current_cuts_rhs_;
+	int lp_fract_var_index_;
+	const std::vector<double>* lp_main_loop_col_solution_; // this is the solution of 1st-stage in the main loop
+	std::pair<int, int> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
+	int lp_column_set_;
 
     // TODO: REMOVE AGAIN
     int optimality_cut_counter_;

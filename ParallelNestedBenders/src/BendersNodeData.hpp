@@ -131,7 +131,7 @@ namespace parallel_benders{
     const int PNB_INT_BARRIER_WITH_CROSSOVER = 13;
     const int PNB_INT_CONCURRENT_MASTER_STANDARD = 14; // Uses dual simplex for subproblems, but concurrent master optimizer
 
-    // SOlution handling
+    // Solution handling
     const int PNB_INT_SOLUTION_PRIMAL_NO = -2;
     const int PNB_INT_SOLUTION_PRIMAL_ALL = -1;
     const int PNB_INT_SOLUTION_DUAL_NO = -2;
@@ -153,6 +153,10 @@ namespace parallel_benders{
     const int PNB_SOLUTION_UPPER_LESS_LOWER_BOUND = 9;
     const int PNB_SOLUTION_CVAR_H_NEGATIVE = 10;
 
+	// L&P CGP master problem sides (column sets)
+	const int PNB_COL_SET_NONE = 0;
+	const int PNB_COL_SET_PRIME = 1;
+	const int PNB_COL_SET_DOUBLE_PRIME = 2;
 
     struct BendersNodeData;
 
@@ -168,6 +172,7 @@ namespace parallel_benders{
         int cut_creation_iteration_;
         int not_active_iterations_;
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
+		int column_set_; // used for L&P cuts CGP master problem
         std::shared_ptr<OsiRowCut> cut_;
         double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
         int current_index_in_solver_; // Needs to be updated at each run to be meaningful
