@@ -204,6 +204,11 @@ namespace parallel_benders {
             // Look at current node
             BendersNodeData* benders_node_ptr = (*it)->getDataPtr();
             SmiNodeData* node_ptr = benders_node_ptr->smi_node_data_;
+			
+			// update num cols and rows for benders node
+			benders_node_ptr->cols_ = benders_stage_ptr->num_columns_;
+			benders_node_ptr->rows_ = benders_stage_ptr->num_rows_;
+
             if ( !node_ptr->isCoreNode()){ // Makes only sense for non-core nodes
                 // Find stochastic T and W matrix, but only until we found out out if we have a stochastic_matrix_t 
                 if ( node_ptr->getNumMatrixElements() && !( benders_stage_ptr->stochastic_matrix_w_ && benders_stage_ptr->stochastic_matrix_t_ && !staircase_in_stage) ){
@@ -296,7 +301,7 @@ namespace parallel_benders {
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
-        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),store_primal_and_dual_(false),
+        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1), lp_main_loop_col_solution_(nullptr), lp_main_loop_iteration_round_(std::make_pair(-1,-1)), lp_fract_var_index_(-1), lp_column_set_(PNB_COL_SET_NONE), store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
@@ -683,6 +688,8 @@ namespace parallel_benders {
 		LOG_IF(FATAL, lp_switches_limit_ <= 0) << "PNB_LP_SWITCHES_LIMIT parameter should have value > 0. If you want to turn off L&P cuts, set PNB_LP_ROUNDS_LIMIT to 0";
 		LOG_IF(FATAL, lp_major_it_limit_ <= 0) << "PNB_LP_MAJOR_IT_LIMIT parameter should have value > 0. If you want to turn off L&P cuts, set PNB_LP_ROUNDS_LIMIT to 0";
 
+		LOG_IF(FATAL, lp_rounds_limit_ > 0 && (num_theta > 1 || adaptive_)) << "L&P cuts are not implemented / tested when used with Hybrid cut aggregation";
+
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
     }
@@ -765,6 +772,7 @@ namespace parallel_benders {
             num_stages_ = core_->getNumStages();
             num_scenarios_ = smi_->getNumScenarios();
             InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
+			LOG_IF(FATAL, lp_rounds_limit_ > 0 || lp_fract_var_index_ != -1) << "Never tested for L&P cuts. Adjust problem will update benders_node->num_cols_ and num_rows_";
             AdjustProblem(); // We need to set the important properties again!
             // Best way would be to just recreate the benders_node_data tree from scratch!
         }
@@ -882,6 +890,28 @@ namespace parallel_benders {
                 }
 
             }
+#ifdef TEST
+			if (current_stage_ == 0) {
+				int fract_index = lp_fract_var_index_;
+				double fract_value;
+				if (fract_index == 0) {
+					fract_value = (*lp_main_loop_col_solution_)[fract_index];
+					if (CompareForEquality(fract_value, 0.09, 0.001) && current_iteration_ == 1) { // it. 3, round: 2. Stop before the second CGP iteration
+						not_stop_loop = false;
+					}
+				}
+				else if (fract_index == 1) {
+					fract_value = (*lp_main_loop_col_solution_)[fract_index];
+					if (CompareForEquality(fract_value, 0.96, 0.001) && current_iteration_ == 1) { // it. 3, round: 1. Stop before the second CGP iteration
+						not_stop_loop = false;
+					}
+					else if (CompareForEquality(fract_value, 0.7, 0.001) && current_iteration_ == 1) { // it. 4, round: 1. Stop before the second CGP iteration
+						not_stop_loop = false;
+					}
+				}
+			}
+			
+#endif // TEST
             if ( !not_stop_loop ){ // We stop the loop!
                 LOG_IF(INFO,solution_similiarity_counter_ >= max_similarity_iteration_) << "Stopped due to solution similarity for " << solution_similiarity_counter_ << " iterations.";
                 if ( solution_similiarity_counter_ >= max_similarity_iteration_ )
@@ -1041,8 +1071,10 @@ namespace parallel_benders {
             }
 
             // Initialize lower/upper bounds for this stage.
-            temporary_stage_lower_bound_ = 0;
-            temporary_stage_upper_bound_ = 0;
+			if (lp_column_set_ != parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
+				temporary_stage_lower_bound_ = 0;
+				temporary_stage_upper_bound_ = 0;
+			}
 
             // Stochastic Cutting Plane Method
             //stochastic_cutting_plane_ = true;
@@ -1474,6 +1506,7 @@ namespace parallel_benders {
             }
 
             bool can_update_upper_bound = !warm_up_;
+			can_update_upper_bound = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME) ? false : can_update_upper_bound; // we do not update when solve prime subproblems in L&P cuts CGP
             if ( d_square_ && current_stage_==1){
                 // Solve C^3-SLP
                 if ( stage_data_[current_stage_]->violated_index_ >= 0){
@@ -1913,8 +1946,18 @@ namespace parallel_benders {
             }
             timer_.Stop(current_stage_);
             // Change next stage, depending on where we are heading (forward or backward)
-            if ( !generate_lp_cuts_) // we stay on the same stage during the L&P rounds
+			if (!generate_lp_cuts_ && lp_column_set_ != parallel_benders::PNB_COL_SET_PRIME) { // we stay on the same stage during the L&P rounds (1st stage) or when we switched from prime to double prime (2nd stage) 
 				forward_ ? current_stage_++ : current_stage_--;
+			}
+			// Change prime / double prime sides in L&P CGP
+			if (lp_fract_var_index_ != -1) {
+				if (current_stage_ == 0) {
+					lp_column_set_ = parallel_benders::PNB_COL_SET_NONE;
+				}
+				else {
+					lp_column_set_ = (lp_column_set_ == parallel_benders::PNB_COL_SET_NONE) ? parallel_benders::PNB_COL_SET_PRIME : parallel_benders::PNB_COL_SET_DOUBLE_PRIME;
+				}
+			}
         }
         timer_.Stop(current_stage_);
         if ( pretty_printing_ )
@@ -2292,7 +2335,11 @@ namespace parallel_benders {
 
 		// We need the column solution for the next stage problem!
 		// We want to differentiate between column solution and theta variables 
-		StoreValuesFromSolverInVector(benders_node_pointer->col_solution_, osi_solver->getColSolution(), stage_data_[current_stage_]->num_columns_);
+		StoreValuesFromSolverInVector(benders_node_pointer->col_solution_, osi_solver->getColSolution(), benders_node_pointer->cols_);
+
+		//TODO: delete it later
+		LOG_IF(FATAL, lp_fract_var_index_ != -1 && current_stage_ == 0 && osi_solver->getNumCols() - benders_node_pointer->cols_ != 2) << "Why would num_theta be not 2 if we do not use multicut / cut aggreagtion in CGP?";
+		LOG_IF(FATAL, lp_fract_var_index_ == -1 && lp_rounds_limit_ == 0 && benders_node_pointer->cols_ != stage_data_[current_stage_]->num_columns_) << "Why would it be different unless we use L&P cuts";
 
 		if (generate_lp_cuts_) {
 			assert(current_stage_ == 0 && lp_round_ > 0);
@@ -2312,7 +2359,7 @@ namespace parallel_benders {
 			}
 
 			if (fractional_variables_.empty()) {
-				LOG(INFO) << "L&P round " << lp_round_ << ": No fractional variables, no L&P cuts to generate.";
+				LOG(INFO) << "L&P round " << lp_round_ << ": No fractional variables, no L&P cuts to generate." << std::endl;
 
 				generate_lp_cuts_ = false;
 				if (lp_round_ > 1) { // we do not count as a switch the L&P rounds session in which no cuts were build
@@ -2602,14 +2649,37 @@ namespace parallel_benders {
         if ( current_stage_ > 0 ){
             // Get solution from predecessor in tree
             double* unbounded_rhs = nullptr;
-            double * column_solution = (benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_.empty() ? nullptr : &benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_[0]); // Is of length num_columns of previous stage
+			int double_prime_offset = (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) ? stage_data_[current_stage_-1]->num_columns_ : 0;
+#ifdef TEST
+			int fract_index = lp_fract_var_index_;
+			double fract_value;
+			if (fract_index == 0) {
+				fract_value = (*lp_main_loop_col_solution_)[fract_index];
+				if (CompareForEquality(fract_value, 0.09, 0.001)) { // it. 3, round: 2
+					benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_ = { 0, 1, 1, 1 };
+				}
+			}
+			else if (fract_index == 1) {
+				fract_value = (*lp_main_loop_col_solution_)[fract_index];
+				if (CompareForEquality(fract_value, 0.96, 0.001)) { // it. 3, round: 1
+					benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_ = { 0, 0, 0, 1 };
+				}
+				else if (CompareForEquality(fract_value, 0.7, 0.001)) { // it. 4, round: 1
+					benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_ = { 1, 0, 1, 1 };
+				}
+			}
+#endif // TEST
+
+            double * column_solution = (benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_.empty() ? nullptr : &benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_[double_prime_offset]); // Is of length num_columns of previous stage
             if ( warm_up_ && column_solution == nullptr ){ // We want the column solution of the warm_up_ solution! This is the warm_up_solution_ with an offset according the number of cols until current_stage-2.
-                int offset_warmup = 0;
+				assert(lp_fract_var_index_ == -1 && "Never tested with warm up for cgp");
+				int offset_warmup = 0;
                 for (int i = 0; i < current_stage_-1; i++)
                     offset_warmup += stage_data_[i]->num_columns_;
                 column_solution = warm_up_solution_.get()+offset_warmup;
             }
             if ( benders_node_pointer->unbounded_problem_ )
+				assert(lp_fract_var_index_ == -1 && "Never tested for cgp");
                 unbounded_rhs = benders_tree_node_pointer->getParent()->getDataPtr()->unbounded_extreme_ray_.get();
 
             if ( column_solution != nullptr){
@@ -3611,9 +3681,12 @@ namespace parallel_benders {
 		cgp_pnb->parameter_ = cgp_parameter;
 		cgp_pnb->Init();
 		cgp_pnb->upper_bound_ = upper_bound_; // TODO: will it be valid when we implement the algorithm
+		cgp_pnb->lp_fract_var_index_ = fractional_variable.first;
+		cgp_pnb->lp_main_loop_col_solution_ = &tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
+		cgp_pnb->lp_main_loop_iteration_round_ = std::make_pair(current_iteration_, lp_round_);
 		SmiTreeNode<BendersNodeData*>* cgp_first_stage_node = cgp_pnb->tree_nodes_by_stage_[0][0];
 		
-		//Add optimality cuts from the main loop
+		//Add optimality and L&P cuts from the main loop
 		// something similar is done in HandleInitialSolutionProcedures()
 		BendersNodeData::cut_container::iterator it = tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.begin();
 		for (; it != tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end(); ++it) {
@@ -3621,8 +3694,6 @@ namespace parallel_benders {
 			cut.cut_creation_iteration_ = 0;
 			AddOptimalityCutToContainer(cgp_first_stage_node, std::make_shared<CutStuff>(cut));
 		}
-
-		//Add L&P cuts from the main loop
 		it = tree_nodes_by_stage_[0][0]->getDataPtr()->lift_and_project_cuts_.begin();
 		for (; it != tree_nodes_by_stage_[0][0]->getDataPtr()->lift_and_project_cuts_.end(); ++it) {		
 			CutStuff cut = *it->get();
@@ -3630,8 +3701,8 @@ namespace parallel_benders {
 			// we add L&P cuts to CGP as optimality cuts. Adding them as L&P cuts would generaly also work
 			AddOptimalityCutToContainer(cgp_first_stage_node, std::make_shared<CutStuff>(cut));
 		}
-
 		// TODO: Add feasibility cuts from the main loop
+
 		LOG_IF(FATAL, !tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.empty()) << "feasibility cuts not implemented for CGP";
 
 		cgp_pnb->Solve();
@@ -3853,6 +3924,8 @@ namespace parallel_benders {
 
         if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty()){
             // TODO Delete all cvar_constraints from the model, we add them after the other cuts!
+			assert(!generate_lp_cuts_ && "This case is not tested for L&P.");
+			assert(lp_fract_var_index_ == -1 && "This case is not tested for L&P CGP MP.");
             int num_cvar_cuts = benders_node_pointer->cvar_cuts_.size();
             if ( benders_node_pointer->cvar_cuts_.back().get()->cut_creation_iteration_ == current_iteration_-1 )
                 num_cvar_cuts--;  // New cvar cuts were added to the container in the last iteration, so I have cuts-1 in the problem!
@@ -3867,6 +3940,8 @@ namespace parallel_benders {
         }
 
         if ( level_decomp_ && (level_manhattan_ || level_infinity_) && current_stage_ < num_stages_-1 && current_stage_ <= level_stage_){
+			assert(!generate_lp_cuts_ && "This case is not tested for L&P.");
+			assert(lp_fract_var_index_ == -1 && "This case is not tested for L&P CGP MP.");
             if ( !seperate_first_stage_solver_ && current_stage_ == 0){
                 //LOG(FATAL) << "Regularized Decomposition can not work without a seperable first stage solver instance.";
                 regularized_initialized_rows_ = false;
@@ -3910,6 +3985,8 @@ namespace parallel_benders {
 
         bool add_feas_cut_with_opt_cuts_present = false;
         if ( !benders_node_pointer->feasibility_cuts_.empty()){
+			assert(!generate_lp_cuts_ && "This case is not tested for L&P.");
+			assert(lp_fract_var_index_ == -1 && "This case is not tested for L&P CGP MP.");
             // Add the cuts
             if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
                 feas_it = benders_node_pointer->last_iteration_start_feasibility_;
@@ -3989,6 +4066,7 @@ namespace parallel_benders {
         }
 
 		if (!benders_node_pointer->lift_and_project_cuts_.empty()) {
+			assert(lp_fract_var_index_ == -1 && "Cannot have L&P cuts in CGP");
 			// Add the cuts
 			BendersNodeData::cut_container::iterator it = benders_node_pointer->lift_and_project_cuts_.begin();
 			if (seperate_first_stage_solver_ && current_stage_ == 0) {
@@ -5738,6 +5816,7 @@ namespace parallel_benders {
         if ( current_stage_ == num_stages_-1) // No need for a level problem in the last stage!
             return;
 
+		assert(lp_fract_var_index_ != -1 && "never tested in CGP with prime/double prime UB and LB");
         double lower_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->lower_bound_ : lower_bound_);
         double upper_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->upper_bound_ : upper_bound_);
 
@@ -6717,7 +6796,9 @@ namespace parallel_benders {
 
         // Warm up period
         if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
-            //// Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
+			assert(lp_fract_var_index_ == -1 && "Not implemented for CGP");
+			assert(lp_rounds_limit_ == 0 && "Not impelemnted for L&P cuts");
+            // Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
 
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
             //ev_smi->writeSmps("ev_problem",true);
