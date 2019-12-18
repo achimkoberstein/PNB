@@ -2073,6 +2073,8 @@ namespace parallel_benders {
 #endif // COMPUTING_TIMER
 
         // We only need to store data if we have a feasible solution for the subproblem.
+		bool old_generate_lp_cuts = generate_lp_cuts_;
+		int old_lp_round = lp_round_;
         if ( !infeasible_problems_[benders_tree_node_pointer->scenario()] ){
             StoreData(osi_solver,benders_tree_node_pointer);
 
@@ -2140,7 +2142,17 @@ namespace parallel_benders {
                 BuildAndSolveLevelProblem(osi_solver,benders_tree_node_pointer);
             }
         }
-		PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario());
+		std::string suffix;
+		if (old_generate_lp_cuts != generate_lp_cuts_) { // we tried to build an L&P cut but had no fractional vars
+			suffix = "round_" + std::to_string(old_lp_round) + "_feasible_relaxation";
+		}	
+		else if (generate_lp_cuts_) {// we have MP relaxation with fractional variables and build an L&P cuts
+			suffix = "round_" + std::to_string(lp_round_) + "_relaxation";
+		}
+		else if (lp_fract_var_index_ != -1 && current_stage_ > 0) {// subproblems in CGP
+			suffix = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME ? "prime" : "double_prime");
+		}
+		PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), suffix);
         DeleteSubproblem(osi_solver,benders_tree_node_pointer);
 
     }
@@ -7018,7 +7030,10 @@ namespace parallel_benders {
     {
         if ( current_stage_ <= 2 && print_subproblems_){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
+			if (lp_fract_var_index_ != -1) { // prefix for L&P CGP (main loop iteration info)
+				stream << "stage_" << 0 << "_F_" << lp_main_loop_iteration_round_.first << "_0_round_" << lp_main_loop_iteration_round_.second << "-";
+			}
+            stream << "stage_" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;			
             if ( append != "")
                 stream << "_" << append;
             OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -7030,8 +7045,8 @@ namespace parallel_benders {
                 CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"lp");
                 //name = stream.str()+"mps";
                 //CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"mps");
-                name = stream.str()+"sav";
-                CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"sav");
+                //name = stream.str()+"sav";
+                //CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"sav");
             }
             else {
                 std::lock_guard<std::mutex> lock(console_mutex_);
