@@ -2574,11 +2574,12 @@ namespace parallel_benders {
         }
 
         // Do a quick matrix check, only if we do not reuse the solver. Necessary for problems that do not have a w_matrix!
-        if ( !reuse_solver &&benders_node_pointer->matrix_->getMinorDim() == 0){
+        if ( !reuse_solver && benders_node_pointer->matrix_->getMinorDim() == 0){
             benders_node_pointer->matrix_->reverseOrdering(); // We have an empty matrix, it is col ordered, so we need to reverse that ordering!
             benders_node_pointer->matrix_->setDimensions(0,stage_pointer->num_columns_);
         }
 
+		// Column lower bounds
         if (  node_pointer->getColLowerLength()) {
             benders_node_pointer->column_lower_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->column_lower_, core_->getDenseColLower(current_stage_), stage_pointer->num_columns_*sizeof(double));
@@ -2605,7 +2606,8 @@ namespace parallel_benders {
         // If we have a fixed_solution we change the bounds to the fixed solution!
         if ( current_stage_ == 0 && fixed_first_stage_ ){
             // Delete the old ones, otherwise: memory leak
-            if ( node_pointer->getColLowerLength())
+			assert(lp_fract_var_index_ != -1 && "if we delete col_upper or lower of smi model in CGP something bad might happen");
+			if ( node_pointer->getColLowerLength())
                 delete [] benders_node_pointer->column_lower_;
             if ( node_pointer->getColUpperLength())
                 delete [] benders_node_pointer->column_upper_;
@@ -2613,8 +2615,13 @@ namespace parallel_benders {
             benders_node_pointer->column_lower_ = fixed_solution_.get();
         }
 
-        // Objective function coefficients
-        if ( node_pointer->getObjectiveLength()) {
+		// Objective function coefficients
+		if (lp_fract_var_index_ != -1 && current_stage_ == 0) { // for L&P CGP MP
+			// (1-lambda) * theta' + lambda * theta"
+			// theta columns to be added later in AppendColsToSubproblem() => here obj. coefs are all 0
+			benders_node_pointer->objective_ = new double[stage_pointer->num_columns_ * 2]();
+		}
+		else if ( node_pointer->getObjectiveLength()) {
             benders_node_pointer->objective_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->objective_, core_->getDenseObjCoefficients(current_stage_), stage_pointer->num_columns_*sizeof(double));
             if ( stage_pointer->stochastic_objective_ )
@@ -2795,26 +2802,24 @@ namespace parallel_benders {
 
 		//	Modifications for L&P CGP MP
 		if (lp_fract_var_index_ != -1 && current_stage_ == 0) {
+			// be carefull with deleting stuff here: objects from main loop smi might be deleted
 			int num_cols = stage_pointer->num_columns_;
 			int num_rows = stage_pointer->num_rows_;
 			
 			//*** A matrix rows
 			// A matrix -> A' and A"
-			CoinPackedMatrix* a_matrix = benders_node_pointer->matrix_; // RowOrdered
-			assert(!node_pointer->hasMatrix() && "1st stage can not have stochastic matrix");
-			assert(!stage_pointer->stochastic_matrix_w_);
-			assert(a_matrix->getNumRows() == num_rows);
-			assert(a_matrix->getNumCols() == num_cols);
+			CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
+			assert(A_matrix->getNumRows() == num_rows);
+			assert(A_matrix->getNumCols() == num_cols);
 
-			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(*a_matrix); // this is the matrix we put in the solver 
+			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(*A_matrix); // this is the matrix we put in the solver 
 			// add empty rows at the bottom of it.
-			assert(problem_matrix->getNumRows() == 0 && "Never tested the lines below with problems that have matrix A");
 			problem_matrix->setDimensions(num_rows * 2, num_cols);
 			// double prime side
 			CoinPackedMatrix double_prime_cols;
 			double_prime_cols.reverseOrdering(); // RowOrdered now
 			double_prime_cols.setDimensions(num_rows, num_cols); // set empty matrix to original a_matrix dimensions
-			double_prime_cols.bottomAppendPackedMatrix(*a_matrix); // new cols => empty top half, A-matrix in second half	
+			double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half, A-matrix in second half	
 			problem_matrix->rightAppendPackedMatrix(double_prime_cols);
 
 			//*** (1-lambda) * x' + lambda * x"  TODO: is it correct with continuous variables, do we need to move bounds in matrix?
@@ -2829,10 +2834,13 @@ namespace parallel_benders {
 			problem_matrix->bottomAppendPackedMatrix(last_line);
 
 			// reassign
-			delete a_matrix; // no longer needed
+			delete A_matrix; // no longer needed
 			benders_node_pointer->matrix_ = problem_matrix;
+<<<<<<< HEAD
 			benders_node_pointer->cols_ = problem_matrix->getNumCols();
 			benders_node_pointer->rows_ = problem_matrix->getNumRows();
+=======
+>>>>>>> 419c42fa... BuildSubproblem() for CGP MP
 
 			//*** Col Lower and Upper bounds (bounds) TODO: is it correct with continuous variables, do we need to move bounds in matrix?
 			// duplicate bounds for double-prime columns, we stick to the dynamic arrays here
