@@ -148,11 +148,6 @@ namespace parallel_benders {
         benders_stage_ptr->num_columns_ = core_->getNumCols(stage);
         benders_stage_ptr->num_rows_ = core_->getNumRows(stage);
 
-        // Initialize upper and lower bounds
-        benders_stage_ptr->upper_bound_ = infinity_;
-        benders_stage_ptr->lower_bound_ = -infinity_;
-
-
         // Build core T and W matrix
         // What do I need? Assign column to either W or T matrix, so we can keep it organized.
         // 
@@ -303,9 +298,9 @@ namespace parallel_benders {
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1), lp_main_loop_col_solution_(nullptr), lp_main_loop_iteration_round_(std::make_pair(-1,-1)), lp_fract_var_index_(-1), lp_column_set_(PNB_COL_SET_NONE), store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
-        stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
+        stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
-        cvar_constr_decomp_(false),current_second_stage_approximation_(),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),cvar_feasible_first_stage_solution_(false),cvar_next_iterate_problem_(false),change_cvar_alpha_(false),stop_cvar_(false),osi_stopping_criterion_solver_(nullptr),
+        cvar_constr_decomp_(false),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),cvar_feasible_first_stage_solution_(false),cvar_next_iterate_problem_(false),change_cvar_alpha_(false),stop_cvar_(false),osi_stopping_criterion_solver_(nullptr),
         warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(2),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),print_subproblems_(false),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
@@ -652,7 +647,7 @@ namespace parallel_benders {
         stage_lower_upper_bounds_.reserve(num_stages_);
         for (int i = 0; i < num_stages_;i++){
             stage_lower_upper_bounds_.emplace_back( std::make_pair(-infinity_,infinity_));
-            old_lower_upper_bounds_.emplace_back( std::make_pair(-infinity_,infinity_));
+            stage_old_lower_upper_bounds_.emplace_back( std::make_pair(-infinity_,infinity_));
         }
         stage_lower_upper_bounds_[num_stages_-1].first = 0; // We do not have another stage in the last one.
         
@@ -823,8 +818,6 @@ namespace parallel_benders {
         // Variables for pretty printing
         int last_major_iteration = 0;
         int last_current_iteration = 0;
-        double last_lower_bound = lower_bound_;
-        double last_upper_bound = upper_bound_;
         double last_gap = infinity_;
 
         timer_.Stop(setup_timer);
@@ -890,28 +883,7 @@ namespace parallel_benders {
                 }
 
             }
-#ifdef TEST
-			if (current_stage_ == 0) {
-				int fract_index = lp_fract_var_index_;
-				double fract_value;
-				if (fract_index == 0) {
-					fract_value = (*lp_main_loop_col_solution_)[fract_index];
-					if (CompareForEquality(fract_value, 0.09, 0.001) && current_iteration_ == 1) { // it. 3, round: 2. Stop before the second CGP iteration
-						not_stop_loop = false;
-					}
-				}
-				else if (fract_index == 1) {
-					fract_value = (*lp_main_loop_col_solution_)[fract_index];
-					if (CompareForEquality(fract_value, 0.96, 0.001) && current_iteration_ == 1) { // it. 3, round: 1. Stop before the second CGP iteration
-						not_stop_loop = false;
-					}
-					else if (CompareForEquality(fract_value, 0.7, 0.001) && current_iteration_ == 1) { // it. 4, round: 1. Stop before the second CGP iteration
-						not_stop_loop = false;
-					}
-				}
-			}
-			
-#endif // TEST
+
             if ( !not_stop_loop ){ // We stop the loop!
                 LOG_IF(INFO,solution_similiarity_counter_ >= max_similarity_iteration_) << "Stopped due to solution similarity for " << solution_similiarity_counter_ << " iterations.";
                 if ( solution_similiarity_counter_ >= max_similarity_iteration_ )
@@ -1050,8 +1022,8 @@ namespace parallel_benders {
                     if ( absolute_error > strategy_epsilon_* absolute_gap && ComputeRelativeGap(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first) > strategy_epsilon_*absolute_gap ){// If true, values are not equal. 
                         forward_ = true; // We want to move forward again, with the newest cuts..
                         // Check for nearby values
-                        if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
-                            && std::abs(old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
+                        if ( std::abs(stage_old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
+                            && std::abs(stage_old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
                                 forward_ = false;
                         }
                         if ( forward_ ){
@@ -1072,8 +1044,8 @@ namespace parallel_benders {
 
             // Initialize lower/upper bounds for this stage.
 			if (lp_column_set_ != parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
-				temporary_stage_lower_bound_ = 0;
-				temporary_stage_upper_bound_ = 0;
+				temporary_stage_lower_bound = 0;
+				temporary_stage_upper_bound = 0;
 			}
 
             // Stochastic Cutting Plane Method
@@ -1500,9 +1472,17 @@ namespace parallel_benders {
             }
 
             // Update the temporary stage lower/upper bounds!
+			double prime_multiplier(1.0);
+			if (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME) {
+				prime_multiplier = (1 - (*lp_main_loop_col_solution_)[lp_fract_var_index_]); // 1 - lambda
+			}
+			else if (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
+				prime_multiplier = (*lp_main_loop_col_solution_)[lp_fract_var_index_]; // lambda
+			}
+
             for ( auto node : tree_nodes_by_stage_[current_stage_]){
-                temporary_stage_lower_bound_ += node->getDataPtr()->lower_bound_*node->getDataPtr()->probability_;
-                temporary_stage_upper_bound_ += node->getDataPtr()->solution_value_*node->getDataPtr()->probability_;
+                temporary_stage_lower_bound += node->getDataPtr()->lower_bound_*node->getDataPtr()->probability_*prime_multiplier; // TODO: what is here for 2nd stage
+                temporary_stage_upper_bound += node->getDataPtr()->solution_value_*node->getDataPtr()->probability_*prime_multiplier;
             }
 
             bool can_update_upper_bound = !warm_up_;
@@ -1519,8 +1499,8 @@ namespace parallel_benders {
 
                     //    // Before we resolve the problems, we need to reset temporary bounds
                     //
-                    // temporary_stage_lower_bound_ = 0.0;
-                    // temporary_stage_upper_bound_ = 0.0;
+                    // temporary_stage_lower_bound = 0.0;
+                    // temporary_stage_upper_bound = 0.0;
                     //
                     //    int num_nodes = tree_nodes_by_stage_[current_stage_].size();
                     //    for ( int i = 0; i < num_nodes; i++ ){
@@ -1557,7 +1537,7 @@ namespace parallel_benders {
 
                     double cut_rhs = 0;
                     double lower_bound_for_second_stage = -d_square_translation_term_;
-                    double current_expected_second_stage_value_function = temporary_stage_upper_bound_;
+                    double current_expected_second_stage_value_function = temporary_stage_upper_bound;
                     double cut_coefficient_scalar = current_expected_second_stage_value_function-lower_bound_for_second_stage;
                     std::vector<int> integer_cols = core_->getIntCols(current_stage_-1); // Assume they are sorted!
 
@@ -1625,7 +1605,7 @@ namespace parallel_benders {
                 stage_data_[current_stage_]->violated_index_ = -1;
             }
 
-            bool update_upper_bound = false;
+            bool updated_upper_bound = false;
             if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() && !warm_up_ ){// Update upper bound only, when we have no infeasible problems!
                 theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD and FASTPASS_WITH_FASTBACK
                 // This ensures that we get back to the first stage when we finally reached the last stage! Important only for FastBackward protocols.
@@ -1637,10 +1617,10 @@ namespace parallel_benders {
 
             // Update stage wise upper/lower bounds, only if we did not have infeasible problems.
             if ( !infeasible_problem_ && infeasible_problems_.none() ){
-                old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
-                old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
-                stage_lower_upper_bounds_[current_stage_].first = temporary_stage_lower_bound_;
-                stage_lower_upper_bounds_[current_stage_].second = temporary_stage_upper_bound_;
+                stage_old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
+                stage_old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
+                stage_lower_upper_bounds_[current_stage_].first = temporary_stage_lower_bound;
+                stage_lower_upper_bounds_[current_stage_].second = temporary_stage_upper_bound;
 
                 if ( current_stage_ == num_stages_-1 && can_update_upper_bound ){
                     // Update upper bound of problem
@@ -1649,11 +1629,11 @@ namespace parallel_benders {
                         sum_stage_solutions += stage_lower_upper_bounds_[i].second;
                     if ( upper_bound_ > sum_stage_solutions && can_update_upper_bound ){
                         upper_bound_ = sum_stage_solutions;
-                        update_upper_bound = true;
+                        updated_upper_bound = true;
                         solution_similiarity_counter_ = 0;
                     }
                     if ( cvar_constr_decomp_ ){ // We have no upper bounds when using cvar constraints..
-                        update_upper_bound = true;
+                        updated_upper_bound = true;
                         upper_bound_ = sum_stage_solutions;
                     }
                     // Update node-wise upper bounds! (only needed for Level Decomposition in Multi-Stage Problems)
@@ -1746,7 +1726,7 @@ namespace parallel_benders {
             }
 
             // In case we updated the upper bound, we now need to store all column solutions!
-            if ( update_upper_bound) {
+			if ( updated_upper_bound ) {  // for the second stage in L&P CGP we would need the separated vectors for prime and double prime. Not implemented
                 for (int temp_stage = 0; temp_stage < compute_primal_solutions_for_stage_; temp_stage++){
                     for ( auto node = tree_nodes_by_stage_[temp_stage].begin(); node != tree_nodes_by_stage_[temp_stage].end(); ++node){
                         // Copy solution from col_solution_ to incumbent_col_solution
@@ -1766,9 +1746,7 @@ namespace parallel_benders {
                 if ( (major_iteration_ > last_major_iteration || (pretty_printing_verbose_ && current_iteration_ > last_current_iteration)) && current_stage_ == 0 ){
                     last_major_iteration = major_iteration_;
                     last_current_iteration = current_iteration_;
-                    last_lower_bound = lower_bound_;
-                    last_upper_bound = upper_bound_;
-                    last_gap = ComputeRelativeGap(last_upper_bound,last_lower_bound);
+                    last_gap = ComputeRelativeGap(upper_bound_,lower_bound_);
                     std::cout << "\n";
                 }
 
@@ -1777,7 +1755,7 @@ namespace parallel_benders {
                 std::string iteration_string = boost::lexical_cast<std::string>(pretty_printing_verbose_ ? major_iteration_:last_major_iteration) + ( pretty_printing_verbose_ ? +"."+boost::lexical_cast<std::string>(current_iteration_) : "");
                 if ( !forward_ )
                     direction_string = "B";
-                std::cout << "\r" << left << std::setw(10) << iteration_string << std::setw(16) << last_lower_bound << std::setw(16) << last_upper_bound << std::setw(16) << last_gap << std::setw(5) << direction_string << current_stage_;
+                std::cout << "\r" << left << std::setw(10) << iteration_string << std::setw(16) << lower_bound_ << std::setw(16) << upper_bound_ << std::setw(16) << last_gap << std::setw(5) << direction_string << current_stage_;
 
 
                 // Output at which stage we are currently like this. Put current mode up Front, followed by current stage. F3, F4 F5, B6 . But let it overwrite in the same position of the stream. Is this possible? TODO
@@ -2387,7 +2365,7 @@ namespace parallel_benders {
 		}
 
         // Copy theta variables
-        int num_theta = osi_solver->getNumCols()-stage_data_[current_stage_]->num_columns_;
+        int num_theta = osi_solver->getNumCols()-benders_node_pointer->cols_;
         assert(num_theta >= 0);
 
         // Store values for next stage approximation and column solution 
@@ -2411,7 +2389,7 @@ namespace parallel_benders {
             else if ( cvar_constr_decomp_ )
                 num_theta -= 1;
             assert(num_theta >= 0);
-            StoreValuesFromSolverInVector(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
+            StoreValuesFromSolverInVector(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+benders_node_pointer->cols_,num_theta);
             //if (  benders_node_pointer->unbounded_ && num_theta > 0){
             //    for (int i = 0; i < num_theta;i++)
             //        benders_node_pointer->next_stage_approximation_[i] = -infinity_;
@@ -2461,7 +2439,8 @@ namespace parallel_benders {
 
         double solution_value = 0; // Compute the value of the c*x solution without all thetas!
         const double* obj_coefs = osi_solver->getObjCoefficients();
-        for (int i = 0; i < stage_data_[current_stage_]->num_columns_;i++){
+		int i = 0;
+		for ( ; i < benders_node_pointer->cols_;i++){
             solution_value += benders_node_pointer->col_solution_[i]*obj_coefs[i];
         }
         benders_node_pointer->solution_value_ = solution_value;
@@ -2473,11 +2452,13 @@ namespace parallel_benders {
             if ( d_square_ && current_stage_ == 0)
                 solution_value -= d_square_translation_term_;
             for ( double theta_value : benders_node_pointer->next_stage_approximation_){ // Add all thetas to the c*x solution to get lower bound for node at this stage
-                solution_value += theta_value;
+				LOG_IF(FATAL, lp_fract_var_index_ == -1 && obj_coefs[i] != 1.0) << "Theta coef is always 1 except L&P CGP";
+				solution_value += theta_value*obj_coefs[i]; // in L&P CGP obj coefs for theta are not 1
+				i++;
             }
         }
 
-		if ( !generate_lp_cuts_ ) {
+		if ( !generate_lp_cuts_ ) { // for L&P cuts we force to solve the relaxation - we is not a lower bound
 			benders_node_pointer->lower_bound_ = solution_value;
 		}
 
@@ -2669,25 +2650,6 @@ namespace parallel_benders {
             // Get solution from predecessor in tree
             double* unbounded_rhs = nullptr;
 			int double_prime_offset = (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) ? stage_data_[current_stage_-1]->num_columns_ : 0;
-#ifdef TEST
-			int fract_index = lp_fract_var_index_;
-			double fract_value;
-			if (fract_index == 0) {
-				fract_value = (*lp_main_loop_col_solution_)[fract_index];
-				if (CompareForEquality(fract_value, 0.09, 0.001)) { // it. 3, round: 2
-					benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_ = { 0, 1, 1, 1 };
-				}
-			}
-			else if (fract_index == 1) {
-				fract_value = (*lp_main_loop_col_solution_)[fract_index];
-				if (CompareForEquality(fract_value, 0.96, 0.001)) { // it. 3, round: 1
-					benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_ = { 0, 0, 0, 1 };
-				}
-				else if (CompareForEquality(fract_value, 0.7, 0.001)) { // it. 4, round: 1
-					benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_ = { 1, 0, 1, 1 };
-				}
-			}
-#endif // TEST
 
             double * column_solution = (benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_.empty() ? nullptr : &benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_[double_prime_offset]); // Is of length num_columns of previous stage
             if ( warm_up_ && column_solution == nullptr ){ // We want the column solution of the warm_up_ solution! This is the warm_up_solution_ with an offset according the number of cols until current_stage-2.
@@ -3714,7 +3676,11 @@ namespace parallel_benders {
 		int threads_per_CGP = 1; // TODO: threads are expensive, let us first try the simplest case. Easier for debugging
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_CPU_USED, threads_per_CGP);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
+<<<<<<< HEAD
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // TODO: change it to 1
+=======
+		cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
+>>>>>>> 1bab74c7... correct calculation of bounds and cuts in L&P CGP
 
 		//we do not compute solutions and objectives since they should somehow be stored from prime and double prime subproblems
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, PNB_INT_SOLUTION_PRIMAL_NO);
