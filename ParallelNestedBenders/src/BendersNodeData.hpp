@@ -344,10 +344,6 @@ struct BendersStageData {
     int stage_; // Just to be sure
     int num_thetas_; // Number of variables that represent the approximation of the next stage
 
-    // Store stage-wise upper and lower bounds
-    double upper_bound_;
-    double lower_bound_; 
-
     // Store information about stochasticity in stage
     bool stochastic_matrix_w_;
     bool stochastic_matrix_t_;

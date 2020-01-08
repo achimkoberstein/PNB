@@ -269,10 +269,8 @@ private:
     double strategy_epsilon_;
    	// Stage wise upper and lower bound, necessary for certain sequencing protocols
 	std::vector<std::pair<double,double> > stage_lower_upper_bounds_;
-	std::vector<std::pair<double,double> > old_lower_upper_bounds_;
-	double temporary_stage_lower_bound_;// p * c * x + \theta <- actual values for this stage plus recourse function
-	double temporary_stage_upper_bound_;// p * c * x <- actual values for this stage
-    bool compute_stage_bounds_;
+	std::vector<std::pair<double,double> > stage_old_lower_upper_bounds_;
+	bool compute_stage_bounds_; //used for PNB_INT_FASTPASS_WITH_FASTBACK sequencing and regularization_
     bool at_last_iteration_;
     int cuts_added_last_round_;
     bool theta_approximations_everywhere_;
@@ -317,7 +315,6 @@ private:
 
 	// AK: CVaR risk constraint decomposition
 	bool cvar_constr_decomp_;
-    std::vector<double> current_second_stage_approximation_;
     double cvar_beta_;
     double cvar_rho_;
     double cvar_H_;
