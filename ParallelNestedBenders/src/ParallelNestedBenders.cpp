@@ -3104,6 +3104,38 @@ namespace parallel_benders {
 
     }
 
+	void ParallelNestedBenders::ApplyOptimalityCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff) {
+		OsiRowCut* cut = cut_stuff->cut_.get();
+		
+
+		if (lp_fract_var_index_ == -1) {
+			osi_solver->applyRowCuts(1, cut);
+		}
+		else {
+			assert(stage_data_[current_stage_]->num_thetas_ == 1 && "never tested with multi cut");
+			int column_set = cut_stuff->column_set_;
+			CoinPackedVector& row = cut->mutableRow(); // TODO: we do not need copying
+			int* indices = row.getIndices();
+			int* old_indices = new int[row.getNumElements()];
+			std::copy(indices, indices + row.getNumElements(), old_indices);
+
+			if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_PRIME) {
+				indices[row.getNumElements()-1] += stage_data_[current_stage_]->num_columns_; // shift theta to the end
+				osi_solver->applyRowCuts(1, cut);
+			}
+			if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
+				//apply to the right side => shift by num_cols - used for L&P CGP master problem
+				int i = 0;
+				for (; i < row.getNumElements()-1; ++i) {
+					indices[i] += stage_data_[current_stage_]->num_columns_;
+				}
+				indices[i] = old_indices[i] + stage_data_[current_stage_]->num_columns_+1; // shift theta to the end
+				osi_solver->applyRowCuts(1, cut);
+			}
+			// set the indices back
+			std::copy(old_indices, old_indices + row.getNumElements(), indices);
+		}
+	}
 
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
@@ -4080,7 +4112,7 @@ namespace parallel_benders {
                 }
                 if ( (*it)->to_use_ ){
                     assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
-                    osi_solver->applyRowCuts(1,(*it)->cut_.get());
+					ApplyOptimalityCut(osi_solver, *it);
                 }
             }
         }
