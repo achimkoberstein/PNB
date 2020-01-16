@@ -2096,8 +2096,8 @@ namespace parallel_benders {
 
 #ifdef TEST
 				assert(lp_current_cuts_coefficients_.size() == num_cuts && lp_current_cuts_rhs_.size() == num_cuts);
-				AggregateLiftAndProjectCuts(benders_tree_node_pointer); // TODO: or maybe do it later in Solve() main routine
 #endif
+				AggregateLiftAndProjectCuts(benders_tree_node_pointer); // TODO: or maybe do it later in Solve() main routine
 			}
 
             /************************************************************************/
@@ -3750,34 +3750,58 @@ namespace parallel_benders {
 
 		// Functionally similar to AggregateOptimalityCuts(). Later might be reasonable to update that method instead of creating the new one
 		// Currently we do not use any kind of aggregation technique for L&P cuts
+		// TODO: use here similar techniques as in AggregateOptimalityCuts() for validating the cut. See sum var
 
-		int num_cuts = lp_current_cuts_rhs_.size();
 		int num_columns = stage_data_[current_stage_]->num_columns_;
-		int num_theta = 1;
-		if (num_theta != benders_tree_node_pointer->getDataPtr()->num_thetas_) {
-			assert(benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1 && "Not tested with multicut.");
-			benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = true;
-			//createRoundRobinAggregation(benders_tree_node_pointer->getDataPtr(), num_childs, num_cuts, num_subproblems_per_cut, num_oda_aggregates_);
-			// We have to transform the old optimality cuts to the new number of theta's we would like to have
-			// We already called a function that gives us a new number of whatever it is we need.
 
-			// Transform all old optimality cuts to new ones.
+		int num_cuts = stage_data_[current_stage_]->num_thetas_;
+		int node_num_cuts = benders_tree_node_pointer->getDataPtr()->num_thetas_;
+		if (num_cuts != node_num_cuts) {
+			if (node_num_cuts > 0) // Initialized with 0, so in first iteration not reasonable
+				num_cuts = node_num_cuts;
+		}
+		LOG_IF (FATAL, num_cuts != lp_current_cuts_rhs_.size()) << "How can this happen if we use single cut!";
+		LOG_IF(FATAL, num_cuts != 1) << "Never tested for multi-cut or hybrid aggregation.";
+
+		bool change_aggregation_level = benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_;
+		if (num_cuts != benders_tree_node_pointer->getDataPtr()->num_thetas_) {
+			LOG_IF(FATAL, true) << "Not tested when aggreg level changes after L&P round. Probably it is the first iteration.";
+			change_aggregation_level = true;
+			benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = true;
+			LOG_IF(FATAL, benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ && current_iteration_ > 1) << "Not tested when aggreg level changed during L&P round.";
 			// Set new values
 			benders_tree_node_pointer->getDataPtr()->num_thetas_ = num_cuts;
-			//benders_tree_node_pointer->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
-			//benders_tree_node_pointer->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
+			benders_tree_node_pointer->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
+			benders_tree_node_pointer->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
 		}
-		assert(num_columns + num_theta == osi_solver_->getNumCols());
 
-		// Add cut
+		// Add cuts
+		int added_cuts = 0;
 		for (int cut_index = 0; cut_index < num_cuts; cut_index++) {
+			LOG_IF(FATAL, num_cuts > 1) << "Check whether L&P cuts are build correct for aggregation schemes.";
 			double cut_lower_bound = lp_current_cuts_rhs_[cut_index];
+			int num_theta_indices = 1;
 			
 			std::vector<double> cut_elements = lp_current_cuts_coefficients_[cut_index];
-			cut_elements.resize(num_columns + num_theta, 1.0);
+			cut_elements.resize(num_columns + num_theta_indices, 1.0);
 
-			std::vector<int> cut_indices(num_columns + num_theta);
+			std::vector<int> cut_indices(num_columns + num_theta_indices);
 			std::iota(cut_indices.begin(), cut_indices.end(), 0); // 0, 1, 2...
+
+			// Check if cut is not redundant: Conditional Expected Value of Subproblems (theta) is greater than before. For implementation reasons, we only do this if we do not change aggregation level..
+			// Theta = cut lower bound - cut_vector * column_solution
+			// Compute cut_vector * column_solution
+			std::vector<double>& column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
+			assert(!column_solution.empty());
+			double sum = 0.0;
+			for (int index = 0; index < num_columns; index++) { // We iterate over column_solution, but not over the theta index, which is always the last one.
+				int column_index = cut_indices[index];
+				sum += column_solution[column_index] * cut_elements[index];
+			}
+			// Add computed cut right hand side
+			sum = cut_lower_bound - sum;
+			// Check with previous stuff only, if we did not changed the aggregation level. Because if we changed we do not have the data yet to check for validity of new cut
+			// If solution value of problem is greater than approximation we have, we need to add a new cut, otherwise we don't, but it does not harm to do so (except solution time..)
 
 			// "Sparsify" the cut
 			if (CompareWithZero(cut_lower_bound))
@@ -3785,7 +3809,7 @@ namespace parallel_benders {
 
 			int new_index = 0;
 			// Clear zero elements and create sparse vector for future reference
-			for (int i = 0; i < num_columns + num_theta; i++) {
+			for (int i = 0; i < num_columns + num_theta_indices; i++) {
 				if (CompareWithZero(cut_elements[i])) {
 					// Set cut element to zero, if near enough to zero, otherwise numerical difficulties arise
 					cut_elements[i] = 0.0;
@@ -3796,20 +3820,26 @@ namespace parallel_benders {
 					new_index++;
 				}
 			}
-			assert(new_index <= num_columns + num_theta);
+			assert(new_index <= num_columns + num_theta_indices);
 
 			std::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
 			cut_pointer->setLb(cut_lower_bound);
 			cut_pointer->setUb(infinity_);
 			cut_pointer->setRow(new_index, &cut_indices[0], &cut_elements[0], debug_test_duplicate_indices_);
 			std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_, cut_pointer));
-			cut_stuff->aggregate_number_ = 0;
-			//benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate // TODO: what is this
-			
+			cut_stuff->aggregate_number_ = cut_index;
+			if (change_aggregation_level || sum > benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[cut_index]) {
+				added_cuts++;
+				benders_tree_node_pointer->getDataPtr()->active_aggregates_[cut_index] = true;  // Set aggregate to active: We have a cut for this aggregate
+			}
+			else {
+				LOG_IF(FATAL, true) << "What does it mean for L&P cuts?";
+				cut_stuff->to_use_ = false;
+			}
+						
 			AddLiftAndProjectCutToContainer(benders_tree_node_pointer, cut_stuff);
 		}
-		stage_data_[current_stage_]->added_lift_and_project_cuts_ += num_cuts;
-		LOG(INFO) << "Aggregated L&P cuts.";
+		stage_data_[current_stage_]->added_lift_and_project_cuts_ += added_cuts;
 	}
 
     OsiSolverInterface* ParallelNestedBenders::GetSolverByThread(){
@@ -5143,7 +5173,6 @@ namespace parallel_benders {
         if ( aggregate_number >= benders_node_pointer->oda_aggregates_.size() )
             return;
 
-        benders_node_pointer->active_aggregates_;
         int num_columns = stage_data_[current_stage_-1]->num_columns_;
 
         std::vector<int>& oda_aggregates(benders_node_pointer->oda_aggregates_[aggregate_number]);
