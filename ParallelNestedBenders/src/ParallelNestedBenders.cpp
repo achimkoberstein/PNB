@@ -673,7 +673,6 @@ namespace parallel_benders {
         // Use only one thread per cplex instance (except for the first sage
 
 		// LiftAndProject cuts
-		// TODO: make function of lp_check
 		lp_rounds_limit_ = param.get(PNB_LP_ROUNDS_LIMIT, 0);
 		lp_switches_limit_ = param.get(PNB_LP_SWITCHES_LIMIT, 1);
 		lp_major_it_limit_ = param.get(PNB_LP_MAJOR_IT_LIMIT, 1);
@@ -2906,6 +2905,13 @@ namespace parallel_benders {
 
         // We need to set the integer indices, if we have not done so already!
         if ( !reuse_solver && integer_problems_[current_stage_] ){
+			// initialize all variables as continuous
+			std::vector<int> allstagevars_indices(stage_pointer->num_columns_);
+			for (int i = 0; i < stage_pointer->num_columns_; i++)
+				allstagevars_indices[i] = i;
+			osi_solver->setContinuous(&allstagevars_indices[0], stage_pointer->num_columns_);
+
+			// change status (coltype) of integer vars
             std::vector<int> integer_indices = core_->getIntCols(current_stage_);
             osi_solver->setInteger(&integer_indices[0],integer_indices.size()); // Sets integer only, if we actually use osi_solver->branchAndBound() method!!
         }
