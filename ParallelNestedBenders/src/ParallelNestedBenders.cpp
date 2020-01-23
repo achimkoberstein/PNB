@@ -3804,9 +3804,7 @@ namespace parallel_benders {
 			benders_tree_node_pointer->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
 		}
 
-#ifdef TEST
 		num_cuts = lp_current_cuts_rhs_.size(); // for the TestCase w/o precalculated cuts it will be 0
-#endif
 
 		// TODO: lp_current_cuts are not erased after every lp_round but overwritten.
 		// Be careful not to use the lp_current_cuts_rhs (_coefficients) from the previous lp round if lp_current_cuts_... is not overwritten due to some reason.
