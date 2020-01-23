@@ -1376,7 +1376,6 @@ TEST_F(RelaxationTest, fast) {
 }
 
 TEST_F(LiftAndProjectCutsTest, slow) {
-	// ! turn off TEST flag from PNB preprocessor
 	// Continuous problems (L&P Cuts are not applicable)
 	EXPECT_NEAR(solveSMPS("posts/storm/stormG2_125"), 15512101.22, 3.4); // TODO: edit test for storm
 	EXPECT_NEAR(solveSMPS("felt/airlift/AIRL"), 249101.672072, 0.1); //BLOCK (dependent)
