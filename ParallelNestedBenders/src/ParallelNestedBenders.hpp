@@ -235,6 +235,7 @@ private:
 
 
     // D^2 C^3
+	bool auto_d2_algorithm_; // algorithm will be used automatically when necessary
     bool d_square_;
     int d_square_translation_term_;
     int d_square_lower_bound_counter_;
