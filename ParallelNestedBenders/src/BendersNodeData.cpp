@@ -201,6 +201,8 @@ void Parameter::init()
     parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
     parameter_.put(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
     parameter_.put(PNB_COMPUTE_OBJECTIVE_VALUES,false);
+	//D2 algorithm
+	SetParameterValue(PNB_AUTO_D2_ALGORITHM, false);
 	// LiftAndProject Cuts
 	parameter_.put(PNB_LP_ROUNDS_LIMIT, 0);
 	parameter_.put(PNB_LP_SWITCHES_LIMIT, 1);

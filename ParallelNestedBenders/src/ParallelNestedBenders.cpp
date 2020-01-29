@@ -294,7 +294,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1), lp_main_loop_col_solution_(nullptr), lp_main_loop_iteration_round_(std::make_pair(-1,-1)), lp_fract_var_index_(-1), lp_column_set_(PNB_COL_SET_NONE), store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
@@ -604,6 +604,9 @@ namespace parallel_benders {
         param.put(PNB_CPU_USED,num_cpu_);
         thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
 
+		//D^2 algorithm
+		auto_d2_algorithm_ = param.get(PNB_AUTO_D2_ALGORITHM, false);
+
         // Set first stage solver to own instance
         seperate_first_stage_solver_ = true;
 
@@ -743,16 +746,24 @@ namespace parallel_benders {
             if ( integer_problems_[i] ){ // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
                 // We could enable the D^2 algorithm (with LaporteLouveaux Cuts) only if we have no mixed-integer first stage!
                 const std::vector<int>& binary_cols(core_->getBinaryCols(0)); // Get binary cols of first stage!
-                if ( binary_cols.size() == stage_data_[0]->num_columns_ )
+                if ( binary_cols.size() == stage_data_[0]->num_columns_)
                 {
-                    d_square_ = true;
-                    store_primal_and_dual_ = true; // We need primal solution after we solved the subproblems!
-                    // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
-                    integer_problems_[i] = false;
-                    // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
-                    d_square_translation_term_ = 20000; // Is taken for LaporteLoveaux Cuts as the minimum value of second stage problems!
-                    d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
-                    LOG(INFO) << "Enabling D^2 algorithm.";
+					if (auto_d2_algorithm_){
+						d_square_ = true;
+						store_primal_and_dual_ = true; // We need primal solution after we solved the subproblems!
+						// If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
+						integer_problems_[i] = false;
+						// We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
+						d_square_translation_term_ = 20000; // Is taken for LaporteLoveaux Cuts as the minimum value of second stage problems!
+						d_square_w_iteration_.resize(stage_data_[1]->num_columns_, -1);
+						LOG(INFO) << "Enabling D^2 algorithm.";
+					}
+					else {
+						// We have a problem with first-stage pure binary and second stage integers. We can use D^2 algorithm
+						LOG(ERROR) << "You tried to solve a pure first stage binary problem and mixed-integers at another stage. You can activate the D^2 algorithm with param PNB_AUTO_D2_ALGORITHM or solve relaxation by specifying the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
+						solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+						return;
+					}
                 }
                 else {
                     // We have a problem with first-stage mixed-integer and second stage integers. We can not solve such a problem!

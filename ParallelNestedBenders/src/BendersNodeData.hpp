@@ -57,6 +57,7 @@ namespace parallel_benders{
     const std::string PNB_ODA_KAPPA = "PNB_ODA_KAPPA";
     const std::string PNB_ODA_AGGREGATES = "PNB_ODA_AGGREGATES";
     const std::string PNB_STAGE_LEVEL = "PNB_STAGE_LEVEL";
+	const std::string PNB_AUTO_D2_ALGORITHM = "PNB_AUTO_D2_ALGORITHM";
 	const std::string PNB_LP_ROUNDS_LIMIT = "PNB_LP_ROUNDS_LIMIT";
 	const std::string PNB_LP_SWITCHES_LIMIT = "PNB_LP_SWITCHES_LIMIT";
 	const std::string PNB_LP_MAJOR_IT_LIMIT = "PNB_LP_MAJOR_IT_LIMIT";
