@@ -148,7 +148,7 @@ void Parameter::init()
     parameter_.put(PNB_BENDERS,PNB_INT_ALGORITHM_BENDERS); // 0: No Benders (detEq), 1 Benders
     
 	// WarmStart
-    parameter_.put(PNB_WARM_START, 1); // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario (in the same iteration)
+    parameter_.put(PNB_WARM_START, 0); // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario (in the same iteration)
 
     parameter_.put(PNB_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
     parameter_.put(PNB_FEAS_CUT_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
@@ -156,7 +156,7 @@ void Parameter::init()
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
 	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
-    parameter_.put(PNB_RELAXATION, 2); // Give stage from which we should solve the relaxed problem! (Standard is: Allow integers in first-stage, but relax later stages!)
+    parameter_.put(PNB_RELAXATION, 0); // Give stage from which we should solve the relaxed problem! (default: 0 - no relaxation, standard: 2 - allow integers in first-stage, but relax later stages!)
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)
@@ -177,9 +177,9 @@ void Parameter::init()
     parameter_.put(PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
     parameter_.put(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.1);
     // Start solution
-    parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_EV_SOLUTION); 
+    parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_NO_START_SOLUTION);
 	// Parallel Parameters
-	parameter_.put(PNB_NUM_CPU,0);
+	parameter_.put(PNB_NUM_CPU,1);
 	parameter_.put(PNB_CPU_USED,0);
     // Maximal solution time
     parameter_.put(PNB_MAXIMAL_SOLUTION_TIME,3600); // In Seconds
@@ -205,6 +205,7 @@ void Parameter::init()
 	parameter_.put(PNB_LP_ROUNDS_LIMIT, 0);
 	parameter_.put(PNB_LP_SWITCHES_LIMIT, 1);
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
+	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 1000000);
 
 	// Fill in constants
 	// PNB_BENDERS
