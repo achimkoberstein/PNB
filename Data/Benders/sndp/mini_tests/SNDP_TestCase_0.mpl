@@ -1,6 +1,5 @@
 !Properties from TestCase_0 that are present in this test case:
 ! - no matrix A
-! - only >= constr in matrix A (if any)
 ! - only bin vars on the first stage
 ! - standard bounds for 1st stage cont vars (if any)
 ! - only vector rhs is stochastic
