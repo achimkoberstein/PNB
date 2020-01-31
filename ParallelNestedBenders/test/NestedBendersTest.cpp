@@ -494,6 +494,7 @@ public:
 
 		for (auto const& parameter_set : parameter_sets_) {
 			benders_parameter_ = parameter_set;
+			write_xml("current_param.xml", benders_parameter_.parameter_);
 			solutions.push_back(solveProblemWithParameters(core_name, time_name, stoch_name));
 		}      
 
@@ -1232,8 +1233,6 @@ protected:
 };
 
 TEST_F(LiftAndProjectCutsTest, fast) {
-	// ! turn off TEST flag from PNB preprocessor
-
 	// Continuous problems (L&P Cuts are not applicable)
 	EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
 	EXPECT_NEAR(solveSMPS("other/Fina4"), -68401.8, 0.1);
@@ -1243,22 +1242,28 @@ TEST_F(LiftAndProjectCutsTest, fast) {
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-1"), 413.4, 0.1);
 
 	// Binary 1st stage
-	EXPECT_NEAR(solveSMPS("sndp/mini_tests/SNDP_stochastic_MIP"), -15250.00, 0.1); // all >= constraints, obj function is MIN
-	EXPECT_NEAR(solveSMPS("sndp/mini_tests/SNDP_stochastic_MIP_TestCase_1"), -15250.00, 0.1); // all >= constraints except demand constraint, obj function is MIN
+	EXPECT_NEAR(solveSMPS("sndp/mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
+	EXPECT_NEAR(solveSMPS("sndp/mini_tests/SNDP_TestCase_4_2"), -15250.00, 0.1); // matrix A with non-binding >= constr (in standard there is no matrix A)
+	EXPECT_NEAR(solveSMPS("sndp/mini_tests/SNDP_TestCase_4_3"), -15250.00, 0.1); // matrix A with non-binding <= constr (in standard there is no matrix A)
+	
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 1); // anyways as for now it makes now sence at only takes much time
+	EXPECT_NEAR(solveSMPS("sndp/mini_tests/SNDP_TestCase_2"), -54250.00, 0.1); // 3 bin vars on 1st stage (in standard there are 2)
+	EXPECT_NEAR(solveSMPS("sndp/mini_tests/SNDP_TestCase_3"), -5000.00, 0.1); // 2 cont vars on 1st stage (in standard there are only bin vars on 1st stage)
 	
 	// Integer 2 stages (2nd stage vars are cont or relaxed)
-	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 882.615, 0.1); // 1834.87 for MIP
+	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 882.615, 0.1); // 1834.87 for MIP
 	//EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224444.4, 0.1); // 224434.32 for MIP // I do not get these values
-	//EXPECT_NEAR(solveSMPS("sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // -121.6 for MIP // I do not get these values
+	EXPECT_NEAR(solveSMPS("sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // -121.6 for MIP // I do not get these values
+	EXPECT_NEAR(solveSMPS("sndp/under_90_it/SNDP_20_4_2_1"), -87272, 0.1);
 	
 	// Multi stage (>= 2nd stage vars are cont or relaxed)
-	// generate feasibility cuts:
-	//EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
+
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, default_lp_rounds_limit); // set it back
 }
 
 TEST_F(LiftAndProjectCutsTest, bounds_convergence) {
-	// ! set TEST flag for PNB preprocessor
 
 	// Check the convergance of UB and LB
 	std::vector<double> ub{ 1.0e+20,  53106.83999999,  19.61999999, -30.86621118, -78.90000000, -78.90000000, -78.90000000, -78.90000000, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999, -121.59999999 };
@@ -1310,6 +1315,7 @@ TEST_F(NestedBendersTestInteger, fast) {
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 1583.66, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 223753.66, 0.1);
 	EXPECT_NEAR(solveSMPS("sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1);
+	EXPECT_NEAR(solveSMPS("sndp/under_90_it/SNDP_20_4_2_1"), -87272, 0.1);
 }
 
 TEST_F(NestedBendersTestFeasibility, fast) {

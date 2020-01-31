@@ -86,6 +86,23 @@ private:
 	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+	/** Check if problem itself and parameters are suitable for L&P cuts method
+
+		Check if:
+		1) L&P related parameters are valid.
+		2) Additional methods of PNB are implemented for L&P cuts methods.
+		3) Problem structure is valid for L&P cuts and L&P cuts for the problems of the problem class implemented.
+
+		allowed_test_cases: every digit in the integer is related to parameter setting or instance properties. If digit is 1, than property / parameter is allowed. First digit should always be 1.
+			allow_le_constr			- 2nd digit, e.g., 1100000
+			allow_ge_constr			- 3rd digit, e.g., 1010000
+			allow_eq_constr			- 4
+			allow_non_standard_lb	- 5
+			allow_non_standard_ub	- 6
+			allow_cont_first_stage	- 7
+		
+	*/
+	bool ParallelNestedBenders::ProblemSuitableForLPCuts(int allowed_test_cases);
 
     void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -390,7 +407,7 @@ private:
 	bool generate_lp_cuts_;
 	int next_lp_rounds_iteration_;
 	std::map<double, std::pair<int, double>> fractional_variables_; //<fractional part, <var index, var value> > ordered ascending by int violation
-	std::vector<std::vector<double>> lp_current_cuts_coefficients_; // TODO: erase this stuff later in the iteration
+	std::vector<std::vector<double>> lp_current_cuts_coefficients_;
 	std::vector<double> lp_current_cuts_rhs_;
 	int lp_fract_var_index_;
 	const std::vector<double>* lp_main_loop_col_solution_; // this is the solution of 1st-stage in the main loop
