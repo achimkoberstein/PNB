@@ -3729,21 +3729,23 @@ namespace parallel_benders {
 		
 		delete cgp_pnb;
 
-#ifdef TEST
-		// Store computed values (for SNDP_TestCase_0)
-		if (current_iteration_ == 3 && lp_round_ == 1) {
+		// see GenerateOptimalityCut() for examples with bounds etc.
+
+		// Precomputed values (for SNDP_TestCase_0)
+		int fract_var_index = fractional_variable.first;
+		float fract_var_value = fractional_variable.second;
+		if (current_iteration_ == 3 && lp_round_ == 1 && fract_var_index == 1 && CompareForEquality(fract_var_value, 0.96, 0.01)) {
 			lp_current_cuts_coefficients_[lp_cut_index] = std::vector<double>{ 25000.0, 17000.0 };
 			lp_current_cuts_rhs_[lp_cut_index] = 0.0;
 		}
-		else if (current_iteration_ == 3 && lp_round_ == 2) {
+		else if (current_iteration_ == 3 && lp_round_ == 2 && fract_var_index == 0 && CompareForEquality(fract_var_value, 0.09, 0.01)) {
 			lp_current_cuts_coefficients_[lp_cut_index] = std::vector<double>{ 2250.0, 1250.0 };
 			lp_current_cuts_rhs_[lp_cut_index] = -15750.0;
 		}
-		else if (current_iteration_ == 4 && lp_round_ == 1) {
+		else if (current_iteration_ == 4 && lp_round_ == 1 && fract_var_index == 1 && CompareForEquality(fract_var_value, 0.7, 0.01)) {
 			lp_current_cuts_coefficients_[lp_cut_index] = std::vector<double>{ 2250.0, 6500.0 };
 			lp_current_cuts_rhs_[lp_cut_index] = -10500.0;
 		}
-#endif
 	}
 
 	void ParallelNestedBenders::AggregateLiftAndProjectCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ) {
