@@ -924,8 +924,10 @@ namespace parallel_benders {
                     LOG(INFO) << "Upper Bound is lower than lower Bound. Iteration: " << current_iteration_;
             }
             if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){
-                if ( !regularization_)
-                    LOG(INFO) << "New Lower bound " << lower_bound_ << " is less than old lower bound " << old_lower_bound_;
+				if (!regularization_) {
+					LOG_IF(FATAL, lp_fract_var_index_ != -1) << "Pasha: why does it happen?! Is it an error because of prime / double-prime, see commit in old pnb 04.09.18";
+				    LOG(INFO) << "New Lower bound " << lower_bound_ << " is less than old lower bound " << old_lower_bound_;
+				}
             }
             if ( !infeasible_problem_ ){
                 // Count if gap is similar
@@ -1793,7 +1795,7 @@ namespace parallel_benders {
 						std::cout << "Lower Bound:  " << lower_bound_ << "\n";
 						std::cout << "Upper Bound:  " << upper_bound_ << "\n";
 						std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_, lower_bound_) << std::endl;
-						ub_lb_for_iteration_.push_back(make_pair(upper_bound_, lower_bound_));
+						iteration_u_and_l_bounds_.push_back(make_pair(upper_bound_, lower_bound_));
 					}
                 }
             }
@@ -2110,6 +2112,9 @@ namespace parallel_benders {
 				thread_pool_.wait(1); // we wait until all threads are done except the current HandleSubproblem() task
 
 				AggregateLiftAndProjectCuts(benders_tree_node_pointer); // TODO: or maybe do it later in Solve() main routine
+
+				lp_current_cuts_coefficients_.clear();
+				lp_current_cuts_rhs_.clear();
 			}
 
             /************************************************************************/
@@ -2374,11 +2379,7 @@ namespace parallel_benders {
 				}
 				lp_round_ = 0;
 			}
-<<<<<<< HEAD
-			LOG_IF(FATAL, generate_lp_cuts_ && current_iteration_ == 1 && "Never tested - in the first it. all vars were always int and we built no L&P cuts. Does active_aggregates_[i] works correct? Check!");
-=======
 			LOG_IF(FATAL, generate_lp_cuts_ && current_iteration_ == 1) << "Never tested - in the first it. all vars were always int and we built no L&P cuts. Does active_aggregates_[i] works correct? Check!";
->>>>>>> d32cb2a2... LOG FATAL for non standard cases , ProblemSuitableForLPCuts(), simplest parameters as default [squash before 23.01]
 		}
 
         // Copy theta variables
@@ -2493,7 +2494,8 @@ namespace parallel_benders {
 
         // Store dual solutions
         if ( !forward_ || store_primal_and_dual_ ){
-            // Store Dual Solution ( only if we move backward ) ( or we need it anyway )
+			LOG_IF(FATAL, lp_fract_var_index_ != -1 && current_stage_ == 0) << "Check what is going on here";
+			// Store Dual Solution ( only if we move backward ) ( or we need it anyway )
             if ( integer_problems_[current_stage_] ){// Dual solution for MIP-first stage makes no sense to us
                 if ( store_primal_and_dual_ == true && current_stage_ > 0){
                     // Compute dual information from solution we got!
@@ -2817,11 +2819,8 @@ namespace parallel_benders {
 			// reassign
 			delete A_matrix; // no longer needed
 			benders_node_pointer->matrix_ = problem_matrix;
-<<<<<<< HEAD
 			benders_node_pointer->cols_ = problem_matrix->getNumCols();
 			benders_node_pointer->rows_ = problem_matrix->getNumRows();
-=======
->>>>>>> 419c42fa... BuildSubproblem() for CGP MP
 
 			//*** Col Lower and Upper bounds (bounds) TODO: is it correct with continuous variables, do we need to move bounds in matrix?
 			// duplicate bounds for double-prime columns, we stick to the dynamic arrays here
@@ -2871,6 +2870,7 @@ namespace parallel_benders {
 
         }
         else{
+			LOG_IF(FATAL, lp_fract_var_index_ != -1 && current_stage_ == 0) << "Check what is going on here";
             if ( stage_pointer->stochastic_bounds_ ){
                 // Update variable bounds
                 std::vector<double> col_bounds;
@@ -3243,7 +3243,7 @@ namespace parallel_benders {
             // Compute cut_vector * column_solution
             double sum = 0.0;
             for ( int index = 0;  index < num_columns;  index++ ) { // We iterate over column_solution, but not over the theta index, which is always the last one.
-                int column_index = cut_indices[index];
+                int column_index = cut_indices[index] + (lp_column_set_ == PNB_COL_SET_DOUBLE_PRIME ? num_columns : 0);
                 sum += column_solution[column_index] * cut_elements[index];
             }
             // Add computed cut right hand side
@@ -3277,7 +3277,10 @@ namespace parallel_benders {
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
             cut_stuff->aggregate_number_ = i;
-            if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
+			cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
+			int theta_index = i + (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME ? 1 : 0); // in L&P CGP 2 stage approximation has 
+			LOG_IF(FATAL, lp_fract_var_index_ != -1 && i > 0) << "be carefull with next_stage_approximation_: for single cut it is: [theta_prime, theta_double_prime]; for multi cut it should be [theta_prime_agr_1, theta_double_prime_agr_1, theta_prime_agr_2...]";
+            if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index]-d_square_translation_term_ : 0) ){
                 added_cuts++;
                 benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate
             }
@@ -3704,19 +3707,13 @@ namespace parallel_benders {
 		int threads_per_CGP = 1; // TODO: threads are expensive, let us first try the simplest case. Easier for debugging
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_CPU_USED, threads_per_CGP);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
-<<<<<<< HEAD
-		cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // TODO: change it to 1
-=======
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
->>>>>>> 1bab74c7... correct calculation of bounds and cuts in L&P CGP
 
 		//we do not compute solutions and objectives since they should somehow be stored from prime and double prime subproblems
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, PNB_INT_SOLUTION_PRIMAL_NO);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS, PNB_INT_SOLUTION_DUAL_NO);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES, false);
-#ifdef TEST
-		cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, true);
-#endif
+		cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_WARM_START, 0);
 		//parameter_.SetParameterValue(parallel_benders::PNB_BOUNDS_IN_MATRIX, true); //what is this?
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_USE_START_SOLUTION, 0);
@@ -3726,7 +3723,7 @@ namespace parallel_benders {
 		ParallelNestedBenders* cgp_pnb = new ParallelNestedBenders(smi_); 
 		cgp_pnb->parameter_ = cgp_parameter;
 		cgp_pnb->Init();
-		cgp_pnb->upper_bound_ = upper_bound_; // TODO: will it be valid when we implement the algorithm
+		//cgp_pnb->upper_bound_ = upper_bound_; // TODO: will it be valid when we implement the algorithm, do we need it
 		cgp_pnb->lp_fract_var_index_ = fractional_variable.first;
 		cgp_pnb->lp_main_loop_col_solution_ = &tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
 		cgp_pnb->lp_main_loop_iteration_round_ = std::make_pair(current_iteration_, lp_round_);
@@ -3738,6 +3735,7 @@ namespace parallel_benders {
 		for (; it != tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end(); ++it) {
 			CutStuff cut = *it->get();
 			cut.cut_creation_iteration_ = 0;
+			cut.column_set_ = parallel_benders::PNB_COL_SET_NONE; // it will be added to both - prime and double-prime - sides of MP CGP
 			AddOptimalityCutToContainer(cgp_first_stage_node, std::make_shared<CutStuff>(cut));
 		}
 		it = tree_nodes_by_stage_[0][0]->getDataPtr()->lift_and_project_cuts_.begin();
@@ -3781,8 +3779,7 @@ namespace parallel_benders {
 			lp_current_cuts_coefficients_[lp_cut_index] = std::vector<double>{ 2250.0, 6500.0 };
 			lp_current_cuts_rhs_[lp_cut_index] = -10500.0;
 		}
-		else { // we need to erase lp_current_cuts_coefficients because they are not erased after every lp round.
-			//It means that during the testing if no cut is added after the round, the information is still there and cut will be considered as not valid: sum < theta (see AggregateL&PCuts)
+		else { // we need to erase lp_current_cuts_coefficients to avoid L&P cut aggregation.
 			lp_current_cuts_coefficients_.clear();
 			lp_current_cuts_rhs_.clear();
 		}
@@ -3841,7 +3838,7 @@ namespace parallel_benders {
 			assert(!column_solution.empty());
 			double sum = 0.0;
 			for (int index = 0; index < num_columns; index++) { // We iterate over column_solution, but not over the theta index, which is always the last one.
-				int column_index = cut_indices[index];
+				int column_index = cut_indices[index] + (lp_column_set_ == PNB_COL_SET_DOUBLE_PRIME ? num_columns : 0);
 				sum += column_solution[column_index] * cut_elements[index];
 			}
 			// Add computed cut right hand side
@@ -3879,7 +3876,7 @@ namespace parallel_benders {
 				benders_tree_node_pointer->getDataPtr()->active_aggregates_[cut_index] = true;  // Set aggregate to active: We have a cut for this aggregate
 			}
 			else {
-				LOG_IF(FATAL, true) << "What does it mean for L&P cuts?";
+				LOG_IF(FATAL, true) << "What does it mean for L&P cuts? Should not L&P cuts always cut smth. See Csabas comments in article about it.";
 				cut_stuff->to_use_ = false;
 			}
 						
@@ -6033,10 +6030,10 @@ namespace parallel_benders {
 			osi_solver->deleteCols(cols_to_remove,&remove_indices[0]);
 		}
 
-   		if ( benders_node_pointer->changed_aggregation_level_ && !benders_node_pointer->optimality_cuts_.empty()) {
+   		if ( benders_node_pointer->changed_aggregation_level_ && !benders_node_pointer->optimality_cuts_.empty() && lp_fract_var_index_ == -1) {//we do not do it in L&P CGP
 			// We need to activate the theta variables!
 			for (int i = 0; i < benders_node_pointer->num_thetas_; i++){
-				osi_solver->setObjCoeff(stage_data_[current_stage_]->num_columns_+i,benders_node_pointer->active_aggregates_[i] ? 1.0 : 0.0);
+				osi_solver->setObjCoeff(benders_node_pointer->cols_+i,benders_node_pointer->active_aggregates_[i] ? 1.0 : 0.0);
 				LOG_IF(FATAL, lp_rounds_limit_ && !benders_node_pointer->active_aggregates_[i] && "What happens when theta for L&P cuts is not active?");
             }
 		}
@@ -6107,7 +6104,7 @@ namespace parallel_benders {
         if ( current_stage_ == num_stages_-1) // No need for a level problem in the last stage!
             return;
 
-		assert(lp_fract_var_index_ != -1 && "never tested in CGP with prime/double prime UB and LB");
+		LOG_IF(FATAL, lp_fract_var_index_ != -1) << "never tested in CGP with prime/double prime UB and LB";
         double lower_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->lower_bound_ : lower_bound_);
         double upper_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->upper_bound_ : upper_bound_);
 
@@ -7308,7 +7305,7 @@ namespace parallel_benders {
         if ( current_stage_ <= 2 && print_subproblems_){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
 			if (lp_fract_var_index_ != -1) { // prefix for L&P CGP (main loop iteration info)
-				stream << "stage_" << 0 << "_F_" << lp_main_loop_iteration_round_.first << "_0_round_" << lp_main_loop_iteration_round_.second << "-";
+				stream << "stage_" << 0 << "_F_" << lp_main_loop_iteration_round_.first << "_0_round_" << lp_main_loop_iteration_round_.second << "_fract_" << lp_fract_var_index_ << "-";
 			}
             stream << "stage_" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;			
             if ( append != "")
