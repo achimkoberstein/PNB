@@ -690,12 +690,13 @@ protected:
         generate_initial_solution_ = false;
         compute_statistics_ = false;
 
-		parameter_strings_.push_back("{}"); // default parameters
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\" }");
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1 }"); // single cut (default)
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }"); // multi cut
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 5 }");
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\" }");
+		parameter_strings_.push_back("{}"); // default parameters - single-cut
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 1 }"); // multi cut
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 2 }"); // multi cut
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 5, \"PNB_NUM_CPU\" : 0 }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_USE_START_SOLUTION\" : 1 }"); // BUG#1
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_CUT_CONSOLIDATION\" : 1, \"PNB_USE_START_SOLUTION\" : 2  }");
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\" }"); // ODA crashes and not working for multi stage
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }");
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\" }");
