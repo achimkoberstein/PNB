@@ -45,8 +45,9 @@ public:
 
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
 	std::vector<parallel_benders::Parameter> parameter_sets_; // Used to store different combinations (Parameter instances) of parameters
-	std::string testbed_log_file_string_; // for every repetition
+	std::string instance_specification_file_; // for characteristics of the instance such as number vars, constraints, stages etc.
     std::string testbed_aggregated_log_file_string_; // average of repetitions
+	std::string testbed_log_file_string_; // for every repetition
 	std::string parameter_name_string_;
     static const int max_stages_ = 11; // This can be set differently
     bool use_multi_cut_;
@@ -658,6 +659,69 @@ public:
         return average;
  
     }
+	// Solve the problems from the filename.csv one by one using solveSMPS()
+	// every value in the file is the path to file: cor_tim_sto OR cor_tim;sto OR cor;tim;sto
+	// // - is a comment and should start the line
+	// case non sensitive
+	// paths in format folder/subfolder/sto_file_name
+	
+	void solveSMPSFromList(const char* filename) {
+		std::string line;
+		std::ifstream list;
+		list.open(filename);
+
+		LOG_IF(FATAL, !list.is_open()) << "Could not open " << filename;
+
+		while (getline(list, line)) { // cor;tim;sto OR cor_tim;sto OR cor_tim_sto
+			// Split path to testset, problem, instances
+			std::vector<std::string> splitted_line;
+			if (line.substr(0, 2) != "//") { // because double slash is a comment
+				std::size_t current(0);
+				std::size_t previous(0);
+				current = line.find(";");
+				for (int i = 0; i < 3; i++) {
+					if (current == std::string::npos) {
+						splitted_line.push_back(line.substr(previous, line.length() - previous));
+						break;
+					}
+					splitted_line.push_back(line.substr(previous, current - previous));
+					previous = current + 1;
+					current = line.find(";", previous);
+				}
+			}
+
+			//transform to lower
+			for (auto& s: splitted_line) {
+				std::transform(s.begin(), s.end(), s.begin(),
+					[](unsigned char c) { return std::tolower(c); }
+				);
+			}
+			std::string cor;
+			std::string tim;
+			std::string sto;
+			if (splitted_line.size() == 0) { // the line was a comment
+				assert(line.substr(0, 2) == "//");
+				continue;
+			}
+			else if (splitted_line.size() == 1) {
+				cor = splitted_line[0];
+				tim = splitted_line[0];
+				sto = splitted_line[0];
+			}
+			else if (splitted_line.size() == 2) {
+				cor = splitted_line[0];
+				tim = splitted_line[0];
+				sto = splitted_line[1];
+			}
+			else if (splitted_line.size() == 3) {
+				cor = splitted_line[0];
+				tim = splitted_line[1];
+				sto = splitted_line[2];
+			}
+
+			solveSMPS(cor.c_str(), tim.c_str(), sto.c_str());
+		}	
+	}
 
     bool FileExists(const char* filename) 
     {
@@ -707,8 +771,9 @@ protected:
     }
     virtual ~NestedBendersTest(){}
     virtual void SetUp(){ // this is also the fixture that is called for every test, e.g., TEST(NestedBendersTest, test)
-		testbed_log_file_string_ = "Results.csv";
-        testbed_aggregated_log_file_string_ = "Results-Aggregated.csv";
+		instance_specification_file_ = "../../../../Data/Benders/InstanceSpecs.csv";
+		testbed_log_file_string_ = "../../../../Data/Benders/Results.csv";
+        testbed_aggregated_log_file_string_ = "../../../../Data/Benders/Results-Aggregated.csv";
 
 		// Write title line.
 		std::stringstream s;
@@ -841,6 +906,10 @@ protected:
             // Load ParallelNestedBendersSolver
             double solver_time = CoinGetTimeOfDay();
             OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
+			nested_benders.setTestsetProblemInstanceNames(total_stoch_string);
+			if (benders_parameter_.GetBoolParamValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS)) {
+				nested_benders.setInstanceSpecsFile(instance_specification_file_);
+			}
             nested_benders.setParameters(benders_parameter_);
             if ( benders_parameter_.parameter_.get(parallel_benders::PNB_USE_START_SOLUTION,0) == parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION){
 				assert( current_start_solution_.get() != nullptr);
@@ -1228,6 +1297,23 @@ protected:
 	}
 };
 
+// Tests set to simply collect properties of instances to .csv file
+class CollectInstanceSpecs : public NestedBendersTest
+{
+protected:
+	CollectInstanceSpecs() { // override parameter_strings_
+		parameter_strings_.clear();
+		// 1 seconds sollution time to stop the algorithm in Solve() main loop. We only want to store the instance specs
+		parameter_strings_.push_back("{ \"PNB_SAVE_INSTANCE_SPECS\" : true, \"PNB_MAXIMAL_SOLUTION_TIME\" : 1 }"); 
+	}
+};
+
+TEST_F(CollectInstanceSpecs, all) {
+	// TODO: turn off the statistics collection
+	solveSMPSFromList("../../../../Data/Benders/InstanceListAll.txt");
+	EXPECT_TRUE(true);
+}
+
 TEST_F(LiftAndProjectCutsTest, fast) {
 	// Binary 1st stage
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 4);
@@ -1332,7 +1418,7 @@ TEST_F(NestedBendersTestInteger, fast) {
 }
 
 TEST_F(NestedBendersTestFeasibility, fast) {
-	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3"), 722.58, 0.1); // Dependent
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-first"), 14794.6, 0.1); // INDEP
 	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
@@ -1344,8 +1430,8 @@ TEST_F(NestedBendersTestMultiStage, fast) {
 	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10", "watson/timeWAT_I_10", "watson/stochWAT_I_10_32"), -1866.42, 0.5);
 	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
 	// generate feasibility cuts
-	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
-	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS", "felt/electric_three_stage/LandS", "felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3"), 722.58, 0.1); // Dependent
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3", "felt/electric_three_stage/LandS3", "felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent
 }
 
 TEST_F(CVaRTest, fast) {
@@ -1378,7 +1464,7 @@ TEST_F(DetEqTest, fast) {
 	EXPECT_NEAR(solveSMPS("sslp-ntaimo/sslp_5_25_50a"), -121.6, 42.0);
 
 	// Multi stage
-	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3"), 722.58, 0.1); // Dependent
 }
 
 TEST_F(RelaxationTest, fast) {
@@ -1465,7 +1551,7 @@ TEST_F(DetEqTest, slow) {
 	EXPECT_NEAR(solveSMPS("ssch/c2"), 0, 1.0); // 0 for MIP
 
 	// Multi stage
-	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS", "felt/electric_three_stage/LandS", "felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3", "felt/electric_three_stage/LandS3", "felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent
 	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10", "watson/timeWAT_C_10", "watson/stochWAT_C_10_16"), -2400.1, 2.3);
 }
 
@@ -1770,10 +1856,10 @@ TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts
 
 // Alternative: bonds_FELT
 TEST_F(NestedBendersTestMultiStage, sgpf_POSTS) { // Verified with original values
-    EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y3"), -3027.706, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y4"), -4031.391, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y5"), -5201.282, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y6"), -6484.47, 0.1);// -6403.3 original result, but it is verified by MSLiP via Neos
+    EXPECT_NEAR(solveSMPS("posts/sg/posts_sgpf5y3"), -3027.706, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/sg/posts_sgpf5y4"), -4031.391, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/sg/posts_sgpf5y5"), -5201.282, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/sg/posts_sgpf5y6"), -6484.47, 0.1);// -6403.3 original result, but it is verified by MSLiP via Neos
 }
 
 TEST_F(NestedBendersTest, stormG2_POSTS) {
@@ -1864,8 +1950,8 @@ TEST_F(NestedBendersTest,electric_FELT){ //SCENARIOS
 }
 
 TEST_F(NestedBendersTestMultiStage,electric_FELT){ //SCENARIOS, three-stage, No staircase problem. verified
-    EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
-    EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS","felt/electric_three_stage/LandS","felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent 
+    EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3"), 722.58, 0.1); // Dependent
+    EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3","felt/electric_three_stage/LandS3","felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent 
 }
 
 TEST_F(NestedBendersTestFeasibility,environ_FELT){//two-stage, BLOCKS and/or INDEP //values verified with det-eq, but differ from andy felts test set ( maybe indep/blocks mixture is incorrect??
@@ -2212,8 +2298,8 @@ TEST_F(NestedBendersTestFeasibility,feasibility){// all problems that generate f
 	EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"),18439 , 0.1); // 18438.891
 	EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"),18615.4 , 0.1); // 18616.224
 	EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
-	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
-	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS","felt/electric_three_stage/LandS","felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent 
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3"), 722.58, 0.1); // Dependent
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3","felt/electric_three_stage/LandS3","felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent 
 	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2400.1,0.5); // -2401.87
 	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_32"), -2172.9,0.3); // -2167.62
 	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_64"), -2310.7,0.1); //-2027.43
@@ -2248,7 +2334,7 @@ TEST_F(NestedBendersTest,postponement){// postponement
 	EXPECT_NEAR(solveSMPS("postponement/TS_36_new=SL600L2Flex_2_end"),0,1);
 	EXPECT_NEAR(solveSMPS("postponement/TS_81_new=SL600L2Flex_2_end"),0,1);
 	EXPECT_NEAR(solveSMPS("postponement/TS_256_new=SL600L2Flex_2_end"),0,1);
-    EXPECT_NEAR(solveSMPS("PostponementSMPS/SMPS 11/pTest"), -515723, 10); 
+    EXPECT_NEAR(solveSMPS("PostponementSMPS/SMPS 11/pTest_11"), -515723, 10); 
 }
 
 TEST_F(NestedBendersTest,FeasibilityCutTest){

@@ -294,7 +294,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
+        current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1), lp_main_loop_col_solution_(nullptr), lp_main_loop_iteration_round_(std::make_pair(-1,-1)), lp_fract_var_index_(-1), lp_column_set_(PNB_COL_SET_NONE), store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
@@ -342,8 +342,9 @@ namespace parallel_benders {
         // Iterate over property map..
         boost::property_tree::ptree& param(parameter_.parameter_);
 
-		//Specify if we want to print out all the subproblems (.lp files)
+		//Specify if we want to print out all the subproblems (.lp files) or save problems specs (num cols / rows etc. to the .csv file)
 		print_subproblems_ = param.get(PNB_PRINT_SUBPROBLEMS,false);
+		instance_specs_to_file_ = param.get(PNB_SAVE_INSTANCE_SPECS, false);
 
         // Specify if we want to keep solutions or not
         compute_primal_solutions_for_stage_ = param.get(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
@@ -731,6 +732,9 @@ namespace parallel_benders {
             assert( !non_staircase_stochastic_problem_);
             LOG(INFO)<< "Done.";
         }
+		if (instance_specs_to_file_) {
+			SaveInstanceSpecs();
+		}
 		if (integer_problems_[0] && solve_relaxation_ == 1) { // stages are indexed as 0,1,2...
 			integer_problems_[0] = false;
 			LOG(INFO) << "We solve the LP relaxation for stage 1.";
@@ -3707,6 +3711,7 @@ namespace parallel_benders {
 		int threads_per_CGP = 1; // TODO: threads are expensive, let us first try the simplest case. Easier for debugging
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_CPU_USED, threads_per_CGP);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
+		cgp_parameter.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
 		cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
 
 		//we do not compute solutions and objectives since they should somehow be stored from prime and double prime subproblems
@@ -3997,6 +4002,10 @@ namespace parallel_benders {
 				if (CompareForEquality(row_lower[i], row_upper[i], zero_tolerance_)){
 					eq_constr = true;
 				}
+				// we do not need iterating further
+				if (le_constr && ge_constr && eq_constr) {
+					break;
+				}
 			}
 
 			// Non standard bounds for cont vars
@@ -4012,6 +4021,10 @@ namespace parallel_benders {
 					}
 					if (col_upper[i] <= infinity_ - zero_tolerance_) {
 						non_standard_ub = true;
+					}
+					// we do not need iterating further
+					if (non_standard_ub && non_standard_lb) {
+						break;
 					}
 				}
 			}
@@ -7329,6 +7342,151 @@ namespace parallel_benders {
         }
     }
 
+	void ParallelNestedBenders::SaveInstanceSpecs() {
+		
+		int num_columns(23); // in csv
+		std::vector<std::string> values(num_columns, "NA");
+		
+		// update OsiStochasticSolverInterface::setInstanceSpecsFile() to have a correct header after any changes here
+		int testset_index(0);
+		int problem_index(1);
+		int instance_index(2);
+		int stages_index(3);
+		int scenarios_index(4);
+		int first_int_index(5);
+		int first_bin_index(6);
+		int first_cont_index(7);
+		int first_constraints_index(8);
+		int second_int_index(9);
+		int second_bin_index(10);
+		int second_cont_index(11);
+		int second_constraints_index(12);
+		int first_le_constr_index(13);
+		int first_ge_constr_index(14);
+		int first_eq_constr_index(15);
+		int first_non_standard_ub_index(16);
+		int first_non_standard_lb_index(17);
+		int stochastic_obj_index(18);
+		int stochastic_rhs_index(19);
+		int stochastic_T_index(20);
+		int stochastic_W_index(21);
+		int stochastic_bounds_index(22);
+
+		// Store values!
+		LOG_IF(FATAL, testset_name_ == "" || problem_name_ == "" || instance_name_ == "") << "Testset and/or Problem name and/or Instance are not set. Use setTestsetProblemInstanceNames()";
+		values[testset_index] = testset_name_;
+		values[problem_index] = problem_name_;
+		values[instance_index] = instance_name_;
+
+		values[stages_index] = std::to_string(core_->getNumStages());
+		values[scenarios_index] = std::to_string(num_scenarios_);
+		assert(num_scenarios_ > 0);
+		values[first_int_index] = std::to_string(core_->getIntCols(0).size() - core_->getBinaryCols(0).size()); // in SMI binary are a subset of int vars
+		values[first_bin_index] = std::to_string(core_->getBinaryCols(0).size());
+		values[first_cont_index] = std::to_string(core_->getNumCols(0) - core_->getIntCols(0).size());
+		values[first_constraints_index] = std::to_string(core_->getNumRows(0));
+		values[second_int_index] = std::to_string(core_->getIntCols(1).size() - core_->getBinaryCols(1).size());
+		values[second_bin_index] = std::to_string(core_->getBinaryCols(1).size());
+		values[second_cont_index] = std::to_string(core_->getNumCols(1) - core_->getIntCols(1).size());
+		values[second_constraints_index] = std::to_string(core_->getNumRows(1));
+
+		bool le_constr = false;
+		bool ge_constr = false;
+		bool eq_constr = false;
+		double* row_lower = const_cast<double*> (core_->getDenseRowLower(0));
+		double* row_upper = const_cast<double*> (core_->getDenseRowUpper(0));
+		for (unsigned int i = 0; i < core_->getNumRows(0); i++) {
+			if (row_lower[i] <= -infinity_ + zero_tolerance_) {
+				le_constr = true;
+			}
+			if (row_upper[i] >= infinity_ - zero_tolerance_) {
+				ge_constr = true;
+			}
+			if (CompareForEquality(row_lower[i], row_upper[i], zero_tolerance_)) {
+				eq_constr = true;
+			}
+			// we do not need iterating further
+			if (le_constr && ge_constr && eq_constr) {
+				break;
+			}
+		}
+		values[first_le_constr_index] = BoolToString(le_constr);
+		values[first_ge_constr_index] = BoolToString(ge_constr);
+		values[first_eq_constr_index] = BoolToString(eq_constr);
+
+		bool non_standard_lb(false);
+		bool non_standard_ub(false);
+		double* col_lower = const_cast<double*> (core_->getDenseColLower(0));
+		double* col_upper = const_cast<double*> (core_->getDenseColUpper(0));
+		for (unsigned int i = 0; i < core_->getNumCols(0); i++) {
+			bool binary = std::find(std::begin(core_->getBinaryCols(0)), std::end(core_->getBinaryCols(0)), i) != std::end(core_->getBinaryCols(0));
+			if (!binary) {
+				if (col_upper[i] <= infinity_ - zero_tolerance_) {
+					non_standard_ub = true;
+				}
+				if (!CompareWithZero(col_lower[i])) {
+					non_standard_lb = true;
+				}
+			}
+			// we do not need iterating further
+			if (non_standard_ub && non_standard_lb) {
+				break;
+			}
+		}
+		values[first_non_standard_ub_index] = BoolToString(non_standard_ub);
+		values[first_non_standard_lb_index] = BoolToString(non_standard_lb);
+
+		BendersStageData* second_stage_pointer = stage_data_[1];
+		values[stochastic_obj_index] = BoolToString(second_stage_pointer->stochastic_objective_);
+		values[stochastic_rhs_index] = BoolToString(second_stage_pointer->stochastic_rhs_);
+		values[stochastic_T_index] = BoolToString(second_stage_pointer->stochastic_matrix_t_);
+		values[stochastic_W_index] = BoolToString(second_stage_pointer->stochastic_matrix_w_);
+		values[stochastic_bounds_index] = BoolToString(second_stage_pointer->stochastic_bounds_);
+
+		// Values vector to string
+		std::stringstream row;
+		std::copy(values.begin(), values.end() - 1, std::ostream_iterator<std::string>(row, ";"));
+		row << values.back(); // get rid of trailing semicolon
+
+		std::fstream file;
+		file.open(instance_specification_file_); // should be the list of relative paths to .sto (.stoch) files
+
+		LOG_IF(FATAL, !file.is_open()) << "Could not open " << instance_specification_file_;
+
+		std::stringstream ss_name;
+		ss_name << testset_name_ << ";" << problem_name_ << ";" << instance_name_;
+		std::string instance_full_name = ss_name.str(); // basically row id in instace specs file, e.g., "sndp;mini_tests;SNDP_TestCase_0"
+		// Check for duplicates
+		int record_counter(0);
+		bool different_present(false);
+		std::string line;
+		while (getline(file, line)) {
+			// if there is already a record for this instance
+			int start = NthFind(2, line, ";") + 1;
+			int len = NthFind(3, line, ";") - start;
+			std::string line_instance(line.substr(start, len));
+			if (instance_name_ == line_instance) {
+				if (line != row.str()) {
+					different_present = true;
+				}
+				record_counter++;
+			}
+		}
+		file.close();
+
+		// We might have issues with duplicated rows during the analysis in Excel - therefore, raise an error
+		LOG_IF(FATAL, record_counter > 1) << "Information for the instance " << instance_name_ << " is present in " << instance_specification_file_ << " " << record_counter << " times. Delete the redundant rows.";
+		LOG_IF(FATAL, different_present) << "Information for the instance " << instance_name_ << " is already present in " << instance_specification_file_ << " and is different. Did you change the problem or moved it to another folder?";
+
+		if (record_counter == 0) {
+			// Write to instance specification file
+			file.open(instance_specification_file_, ios_base::app | ios_base::in);
+			row << "\n";
+			file << row.str();
+			file.close();
+		}	
+	}
+
 	bool ParallelNestedBenders::CheckForSameCut( const CutStuff& cut_to_check, const BendersNodeData::cut_container & container )
 	{
 		for ( auto it : container ){
@@ -7681,6 +7839,25 @@ namespace parallel_benders {
         }
         return row_vector;
     }
+
+	inline const char* const BoolToString(bool b)
+	{
+		return b ? "true" : "false";
+	}
+
+	inline int NthFind(int n, const string& s, const string& p)
+	{
+		string::size_type i = s.find(p);     // find the first occurrence
+
+		int j;
+		for (j = 1; j < n && i != string::npos; ++j)
+			i = s.find(p, i + 1); // find the next occurrence
+
+		if (j == n)
+			return(i);
+		else
+			return(-1);
+	}
 
     bool CompareForEquality( double first, double second, double tolerance )
     {

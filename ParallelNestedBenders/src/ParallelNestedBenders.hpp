@@ -125,6 +125,11 @@ private:
 
     void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true, bool use_quadratic = false);
     inline void PrintSubproblem(OsiSolverInterface* osi_solver, int scenario, const std::string& = "");
+	
+	// save instance characteristics such as number columns / rows / vars to the .csv file
+	// default filename is InstanceSpecs.csv
+	// filename can be set with pnb::SetInstanceSpecsFile(filename)
+	void SaveInstanceSpecs();
     inline int getNumRowsProblem();
     inline int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
@@ -199,6 +204,12 @@ private:
     // Characteristic of problem
     bool non_staircase_problem_;
     bool non_staircase_stochastic_problem_;
+	std::string instance_specification_file_; // .csv to store the instance specification
+	std::string testset_name_; // e.g., felt
+	std::string problem_name_; // e.g., airlift
+	std::string instance_name_; // e.g., airl2, normally takes a .sto file name
+	bool instance_specs_to_file_; // whether to store data to instance_specification_file_
+
     // Direction of algorithm
     bool forward_;
     // Do we have infeasible/unbounded problems? And which?
@@ -431,6 +442,9 @@ private:
 };
 
 // TODO: Problems
+
+inline const char* const BoolToString(bool b);
+inline int NthFind(int n, const string& s, const string& p);
 
 // We need a coordinator, that tells the threads what to do. 
 // It waits for the threads to end, then does some stuff and waits again.

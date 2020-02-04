@@ -1,0 +1,27 @@
+let
+    // get the path to statistics .csv file
+    Params = Excel.CurrentWorkbook(){[Name="tblSettings"]}[Content],
+    #"Changed Type" = Table.TransformColumnTypes(Params,{{"Parameter", type text}, {"Value", type text}, {"Description", type text}}),
+    specsFilePath = #"Changed Type"{3}[Value],
+
+    // read the file
+    Source = Csv.Document(File.Contents(specsFilePath),[Delimiter=";", Encoding=1252, QuoteStyle=QuoteStyle.None]),
+    #"Promoted Headers" = try Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    FileNotFound = #"Promoted Headers"[HasError], // returns a record [HasError: true/false, Value: table]
+
+    // transform columns
+    DecimalCols = {},
+    StringCols = {"Testset", "Problem", "Instance"},
+    IntegerCols = {"Stages", "Scenarios", "1st Int", "1st Bin", "1st Cont", "1st Constraints", "2nd Int", "2nd Bin", "2nd Cont", "2nd Constraints"},
+    BooleanCols = {"1st <= constr", "1st >= constr", "1st == constr", "1st non standard ub", "1st non standard lb", "Stochastic Obj", "Stochastic RHS", "Stochastic T", "Stochastic W", "Stochastic Bounds"},
+    #". to comma" = Table.ReplaceValue(#"Promoted Headers"[Value],".",",",Replacer.ReplaceText,DecimalCols),
+    DecimalColsType = Table.TransformColumnTypes(#". to comma", List.Transform(DecimalCols, each {_, type number})),
+    StringColsType = Table.TransformColumnTypes(DecimalColsType, List.Transform(StringCols, each {_, type text})),
+    IntegerColsType = Table.TransformColumnTypes(StringColsType, List.Transform(IntegerCols, each {_, Int64.Type})),
+    BooleanColsType = Table.TransformColumnTypes(IntegerColsType, List.Transform(BooleanCols, each {_, type logical})),
+    //TimeColsType = Table.TransformColumnTypes(BooleanColsType,{{" Time", type time}}),
+    //DateColsType = Table.TransformColumnTypes(TimeColsType, {{"Date", type date}}, "en-US"),
+    
+    Result = if FileNotFound then error "The .csv file with problem specs not found. Check the specsFilePath on Settings tab." else #"BooleanColsType"
+in
+    Result

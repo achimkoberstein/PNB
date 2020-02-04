@@ -33,9 +33,16 @@ public:
 
 	virtual int getSolutionCode() const = 0;
 
+	//virtual void setLogFile(std::string filename) = 0;
+	void setInstanceSpecsFile(const std::string& filename);
+	virtual void setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance) = 0; //strings will be transformed to lower case
+	virtual void setTestsetProblemInstanceNames(std::string path) = 0; // use path to the .sto file
+
 protected:
     OsiSolverInterface* osi_solver_;
     SmiScnModel* smi_model_;
+	std::string log_file_; // statistics about solution process
+	std::string instance_specification_file_; // statistics about the problem instance
 
 private:
 

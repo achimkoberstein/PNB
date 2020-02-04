@@ -8,7 +8,7 @@
 #include "ilcplex/cplex.h"
 
 
-OsiStochasticSolverInterface::OsiStochasticSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel ): osi_solver_(osiSolver),smi_model_(smiModel) {}
+OsiStochasticSolverInterface::OsiStochasticSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel ): osi_solver_(osiSolver),smi_model_(smiModel), log_file_("Log.csv"), instance_specification_file_("InstanceSpecs.csv") {}
 
 OsiStochasticSolverInterface::~OsiStochasticSolverInterface(){
 
@@ -17,6 +17,37 @@ OsiStochasticSolverInterface::~OsiStochasticSolverInterface(){
 OsiSolverInterface* OsiStochasticSolverInterface::getOsiSolverInterface()
 {
     return osi_solver_;
+}
+
+void OsiStochasticSolverInterface::setInstanceSpecsFile(const string& filename)
+{
+	instance_specification_file_ = filename;
+	// Write header line.
+	std::stringstream s;
+	s << "Testset;Problem;Instance;Stages;Scenarios;1st Int;1st Bin;1st Cont;1st Constraints;2nd Int;2nd Bin;2nd Cont;2nd Constraints;";
+	s << "1st <= constr;1st >= constr;1st == constr;1st non standard ub;1st non standard lb;"; //bool
+	s << "Stochastic Obj;Stochastic RHS;Stochastic T;Stochastic W;Stochastic Bounds"; //bool
+
+	std::string header = s.str();
+
+	struct stat info;
+	int ret = -1;
+	ret = stat(instance_specification_file_.c_str(), &info); //get the file attributes
+	if (!(ret == 0)) { // stat() is not able to get the file attributes, not exists
+		ofstream log_file;
+		log_file.open(instance_specification_file_.c_str(), ios::app | ios::out);
+		log_file << header << std::endl;
+		log_file.close();
+	}
+
+	// We need to check if first line is still valid
+	ifstream log_file(instance_specification_file_.c_str());
+	std::string line;
+	std::getline(log_file, line);
+	log_file.close();
+	if (line != header) {
+		LOG(FATAL) << "The columns in instance specs file have changed. Please remove file " << instance_specification_file_ << " before proceeding!.";
+	}
 }
 
 OsiStochasticDetEqSolverInterface::OsiStochasticDetEqSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
