@@ -143,6 +143,9 @@ void Parameter::init()
 {
     // Save .lp files on disc (many files are saved on disk and might take a lot of space)
 	parameter_.put(PNB_PRINT_SUBPROBLEMS,false);
+
+	// Append instance info to .csv file
+	parameter_.put(PNB_SAVE_INSTANCE_SPECS, false);
 	
     // DetEq or Benders
     parameter_.put(PNB_BENDERS,PNB_INT_ALGORITHM_BENDERS); // 0: No Benders (detEq), 1 Benders

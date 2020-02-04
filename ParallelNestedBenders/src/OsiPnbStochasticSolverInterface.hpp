@@ -30,6 +30,9 @@ public:
     //const double * getDualsByNodeAndStage(int node_number, int stage) const;
 
 	void printSolutionToFile(const char* filename) const;
+	void setInstanceSpecsFile(const std::string& filename); //create if not exists
+	void setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance); // strings will be transformed to lower case
+	void setTestsetProblemInstanceNames(std::string path); // use path to the .sto file
 
     void fixFirstStageVariables(const double* solution);
     void giveStartSolution(const double* solution, int num_cols_given = 0);

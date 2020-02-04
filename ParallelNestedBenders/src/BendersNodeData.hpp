@@ -29,6 +29,7 @@ namespace parallel_benders{
     // IMPORTANT: If you add a new string here, also set the default value in the Init() method of Parameter class and to ParallelNestedBenders class definitition/declaration
     // We start with integer parameters
     const std::string PNB_PRINT_SUBPROBLEMS = "PNB_PRINT_SUBPROBLEMS";
+	const std::string PNB_SAVE_INSTANCE_SPECS = "PNB_SAVE_INSTANCE_SPECS";
 	const std::string PNB_BENDERS = "PNB_BENDERS";          //
     const std::string PNB_WARM_START = "PNB_WARM_START";    //
     const std::string PNB_LP_METHOD = "PNB_LP_METHOD";

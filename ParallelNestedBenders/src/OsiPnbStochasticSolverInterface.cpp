@@ -33,6 +33,45 @@ void OsiStochasticParallelNestedBendersSolverInterface::setParameters(const para
     nested_benders_->parameter_ = parameters;
 }
 
+void OsiStochasticParallelNestedBendersSolverInterface::setInstanceSpecsFile(const std::string& filename) {
+	OsiStochasticSolverInterface::setInstanceSpecsFile(filename);
+	nested_benders_->instance_specification_file_ = filename;
+}
+
+void OsiStochasticParallelNestedBendersSolverInterface::setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance) {
+	
+	// to lower case
+	std::vector<std::reference_wrapper<std::string>> arguments = { testset, problem, instance };
+	for (auto& s : arguments) {
+		std::transform(s.get().begin(), s.get().end(), s.get().begin(),
+			[](unsigned char c) { return std::tolower(c); } // correct
+		);
+	}
+
+	nested_benders_->testset_name_ = testset;
+	nested_benders_->problem_name_ = problem;
+	nested_benders_->instance_name_ = instance;
+}
+
+void OsiStochasticParallelNestedBendersSolverInterface::setTestsetProblemInstanceNames(std::string path) {
+	// Split path to testset, problem, instances
+	std::vector<std::string> splitted_path(3, "NA");
+	int elem_counter(0);
+	std::size_t current(0);
+	std::size_t previous(path.size());
+	current = path.rfind("/");
+	while (current != std::string::npos && elem_counter < 3) {
+		splitted_path[elem_counter] = path.substr(current + 1, previous - current);
+		elem_counter++;
+		previous = current - 1;
+		current = path.rfind("/", previous);
+	}
+	if (splitted_path[0] == "NA") {
+		splitted_path[0] = path;
+	}
+	
+	setTestsetProblemInstanceNames(splitted_path[2], splitted_path[1], splitted_path[0]);
+}
 
 double OsiStochasticParallelNestedBendersSolverInterface::getObjValue() const
 {
@@ -234,6 +273,9 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 
     }
     else {
+		if (nested_benders_->parameter_.GetBoolParamValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS)) {
+			setInstanceSpecsFile(instance_specification_file_);
+		}
         nested_benders_->Init();
         nested_benders_->Solve();
     }

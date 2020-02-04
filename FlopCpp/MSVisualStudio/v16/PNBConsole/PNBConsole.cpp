@@ -31,6 +31,7 @@ int main(int argc,  char* argv[])
     std::string time;
     std::string stoch;
     std::string parameter;
+	std::string specs_to_file;
 
     // Declare the supported options.
     boost::program_options::options_description desc("Allowed options");
@@ -41,7 +42,7 @@ int main(int argc,  char* argv[])
         ("time", boost::program_options::value<std::string>(&time), "Time File")
         ("stoch", boost::program_options::value<std::string>(&stoch), "Stoch File")
         ("parameter", boost::program_options::value<std::string>(&parameter), "Parameter File")
-
+		("specs_to_file", boost::program_options::value<std::string>(&specs_to_file), "Instance Specs Output File")
         ;
 
     boost::program_options::variables_map vm;
@@ -75,10 +76,13 @@ int main(int argc,  char* argv[])
 
     int smps_read_in = 0;
     SmiScnModel smi_model;
+	std::string instance_path;
     if (vm.count("smps")) {
+		instance_path = smps.c_str();
         smps_read_in = smi_model.readSmps(smps.c_str());
     } else {
         if ( vm.count("core") && vm.count("time") && vm.count("stoch") ){
+			instance_path = stoch.c_str();
             smps_read_in = smi_model.readSmps(core.c_str(),time.c_str(),stoch.c_str());
         }
         else{
@@ -94,6 +98,10 @@ int main(int argc,  char* argv[])
     // Create a new OsiStochasticPNB interface
     OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
     OsiStochasticParallelNestedBendersSolverInterface pnb(osi_solver,&smi_model);
+	pnb.setTestsetProblemInstanceNames(instance_path);
+	if (vm.count("specs_to_file")) {
+		pnb.setInstanceSpecsFile(specs_to_file.c_str());
+	}	
 
     pnb.setParameters(param);
     pnb.initialSolve();
