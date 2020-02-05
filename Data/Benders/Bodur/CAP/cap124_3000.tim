@@ -1,0 +1,6 @@
+TIME          CAP_extensive_form_cap124_3000 (MIN)
+PERIODS       IMPLICIT
+    x01       FirstStCnstr                 Stage1    
+    y0001     SecondStCnstr001                 Stage2    
+*
+ENDATA

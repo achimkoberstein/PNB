@@ -759,7 +759,7 @@ protected:
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 2 }"); // multi cut
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 5, \"PNB_NUM_CPU\" : 0 }");
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_USE_START_SOLUTION\" : 1 }"); // BUG#1
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_CUT_CONSOLIDATION\" : 1, \"PNB_USE_START_SOLUTION\" : 2  }");
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_CUT_CONSOLIDATION\" : true, \"PNB_USE_START_SOLUTION\" : 2  }");
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\" }"); // ODA crashes and not working for multi stage
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }");
@@ -1226,8 +1226,7 @@ protected:
 		parameter_strings_.clear();
 		parameter_strings_.push_back("{}"); // default parameters
 		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 5, \"PNB_NUM_CPU\" : 0 }"); // single cut (default)
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0 }"); // multi cut
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS\", \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_CUT_CONSOLIDATION\" : true, \"PNB_NUM_CPU\" : 0 }"); // multi cut
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\" }"); // not working for MIP
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\" }"); // not working for MIP
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }");
@@ -1311,6 +1310,12 @@ protected:
 TEST_F(CollectInstanceSpecs, all) {
 	// TODO: turn off the statistics collection
 	solveSMPSFromList("../../../../Data/Benders/InstanceListAll.txt");
+	EXPECT_TRUE(true);
+}
+
+TEST_F(CollectInstanceSpecs, cap) {
+	// TODO: turn off the statistics collection
+	solveSMPSFromList("../../../../Data/Benders/InstanceListBodurCAP.txt");
 	EXPECT_TRUE(true);
 }
 
@@ -1415,6 +1420,130 @@ TEST_F(NestedBendersTestInteger, fast) {
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 1583.66, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 223753.66, 0.1);
 	EXPECT_NEAR(solveSMPS("sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1);
+}
+
+TEST_F(NestedBendersTestInteger, cap) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 10);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_5000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_250"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_3000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_4000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_5"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_50"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_5000"), 0, 0.1);
 }
 
 TEST_F(NestedBendersTestFeasibility, fast) {

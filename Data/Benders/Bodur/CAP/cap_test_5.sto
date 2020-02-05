@@ -1,0 +1,25 @@
+STOCH         CAP_extensive_form_cap_test_5 (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'             0.2   Stage1    
+    RHS1      SecondStCnstr1          11.0
+    RHS1      SecondStCnstr2          12.0
+    RHS1      SecondStCnstr3          13.0
+ SC Scen2     Scen1              0.2   Stage2    
+    RHS1      SecondStCnstr1          21.0
+    RHS1      SecondStCnstr2          22.0
+    RHS1      SecondStCnstr3          23.0
+ SC Scen3     Scen1              0.2   Stage2    
+    RHS1      SecondStCnstr1          31.0
+    RHS1      SecondStCnstr2          32.0
+    RHS1      SecondStCnstr3          33.0
+ SC Scen4     Scen1              0.2   Stage2    
+    RHS1      SecondStCnstr1          41.0
+    RHS1      SecondStCnstr2          42.0
+    RHS1      SecondStCnstr3          43.0
+ SC Scen5     Scen1              0.2   Stage2    
+    RHS1      SecondStCnstr1          51.0
+    RHS1      SecondStCnstr2          52.0
+    RHS1      SecondStCnstr3          53.0
+ENDATA
+
+
