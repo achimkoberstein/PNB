@@ -1,0 +1,2698 @@
+*   
+*   cap101_2000_temp.mps
+*   
+*   Generated with the MPL Modeling System
+*   Copyright (c) 1988-2018  Maximal Software
+*   
+*   Date:               February 6, 2020
+*   Time:               18:03
+*   
+*   Constraints:        76
+*   Variables:          1275
+*   Integers:           25
+*   Nonzeros:           2550
+*   Density:            3 %
+*   
+NAME          CAP_extensive_form_cap101_2000 (MIN)
+ROWS
+  N Objective
+  G FirstStCnstr
+  G SecondStCnstr01
+  G SecondStCnstr02
+  G SecondStCnstr03
+  G SecondStCnstr04
+  G SecondStCnstr05
+  G SecondStCnstr06
+  G SecondStCnstr07
+  G SecondStCnstr08
+  G SecondStCnstr09
+  G SecondStCnstr10
+  G SecondStCnstr11
+  G SecondStCnstr12
+  G SecondStCnstr13
+  G SecondStCnstr14
+  G SecondStCnstr15
+  G SecondStCnstr16
+  G SecondStCnstr17
+  G SecondStCnstr18
+  G SecondStCnstr19
+  G SecondStCnstr20
+  G SecondStCnstr21
+  G SecondStCnstr22
+  G SecondStCnstr23
+  G SecondStCnstr24
+  G SecondStCnstr25
+  G SecondStCnstr26
+  G SecondStCnstr27
+  G SecondStCnstr28
+  G SecondStCnstr29
+  G SecondStCnstr30
+  G SecondStCnstr31
+  G SecondStCnstr32
+  G SecondStCnstr33
+  G SecondStCnstr34
+  G SecondStCnstr35
+  G SecondStCnstr36
+  G SecondStCnstr37
+  G SecondStCnstr38
+  G SecondStCnstr39
+  G SecondStCnstr40
+  G SecondStCnstr41
+  G SecondStCnstr42
+  G SecondStCnstr43
+  G SecondStCnstr44
+  G SecondStCnstr45
+  G SecondStCnstr46
+  G SecondStCnstr47
+  G SecondStCnstr48
+  G SecondStCnstr49
+  G SecondStCnstr50
+  G SecondStCnstr51
+  G SecondStCnstr52
+  G SecondStCnstr53
+  G SecondStCnstr54
+  G SecondStCnstr55
+  G SecondStCnstr56
+  G SecondStCnstr57
+  G SecondStCnstr58
+  G SecondStCnstr59
+  G SecondStCnstr60
+  G SecondStCnstr61
+  G SecondStCnstr62
+  G SecondStCnstr63
+  G SecondStCnstr64
+  G SecondStCnstr65
+  G SecondStCnstr66
+  G SecondStCnstr67
+  G SecondStCnstr68
+  G SecondStCnstr69
+  G SecondStCnstr70
+  G SecondStCnstr71
+  G SecondStCnstr72
+  G SecondStCnstr73
+  G SecondStCnstr74
+  G SecondStCnstr75
+COLUMNS
+    x01       Objective        7500.0   FirstStCnstr       58268.0
+    x01       SecondStCnstr51       58268.0
+    x02       Objective        7500.0   FirstStCnstr       58268.0
+    x02       SecondStCnstr52       58268.0
+    x03       Objective        7500.0   FirstStCnstr       58268.0
+    x03       SecondStCnstr53       58268.0
+    x04       Objective        7500.0   FirstStCnstr       58268.0
+    x04       SecondStCnstr54       58268.0
+    x05       Objective        7500.0   FirstStCnstr       58268.0
+    x05       SecondStCnstr55       58268.0
+    x06       Objective        7500.0   FirstStCnstr       58268.0
+    x06       SecondStCnstr56       58268.0
+    x07       Objective        7500.0   FirstStCnstr       58268.0
+    x07       SecondStCnstr57       58268.0
+    x08       Objective        7500.0   FirstStCnstr       58268.0
+    x08       SecondStCnstr58       58268.0
+    x09       Objective        7500.0   FirstStCnstr       58268.0
+    x09       SecondStCnstr59       58268.0
+    x10       Objective        7500.0   FirstStCnstr       58268.0
+    x10       SecondStCnstr60       58268.0
+    x11       Objective           0.0   FirstStCnstr       58268.0
+    x11       SecondStCnstr61       58268.0
+    x12       Objective        7500.0   FirstStCnstr       58268.0
+    x12       SecondStCnstr62       58268.0
+    x13       Objective        7500.0   FirstStCnstr       58268.0
+    x13       SecondStCnstr63       58268.0
+    x14       Objective        7500.0   FirstStCnstr       58268.0
+    x14       SecondStCnstr64       58268.0
+    x15       Objective        7500.0   FirstStCnstr       58268.0
+    x15       SecondStCnstr65       58268.0
+    x16       Objective        7500.0   FirstStCnstr       58268.0
+    x16       SecondStCnstr66       58268.0
+    x17       Objective        7500.0   FirstStCnstr       58268.0
+    x17       SecondStCnstr67       58268.0
+    x18       Objective        7500.0   FirstStCnstr       58268.0
+    x18       SecondStCnstr68       58268.0
+    x19       Objective        7500.0   FirstStCnstr       58268.0
+    x19       SecondStCnstr69       58268.0
+    x20       Objective        7500.0   FirstStCnstr       58268.0
+    x20       SecondStCnstr70       58268.0
+    x21       Objective        7500.0   FirstStCnstr       58268.0
+    x21       SecondStCnstr71       58268.0
+    x22       Objective        7500.0   FirstStCnstr       58268.0
+    x22       SecondStCnstr72       58268.0
+    x23       Objective        7500.0   FirstStCnstr       58268.0
+    x23       SecondStCnstr73       58268.0
+    x24       Objective        7500.0   FirstStCnstr       58268.0
+    x24       SecondStCnstr74       58268.0
+    x25       Objective        7500.0   FirstStCnstr       58268.0
+    x25       SecondStCnstr75       58268.0
+    y0001     Objective       46.1625   SecondStCnstr01           1.0
+    y0001     SecondStCnstr51          -1.0
+    y0002     Objective       36.8375   SecondStCnstr02           1.0
+    y0002     SecondStCnstr51          -1.0
+    y0003     Objective        7.3125   SecondStCnstr03           1.0
+    y0003     SecondStCnstr51          -1.0
+    y0004     Objective       24.2125   SecondStCnstr04           1.0
+    y0004     SecondStCnstr51          -1.0
+    y0005     Objective       55.3375   SecondStCnstr05           1.0
+    y0005     SecondStCnstr51          -1.0
+    y0006     Objective       11.4875   SecondStCnstr06           1.0
+    y0006     SecondStCnstr51          -1.0
+    y0007     Objective       34.5875   SecondStCnstr07           1.0
+    y0007     SecondStCnstr51          -1.0
+    y0008     Objective       30.6625   SecondStCnstr08           1.0
+    y0008     SecondStCnstr51          -1.0
+    y0009     Objective       61.2375   SecondStCnstr09           1.0
+    y0009     SecondStCnstr51          -1.0
+    y0010     Objective       45.6125   SecondStCnstr10           1.0
+    y0010     SecondStCnstr51          -1.0
+    y0011     Objective       25.6625   SecondStCnstr11           1.0
+    y0011     SecondStCnstr51          -1.0
+    y0012     Objective       19.5625   SecondStCnstr12           1.0
+    y0012     SecondStCnstr51          -1.0
+    y0013     Objective       26.0625   SecondStCnstr13           1.0
+    y0013     SecondStCnstr51          -1.0
+    y0014     Objective       13.6625   SecondStCnstr14           1.0
+    y0014     SecondStCnstr51          -1.0
+    y0015     Objective       27.9375   SecondStCnstr15           1.0
+    y0015     SecondStCnstr51          -1.0
+    y0016     Objective       45.4625   SecondStCnstr16           1.0
+    y0016     SecondStCnstr51          -1.0
+    y0017     Objective       31.1125   SecondStCnstr17           1.0
+    y0017     SecondStCnstr51          -1.0
+    y0018     Objective       26.0125   SecondStCnstr18           1.0
+    y0018     SecondStCnstr51          -1.0
+    y0019     Objective       37.3625   SecondStCnstr19           1.0
+    y0019     SecondStCnstr51          -1.0
+    y0020     Objective       44.0875   SecondStCnstr20           1.0
+    y0020     SecondStCnstr51          -1.0
+    y0021     Objective       41.6125   SecondStCnstr21           1.0
+    y0021     SecondStCnstr51          -1.0
+    y0022     Objective       28.7125   SecondStCnstr22           1.0
+    y0022     SecondStCnstr51          -1.0
+    y0023     Objective       21.9375   SecondStCnstr23           1.0
+    y0023     SecondStCnstr51          -1.0
+    y0024     Objective       16.0625   SecondStCnstr24           1.0
+    y0024     SecondStCnstr51          -1.0
+    y0025     Objective       29.5625   SecondStCnstr25           1.0
+    y0025     SecondStCnstr51          -1.0
+    y0026     Objective       12.2375   SecondStCnstr26           1.0
+    y0026     SecondStCnstr51          -1.0
+    y0027     Objective       64.4375   SecondStCnstr27           1.0
+    y0027     SecondStCnstr51          -1.0
+    y0028     Objective       19.1625   SecondStCnstr28           1.0
+    y0028     SecondStCnstr51          -1.0
+    y0029     Objective       17.8125   SecondStCnstr29           1.0
+    y0029     SecondStCnstr51          -1.0
+    y0030     Objective       25.2125   SecondStCnstr30           1.0
+    y0030     SecondStCnstr51          -1.0
+    y0031     Objective       16.1375   SecondStCnstr31           1.0
+    y0031     SecondStCnstr51          -1.0
+    y0032     Objective       14.5125   SecondStCnstr32           1.0
+    y0032     SecondStCnstr51          -1.0
+    y0033     Objective       19.6375   SecondStCnstr33           1.0
+    y0033     SecondStCnstr51          -1.0
+    y0034     Objective       28.8625   SecondStCnstr34           1.0
+    y0034     SecondStCnstr51          -1.0
+    y0035     Objective       29.9875   SecondStCnstr35           1.0
+    y0035     SecondStCnstr51          -1.0
+    y0036     Objective       32.9375   SecondStCnstr36           1.0
+    y0036     SecondStCnstr51          -1.0
+    y0037     Objective       26.5875   SecondStCnstr37           1.0
+    y0037     SecondStCnstr51          -1.0
+    y0038     Objective       27.4625   SecondStCnstr38           1.0
+    y0038     SecondStCnstr51          -1.0
+    y0039     Objective       77.2625   SecondStCnstr39           1.0
+    y0039     SecondStCnstr51          -1.0
+    y0040     Objective       21.7875   SecondStCnstr40           1.0
+    y0040     SecondStCnstr51          -1.0
+    y0041     Objective       22.6125   SecondStCnstr41           1.0
+    y0041     SecondStCnstr51          -1.0
+    y0042     Objective       35.5625   SecondStCnstr42           1.0
+    y0042     SecondStCnstr51          -1.0
+    y0043     Objective       58.5875   SecondStCnstr43           1.0
+    y0043     SecondStCnstr51          -1.0
+    y0044     Objective       33.9625   SecondStCnstr44           1.0
+    y0044     SecondStCnstr51          -1.0
+    y0045     Objective       75.2625   SecondStCnstr45           1.0
+    y0045     SecondStCnstr51          -1.0
+    y0046     Objective       77.9125   SecondStCnstr46           1.0
+    y0046     SecondStCnstr51          -1.0
+    y0047     Objective       70.1625   SecondStCnstr47           1.0
+    y0047     SecondStCnstr51          -1.0
+    y0048     Objective       51.8875   SecondStCnstr48           1.0
+    y0048     SecondStCnstr51          -1.0
+    y0049     Objective       23.2625   SecondStCnstr49           1.0
+    y0049     SecondStCnstr51          -1.0
+    y0050     Objective       31.9625   SecondStCnstr50           1.0
+    y0050     SecondStCnstr51          -1.0
+    y0051     Objective        70.925   SecondStCnstr01           1.0
+    y0051     SecondStCnstr52          -1.0
+    y0052     Objective        62.725   SecondStCnstr02           1.0
+    y0052     SecondStCnstr52          -1.0
+    y0053     Objective          39.3   SecondStCnstr03           1.0
+    y0053     SecondStCnstr52          -1.0
+    y0054     Objective        22.425   SecondStCnstr04           1.0
+    y0054     SecondStCnstr52          -1.0
+    y0055     Objective        69.425   SecondStCnstr05           1.0
+    y0055     SecondStCnstr52          -1.0
+    y0056     Objective          42.4   SecondStCnstr06           1.0
+    y0056     SecondStCnstr52          -1.0
+    y0057     Objective        12.025   SecondStCnstr07           1.0
+    y0057     SecondStCnstr52          -1.0
+    y0058     Objective        24.375   SecondStCnstr08           1.0
+    y0058     SecondStCnstr52          -1.0
+    y0059     Objective        75.175   SecondStCnstr09           1.0
+    y0059     SecondStCnstr52          -1.0
+    y0060     Objective         62.35   SecondStCnstr10           1.0
+    y0060     SecondStCnstr52          -1.0
+    y0061     Objective        37.475   SecondStCnstr11           1.0
+    y0061     SecondStCnstr52          -1.0
+    y0062     Objective        35.475   SecondStCnstr12           1.0
+    y0062     SecondStCnstr52          -1.0
+    y0063     Objective        28.975   SecondStCnstr13           1.0
+    y0063     SecondStCnstr52          -1.0
+    y0064     Objective        35.275   SecondStCnstr14           1.0
+    y0064     SecondStCnstr52          -1.0
+    y0065     Objective        58.625   SecondStCnstr15           1.0
+    y0065     SecondStCnstr52          -1.0
+    y0066     Objective        63.125   SecondStCnstr16           1.0
+    y0066     SecondStCnstr52          -1.0
+    y0067     Objective        46.425   SecondStCnstr17           1.0
+    y0067     SecondStCnstr52          -1.0
+    y0068     Objective        30.675   SecondStCnstr18           1.0
+    y0068     SecondStCnstr52          -1.0
+    y0069     Objective        49.175   SecondStCnstr19           1.0
+    y0069     SecondStCnstr52          -1.0
+    y0070     Objective        72.375   SecondStCnstr20           1.0
+    y0070     SecondStCnstr52          -1.0
+    y0071     Objective        53.425   SecondStCnstr21           1.0
+    y0071     SecondStCnstr52          -1.0
+    y0072     Objective         60.35   SecondStCnstr22           1.0
+    y0072     SecondStCnstr52          -1.0
+    y0073     Objective        36.075   SecondStCnstr23           1.0
+    y0073     SecondStCnstr52          -1.0
+    y0074     Objective        42.275   SecondStCnstr24           1.0
+    y0074     SecondStCnstr52          -1.0
+    y0075     Objective         48.75   SecondStCnstr25           1.0
+    y0075     SecondStCnstr52          -1.0
+    y0076     Objective         36.05   SecondStCnstr26           1.0
+    y0076     SecondStCnstr52          -1.0
+    y0077     Objective        93.125   SecondStCnstr27           1.0
+    y0077     SecondStCnstr52          -1.0
+    y0078     Objective        38.325   SecondStCnstr28           1.0
+    y0078     SecondStCnstr52          -1.0
+    y0079     Objective        46.575   SecondStCnstr29           1.0
+    y0079     SecondStCnstr52          -1.0
+    y0080     Objective        51.425   SecondStCnstr30           1.0
+    y0080     SecondStCnstr52          -1.0
+    y0081     Objective        48.125   SecondStCnstr31           1.0
+    y0081     SecondStCnstr52          -1.0
+    y0082     Objective         41.45   SecondStCnstr32           1.0
+    y0082     SecondStCnstr52          -1.0
+    y0083     Objective         51.25   SecondStCnstr33           1.0
+    y0083     SecondStCnstr52          -1.0
+    y0084     Objective         17.75   SecondStCnstr34           1.0
+    y0084     SecondStCnstr52          -1.0
+    y0085     Objective          55.6   SecondStCnstr35           1.0
+    y0085     SecondStCnstr52          -1.0
+    y0086     Objective        49.675   SecondStCnstr36           1.0
+    y0086     SecondStCnstr52          -1.0
+    y0087     Objective         20.05   SecondStCnstr37           1.0
+    y0087     SecondStCnstr52          -1.0
+    y0088     Objective        28.725   SecondStCnstr38           1.0
+    y0088     SecondStCnstr52          -1.0
+    y0089     Objective         92.45   SecondStCnstr39           1.0
+    y0089     SecondStCnstr52          -1.0
+    y0090     Objective        26.275   SecondStCnstr40           1.0
+    y0090     SecondStCnstr52          -1.0
+    y0091     Objective        42.075   SecondStCnstr41           1.0
+    y0091     SecondStCnstr52          -1.0
+    y0092     Objective        47.375   SecondStCnstr42           1.0
+    y0092     SecondStCnstr52          -1.0
+    y0093     Objective        75.325   SecondStCnstr43           1.0
+    y0093     SecondStCnstr52          -1.0
+    y0094     Objective         65.15   SecondStCnstr44           1.0
+    y0094     SecondStCnstr52          -1.0
+    y0095     Objective         94.05   SecondStCnstr45           1.0
+    y0095     SecondStCnstr52          -1.0
+    y0096     Objective          91.0   SecondStCnstr46           1.0
+    y0096     SecondStCnstr52          -1.0
+    y0097     Objective         83.25   SecondStCnstr47           1.0
+    y0097     SecondStCnstr52          -1.0
+    y0098     Objective        80.175   SecondStCnstr48           1.0
+    y0098     SecondStCnstr52          -1.0
+    y0099     Objective        23.375   SecondStCnstr49           1.0
+    y0099     SecondStCnstr52          -1.0
+    y0100     Objective         54.05   SecondStCnstr50           1.0
+    y0100     SecondStCnstr52          -1.0
+    y0101     Objective          52.4   SecondStCnstr01           1.0
+    y0101     SecondStCnstr53          -1.0
+    y0102     Objective          44.2   SecondStCnstr02           1.0
+    y0102     SecondStCnstr53          -1.0
+    y0103     Objective          29.2   SecondStCnstr03           1.0
+    y0103     SecondStCnstr53          -1.0
+    y0104     Objective        15.725   SecondStCnstr04           1.0
+    y0104     SecondStCnstr53          -1.0
+    y0105     Objective          50.9   SecondStCnstr05           1.0
+    y0105     SecondStCnstr53          -1.0
+    y0106     Objective        28.975   SecondStCnstr06           1.0
+    y0106     SecondStCnstr53          -1.0
+    y0107     Objective          18.2   SecondStCnstr07           1.0
+    y0107     SecondStCnstr53          -1.0
+    y0108     Objective          5.85   SecondStCnstr08           1.0
+    y0108     SecondStCnstr53          -1.0
+    y0109     Objective         56.65   SecondStCnstr09           1.0
+    y0109     SecondStCnstr53          -1.0
+    y0110     Objective        43.825   SecondStCnstr10           1.0
+    y0110     SecondStCnstr53          -1.0
+    y0111     Objective         18.95   SecondStCnstr11           1.0
+    y0111     SecondStCnstr53          -1.0
+    y0112     Objective         16.95   SecondStCnstr12           1.0
+    y0112     SecondStCnstr53          -1.0
+    y0113     Objective         10.45   SecondStCnstr13           1.0
+    y0113     SecondStCnstr53          -1.0
+    y0114     Objective          28.6   SecondStCnstr14           1.0
+    y0114     SecondStCnstr53          -1.0
+    y0115     Objective          41.3   SecondStCnstr15           1.0
+    y0115     SecondStCnstr53          -1.0
+    y0116     Objective          44.6   SecondStCnstr16           1.0
+    y0116     SecondStCnstr53          -1.0
+    y0117     Objective          27.9   SecondStCnstr17           1.0
+    y0117     SecondStCnstr53          -1.0
+    y0118     Objective         12.15   SecondStCnstr18           1.0
+    y0118     SecondStCnstr53          -1.0
+    y0119     Objective         30.65   SecondStCnstr19           1.0
+    y0119     SecondStCnstr53          -1.0
+    y0120     Objective         53.85   SecondStCnstr20           1.0
+    y0120     SecondStCnstr53          -1.0
+    y0121     Objective          34.9   SecondStCnstr21           1.0
+    y0121     SecondStCnstr53          -1.0
+    y0122     Objective          44.7   SecondStCnstr22           1.0
+    y0122     SecondStCnstr53          -1.0
+    y0123     Objective         17.55   SecondStCnstr23           1.0
+    y0123     SecondStCnstr53          -1.0
+    y0124     Objective          35.6   SecondStCnstr24           1.0
+    y0124     SecondStCnstr53          -1.0
+    y0125     Objective        30.225   SecondStCnstr25           1.0
+    y0125     SecondStCnstr53          -1.0
+    y0126     Objective        24.275   SecondStCnstr26           1.0
+    y0126     SecondStCnstr53          -1.0
+    y0127     Objective          74.6   SecondStCnstr27           1.0
+    y0127     SecondStCnstr53          -1.0
+    y0128     Objective          19.8   SecondStCnstr28           1.0
+    y0128     SecondStCnstr53          -1.0
+    y0129     Objective          29.3   SecondStCnstr29           1.0
+    y0129     SecondStCnstr53          -1.0
+    y0130     Objective         44.75   SecondStCnstr30           1.0
+    y0130     SecondStCnstr53          -1.0
+    y0131     Objective        35.625   SecondStCnstr31           1.0
+    y0131     SecondStCnstr53          -1.0
+    y0132     Objective        24.475   SecondStCnstr32           1.0
+    y0132     SecondStCnstr53          -1.0
+    y0133     Objective         37.85   SecondStCnstr33           1.0
+    y0133     SecondStCnstr53          -1.0
+    y0134     Objective         15.75   SecondStCnstr34           1.0
+    y0134     SecondStCnstr53          -1.0
+    y0135     Objective        37.075   SecondStCnstr35           1.0
+    y0135     SecondStCnstr53          -1.0
+    y0136     Objective         31.15   SecondStCnstr36           1.0
+    y0136     SecondStCnstr53          -1.0
+    y0137     Objective        16.225   SecondStCnstr37           1.0
+    y0137     SecondStCnstr53          -1.0
+    y0138     Objective         12.35   SecondStCnstr38           1.0
+    y0138     SecondStCnstr53          -1.0
+    y0139     Objective        73.925   SecondStCnstr39           1.0
+    y0139     SecondStCnstr53          -1.0
+    y0140     Objective          19.6   SecondStCnstr40           1.0
+    y0140     SecondStCnstr53          -1.0
+    y0141     Objective         23.55   SecondStCnstr41           1.0
+    y0141     SecondStCnstr53          -1.0
+    y0142     Objective         28.85   SecondStCnstr42           1.0
+    y0142     SecondStCnstr53          -1.0
+    y0143     Objective          56.8   SecondStCnstr43           1.0
+    y0143     SecondStCnstr53          -1.0
+    y0144     Objective        46.625   SecondStCnstr44           1.0
+    y0144     SecondStCnstr53          -1.0
+    y0145     Objective        75.525   SecondStCnstr45           1.0
+    y0145     SecondStCnstr53          -1.0
+    y0146     Objective        72.475   SecondStCnstr46           1.0
+    y0146     SecondStCnstr53          -1.0
+    y0147     Objective        64.725   SecondStCnstr47           1.0
+    y0147     SecondStCnstr53          -1.0
+    y0148     Objective         61.65   SecondStCnstr48           1.0
+    y0148     SecondStCnstr53          -1.0
+    y0149     Objective          16.7   SecondStCnstr49           1.0
+    y0149     SecondStCnstr53          -1.0
+    y0150     Objective        35.525   SecondStCnstr50           1.0
+    y0150     SecondStCnstr53          -1.0
+    y0151     Objective         35.75   SecondStCnstr01           1.0
+    y0151     SecondStCnstr54          -1.0
+    y0152     Objective         27.55   SecondStCnstr02           1.0
+    y0152     SecondStCnstr54          -1.0
+    y0153     Objective         20.65   SecondStCnstr03           1.0
+    y0153     SecondStCnstr54          -1.0
+    y0154     Objective          22.2   SecondStCnstr04           1.0
+    y0154     SecondStCnstr54          -1.0
+    y0155     Objective         34.25   SecondStCnstr05           1.0
+    y0155     SecondStCnstr54          -1.0
+    y0156     Objective        18.575   SecondStCnstr06           1.0
+    y0156     SecondStCnstr54          -1.0
+    y0157     Objective         27.75   SecondStCnstr07           1.0
+    y0157     SecondStCnstr54          -1.0
+    y0158     Objective          15.4   SecondStCnstr08           1.0
+    y0158     SecondStCnstr54          -1.0
+    y0159     Objective         40.15   SecondStCnstr09           1.0
+    y0159     SecondStCnstr54          -1.0
+    y0160     Objective        27.175   SecondStCnstr10           1.0
+    y0160     SecondStCnstr54          -1.0
+    y0161     Objective           2.3   SecondStCnstr11           1.0
+    y0161     SecondStCnstr54          -1.0
+    y0162     Objective         9.325   SecondStCnstr12           1.0
+    y0162     SecondStCnstr54          -1.0
+    y0163     Objective          10.8   SecondStCnstr13           1.0
+    y0163     SecondStCnstr54          -1.0
+    y0164     Objective        23.975   SecondStCnstr14           1.0
+    y0164     SecondStCnstr54          -1.0
+    y0165     Objective          26.5   SecondStCnstr15           1.0
+    y0165     SecondStCnstr54          -1.0
+    y0166     Objective         27.95   SecondStCnstr16           1.0
+    y0166     SecondStCnstr54          -1.0
+    y0167     Objective         11.25   SecondStCnstr17           1.0
+    y0167     SecondStCnstr54          -1.0
+    y0168     Objective           9.1   SecondStCnstr18           1.0
+    y0168     SecondStCnstr54          -1.0
+    y0169     Objective          14.0   SecondStCnstr19           1.0
+    y0169     SecondStCnstr54          -1.0
+    y0170     Objective          37.2   SecondStCnstr20           1.0
+    y0170     SecondStCnstr54          -1.0
+    y0171     Objective         18.25   SecondStCnstr21           1.0
+    y0171     SecondStCnstr54          -1.0
+    y0172     Objective        32.425   SecondStCnstr22           1.0
+    y0172     SecondStCnstr54          -1.0
+    y0173     Objective           6.9   SecondStCnstr23           1.0
+    y0173     SecondStCnstr54          -1.0
+    y0174     Objective        29.375   SecondStCnstr24           1.0
+    y0174     SecondStCnstr54          -1.0
+    y0175     Objective        13.575   SecondStCnstr25           1.0
+    y0175     SecondStCnstr54          -1.0
+    y0176     Objective         16.65   SecondStCnstr26           1.0
+    y0176     SecondStCnstr54          -1.0
+    y0177     Objective        57.975   SecondStCnstr27           1.0
+    y0177     SecondStCnstr54          -1.0
+    y0178     Objective         9.675   SecondStCnstr28           1.0
+    y0178     SecondStCnstr54          -1.0
+    y0179     Objective        15.475   SecondStCnstr29           1.0
+    y0179     SecondStCnstr54          -1.0
+    y0180     Objective        38.525   SecondStCnstr30           1.0
+    y0180     SecondStCnstr54          -1.0
+    y0181     Objective        25.225   SecondStCnstr31           1.0
+    y0181     SecondStCnstr54          -1.0
+    y0182     Objective         13.45   SecondStCnstr32           1.0
+    y0182     SecondStCnstr54          -1.0
+    y0183     Objective        25.325   SecondStCnstr33           1.0
+    y0183     SecondStCnstr54          -1.0
+    y0184     Objective          25.0   SecondStCnstr34           1.0
+    y0184     SecondStCnstr54          -1.0
+    y0185     Objective         22.15   SecondStCnstr35           1.0
+    y0185     SecondStCnstr54          -1.0
+    y0186     Objective          14.5   SecondStCnstr36           1.0
+    y0186     SecondStCnstr54          -1.0
+    y0187     Objective          22.7   SecondStCnstr37           1.0
+    y0187     SecondStCnstr54          -1.0
+    y0188     Objective          14.0   SecondStCnstr38           1.0
+    y0188     SecondStCnstr54          -1.0
+    y0189     Objective        57.275   SecondStCnstr39           1.0
+    y0189     SecondStCnstr54          -1.0
+    y0190     Objective         23.85   SecondStCnstr40           1.0
+    y0190     SecondStCnstr54          -1.0
+    y0191     Objective           9.4   SecondStCnstr41           1.0
+    y0191     SecondStCnstr54          -1.0
+    y0192     Objective          12.2   SecondStCnstr42           1.0
+    y0192     SecondStCnstr54          -1.0
+    y0193     Objective         40.15   SecondStCnstr43           1.0
+    y0193     SecondStCnstr54          -1.0
+    y0194     Objective          32.5   SecondStCnstr44           1.0
+    y0194     SecondStCnstr54          -1.0
+    y0195     Objective        58.875   SecondStCnstr45           1.0
+    y0195     SecondStCnstr54          -1.0
+    y0196     Objective        55.825   SecondStCnstr46           1.0
+    y0196     SecondStCnstr54          -1.0
+    y0197     Objective        48.075   SecondStCnstr47           1.0
+    y0197     SecondStCnstr54          -1.0
+    y0198     Objective          45.0   SecondStCnstr48           1.0
+    y0198     SecondStCnstr54          -1.0
+    y0199     Objective          21.4   SecondStCnstr49           1.0
+    y0199     SecondStCnstr54          -1.0
+    y0200     Objective        18.875   SecondStCnstr50           1.0
+    y0200     SecondStCnstr54          -1.0
+    y0201     Objective       39.5625   SecondStCnstr01           1.0
+    y0201     SecondStCnstr55          -1.0
+    y0202     Objective       30.2125   SecondStCnstr02           1.0
+    y0202     SecondStCnstr55          -1.0
+    y0203     Objective       13.6125   SecondStCnstr03           1.0
+    y0203     SecondStCnstr55          -1.0
+    y0204     Objective       15.9125   SecondStCnstr04           1.0
+    y0204     SecondStCnstr55          -1.0
+    y0205     Objective       40.3375   SecondStCnstr05           1.0
+    y0205     SecondStCnstr55          -1.0
+    y0206     Objective       13.3875   SecondStCnstr06           1.0
+    y0206     SecondStCnstr55          -1.0
+    y0207     Objective       24.8125   SecondStCnstr07           1.0
+    y0207     SecondStCnstr55          -1.0
+    y0208     Objective       12.4625   SecondStCnstr08           1.0
+    y0208     SecondStCnstr55          -1.0
+    y0209     Objective       46.2375   SecondStCnstr09           1.0
+    y0209     SecondStCnstr55          -1.0
+    y0210     Objective       32.8375   SecondStCnstr10           1.0
+    y0210     SecondStCnstr55          -1.0
+    y0211     Objective        8.3875   SecondStCnstr11           1.0
+    y0211     SecondStCnstr55          -1.0
+    y0212     Objective        1.3625   SecondStCnstr12           1.0
+    y0212     SecondStCnstr55          -1.0
+    y0213     Objective        7.8625   SecondStCnstr13           1.0
+    y0213     SecondStCnstr55          -1.0
+    y0214     Objective       16.0125   SecondStCnstr14           1.0
+    y0214     SecondStCnstr55          -1.0
+    y0215     Objective       25.7375   SecondStCnstr15           1.0
+    y0215     SecondStCnstr55          -1.0
+    y0216     Objective       32.6625   SecondStCnstr16           1.0
+    y0216     SecondStCnstr55          -1.0
+    y0217     Objective       17.3375   SecondStCnstr17           1.0
+    y0217     SecondStCnstr55          -1.0
+    y0218     Objective        7.8125   SecondStCnstr18           1.0
+    y0218     SecondStCnstr55          -1.0
+    y0219     Objective       20.0875   SecondStCnstr19           1.0
+    y0219     SecondStCnstr55          -1.0
+    y0220     Objective       40.3875   SecondStCnstr20           1.0
+    y0220     SecondStCnstr55          -1.0
+    y0221     Objective       24.3375   SecondStCnstr21           1.0
+    y0221     SecondStCnstr55          -1.0
+    y0222     Objective       29.1125   SecondStCnstr22           1.0
+    y0222     SecondStCnstr55          -1.0
+    y0223     Objective        4.0875   SecondStCnstr23           1.0
+    y0223     SecondStCnstr55          -1.0
+    y0224     Objective       22.3625   SecondStCnstr24           1.0
+    y0224     SecondStCnstr55          -1.0
+    y0225     Objective       16.7625   SecondStCnstr25           1.0
+    y0225     SecondStCnstr55          -1.0
+    y0226     Objective        8.7625   SecondStCnstr26           1.0
+    y0226     SecondStCnstr55          -1.0
+    y0227     Objective       60.6125   SecondStCnstr27           1.0
+    y0227     SecondStCnstr55          -1.0
+    y0228     Objective        4.2125   SecondStCnstr28           1.0
+    y0228     SecondStCnstr55          -1.0
+    y0229     Objective       13.7125   SecondStCnstr29           1.0
+    y0229     SecondStCnstr55          -1.0
+    y0230     Objective       31.5125   SecondStCnstr30           1.0
+    y0230     SecondStCnstr55          -1.0
+    y0231     Objective       20.0375   SecondStCnstr31           1.0
+    y0231     SecondStCnstr55          -1.0
+    y0232     Objective        8.8875   SecondStCnstr32           1.0
+    y0232     SecondStCnstr55          -1.0
+    y0233     Objective       22.2625   SecondStCnstr33           1.0
+    y0233     SecondStCnstr55          -1.0
+    y0234     Objective       20.2375   SecondStCnstr34           1.0
+    y0234     SecondStCnstr55          -1.0
+    y0235     Objective       23.3625   SecondStCnstr35           1.0
+    y0235     SecondStCnstr55          -1.0
+    y0236     Objective       20.1625   SecondStCnstr36           1.0
+    y0236     SecondStCnstr55          -1.0
+    y0237     Objective       17.9625   SecondStCnstr37           1.0
+    y0237     SecondStCnstr55          -1.0
+    y0238     Objective        9.2625   SecondStCnstr38           1.0
+    y0238     SecondStCnstr55          -1.0
+    y0239     Objective       63.1125   SecondStCnstr39           1.0
+    y0239     SecondStCnstr55          -1.0
+    y0240     Objective       15.8875   SecondStCnstr40           1.0
+    y0240     SecondStCnstr55          -1.0
+    y0241     Objective        9.8125   SecondStCnstr41           1.0
+    y0241     SecondStCnstr55          -1.0
+    y0242     Objective       18.2875   SecondStCnstr42           1.0
+    y0242     SecondStCnstr55          -1.0
+    y0243     Objective       45.8125   SecondStCnstr43           1.0
+    y0243     SecondStCnstr55          -1.0
+    y0244     Objective       32.5375   SecondStCnstr44           1.0
+    y0244     SecondStCnstr55          -1.0
+    y0245     Objective       64.5375   SecondStCnstr45           1.0
+    y0245     SecondStCnstr55          -1.0
+    y0246     Objective       61.9125   SecondStCnstr46           1.0
+    y0246     SecondStCnstr55          -1.0
+    y0247     Objective       54.1625   SecondStCnstr47           1.0
+    y0247     SecondStCnstr55          -1.0
+    y0248     Objective       48.1875   SecondStCnstr48           1.0
+    y0248     SecondStCnstr55          -1.0
+    y0249     Objective       14.9625   SecondStCnstr49           1.0
+    y0249     SecondStCnstr55          -1.0
+    y0250     Objective       21.8375   SecondStCnstr50           1.0
+    y0250     SecondStCnstr55          -1.0
+    y0251     Objective       45.4875   SecondStCnstr01           1.0
+    y0251     SecondStCnstr56          -1.0
+    y0252     Objective       37.0125   SecondStCnstr02           1.0
+    y0252     SecondStCnstr56          -1.0
+    y0253     Objective       22.2875   SecondStCnstr03           1.0
+    y0253     SecondStCnstr56          -1.0
+    y0254     Objective       15.0125   SecondStCnstr04           1.0
+    y0254     SecondStCnstr56          -1.0
+    y0255     Objective       43.9875   SecondStCnstr05           1.0
+    y0255     SecondStCnstr56          -1.0
+    y0256     Objective       22.0625   SecondStCnstr06           1.0
+    y0256     SecondStCnstr56          -1.0
+    y0257     Objective       20.4875   SecondStCnstr07           1.0
+    y0257     SecondStCnstr56          -1.0
+    y0258     Objective        8.1375   SecondStCnstr08           1.0
+    y0258     SecondStCnstr56          -1.0
+    y0259     Objective       49.8875   SecondStCnstr09           1.0
+    y0259     SecondStCnstr56          -1.0
+    y0260     Objective       36.9125   SecondStCnstr10           1.0
+    y0260     SecondStCnstr56          -1.0
+    y0261     Objective       12.0375   SecondStCnstr11           1.0
+    y0261     SecondStCnstr56          -1.0
+    y0262     Objective       10.0375   SecondStCnstr12           1.0
+    y0262     SecondStCnstr56          -1.0
+    y0263     Objective        3.5375   SecondStCnstr13           1.0
+    y0263     SecondStCnstr56          -1.0
+    y0264     Objective       24.6875   SecondStCnstr14           1.0
+    y0264     SecondStCnstr56          -1.0
+    y0265     Objective       34.3875   SecondStCnstr15           1.0
+    y0265     SecondStCnstr56          -1.0
+    y0266     Objective       37.6875   SecondStCnstr16           1.0
+    y0266     SecondStCnstr56          -1.0
+    y0267     Objective       20.9875   SecondStCnstr17           1.0
+    y0267     SecondStCnstr56          -1.0
+    y0268     Objective        7.6375   SecondStCnstr18           1.0
+    y0268     SecondStCnstr56          -1.0
+    y0269     Objective       23.7375   SecondStCnstr19           1.0
+    y0269     SecondStCnstr56          -1.0
+    y0270     Objective       46.9375   SecondStCnstr20           1.0
+    y0270     SecondStCnstr56          -1.0
+    y0271     Objective       27.9875   SecondStCnstr21           1.0
+    y0271     SecondStCnstr56          -1.0
+    y0272     Objective       37.7875   SecondStCnstr22           1.0
+    y0272     SecondStCnstr56          -1.0
+    y0273     Objective       10.6125   SecondStCnstr23           1.0
+    y0273     SecondStCnstr56          -1.0
+    y0274     Objective       31.0375   SecondStCnstr24           1.0
+    y0274     SecondStCnstr56          -1.0
+    y0275     Objective       23.3125   SecondStCnstr25           1.0
+    y0275     SecondStCnstr56          -1.0
+    y0276     Objective       17.3625   SecondStCnstr26           1.0
+    y0276     SecondStCnstr56          -1.0
+    y0277     Objective       67.4125   SecondStCnstr27           1.0
+    y0277     SecondStCnstr56          -1.0
+    y0278     Objective       12.8875   SecondStCnstr28           1.0
+    y0278     SecondStCnstr56          -1.0
+    y0279     Objective       22.3875   SecondStCnstr29           1.0
+    y0279     SecondStCnstr56          -1.0
+    y0280     Objective       40.1875   SecondStCnstr30           1.0
+    y0280     SecondStCnstr56          -1.0
+    y0281     Objective       28.7125   SecondStCnstr31           1.0
+    y0281     SecondStCnstr56          -1.0
+    y0282     Objective       17.5625   SecondStCnstr32           1.0
+    y0282     SecondStCnstr56          -1.0
+    y0283     Objective       30.9375   SecondStCnstr33           1.0
+    y0283     SecondStCnstr56          -1.0
+    y0284     Objective       17.8125   SecondStCnstr34           1.0
+    y0284     SecondStCnstr56          -1.0
+    y0285     Objective       30.1625   SecondStCnstr35           1.0
+    y0285     SecondStCnstr56          -1.0
+    y0286     Objective       24.2375   SecondStCnstr36           1.0
+    y0286     SecondStCnstr56          -1.0
+    y0287     Objective       15.5125   SecondStCnstr37           1.0
+    y0287     SecondStCnstr56          -1.0
+    y0288     Objective        6.8125   SecondStCnstr38           1.0
+    y0288     SecondStCnstr56          -1.0
+    y0289     Objective       67.0125   SecondStCnstr39           1.0
+    y0289     SecondStCnstr56          -1.0
+    y0290     Objective       17.1375   SecondStCnstr40           1.0
+    y0290     SecondStCnstr56          -1.0
+    y0291     Objective       16.6125   SecondStCnstr41           1.0
+    y0291     SecondStCnstr56          -1.0
+    y0292     Objective       21.9375   SecondStCnstr42           1.0
+    y0292     SecondStCnstr56          -1.0
+    y0293     Objective       49.8875   SecondStCnstr43           1.0
+    y0293     SecondStCnstr56          -1.0
+    y0294     Objective       39.7125   SecondStCnstr44           1.0
+    y0294     SecondStCnstr56          -1.0
+    y0295     Objective       68.6125   SecondStCnstr45           1.0
+    y0295     SecondStCnstr56          -1.0
+    y0296     Objective       65.5625   SecondStCnstr46           1.0
+    y0296     SecondStCnstr56          -1.0
+    y0297     Objective       57.8125   SecondStCnstr47           1.0
+    y0297     SecondStCnstr56          -1.0
+    y0298     Objective       54.7375   SecondStCnstr48           1.0
+    y0298     SecondStCnstr56          -1.0
+    y0299     Objective       14.2125   SecondStCnstr49           1.0
+    y0299     SecondStCnstr56          -1.0
+    y0300     Objective       28.6125   SecondStCnstr50           1.0
+    y0300     SecondStCnstr56          -1.0
+    y0301     Objective       29.9625   SecondStCnstr01           1.0
+    y0301     SecondStCnstr57          -1.0
+    y0302     Objective       21.1375   SecondStCnstr02           1.0
+    y0302     SecondStCnstr57          -1.0
+    y0303     Objective       32.5125   SecondStCnstr03           1.0
+    y0303     SecondStCnstr57          -1.0
+    y0304     Objective       48.0875   SecondStCnstr04           1.0
+    y0304     SecondStCnstr57          -1.0
+    y0305     Objective       49.1625   SecondStCnstr05           1.0
+    y0305     SecondStCnstr57          -1.0
+    y0306     Objective       28.3375   SecondStCnstr06           1.0
+    y0306     SecondStCnstr57          -1.0
+    y0307     Objective       58.4875   SecondStCnstr07           1.0
+    y0307     SecondStCnstr57          -1.0
+    y0308     Objective       47.3375   SecondStCnstr08           1.0
+    y0308     SecondStCnstr57          -1.0
+    y0309     Objective       55.0625   SecondStCnstr09           1.0
+    y0309     SecondStCnstr57          -1.0
+    y0310     Objective       35.4125   SecondStCnstr10           1.0
+    y0310     SecondStCnstr57          -1.0
+    y0311     Objective       36.0875   SecondStCnstr11           1.0
+    y0311     SecondStCnstr57          -1.0
+    y0312     Objective       36.2625   SecondStCnstr12           1.0
+    y0312     SecondStCnstr57          -1.0
+    y0313     Objective       42.7375   SecondStCnstr13           1.0
+    y0313     SecondStCnstr57          -1.0
+    y0314     Objective       38.8375   SecondStCnstr14           1.0
+    y0314     SecondStCnstr57          -1.0
+    y0315     Objective       11.8875   SecondStCnstr15           1.0
+    y0315     SecondStCnstr57          -1.0
+    y0316     Objective       32.7625   SecondStCnstr16           1.0
+    y0316     SecondStCnstr57          -1.0
+    y0317     Objective       30.3375   SecondStCnstr17           1.0
+    y0317     SecondStCnstr57          -1.0
+    y0318     Objective       41.8875   SecondStCnstr18           1.0
+    y0318     SecondStCnstr57          -1.0
+    y0319     Objective       40.6125   SecondStCnstr19           1.0
+    y0319     SecondStCnstr57          -1.0
+    y0320     Objective       28.0375   SecondStCnstr20           1.0
+    y0320     SecondStCnstr57          -1.0
+    y0321     Objective       42.8625   SecondStCnstr21           1.0
+    y0321     SecondStCnstr57          -1.0
+    y0322     Objective       18.4875   SecondStCnstr22           1.0
+    y0322     SecondStCnstr57          -1.0
+    y0323     Objective       35.6625   SecondStCnstr23           1.0
+    y0323     SecondStCnstr57          -1.0
+    y0324     Objective       39.2875   SecondStCnstr24           1.0
+    y0324     SecondStCnstr57          -1.0
+    y0325     Objective       24.8125   SecondStCnstr25           1.0
+    y0325     SecondStCnstr57          -1.0
+    y0326     Objective       34.4625   SecondStCnstr26           1.0
+    y0326     SecondStCnstr57          -1.0
+    y0327     Objective       48.3875   SecondStCnstr27           1.0
+    y0327     SecondStCnstr57          -1.0
+    y0328     Objective       33.4125   SecondStCnstr28           1.0
+    y0328     SecondStCnstr57          -1.0
+    y0329     Objective       23.9125   SecondStCnstr29           1.0
+    y0329     SecondStCnstr57          -1.0
+    y0330     Objective       48.4375   SecondStCnstr30           1.0
+    y0330     SecondStCnstr57          -1.0
+    y0331     Objective       28.0375   SecondStCnstr31           1.0
+    y0331     SecondStCnstr57          -1.0
+    y0332     Objective       29.8875   SecondStCnstr32           1.0
+    y0332     SecondStCnstr57          -1.0
+    y0333     Objective       24.5375   SecondStCnstr33           1.0
+    y0333     SecondStCnstr57          -1.0
+    y0334     Objective       52.7625   SecondStCnstr34           1.0
+    y0334     SecondStCnstr57          -1.0
+    y0335     Objective       17.7875   SecondStCnstr35           1.0
+    y0335     SecondStCnstr57          -1.0
+    y0336     Objective       29.6875   SecondStCnstr36           1.0
+    y0336     SecondStCnstr57          -1.0
+    y0337     Objective       50.4625   SecondStCnstr37           1.0
+    y0337     SecondStCnstr57          -1.0
+    y0338     Objective       44.1625   SecondStCnstr38           1.0
+    y0338     SecondStCnstr57          -1.0
+    y0339     Objective       67.5625   SecondStCnstr39           1.0
+    y0339     SecondStCnstr57          -1.0
+    y0340     Objective       46.5125   SecondStCnstr40           1.0
+    y0340     SecondStCnstr57          -1.0
+    y0341     Objective       29.6625   SecondStCnstr41           1.0
+    y0341     SecondStCnstr57          -1.0
+    y0342     Objective       36.8125   SecondStCnstr42           1.0
+    y0342     SecondStCnstr57          -1.0
+    y0343     Objective       45.4625   SecondStCnstr43           1.0
+    y0343     SecondStCnstr57          -1.0
+    y0344     Objective       18.6625   SecondStCnstr44           1.0
+    y0344     SecondStCnstr57          -1.0
+    y0345     Objective       60.1375   SecondStCnstr45           1.0
+    y0345     SecondStCnstr57          -1.0
+    y0346     Objective       71.7375   SecondStCnstr46           1.0
+    y0346     SecondStCnstr57          -1.0
+    y0347     Objective       63.9875   SecondStCnstr47           1.0
+    y0347     SecondStCnstr57          -1.0
+    y0348     Objective       35.8375   SecondStCnstr48           1.0
+    y0348     SecondStCnstr57          -1.0
+    y0349     Objective       47.1375   SecondStCnstr49           1.0
+    y0349     SecondStCnstr57          -1.0
+    y0350     Objective       22.0875   SecondStCnstr50           1.0
+    y0350     SecondStCnstr57          -1.0
+    y0351     Objective         26.35   SecondStCnstr01           1.0
+    y0351     SecondStCnstr58          -1.0
+    y0352     Objective         26.05   SecondStCnstr02           1.0
+    y0352     SecondStCnstr58          -1.0
+    y0353     Objective        52.575   SecondStCnstr03           1.0
+    y0353     SecondStCnstr58          -1.0
+    y0354     Objective        59.975   SecondStCnstr04           1.0
+    y0354     SecondStCnstr58          -1.0
+    y0355     Objective        30.825   SecondStCnstr05           1.0
+    y0355     SecondStCnstr58          -1.0
+    y0356     Objective         48.75   SecondStCnstr06           1.0
+    y0356     SecondStCnstr58          -1.0
+    y0357     Objective        65.525   SecondStCnstr07           1.0
+    y0357     SecondStCnstr58          -1.0
+    y0358     Objective        53.175   SecondStCnstr08           1.0
+    y0358     SecondStCnstr58          -1.0
+    y0359     Objective        36.725   SecondStCnstr09           1.0
+    y0359     SecondStCnstr58          -1.0
+    y0360     Objective        17.075   SecondStCnstr10           1.0
+    y0360     SecondStCnstr58          -1.0
+    y0361     Objective        40.075   SecondStCnstr11           1.0
+    y0361     SecondStCnstr58          -1.0
+    y0362     Objective        45.725   SecondStCnstr12           1.0
+    y0362     SecondStCnstr58          -1.0
+    y0363     Objective        48.575   SecondStCnstr13           1.0
+    y0363     SecondStCnstr58          -1.0
+    y0364     Objective          58.1   SecondStCnstr14           1.0
+    y0364     SecondStCnstr58          -1.0
+    y0365     Objective          35.3   SecondStCnstr15           1.0
+    y0365     SecondStCnstr58          -1.0
+    y0366     Objective        14.425   SecondStCnstr16           1.0
+    y0366     SecondStCnstr58          -1.0
+    y0367     Objective          31.5   SecondStCnstr17           1.0
+    y0367     SecondStCnstr58          -1.0
+    y0368     Objective        46.875   SecondStCnstr18           1.0
+    y0368     SecondStCnstr58          -1.0
+    y0369     Objective        40.375   SecondStCnstr19           1.0
+    y0369     SecondStCnstr58          -1.0
+    y0370     Objective        32.675   SecondStCnstr20           1.0
+    y0370     SecondStCnstr58          -1.0
+    y0371     Objective        42.625   SecondStCnstr21           1.0
+    y0371     SecondStCnstr58          -1.0
+    y0372     Objective          41.9   SecondStCnstr22           1.0
+    y0372     SecondStCnstr58          -1.0
+    y0373     Objective        43.275   SecondStCnstr23           1.0
+    y0373     SecondStCnstr58          -1.0
+    y0374     Objective          59.7   SecondStCnstr24           1.0
+    y0374     SecondStCnstr58          -1.0
+    y0375     Objective        30.325   SecondStCnstr25           1.0
+    y0375     SecondStCnstr58          -1.0
+    y0376     Objective        50.775   SecondStCnstr26           1.0
+    y0376     SecondStCnstr58          -1.0
+    y0377     Objective         48.25   SecondStCnstr27           1.0
+    y0377     SecondStCnstr58          -1.0
+    y0378     Objective        44.125   SecondStCnstr28           1.0
+    y0378     SecondStCnstr58          -1.0
+    y0379     Objective        42.425   SecondStCnstr29           1.0
+    y0379     SecondStCnstr58          -1.0
+    y0380     Objective         68.85   SecondStCnstr30           1.0
+    y0380     SecondStCnstr58          -1.0
+    y0381     Objective         51.45   SecondStCnstr31           1.0
+    y0381     SecondStCnstr58          -1.0
+    y0382     Objective        45.375   SecondStCnstr32           1.0
+    y0382     SecondStCnstr58          -1.0
+    y0383     Objective         47.95   SecondStCnstr33           1.0
+    y0383     SecondStCnstr58          -1.0
+    y0384     Objective        62.775   SecondStCnstr34           1.0
+    y0384     SecondStCnstr58          -1.0
+    y0385     Objective          32.9   SecondStCnstr35           1.0
+    y0385     SecondStCnstr58          -1.0
+    y0386     Objective        27.875   SecondStCnstr36           1.0
+    y0386     SecondStCnstr58          -1.0
+    y0387     Objective        60.475   SecondStCnstr37           1.0
+    y0387     SecondStCnstr58          -1.0
+    y0388     Objective        51.775   SecondStCnstr38           1.0
+    y0388     SecondStCnstr58          -1.0
+    y0389     Objective        48.725   SecondStCnstr39           1.0
+    y0389     SecondStCnstr58          -1.0
+    y0390     Objective         60.25   SecondStCnstr40           1.0
+    y0390     SecondStCnstr58          -1.0
+    y0391     Objective        37.275   SecondStCnstr41           1.0
+    y0391     SecondStCnstr58          -1.0
+    y0392     Objective        36.575   SecondStCnstr42           1.0
+    y0392     SecondStCnstr58          -1.0
+    y0393     Objective        28.675   SecondStCnstr43           1.0
+    y0393     SecondStCnstr58          -1.0
+    y0394     Objective          41.5   SecondStCnstr44           1.0
+    y0394     SecondStCnstr58          -1.0
+    y0395     Objective        48.775   SecondStCnstr45           1.0
+    y0395     SecondStCnstr58          -1.0
+    y0396     Objective        53.275   SecondStCnstr46           1.0
+    y0396     SecondStCnstr58          -1.0
+    y0397     Objective         45.65   SecondStCnstr47           1.0
+    y0397     SecondStCnstr58          -1.0
+    y0398     Objective        40.475   SecondStCnstr48           1.0
+    y0398     SecondStCnstr58          -1.0
+    y0399     Objective        59.175   SecondStCnstr49           1.0
+    y0399     SecondStCnstr58          -1.0
+    y0400     Objective        28.925   SecondStCnstr50           1.0
+    y0400     SecondStCnstr58          -1.0
+    y0401     Objective       44.0375   SecondStCnstr01           1.0
+    y0401     SecondStCnstr59          -1.0
+    y0402     Objective       35.8375   SecondStCnstr02           1.0
+    y0402     SecondStCnstr59          -1.0
+    y0403     Objective       22.4875   SecondStCnstr03           1.0
+    y0403     SecondStCnstr59          -1.0
+    y0404     Objective       19.3875   SecondStCnstr04           1.0
+    y0404     SecondStCnstr59          -1.0
+    y0405     Objective       42.5375   SecondStCnstr05           1.0
+    y0405     SecondStCnstr59          -1.0
+    y0406     Objective       22.2625   SecondStCnstr06           1.0
+    y0406     SecondStCnstr59          -1.0
+    y0407     Objective       22.4375   SecondStCnstr07           1.0
+    y0407     SecondStCnstr59          -1.0
+    y0408     Objective       10.0875   SecondStCnstr08           1.0
+    y0408     SecondStCnstr59          -1.0
+    y0409     Objective       48.2875   SecondStCnstr09           1.0
+    y0409     SecondStCnstr59          -1.0
+    y0410     Objective       35.4625   SecondStCnstr10           1.0
+    y0410     SecondStCnstr59          -1.0
+    y0411     Objective       10.5875   SecondStCnstr11           1.0
+    y0411     SecondStCnstr59          -1.0
+    y0412     Objective       10.2375   SecondStCnstr12           1.0
+    y0412     SecondStCnstr59          -1.0
+    y0413     Objective        7.8875   SecondStCnstr13           1.0
+    y0413     SecondStCnstr59          -1.0
+    y0414     Objective       24.8875   SecondStCnstr14           1.0
+    y0414     SecondStCnstr59          -1.0
+    y0415     Objective       33.7875   SecondStCnstr15           1.0
+    y0415     SecondStCnstr59          -1.0
+    y0416     Objective       36.2375   SecondStCnstr16           1.0
+    y0416     SecondStCnstr59          -1.0
+    y0417     Objective       19.5375   SecondStCnstr17           1.0
+    y0417     SecondStCnstr59          -1.0
+    y0418     Objective        3.7875   SecondStCnstr18           1.0
+    y0418     SecondStCnstr59          -1.0
+    y0419     Objective       22.2875   SecondStCnstr19           1.0
+    y0419     SecondStCnstr59          -1.0
+    y0420     Objective       45.4875   SecondStCnstr20           1.0
+    y0420     SecondStCnstr59          -1.0
+    y0421     Objective       26.5375   SecondStCnstr21           1.0
+    y0421     SecondStCnstr59          -1.0
+    y0422     Objective       37.9875   SecondStCnstr22           1.0
+    y0422     SecondStCnstr59          -1.0
+    y0423     Objective       11.3625   SecondStCnstr23           1.0
+    y0423     SecondStCnstr59          -1.0
+    y0424     Objective       31.2375   SecondStCnstr24           1.0
+    y0424     SecondStCnstr59          -1.0
+    y0425     Objective       21.8625   SecondStCnstr25           1.0
+    y0425     SecondStCnstr59          -1.0
+    y0426     Objective       17.5625   SecondStCnstr26           1.0
+    y0426     SecondStCnstr59          -1.0
+    y0427     Objective       66.2625   SecondStCnstr27           1.0
+    y0427     SecondStCnstr59          -1.0
+    y0428     Objective       13.0875   SecondStCnstr28           1.0
+    y0428     SecondStCnstr59          -1.0
+    y0429     Objective       22.5875   SecondStCnstr29           1.0
+    y0429     SecondStCnstr59          -1.0
+    y0430     Objective       40.3875   SecondStCnstr30           1.0
+    y0430     SecondStCnstr59          -1.0
+    y0431     Objective       28.9125   SecondStCnstr31           1.0
+    y0431     SecondStCnstr59          -1.0
+    y0432     Objective       17.7625   SecondStCnstr32           1.0
+    y0432     SecondStCnstr59          -1.0
+    y0433     Objective       31.1375   SecondStCnstr33           1.0
+    y0433     SecondStCnstr59          -1.0
+    y0434     Objective       19.9875   SecondStCnstr34           1.0
+    y0434     SecondStCnstr59          -1.0
+    y0435     Objective       29.5625   SecondStCnstr35           1.0
+    y0435     SecondStCnstr59          -1.0
+    y0436     Objective       22.7875   SecondStCnstr36           1.0
+    y0436     SecondStCnstr59          -1.0
+    y0437     Objective       19.8875   SecondStCnstr37           1.0
+    y0437     SecondStCnstr59          -1.0
+    y0438     Objective       11.1875   SecondStCnstr38           1.0
+    y0438     SecondStCnstr59          -1.0
+    y0439     Objective       66.4125   SecondStCnstr39           1.0
+    y0439     SecondStCnstr59          -1.0
+    y0440     Objective       21.4875   SecondStCnstr40           1.0
+    y0440     SecondStCnstr59          -1.0
+    y0441     Objective       16.0125   SecondStCnstr41           1.0
+    y0441     SecondStCnstr59          -1.0
+    y0442     Objective       20.4875   SecondStCnstr42           1.0
+    y0442     SecondStCnstr59          -1.0
+    y0443     Objective       48.4375   SecondStCnstr43           1.0
+    y0443     SecondStCnstr59          -1.0
+    y0444     Objective       39.1125   SecondStCnstr44           1.0
+    y0444     SecondStCnstr59          -1.0
+    y0445     Objective       67.1625   SecondStCnstr45           1.0
+    y0445     SecondStCnstr59          -1.0
+    y0446     Objective       64.1125   SecondStCnstr46           1.0
+    y0446     SecondStCnstr59          -1.0
+    y0447     Objective       56.3625   SecondStCnstr47           1.0
+    y0447     SecondStCnstr59          -1.0
+    y0448     Objective       53.2875   SecondStCnstr48           1.0
+    y0448     SecondStCnstr59          -1.0
+    y0449     Objective       18.5875   SecondStCnstr49           1.0
+    y0449     SecondStCnstr59          -1.0
+    y0450     Objective       27.1625   SecondStCnstr50           1.0
+    y0450     SecondStCnstr59          -1.0
+    y0451     Objective       36.9625   SecondStCnstr01           1.0
+    y0451     SecondStCnstr60          -1.0
+    y0452     Objective       29.6875   SecondStCnstr02           1.0
+    y0452     SecondStCnstr60          -1.0
+    y0453     Objective       35.2375   SecondStCnstr03           1.0
+    y0453     SecondStCnstr60          -1.0
+    y0454     Objective       51.7625   SecondStCnstr04           1.0
+    y0454     SecondStCnstr60          -1.0
+    y0455     Objective       57.7125   SecondStCnstr05           1.0
+    y0455     SecondStCnstr60          -1.0
+    y0456     Objective       31.7875   SecondStCnstr06           1.0
+    y0456     SecondStCnstr60          -1.0
+    y0457     Objective       62.1625   SecondStCnstr07           1.0
+    y0457     SecondStCnstr60          -1.0
+    y0458     Objective       52.6875   SecondStCnstr08           1.0
+    y0458     SecondStCnstr60          -1.0
+    y0459     Objective       63.6125   SecondStCnstr09           1.0
+    y0459     SecondStCnstr60          -1.0
+    y0460     Objective       43.9625   SecondStCnstr10           1.0
+    y0460     SecondStCnstr60          -1.0
+    y0461     Objective       43.9625   SecondStCnstr11           1.0
+    y0461     SecondStCnstr60          -1.0
+    y0462     Objective       41.5875   SecondStCnstr12           1.0
+    y0462     SecondStCnstr60          -1.0
+    y0463     Objective       48.0875   SecondStCnstr13           1.0
+    y0463     SecondStCnstr60          -1.0
+    y0464     Objective       41.5875   SecondStCnstr14           1.0
+    y0464     SecondStCnstr60          -1.0
+    y0465     Objective       20.4375   SecondStCnstr15           1.0
+    y0465     SecondStCnstr60          -1.0
+    y0466     Objective       41.3125   SecondStCnstr16           1.0
+    y0466     SecondStCnstr60          -1.0
+    y0467     Objective       38.8875   SecondStCnstr17           1.0
+    y0467     SecondStCnstr60          -1.0
+    y0468     Objective       48.0375   SecondStCnstr18           1.0
+    y0468     SecondStCnstr60          -1.0
+    y0469     Objective       49.1625   SecondStCnstr19           1.0
+    y0469     SecondStCnstr60          -1.0
+    y0470     Objective       34.5125   SecondStCnstr20           1.0
+    y0470     SecondStCnstr60          -1.0
+    y0471     Objective       51.4125   SecondStCnstr21           1.0
+    y0471     SecondStCnstr60          -1.0
+    y0472     Objective       13.8375   SecondStCnstr22           1.0
+    y0472     SecondStCnstr60          -1.0
+    y0473     Objective       41.5125   SecondStCnstr23           1.0
+    y0473     SecondStCnstr60          -1.0
+    y0474     Objective       38.2125   SecondStCnstr24           1.0
+    y0474     SecondStCnstr60          -1.0
+    y0475     Objective       33.3625   SecondStCnstr25           1.0
+    y0475     SecondStCnstr60          -1.0
+    y0476     Objective       38.1375   SecondStCnstr26           1.0
+    y0476     SecondStCnstr60          -1.0
+    y0477     Objective       54.8625   SecondStCnstr27           1.0
+    y0477     SecondStCnstr60          -1.0
+    y0478     Objective       38.7375   SecondStCnstr28           1.0
+    y0478     SecondStCnstr60          -1.0
+    y0479     Objective       29.2375   SecondStCnstr29           1.0
+    y0479     SecondStCnstr60          -1.0
+    y0480     Objective       47.3625   SecondStCnstr30           1.0
+    y0480     SecondStCnstr60          -1.0
+    y0481     Objective       26.4125   SecondStCnstr31           1.0
+    y0481     SecondStCnstr60          -1.0
+    y0482     Objective       35.2125   SecondStCnstr32           1.0
+    y0482     SecondStCnstr60          -1.0
+    y0483     Objective       22.9125   SecondStCnstr33           1.0
+    y0483     SecondStCnstr60          -1.0
+    y0484     Objective       56.4125   SecondStCnstr34           1.0
+    y0484     SecondStCnstr60          -1.0
+    y0485     Objective       26.3375   SecondStCnstr35           1.0
+    y0485     SecondStCnstr60          -1.0
+    y0486     Objective       38.2375   SecondStCnstr36           1.0
+    y0486     SecondStCnstr60          -1.0
+    y0487     Objective       54.1375   SecondStCnstr37           1.0
+    y0487     SecondStCnstr60          -1.0
+    y0488     Objective       49.4875   SecondStCnstr38           1.0
+    y0488     SecondStCnstr60          -1.0
+    y0489     Objective       76.1125   SecondStCnstr39           1.0
+    y0489     SecondStCnstr60          -1.0
+    y0490     Objective       49.7125   SecondStCnstr40           1.0
+    y0490     SecondStCnstr60          -1.0
+    y0491     Objective       36.8625   SecondStCnstr41           1.0
+    y0491     SecondStCnstr60          -1.0
+    y0492     Objective       45.3625   SecondStCnstr42           1.0
+    y0492     SecondStCnstr60          -1.0
+    y0493     Objective       54.0125   SecondStCnstr43           1.0
+    y0493     SecondStCnstr60          -1.0
+    y0494     Objective       19.0875   SecondStCnstr44           1.0
+    y0494     SecondStCnstr60          -1.0
+    y0495     Objective       66.6125   SecondStCnstr45           1.0
+    y0495     SecondStCnstr60          -1.0
+    y0496     Objective       80.2375   SecondStCnstr46           1.0
+    y0496     SecondStCnstr60          -1.0
+    y0497     Objective       72.5375   SecondStCnstr47           1.0
+    y0497     SecondStCnstr60          -1.0
+    y0498     Objective       42.3125   SecondStCnstr48           1.0
+    y0498     SecondStCnstr60          -1.0
+    y0499     Objective       50.7875   SecondStCnstr49           1.0
+    y0499     SecondStCnstr60          -1.0
+    y0500     Objective       30.6375   SecondStCnstr50           1.0
+    y0500     SecondStCnstr60          -1.0
+    y0501     Objective         35.75   SecondStCnstr01           1.0
+    y0501     SecondStCnstr61          -1.0
+    y0502     Objective          26.4   SecondStCnstr02           1.0
+    y0502     SecondStCnstr61          -1.0
+    y0503     Objective        14.625   SecondStCnstr03           1.0
+    y0503     SecondStCnstr61          -1.0
+    y0504     Objective        17.275   SecondStCnstr04           1.0
+    y0504     SecondStCnstr61          -1.0
+    y0505     Objective         36.55   SecondStCnstr05           1.0
+    y0505     SecondStCnstr61          -1.0
+    y0506     Objective        12.575   SecondStCnstr06           1.0
+    y0506     SecondStCnstr61          -1.0
+    y0507     Objective         24.05   SecondStCnstr07           1.0
+    y0507     SecondStCnstr61          -1.0
+    y0508     Objective          11.7   SecondStCnstr08           1.0
+    y0508     SecondStCnstr61          -1.0
+    y0509     Objective          42.3   SecondStCnstr09           1.0
+    y0509     SecondStCnstr61          -1.0
+    y0510     Objective        29.025   SecondStCnstr10           1.0
+    y0510     SecondStCnstr61          -1.0
+    y0511     Objective           4.6   SecondStCnstr11           1.0
+    y0511     SecondStCnstr61          -1.0
+    y0512     Objective         2.725   SecondStCnstr12           1.0
+    y0512     SecondStCnstr61          -1.0
+    y0513     Objective         7.075   SecondStCnstr13           1.0
+    y0513     SecondStCnstr61          -1.0
+    y0514     Objective        17.025   SecondStCnstr14           1.0
+    y0514     SecondStCnstr61          -1.0
+    y0515     Objective        23.775   SecondStCnstr15           1.0
+    y0515     SecondStCnstr61          -1.0
+    y0516     Objective         28.85   SecondStCnstr16           1.0
+    y0516     SecondStCnstr61          -1.0
+    y0517     Objective         13.55   SecondStCnstr17           1.0
+    y0517     SecondStCnstr61          -1.0
+    y0518     Objective         7.575   SecondStCnstr18           1.0
+    y0518     SecondStCnstr61          -1.0
+    y0519     Objective          16.3   SecondStCnstr19           1.0
+    y0519     SecondStCnstr61          -1.0
+    y0520     Objective          37.5   SecondStCnstr20           1.0
+    y0520     SecondStCnstr61          -1.0
+    y0521     Objective         20.55   SecondStCnstr21           1.0
+    y0521     SecondStCnstr61          -1.0
+    y0522     Objective        27.675   SecondStCnstr22           1.0
+    y0522     SecondStCnstr61          -1.0
+    y0523     Objective           0.0   SecondStCnstr23           1.0
+    y0523     SecondStCnstr61          -1.0
+    y0524     Objective        23.375   SecondStCnstr24           1.0
+    y0524     SecondStCnstr61          -1.0
+    y0525     Objective         12.95   SecondStCnstr25           1.0
+    y0525     SecondStCnstr61          -1.0
+    y0526     Objective           9.7   SecondStCnstr26           1.0
+    y0526     SecondStCnstr61          -1.0
+    y0527     Objective          56.8   SecondStCnstr27           1.0
+    y0527     SecondStCnstr61          -1.0
+    y0528     Objective         2.775   SecondStCnstr28           1.0
+    y0528     SecondStCnstr61          -1.0
+    y0529     Objective        12.275   SecondStCnstr29           1.0
+    y0529     SecondStCnstr61          -1.0
+    y0530     Objective        32.525   SecondStCnstr30           1.0
+    y0530     SecondStCnstr61          -1.0
+    y0531     Objective        19.225   SecondStCnstr31           1.0
+    y0531     SecondStCnstr61          -1.0
+    y0532     Objective          7.45   SecondStCnstr32           1.0
+    y0532     SecondStCnstr61          -1.0
+    y0533     Objective         21.45   SecondStCnstr33           1.0
+    y0533     SecondStCnstr61          -1.0
+    y0534     Objective        20.275   SecondStCnstr34           1.0
+    y0534     SecondStCnstr61          -1.0
+    y0535     Objective         19.55   SecondStCnstr35           1.0
+    y0535     SecondStCnstr61          -1.0
+    y0536     Objective         16.35   SecondStCnstr36           1.0
+    y0536     SecondStCnstr61          -1.0
+    y0537     Objective        17.975   SecondStCnstr37           1.0
+    y0537     SecondStCnstr61          -1.0
+    y0538     Objective         9.275   SecondStCnstr38           1.0
+    y0538     SecondStCnstr61          -1.0
+    y0539     Objective        60.675   SecondStCnstr39           1.0
+    y0539     SecondStCnstr61          -1.0
+    y0540     Objective         17.25   SecondStCnstr40           1.0
+    y0540     SecondStCnstr61          -1.0
+    y0541     Objective           6.0   SecondStCnstr41           1.0
+    y0541     SecondStCnstr61          -1.0
+    y0542     Objective          14.5   SecondStCnstr42           1.0
+    y0542     SecondStCnstr61          -1.0
+    y0543     Objective          42.0   SecondStCnstr43           1.0
+    y0543     SecondStCnstr61          -1.0
+    y0544     Objective          29.1   SecondStCnstr44           1.0
+    y0544     SecondStCnstr61          -1.0
+    y0545     Objective        60.725   SecondStCnstr45           1.0
+    y0545     SecondStCnstr61          -1.0
+    y0546     Objective        58.125   SecondStCnstr46           1.0
+    y0546     SecondStCnstr61          -1.0
+    y0547     Objective        50.375   SecondStCnstr47           1.0
+    y0547     SecondStCnstr61          -1.0
+    y0548     Objective        44.375   SecondStCnstr48           1.0
+    y0548     SecondStCnstr61          -1.0
+    y0549     Objective        16.325   SecondStCnstr49           1.0
+    y0549     SecondStCnstr61          -1.0
+    y0550     Objective        18.025   SecondStCnstr50           1.0
+    y0550     SecondStCnstr61          -1.0
+    y0551     Objective         28.65   SecondStCnstr01           1.0
+    y0551     SecondStCnstr62          -1.0
+    y0552     Objective         20.45   SecondStCnstr02           1.0
+    y0552     SecondStCnstr62          -1.0
+    y0553     Objective        28.725   SecondStCnstr03           1.0
+    y0553     SecondStCnstr62          -1.0
+    y0554     Objective        36.425   SecondStCnstr04           1.0
+    y0554     SecondStCnstr62          -1.0
+    y0555     Objective         32.75   SecondStCnstr05           1.0
+    y0555     SecondStCnstr62          -1.0
+    y0556     Objective          24.9   SecondStCnstr06           1.0
+    y0556     SecondStCnstr62          -1.0
+    y0557     Objective          43.2   SecondStCnstr07           1.0
+    y0557     SecondStCnstr62          -1.0
+    y0558     Objective         30.85   SecondStCnstr08           1.0
+    y0558     SecondStCnstr62          -1.0
+    y0559     Objective         38.65   SecondStCnstr09           1.0
+    y0559     SecondStCnstr62          -1.0
+    y0560     Objective        24.025   SecondStCnstr10           1.0
+    y0560     SecondStCnstr62          -1.0
+    y0561     Objective         17.75   SecondStCnstr11           1.0
+    y0561     SecondStCnstr62          -1.0
+    y0562     Objective        21.875   SecondStCnstr12           1.0
+    y0562     SecondStCnstr62          -1.0
+    y0563     Objective         26.25   SecondStCnstr13           1.0
+    y0563     SecondStCnstr62          -1.0
+    y0564     Objective         34.25   SecondStCnstr14           1.0
+    y0564     SecondStCnstr62          -1.0
+    y0565     Objective          19.4   SecondStCnstr15           1.0
+    y0565     SecondStCnstr62          -1.0
+    y0566     Objective        22.375   SecondStCnstr16           1.0
+    y0566     SecondStCnstr62          -1.0
+    y0567     Objective          12.0   SecondStCnstr17           1.0
+    y0567     SecondStCnstr62          -1.0
+    y0568     Objective         24.55   SecondStCnstr18           1.0
+    y0568     SecondStCnstr62          -1.0
+    y0569     Objective        22.275   SecondStCnstr19           1.0
+    y0569     SecondStCnstr62          -1.0
+    y0570     Objective          30.1   SecondStCnstr20           1.0
+    y0570     SecondStCnstr62          -1.0
+    y0571     Objective        24.525   SecondStCnstr21           1.0
+    y0571     SecondStCnstr62          -1.0
+    y0572     Objective          26.0   SecondStCnstr22           1.0
+    y0572     SecondStCnstr62          -1.0
+    y0573     Objective        19.425   SecondStCnstr23           1.0
+    y0573     SecondStCnstr62          -1.0
+    y0574     Objective         35.85   SecondStCnstr24           1.0
+    y0574     SecondStCnstr62          -1.0
+    y0575     Objective         6.475   SecondStCnstr25           1.0
+    y0575     SecondStCnstr62          -1.0
+    y0576     Objective        26.925   SecondStCnstr26           1.0
+    y0576     SecondStCnstr62          -1.0
+    y0577     Objective        50.875   SecondStCnstr27           1.0
+    y0577     SecondStCnstr62          -1.0
+    y0578     Objective        20.275   SecondStCnstr28           1.0
+    y0578     SecondStCnstr62          -1.0
+    y0579     Objective        18.575   SecondStCnstr29           1.0
+    y0579     SecondStCnstr62          -1.0
+    y0580     Objective          45.0   SecondStCnstr30           1.0
+    y0580     SecondStCnstr62          -1.0
+    y0581     Objective        29.625   SecondStCnstr31           1.0
+    y0581     SecondStCnstr62          -1.0
+    y0582     Objective        21.525   SecondStCnstr32           1.0
+    y0582     SecondStCnstr62          -1.0
+    y0583     Objective          28.3   SecondStCnstr33           1.0
+    y0583     SecondStCnstr62          -1.0
+    y0584     Objective          39.7   SecondStCnstr34           1.0
+    y0584     SecondStCnstr62          -1.0
+    y0585     Objective         15.05   SecondStCnstr35           1.0
+    y0585     SecondStCnstr62          -1.0
+    y0586     Objective         11.35   SecondStCnstr36           1.0
+    y0586     SecondStCnstr62          -1.0
+    y0587     Objective          37.4   SecondStCnstr37           1.0
+    y0587     SecondStCnstr62          -1.0
+    y0588     Objective          28.7   SecondStCnstr38           1.0
+    y0588     SecondStCnstr62          -1.0
+    y0589     Objective        55.675   SecondStCnstr39           1.0
+    y0589     SecondStCnstr62          -1.0
+    y0590     Objective          36.4   SecondStCnstr40           1.0
+    y0590     SecondStCnstr62          -1.0
+    y0591     Objective        13.425   SecondStCnstr41           1.0
+    y0591     SecondStCnstr62          -1.0
+    y0592     Objective        18.475   SecondStCnstr42           1.0
+    y0592     SecondStCnstr62          -1.0
+    y0593     Objective        36.625   SecondStCnstr43           1.0
+    y0593     SecondStCnstr62          -1.0
+    y0594     Objective        26.175   SecondStCnstr44           1.0
+    y0594     SecondStCnstr62          -1.0
+    y0595     Objective        55.725   SecondStCnstr45           1.0
+    y0595     SecondStCnstr62          -1.0
+    y0596     Objective        55.325   SecondStCnstr46           1.0
+    y0596     SecondStCnstr62          -1.0
+    y0597     Objective        47.575   SecondStCnstr47           1.0
+    y0597     SecondStCnstr62          -1.0
+    y0598     Objective          37.9   SecondStCnstr48           1.0
+    y0598     SecondStCnstr62          -1.0
+    y0599     Objective        35.475   SecondStCnstr49           1.0
+    y0599     SecondStCnstr62          -1.0
+    y0600     Objective        11.775   SecondStCnstr50           1.0
+    y0600     SecondStCnstr62          -1.0
+    y0601     Objective        50.625   SecondStCnstr01           1.0
+    y0601     SecondStCnstr63          -1.0
+    y0602     Objective          58.8   SecondStCnstr02           1.0
+    y0602     SecondStCnstr63          -1.0
+    y0603     Objective        85.525   SecondStCnstr03           1.0
+    y0603     SecondStCnstr63          -1.0
+    y0604     Objective         101.1   SecondStCnstr04           1.0
+    y0604     SecondStCnstr63          -1.0
+    y0605     Objective          64.7   SecondStCnstr05           1.0
+    y0605     SecondStCnstr63          -1.0
+    y0606     Objective         81.35   SecondStCnstr06           1.0
+    y0606     SecondStCnstr63          -1.0
+    y0607     Objective         109.5   SecondStCnstr07           1.0
+    y0607     SecondStCnstr63          -1.0
+    y0608     Objective         97.15   SecondStCnstr08           1.0
+    y0608     SecondStCnstr63          -1.0
+    y0609     Objective          58.8   SecondStCnstr09           1.0
+    y0609     SecondStCnstr63          -1.0
+    y0610     Objective         60.95   SecondStCnstr10           1.0
+    y0610     SecondStCnstr63          -1.0
+    y0611     Objective        84.075   SecondStCnstr11           1.0
+    y0611     SecondStCnstr63          -1.0
+    y0612     Objective         87.65   SecondStCnstr12           1.0
+    y0612     SecondStCnstr63          -1.0
+    y0613     Objective        92.275   SecondStCnstr13           1.0
+    y0613     SecondStCnstr63          -1.0
+    y0614     Objective         91.85   SecondStCnstr14           1.0
+    y0614     SecondStCnstr63          -1.0
+    y0615     Objective          64.9   SecondStCnstr15           1.0
+    y0615     SecondStCnstr63          -1.0
+    y0616     Objective        62.225   SecondStCnstr16           1.0
+    y0616     SecondStCnstr63          -1.0
+    y0617     Objective         77.25   SecondStCnstr17           1.0
+    y0617     SecondStCnstr63          -1.0
+    y0618     Objective        90.875   SecondStCnstr18           1.0
+    y0618     SecondStCnstr63          -1.0
+    y0619     Objective        86.125   SecondStCnstr19           1.0
+    y0619     SecondStCnstr63          -1.0
+    y0620     Objective         48.75   SecondStCnstr20           1.0
+    y0620     SecondStCnstr63          -1.0
+    y0621     Objective          80.7   SecondStCnstr21           1.0
+    y0621     SecondStCnstr63          -1.0
+    y0622     Objective        69.425   SecondStCnstr22           1.0
+    y0622     SecondStCnstr63          -1.0
+    y0623     Objective          85.2   SecondStCnstr23           1.0
+    y0623     SecondStCnstr63          -1.0
+    y0624     Objective         92.85   SecondStCnstr24           1.0
+    y0624     SecondStCnstr63          -1.0
+    y0625     Objective          72.8   SecondStCnstr25           1.0
+    y0625     SecondStCnstr63          -1.0
+    y0626     Objective        87.475   SecondStCnstr26           1.0
+    y0626     SecondStCnstr63          -1.0
+    y0627     Objective          28.4   SecondStCnstr27           1.0
+    y0627     SecondStCnstr63          -1.0
+    y0628     Objective         86.05   SecondStCnstr28           1.0
+    y0628     SecondStCnstr63          -1.0
+    y0629     Objective         76.95   SecondStCnstr29           1.0
+    y0629     SecondStCnstr63          -1.0
+    y0630     Objective         102.0   SecondStCnstr30           1.0
+    y0630     SecondStCnstr63          -1.0
+    y0631     Objective         81.05   SecondStCnstr31           1.0
+    y0631     SecondStCnstr63          -1.0
+    y0632     Objective        82.925   SecondStCnstr32           1.0
+    y0632     SecondStCnstr63          -1.0
+    y0633     Objective         77.55   SecondStCnstr33           1.0
+    y0633     SecondStCnstr63          -1.0
+    y0634     Objective        105.45   SecondStCnstr34           1.0
+    y0634     SecondStCnstr63          -1.0
+    y0635     Objective         65.65   SecondStCnstr35           1.0
+    y0635     SecondStCnstr63          -1.0
+    y0636     Objective        73.625   SecondStCnstr36           1.0
+    y0636     SecondStCnstr63          -1.0
+    y0637     Objective       103.175   SecondStCnstr37           1.0
+    y0637     SecondStCnstr63          -1.0
+    y0638     Objective        94.475   SecondStCnstr38           1.0
+    y0638     SecondStCnstr63          -1.0
+    y0639     Objective          58.1   SecondStCnstr39           1.0
+    y0639     SecondStCnstr63          -1.0
+    y0640     Objective        99.525   SecondStCnstr40           1.0
+    y0640     SecondStCnstr63          -1.0
+    y0641     Objective          79.2   SecondStCnstr41           1.0
+    y0641     SecondStCnstr63          -1.0
+    y0642     Objective        82.325   SecondStCnstr42           1.0
+    y0642     SecondStCnstr63          -1.0
+    y0643     Objective        47.975   SecondStCnstr43           1.0
+    y0643     SecondStCnstr63          -1.0
+    y0644     Objective        64.175   SecondStCnstr44           1.0
+    y0644     SecondStCnstr63          -1.0
+    y0645     Objective         40.15   SecondStCnstr45           1.0
+    y0645     SecondStCnstr63          -1.0
+    y0646     Objective         62.65   SecondStCnstr46           1.0
+    y0646     SecondStCnstr63          -1.0
+    y0647     Objective          67.3   SecondStCnstr47           1.0
+    y0647     SecondStCnstr63          -1.0
+    y0648     Objective         40.95   SecondStCnstr48           1.0
+    y0648     SecondStCnstr63          -1.0
+    y0649     Objective        101.05   SecondStCnstr49           1.0
+    y0649     SecondStCnstr63          -1.0
+    y0650     Objective        67.475   SecondStCnstr50           1.0
+    y0650     SecondStCnstr63          -1.0
+    y0651     Objective       34.5125   SecondStCnstr01           1.0
+    y0651     SecondStCnstr64          -1.0
+    y0652     Objective       25.1625   SecondStCnstr02           1.0
+    y0652     SecondStCnstr64          -1.0
+    y0653     Objective       16.6375   SecondStCnstr03           1.0
+    y0653     SecondStCnstr64          -1.0
+    y0654     Objective       30.3125   SecondStCnstr04           1.0
+    y0654     SecondStCnstr64          -1.0
+    y0655     Objective       44.5125   SecondStCnstr05           1.0
+    y0655     SecondStCnstr64          -1.0
+    y0656     Objective       12.4625   SecondStCnstr06           1.0
+    y0656     SecondStCnstr64          -1.0
+    y0657     Objective       40.6875   SecondStCnstr07           1.0
+    y0657     SecondStCnstr64          -1.0
+    y0658     Objective       29.5875   SecondStCnstr08           1.0
+    y0658     SecondStCnstr64          -1.0
+    y0659     Objective       50.4125   SecondStCnstr09           1.0
+    y0659     SecondStCnstr64          -1.0
+    y0660     Objective       35.7875   SecondStCnstr10           1.0
+    y0660     SecondStCnstr64          -1.0
+    y0661     Objective       19.3125   SecondStCnstr11           1.0
+    y0661     SecondStCnstr64          -1.0
+    y0662     Objective       18.4875   SecondStCnstr12           1.0
+    y0662     SecondStCnstr64          -1.0
+    y0663     Objective       24.9875   SecondStCnstr13           1.0
+    y0663     SecondStCnstr64          -1.0
+    y0664     Objective       22.9625   SecondStCnstr14           1.0
+    y0664     SecondStCnstr64          -1.0
+    y0665     Objective       18.1625   SecondStCnstr15           1.0
+    y0665     SecondStCnstr64          -1.0
+    y0666     Objective       34.1375   SecondStCnstr16           1.0
+    y0666     SecondStCnstr64          -1.0
+    y0667     Objective       22.2625   SecondStCnstr17           1.0
+    y0667     SecondStCnstr64          -1.0
+    y0668     Objective       24.9375   SecondStCnstr18           1.0
+    y0668     SecondStCnstr64          -1.0
+    y0669     Objective       31.9125   SecondStCnstr19           1.0
+    y0669     SecondStCnstr64          -1.0
+    y0670     Objective       34.3375   SecondStCnstr20           1.0
+    y0670     SecondStCnstr64          -1.0
+    y0671     Objective       34.1625   SecondStCnstr21           1.0
+    y0671     SecondStCnstr64          -1.0
+    y0672     Objective       21.5375   SecondStCnstr22           1.0
+    y0672     SecondStCnstr64          -1.0
+    y0673     Objective       18.4125   SecondStCnstr23           1.0
+    y0673     SecondStCnstr64          -1.0
+    y0674     Objective       23.4125   SecondStCnstr24           1.0
+    y0674     SecondStCnstr64          -1.0
+    y0675     Objective       18.2375   SecondStCnstr25           1.0
+    y0675     SecondStCnstr64          -1.0
+    y0676     Objective       16.6875   SecondStCnstr26           1.0
+    y0676     SecondStCnstr64          -1.0
+    y0677     Objective       54.6875   SecondStCnstr27           1.0
+    y0677     SecondStCnstr64          -1.0
+    y0678     Objective       15.6375   SecondStCnstr28           1.0
+    y0678     SecondStCnstr64          -1.0
+    y0679     Objective        6.1375   SecondStCnstr29           1.0
+    y0679     SecondStCnstr64          -1.0
+    y0680     Objective       32.5625   SecondStCnstr30           1.0
+    y0680     SecondStCnstr64          -1.0
+    y0681     Objective       15.9875   SecondStCnstr31           1.0
+    y0681     SecondStCnstr64          -1.0
+    y0682     Objective       12.1125   SecondStCnstr32           1.0
+    y0682     SecondStCnstr64          -1.0
+    y0683     Objective       15.9875   SecondStCnstr33           1.0
+    y0683     SecondStCnstr64          -1.0
+    y0684     Objective       34.9625   SecondStCnstr34           1.0
+    y0684     SecondStCnstr64          -1.0
+    y0685     Objective       18.3125   SecondStCnstr35           1.0
+    y0685     SecondStCnstr64          -1.0
+    y0686     Objective       23.1125   SecondStCnstr36           1.0
+    y0686     SecondStCnstr64          -1.0
+    y0687     Objective       32.6875   SecondStCnstr37           1.0
+    y0687     SecondStCnstr64          -1.0
+    y0688     Objective       26.3875   SecondStCnstr38           1.0
+    y0688     SecondStCnstr64          -1.0
+    y0689     Objective       68.5375   SecondStCnstr39           1.0
+    y0689     SecondStCnstr64          -1.0
+    y0690     Objective       28.7125   SecondStCnstr40           1.0
+    y0690     SecondStCnstr64          -1.0
+    y0691     Objective       13.7625   SecondStCnstr41           1.0
+    y0691     SecondStCnstr64          -1.0
+    y0692     Objective       28.1125   SecondStCnstr42           1.0
+    y0692     SecondStCnstr64          -1.0
+    y0693     Objective       47.4625   SecondStCnstr43           1.0
+    y0693     SecondStCnstr64          -1.0
+    y0694     Objective       24.9625   SecondStCnstr44           1.0
+    y0694     SecondStCnstr64          -1.0
+    y0695     Objective       63.5875   SecondStCnstr45           1.0
+    y0695     SecondStCnstr64          -1.0
+    y0696     Objective       67.0875   SecondStCnstr46           1.0
+    y0696     SecondStCnstr64          -1.0
+    y0697     Objective       59.3375   SecondStCnstr47           1.0
+    y0697     SecondStCnstr64          -1.0
+    y0698     Objective       42.1375   SecondStCnstr48           1.0
+    y0698     SecondStCnstr64          -1.0
+    y0699     Objective       29.3625   SecondStCnstr49           1.0
+    y0699     SecondStCnstr64          -1.0
+    y0700     Objective       20.2875   SecondStCnstr50           1.0
+    y0700     SecondStCnstr64          -1.0
+    y0701     Objective       70.8875   SecondStCnstr01           1.0
+    y0701     SecondStCnstr65          -1.0
+    y0702     Objective       62.0625   SecondStCnstr02           1.0
+    y0702     SecondStCnstr65          -1.0
+    y0703     Objective       34.1625   SecondStCnstr03           1.0
+    y0703     SecondStCnstr65          -1.0
+    y0704     Objective       45.2625   SecondStCnstr04           1.0
+    y0704     SecondStCnstr65          -1.0
+    y0705     Objective       81.0625   SecondStCnstr05           1.0
+    y0705     SecondStCnstr65          -1.0
+    y0706     Objective       36.3625   SecondStCnstr06           1.0
+    y0706     SecondStCnstr65          -1.0
+    y0707     Objective       55.6625   SecondStCnstr07           1.0
+    y0707     SecondStCnstr65          -1.0
+    y0708     Objective       55.1625   SecondStCnstr08           1.0
+    y0708     SecondStCnstr65          -1.0
+    y0709     Objective       86.9625   SecondStCnstr09           1.0
+    y0709     SecondStCnstr65          -1.0
+    y0710     Objective       72.3375   SecondStCnstr10           1.0
+    y0710     SecondStCnstr65          -1.0
+    y0711     Objective       52.4875   SecondStCnstr11           1.0
+    y0711     SecondStCnstr65          -1.0
+    y0712     Objective       46.4125   SecondStCnstr12           1.0
+    y0712     SecondStCnstr65          -1.0
+    y0713     Objective       52.9125   SecondStCnstr13           1.0
+    y0713     SecondStCnstr65          -1.0
+    y0714     Objective       32.4125   SecondStCnstr14           1.0
+    y0714     SecondStCnstr65          -1.0
+    y0715     Objective       52.8125   SecondStCnstr15           1.0
+    y0715     SecondStCnstr65          -1.0
+    y0716     Objective       70.6875   SecondStCnstr16           1.0
+    y0716     SecondStCnstr65          -1.0
+    y0717     Objective       57.9375   SecondStCnstr17           1.0
+    y0717     SecondStCnstr65          -1.0
+    y0718     Objective       52.8625   SecondStCnstr18           1.0
+    y0718     SecondStCnstr65          -1.0
+    y0719     Objective       64.1875   SecondStCnstr19           1.0
+    y0719     SecondStCnstr65          -1.0
+    y0720     Objective       69.5125   SecondStCnstr20           1.0
+    y0720     SecondStCnstr65          -1.0
+    y0721     Objective       68.4375   SecondStCnstr21           1.0
+    y0721     SecondStCnstr65          -1.0
+    y0722     Objective       49.7875   SecondStCnstr22           1.0
+    y0722     SecondStCnstr65          -1.0
+    y0723     Objective       48.7875   SecondStCnstr23           1.0
+    y0723     SecondStCnstr65          -1.0
+    y0724     Objective       25.4125   SecondStCnstr24           1.0
+    y0724     SecondStCnstr65          -1.0
+    y0725     Objective       54.7875   SecondStCnstr25           1.0
+    y0725     SecondStCnstr65          -1.0
+    y0726     Objective       39.0875   SecondStCnstr26           1.0
+    y0726     SecondStCnstr65          -1.0
+    y0727     Objective       89.8625   SecondStCnstr27           1.0
+    y0727     SecondStCnstr65          -1.0
+    y0728     Objective       46.0125   SecondStCnstr28           1.0
+    y0728     SecondStCnstr65          -1.0
+    y0729     Objective       42.6875   SecondStCnstr29           1.0
+    y0729     SecondStCnstr65          -1.0
+    y0730     Objective       16.2625   SecondStCnstr30           1.0
+    y0730     SecondStCnstr65          -1.0
+    y0731     Objective       37.2125   SecondStCnstr31           1.0
+    y0731     SecondStCnstr65          -1.0
+    y0732     Objective       41.3375   SecondStCnstr32           1.0
+    y0732     SecondStCnstr65          -1.0
+    y0733     Objective       40.7125   SecondStCnstr33           1.0
+    y0733     SecondStCnstr65          -1.0
+    y0734     Objective       49.9375   SecondStCnstr34           1.0
+    y0734     SecondStCnstr65          -1.0
+    y0735     Objective       54.8625   SecondStCnstr35           1.0
+    y0735     SecondStCnstr65          -1.0
+    y0736     Objective       58.6625   SecondStCnstr36           1.0
+    y0736     SecondStCnstr65          -1.0
+    y0737     Objective       47.6625   SecondStCnstr37           1.0
+    y0737     SecondStCnstr65          -1.0
+    y0738     Objective       51.7125   SecondStCnstr38           1.0
+    y0738     SecondStCnstr65          -1.0
+    y0739     Objective      104.1125   SecondStCnstr39           1.0
+    y0739     SecondStCnstr65          -1.0
+    y0740     Objective       41.4125   SecondStCnstr40           1.0
+    y0740     SecondStCnstr65          -1.0
+    y0741     Objective       48.3375   SecondStCnstr41           1.0
+    y0741     SecondStCnstr65          -1.0
+    y0742     Objective       62.3875   SecondStCnstr42           1.0
+    y0742     SecondStCnstr65          -1.0
+    y0743     Objective       84.0125   SecondStCnstr43           1.0
+    y0743     SecondStCnstr65          -1.0
+    y0744     Objective       55.0375   SecondStCnstr44           1.0
+    y0744     SecondStCnstr65          -1.0
+    y0745     Objective      100.1375   SecondStCnstr45           1.0
+    y0745     SecondStCnstr65          -1.0
+    y0746     Objective      103.6375   SecondStCnstr46           1.0
+    y0746     SecondStCnstr65          -1.0
+    y0747     Objective       95.8875   SecondStCnstr47           1.0
+    y0747     SecondStCnstr65          -1.0
+    y0748     Objective       77.3125   SecondStCnstr48           1.0
+    y0748     SecondStCnstr65          -1.0
+    y0749     Objective       44.3125   SecondStCnstr49           1.0
+    y0749     SecondStCnstr65          -1.0
+    y0750     Objective       56.8375   SecondStCnstr50           1.0
+    y0750     SecondStCnstr65          -1.0
+    y0751     Objective         41.45   SecondStCnstr01           1.0
+    y0751     SecondStCnstr66          -1.0
+    y0752     Objective        32.625   SecondStCnstr02           1.0
+    y0752     SecondStCnstr66          -1.0
+    y0753     Objective         23.05   SecondStCnstr03           1.0
+    y0753     SecondStCnstr66          -1.0
+    y0754     Objective        39.575   SecondStCnstr04           1.0
+    y0754     SecondStCnstr66          -1.0
+    y0755     Objective        58.825   SecondStCnstr05           1.0
+    y0755     SecondStCnstr66          -1.0
+    y0756     Objective          19.6   SecondStCnstr06           1.0
+    y0756     SecondStCnstr66          -1.0
+    y0757     Objective         49.95   SecondStCnstr07           1.0
+    y0757     SecondStCnstr66          -1.0
+    y0758     Objective        42.725   SecondStCnstr08           1.0
+    y0758     SecondStCnstr66          -1.0
+    y0759     Objective        64.725   SecondStCnstr09           1.0
+    y0759     SecondStCnstr66          -1.0
+    y0760     Objective          46.9   SecondStCnstr10           1.0
+    y0760     SecondStCnstr66          -1.0
+    y0761     Objective         33.75   SecondStCnstr11           1.0
+    y0761     SecondStCnstr66          -1.0
+    y0762     Objective        31.625   SecondStCnstr12           1.0
+    y0762     SecondStCnstr66          -1.0
+    y0763     Objective        38.125   SecondStCnstr13           1.0
+    y0763     SecondStCnstr66          -1.0
+    y0764     Objective          29.4   SecondStCnstr14           1.0
+    y0764     SecondStCnstr66          -1.0
+    y0765     Objective        23.375   SecondStCnstr15           1.0
+    y0765     SecondStCnstr66          -1.0
+    y0766     Objective         44.25   SecondStCnstr16           1.0
+    y0766     SecondStCnstr66          -1.0
+    y0767     Objective          36.7   SecondStCnstr17           1.0
+    y0767     SecondStCnstr66          -1.0
+    y0768     Objective        38.075   SecondStCnstr18           1.0
+    y0768     SecondStCnstr66          -1.0
+    y0769     Objective         46.35   SecondStCnstr19           1.0
+    y0769     SecondStCnstr66          -1.0
+    y0770     Objective        39.525   SecondStCnstr20           1.0
+    y0770     SecondStCnstr66          -1.0
+    y0771     Objective          48.6   SecondStCnstr21           1.0
+    y0771     SecondStCnstr66          -1.0
+    y0772     Objective          19.8   SecondStCnstr22           1.0
+    y0772     SecondStCnstr66          -1.0
+    y0773     Objective        32.175   SecondStCnstr23           1.0
+    y0773     SecondStCnstr66          -1.0
+    y0774     Objective        26.025   SecondStCnstr24           1.0
+    y0774     SecondStCnstr66          -1.0
+    y0775     Objective         32.55   SecondStCnstr25           1.0
+    y0775     SecondStCnstr66          -1.0
+    y0776     Objective         25.95   SecondStCnstr26           1.0
+    y0776     SecondStCnstr66          -1.0
+    y0777     Objective        59.875   SecondStCnstr27           1.0
+    y0777     SecondStCnstr66          -1.0
+    y0778     Objective          29.4   SecondStCnstr28           1.0
+    y0778     SecondStCnstr66          -1.0
+    y0779     Objective        20.575   SecondStCnstr29           1.0
+    y0779     SecondStCnstr66          -1.0
+    y0780     Objective        35.175   SecondStCnstr30           1.0
+    y0780     SecondStCnstr66          -1.0
+    y0781     Objective        14.225   SecondStCnstr31           1.0
+    y0781     SecondStCnstr66          -1.0
+    y0782     Objective        24.725   SecondStCnstr32           1.0
+    y0782     SecondStCnstr66          -1.0
+    y0783     Objective        10.725   SecondStCnstr33           1.0
+    y0783     SecondStCnstr66          -1.0
+    y0784     Objective          44.6   SecondStCnstr34           1.0
+    y0784     SecondStCnstr66          -1.0
+    y0785     Objective        29.275   SecondStCnstr35           1.0
+    y0785     SecondStCnstr66          -1.0
+    y0786     Objective        37.425   SecondStCnstr36           1.0
+    y0786     SecondStCnstr66          -1.0
+    y0787     Objective        42.325   SecondStCnstr37           1.0
+    y0787     SecondStCnstr66          -1.0
+    y0788     Objective        39.525   SecondStCnstr38           1.0
+    y0788     SecondStCnstr66          -1.0
+    y0789     Objective        79.025   SecondStCnstr39           1.0
+    y0789     SecondStCnstr66          -1.0
+    y0790     Objective        37.525   SecondStCnstr40           1.0
+    y0790     SecondStCnstr66          -1.0
+    y0791     Objective          28.2   SecondStCnstr41           1.0
+    y0791     SecondStCnstr66          -1.0
+    y0792     Objective         42.55   SecondStCnstr42           1.0
+    y0792     SecondStCnstr66          -1.0
+    y0793     Objective        56.925   SecondStCnstr43           1.0
+    y0793     SecondStCnstr66          -1.0
+    y0794     Objective         25.05   SecondStCnstr44           1.0
+    y0794     SecondStCnstr66          -1.0
+    y0795     Objective        71.625   SecondStCnstr45           1.0
+    y0795     SecondStCnstr66          -1.0
+    y0796     Objective        83.225   SecondStCnstr46           1.0
+    y0796     SecondStCnstr66          -1.0
+    y0797     Objective        75.475   SecondStCnstr47           1.0
+    y0797     SecondStCnstr66          -1.0
+    y0798     Objective        47.325   SecondStCnstr48           1.0
+    y0798     SecondStCnstr66          -1.0
+    y0799     Objective          38.6   SecondStCnstr49           1.0
+    y0799     SecondStCnstr66          -1.0
+    y0800     Objective         33.55   SecondStCnstr50           1.0
+    y0800     SecondStCnstr66          -1.0
+    y0801     Objective       65.5375   SecondStCnstr01           1.0
+    y0801     SecondStCnstr67          -1.0
+    y0802     Objective       56.7875   SecondStCnstr02           1.0
+    y0802     SecondStCnstr67          -1.0
+    y0803     Objective       31.6875   SecondStCnstr03           1.0
+    y0803     SecondStCnstr67          -1.0
+    y0804     Objective       14.8125   SecondStCnstr04           1.0
+    y0804     SecondStCnstr67          -1.0
+    y0805     Objective       64.7875   SecondStCnstr05           1.0
+    y0805     SecondStCnstr67          -1.0
+    y0806     Objective       34.7875   SecondStCnstr06           1.0
+    y0806     SecondStCnstr67          -1.0
+    y0807     Objective       15.8625   SecondStCnstr07           1.0
+    y0807     SecondStCnstr67          -1.0
+    y0808     Objective       20.0375   SecondStCnstr08           1.0
+    y0808     SecondStCnstr67          -1.0
+    y0809     Objective       70.5375   SecondStCnstr09           1.0
+    y0809     SecondStCnstr67          -1.0
+    y0810     Objective       57.7125   SecondStCnstr10           1.0
+    y0810     SecondStCnstr67          -1.0
+    y0811     Objective       32.8375   SecondStCnstr11           1.0
+    y0811     SecondStCnstr67          -1.0
+    y0812     Objective       29.0125   SecondStCnstr12           1.0
+    y0812     SecondStCnstr67          -1.0
+    y0813     Objective       24.4125   SecondStCnstr13           1.0
+    y0813     SecondStCnstr67          -1.0
+    y0814     Objective       27.6625   SecondStCnstr14           1.0
+    y0814     SecondStCnstr67          -1.0
+    y0815     Objective       51.0125   SecondStCnstr15           1.0
+    y0815     SecondStCnstr67          -1.0
+    y0816     Objective       58.4875   SecondStCnstr16           1.0
+    y0816     SecondStCnstr67          -1.0
+    y0817     Objective       41.7875   SecondStCnstr17           1.0
+    y0817     SecondStCnstr67          -1.0
+    y0818     Objective       26.3375   SecondStCnstr18           1.0
+    y0818     SecondStCnstr67          -1.0
+    y0819     Objective       44.5375   SecondStCnstr19           1.0
+    y0819     SecondStCnstr67          -1.0
+    y0820     Objective       67.8875   SecondStCnstr20           1.0
+    y0820     SecondStCnstr67          -1.0
+    y0821     Objective       48.7875   SecondStCnstr21           1.0
+    y0821     SecondStCnstr67          -1.0
+    y0822     Objective       52.7125   SecondStCnstr22           1.0
+    y0822     SecondStCnstr67          -1.0
+    y0823     Objective       30.4125   SecondStCnstr23           1.0
+    y0823     SecondStCnstr67          -1.0
+    y0824     Objective       34.6625   SecondStCnstr24           1.0
+    y0824     SecondStCnstr67          -1.0
+    y0825     Objective       43.3625   SecondStCnstr25           1.0
+    y0825     SecondStCnstr67          -1.0
+    y0826     Objective       28.4375   SecondStCnstr26           1.0
+    y0826     SecondStCnstr67          -1.0
+    y0827     Objective       87.1875   SecondStCnstr27           1.0
+    y0827     SecondStCnstr67          -1.0
+    y0828     Objective       31.8625   SecondStCnstr28           1.0
+    y0828     SecondStCnstr67          -1.0
+    y0829     Objective       38.9625   SecondStCnstr29           1.0
+    y0829     SecondStCnstr67          -1.0
+    y0830     Objective       43.8125   SecondStCnstr30           1.0
+    y0830     SecondStCnstr67          -1.0
+    y0831     Objective       40.5125   SecondStCnstr31           1.0
+    y0831     SecondStCnstr67          -1.0
+    y0832     Objective       33.8375   SecondStCnstr32           1.0
+    y0832     SecondStCnstr67          -1.0
+    y0833     Objective       44.0125   SecondStCnstr33           1.0
+    y0833     SecondStCnstr67          -1.0
+    y0834     Objective       10.1375   SecondStCnstr34           1.0
+    y0834     SecondStCnstr67          -1.0
+    y0835     Objective       49.9375   SecondStCnstr35           1.0
+    y0835     SecondStCnstr67          -1.0
+    y0836     Objective       45.0375   SecondStCnstr36           1.0
+    y0836     SecondStCnstr67          -1.0
+    y0837     Objective       12.4125   SecondStCnstr37           1.0
+    y0837     SecondStCnstr67          -1.0
+    y0838     Objective       21.1125   SecondStCnstr38           1.0
+    y0838     SecondStCnstr67          -1.0
+    y0839     Objective       87.8125   SecondStCnstr39           1.0
+    y0839     SecondStCnstr67          -1.0
+    y0840     Objective       18.6625   SecondStCnstr40           1.0
+    y0840     SecondStCnstr67          -1.0
+    y0841     Objective       36.4125   SecondStCnstr41           1.0
+    y0841     SecondStCnstr67          -1.0
+    y0842     Objective       42.7375   SecondStCnstr42           1.0
+    y0842     SecondStCnstr67          -1.0
+    y0843     Objective       70.6875   SecondStCnstr43           1.0
+    y0843     SecondStCnstr67          -1.0
+    y0844     Objective       57.7875   SecondStCnstr44           1.0
+    y0844     SecondStCnstr67          -1.0
+    y0845     Objective       89.4125   SecondStCnstr45           1.0
+    y0845     SecondStCnstr67          -1.0
+    y0846     Objective       86.3625   SecondStCnstr46           1.0
+    y0846     SecondStCnstr67          -1.0
+    y0847     Objective       78.6125   SecondStCnstr47           1.0
+    y0847     SecondStCnstr67          -1.0
+    y0848     Objective       74.7875   SecondStCnstr48           1.0
+    y0848     SecondStCnstr67          -1.0
+    y0849     Objective       15.7625   SecondStCnstr49           1.0
+    y0849     SecondStCnstr67          -1.0
+    y0850     Objective       48.4375   SecondStCnstr50           1.0
+    y0850     SecondStCnstr67          -1.0
+    y0851     Objective       62.0875   SecondStCnstr01           1.0
+    y0851     SecondStCnstr68          -1.0
+    y0852     Objective       53.3625   SecondStCnstr02           1.0
+    y0852     SecondStCnstr68          -1.0
+    y0853     Objective       28.2625   SecondStCnstr03           1.0
+    y0853     SecondStCnstr68          -1.0
+    y0854     Objective       11.3625   SecondStCnstr04           1.0
+    y0854     SecondStCnstr68          -1.0
+    y0855     Objective       61.3375   SecondStCnstr05           1.0
+    y0855     SecondStCnstr68          -1.0
+    y0856     Objective       31.3375   SecondStCnstr06           1.0
+    y0856     SecondStCnstr68          -1.0
+    y0857     Objective       17.0125   SecondStCnstr07           1.0
+    y0857     SecondStCnstr68          -1.0
+    y0858     Objective       19.3625   SecondStCnstr08           1.0
+    y0858     SecondStCnstr68          -1.0
+    y0859     Objective       67.2375   SecondStCnstr09           1.0
+    y0859     SecondStCnstr68          -1.0
+    y0860     Objective       54.2625   SecondStCnstr10           1.0
+    y0860     SecondStCnstr68          -1.0
+    y0861     Objective       29.3875   SecondStCnstr11           1.0
+    y0861     SecondStCnstr68          -1.0
+    y0862     Objective       25.5875   SecondStCnstr12           1.0
+    y0862     SecondStCnstr68          -1.0
+    y0863     Objective       20.9625   SecondStCnstr13           1.0
+    y0863     SecondStCnstr68          -1.0
+    y0864     Objective       24.2375   SecondStCnstr14           1.0
+    y0864     SecondStCnstr68          -1.0
+    y0865     Objective       47.5625   SecondStCnstr15           1.0
+    y0865     SecondStCnstr68          -1.0
+    y0866     Objective       55.0375   SecondStCnstr16           1.0
+    y0866     SecondStCnstr68          -1.0
+    y0867     Objective       38.3375   SecondStCnstr17           1.0
+    y0867     SecondStCnstr68          -1.0
+    y0868     Objective       25.0875   SecondStCnstr18           1.0
+    y0868     SecondStCnstr68          -1.0
+    y0869     Objective       41.1125   SecondStCnstr19           1.0
+    y0869     SecondStCnstr68          -1.0
+    y0870     Objective       63.7375   SecondStCnstr20           1.0
+    y0870     SecondStCnstr68          -1.0
+    y0871     Objective       45.3375   SecondStCnstr21           1.0
+    y0871     SecondStCnstr68          -1.0
+    y0872     Objective       49.2875   SecondStCnstr22           1.0
+    y0872     SecondStCnstr68          -1.0
+    y0873     Objective       26.9625   SecondStCnstr23           1.0
+    y0873     SecondStCnstr68          -1.0
+    y0874     Objective       31.2375   SecondStCnstr24           1.0
+    y0874     SecondStCnstr68          -1.0
+    y0875     Objective       39.9125   SecondStCnstr25           1.0
+    y0875     SecondStCnstr68          -1.0
+    y0876     Objective       24.9875   SecondStCnstr26           1.0
+    y0876     SecondStCnstr68          -1.0
+    y0877     Objective       83.7625   SecondStCnstr27           1.0
+    y0877     SecondStCnstr68          -1.0
+    y0878     Objective       28.4375   SecondStCnstr28           1.0
+    y0878     SecondStCnstr68          -1.0
+    y0879     Objective       35.5375   SecondStCnstr29           1.0
+    y0879     SecondStCnstr68          -1.0
+    y0880     Objective       40.3875   SecondStCnstr30           1.0
+    y0880     SecondStCnstr68          -1.0
+    y0881     Objective       37.0875   SecondStCnstr31           1.0
+    y0881     SecondStCnstr68          -1.0
+    y0882     Objective       30.3875   SecondStCnstr32           1.0
+    y0882     SecondStCnstr68          -1.0
+    y0883     Objective       40.5875   SecondStCnstr33           1.0
+    y0883     SecondStCnstr68          -1.0
+    y0884     Objective       11.2625   SecondStCnstr34           1.0
+    y0884     SecondStCnstr68          -1.0
+    y0885     Objective       46.5125   SecondStCnstr35           1.0
+    y0885     SecondStCnstr68          -1.0
+    y0886     Objective       41.5875   SecondStCnstr36           1.0
+    y0886     SecondStCnstr68          -1.0
+    y0887     Objective        8.9875   SecondStCnstr37           1.0
+    y0887     SecondStCnstr68          -1.0
+    y0888     Objective       17.6875   SecondStCnstr38           1.0
+    y0888     SecondStCnstr68          -1.0
+    y0889     Objective       84.3625   SecondStCnstr39           1.0
+    y0889     SecondStCnstr68          -1.0
+    y0890     Objective       15.2375   SecondStCnstr40           1.0
+    y0890     SecondStCnstr68          -1.0
+    y0891     Objective       32.9625   SecondStCnstr41           1.0
+    y0891     SecondStCnstr68          -1.0
+    y0892     Objective       39.2875   SecondStCnstr42           1.0
+    y0892     SecondStCnstr68          -1.0
+    y0893     Objective       67.2375   SecondStCnstr43           1.0
+    y0893     SecondStCnstr68          -1.0
+    y0894     Objective       54.3625   SecondStCnstr44           1.0
+    y0894     SecondStCnstr68          -1.0
+    y0895     Objective       85.9625   SecondStCnstr45           1.0
+    y0895     SecondStCnstr68          -1.0
+    y0896     Objective       82.9125   SecondStCnstr46           1.0
+    y0896     SecondStCnstr68          -1.0
+    y0897     Objective       75.1625   SecondStCnstr47           1.0
+    y0897     SecondStCnstr68          -1.0
+    y0898     Objective       71.3375   SecondStCnstr48           1.0
+    y0898     SecondStCnstr68          -1.0
+    y0899     Objective       12.3125   SecondStCnstr49           1.0
+    y0899     SecondStCnstr68          -1.0
+    y0900     Objective       44.9875   SecondStCnstr50           1.0
+    y0900     SecondStCnstr68          -1.0
+    y0901     Objective       49.0375   SecondStCnstr01           1.0
+    y0901     SecondStCnstr69          -1.0
+    y0902     Objective       40.3125   SecondStCnstr02           1.0
+    y0902     SecondStCnstr69          -1.0
+    y0903     Objective       24.7875   SecondStCnstr03           1.0
+    y0903     SecondStCnstr69          -1.0
+    y0904     Objective       12.8375   SecondStCnstr04           1.0
+    y0904     SecondStCnstr69          -1.0
+    y0905     Objective       48.3125   SecondStCnstr05           1.0
+    y0905     SecondStCnstr69          -1.0
+    y0906     Objective       24.5625   SecondStCnstr06           1.0
+    y0906     SecondStCnstr69          -1.0
+    y0907     Objective       21.3375   SecondStCnstr07           1.0
+    y0907     SecondStCnstr69          -1.0
+    y0908     Objective       11.1375   SecondStCnstr08           1.0
+    y0908     SecondStCnstr69          -1.0
+    y0909     Objective       54.2125   SecondStCnstr09           1.0
+    y0909     SecondStCnstr69          -1.0
+    y0910     Objective       41.2125   SecondStCnstr10           1.0
+    y0910     SecondStCnstr69          -1.0
+    y0911     Objective       16.3375   SecondStCnstr11           1.0
+    y0911     SecondStCnstr69          -1.0
+    y0912     Objective       12.5375   SecondStCnstr12           1.0
+    y0912     SecondStCnstr69          -1.0
+    y0913     Objective        7.9125   SecondStCnstr13           1.0
+    y0913     SecondStCnstr69          -1.0
+    y0914     Objective       23.9375   SecondStCnstr14           1.0
+    y0914     SecondStCnstr69          -1.0
+    y0915     Objective       36.9125   SecondStCnstr15           1.0
+    y0915     SecondStCnstr69          -1.0
+    y0916     Objective       41.9875   SecondStCnstr16           1.0
+    y0916     SecondStCnstr69          -1.0
+    y0917     Objective       25.2875   SecondStCnstr17           1.0
+    y0917     SecondStCnstr69          -1.0
+    y0918     Objective       12.0375   SecondStCnstr18           1.0
+    y0918     SecondStCnstr69          -1.0
+    y0919     Objective       28.0625   SecondStCnstr19           1.0
+    y0919     SecondStCnstr69          -1.0
+    y0920     Objective       50.4875   SecondStCnstr20           1.0
+    y0920     SecondStCnstr69          -1.0
+    y0921     Objective       32.3125   SecondStCnstr21           1.0
+    y0921     SecondStCnstr69          -1.0
+    y0922     Objective       40.2875   SecondStCnstr22           1.0
+    y0922     SecondStCnstr69          -1.0
+    y0923     Objective       13.9125   SecondStCnstr23           1.0
+    y0923     SecondStCnstr69          -1.0
+    y0924     Objective       30.9375   SecondStCnstr24           1.0
+    y0924     SecondStCnstr69          -1.0
+    y0925     Objective       26.8625   SecondStCnstr25           1.0
+    y0925     SecondStCnstr69          -1.0
+    y0926     Objective       19.8625   SecondStCnstr26           1.0
+    y0926     SecondStCnstr69          -1.0
+    y0927     Objective       70.7125   SecondStCnstr27           1.0
+    y0927     SecondStCnstr69          -1.0
+    y0928     Objective       15.3875   SecondStCnstr28           1.0
+    y0928     SecondStCnstr69          -1.0
+    y0929     Objective       24.8875   SecondStCnstr29           1.0
+    y0929     SecondStCnstr69          -1.0
+    y0930     Objective       40.0875   SecondStCnstr30           1.0
+    y0930     SecondStCnstr69          -1.0
+    y0931     Objective       31.2125   SecondStCnstr31           1.0
+    y0931     SecondStCnstr69          -1.0
+    y0932     Objective       20.0625   SecondStCnstr32           1.0
+    y0932     SecondStCnstr69          -1.0
+    y0933     Objective       33.4375   SecondStCnstr33           1.0
+    y0933     SecondStCnstr69          -1.0
+    y0934     Objective       15.6125   SecondStCnstr34           1.0
+    y0934     SecondStCnstr69          -1.0
+    y0935     Objective       33.4625   SecondStCnstr35           1.0
+    y0935     SecondStCnstr69          -1.0
+    y0936     Objective       28.5375   SecondStCnstr36           1.0
+    y0936     SecondStCnstr69          -1.0
+    y0937     Objective       13.3375   SecondStCnstr37           1.0
+    y0937     SecondStCnstr69          -1.0
+    y0938     Objective        4.6375   SecondStCnstr38           1.0
+    y0938     SecondStCnstr69          -1.0
+    y0939     Objective       71.3375   SecondStCnstr39           1.0
+    y0939     SecondStCnstr69          -1.0
+    y0940     Objective       14.9625   SecondStCnstr40           1.0
+    y0940     SecondStCnstr69          -1.0
+    y0941     Objective       19.9125   SecondStCnstr41           1.0
+    y0941     SecondStCnstr69          -1.0
+    y0942     Objective       26.2625   SecondStCnstr42           1.0
+    y0942     SecondStCnstr69          -1.0
+    y0943     Objective       54.1875   SecondStCnstr43           1.0
+    y0943     SecondStCnstr69          -1.0
+    y0944     Objective       43.0125   SecondStCnstr44           1.0
+    y0944     SecondStCnstr69          -1.0
+    y0945     Objective       72.9125   SecondStCnstr45           1.0
+    y0945     SecondStCnstr69          -1.0
+    y0946     Objective       69.8875   SecondStCnstr46           1.0
+    y0946     SecondStCnstr69          -1.0
+    y0947     Objective       62.1375   SecondStCnstr47           1.0
+    y0947     SecondStCnstr69          -1.0
+    y0948     Objective       58.2875   SecondStCnstr48           1.0
+    y0948     SecondStCnstr69          -1.0
+    y0949     Objective       12.0375   SecondStCnstr49           1.0
+    y0949     SecondStCnstr69          -1.0
+    y0950     Objective       31.9375   SecondStCnstr50           1.0
+    y0950     SecondStCnstr69          -1.0
+    y0951     Objective         32.75   SecondStCnstr01           1.0
+    y0951     SecondStCnstr70          -1.0
+    y0952     Objective          23.4   SecondStCnstr02           1.0
+    y0952     SecondStCnstr70          -1.0
+    y0953     Objective          18.3   SecondStCnstr03           1.0
+    y0953     SecondStCnstr70          -1.0
+    y0954     Objective          26.0   SecondStCnstr04           1.0
+    y0954     SecondStCnstr70          -1.0
+    y0955     Objective         35.75   SecondStCnstr05           1.0
+    y0955     SecondStCnstr70          -1.0
+    y0956     Objective        14.975   SecondStCnstr06           1.0
+    y0956     SecondStCnstr70          -1.0
+    y0957     Objective         33.05   SecondStCnstr07           1.0
+    y0957     SecondStCnstr70          -1.0
+    y0958     Objective          20.7   SecondStCnstr08           1.0
+    y0958     SecondStCnstr70          -1.0
+    y0959     Objective         41.65   SecondStCnstr09           1.0
+    y0959     SecondStCnstr70          -1.0
+    y0960     Objective        26.025   SecondStCnstr10           1.0
+    y0960     SecondStCnstr70          -1.0
+    y0961     Objective          10.1   SecondStCnstr11           1.0
+    y0961     SecondStCnstr70          -1.0
+    y0962     Objective         11.45   SecondStCnstr12           1.0
+    y0962     SecondStCnstr70          -1.0
+    y0963     Objective        16.075   SecondStCnstr13           1.0
+    y0963     SecondStCnstr70          -1.0
+    y0964     Objective        23.825   SecondStCnstr14           1.0
+    y0964     SecondStCnstr70          -1.0
+    y0965     Objective        20.775   SecondStCnstr15           1.0
+    y0965     SecondStCnstr70          -1.0
+    y0966     Objective         25.85   SecondStCnstr16           1.0
+    y0966     SecondStCnstr70          -1.0
+    y0967     Objective          11.5   SecondStCnstr17           1.0
+    y0967     SecondStCnstr70          -1.0
+    y0968     Objective        15.225   SecondStCnstr18           1.0
+    y0968     SecondStCnstr70          -1.0
+    y0969     Objective         21.15   SecondStCnstr19           1.0
+    y0969     SecondStCnstr70          -1.0
+    y0970     Objective        33.575   SecondStCnstr20           1.0
+    y0970     SecondStCnstr70          -1.0
+    y0971     Objective          23.4   SecondStCnstr21           1.0
+    y0971     SecondStCnstr70          -1.0
+    y0972     Objective        26.025   SecondStCnstr22           1.0
+    y0972     SecondStCnstr70          -1.0
+    y0973     Objective           9.0   SecondStCnstr23           1.0
+    y0973     SecondStCnstr70          -1.0
+    y0974     Objective        25.925   SecondStCnstr24           1.0
+    y0974     SecondStCnstr70          -1.0
+    y0975     Objective          9.95   SecondStCnstr25           1.0
+    y0975     SecondStCnstr70          -1.0
+    y0976     Objective          16.5   SecondStCnstr26           1.0
+    y0976     SecondStCnstr70          -1.0
+    y0977     Objective          53.8   SecondStCnstr27           1.0
+    y0977     SecondStCnstr70          -1.0
+    y0978     Objective          9.85   SecondStCnstr28           1.0
+    y0978     SecondStCnstr70          -1.0
+    y0979     Objective        10.625   SecondStCnstr29           1.0
+    y0979     SecondStCnstr70          -1.0
+    y0980     Objective        35.075   SecondStCnstr30           1.0
+    y0980     SecondStCnstr70          -1.0
+    y0981     Objective          19.2   SecondStCnstr31           1.0
+    y0981     SecondStCnstr70          -1.0
+    y0982     Objective          11.1   SecondStCnstr32           1.0
+    y0982     SecondStCnstr70          -1.0
+    y0983     Objective        20.475   SecondStCnstr33           1.0
+    y0983     SecondStCnstr70          -1.0
+    y0984     Objective        29.275   SecondStCnstr34           1.0
+    y0984     SecondStCnstr70          -1.0
+    y0985     Objective         16.55   SecondStCnstr35           1.0
+    y0985     SecondStCnstr70          -1.0
+    y0986     Objective         13.35   SecondStCnstr36           1.0
+    y0986     SecondStCnstr70          -1.0
+    y0987     Objective        26.975   SecondStCnstr37           1.0
+    y0987     SecondStCnstr70          -1.0
+    y0988     Objective        18.275   SecondStCnstr38           1.0
+    y0988     SecondStCnstr70          -1.0
+    y0989     Objective        57.675   SecondStCnstr39           1.0
+    y0989     SecondStCnstr70          -1.0
+    y0990     Objective        25.975   SecondStCnstr40           1.0
+    y0990     SecondStCnstr70          -1.0
+    y0991     Objective           3.0   SecondStCnstr41           1.0
+    y0991     SecondStCnstr70          -1.0
+    y0992     Objective         17.35   SecondStCnstr42           1.0
+    y0992     SecondStCnstr70          -1.0
+    y0993     Objective          39.0   SecondStCnstr43           1.0
+    y0993     SecondStCnstr70          -1.0
+    y0994     Objective          26.1   SecondStCnstr44           1.0
+    y0994     SecondStCnstr70          -1.0
+    y0995     Objective        57.725   SecondStCnstr45           1.0
+    y0995     SecondStCnstr70          -1.0
+    y0996     Objective        58.325   SecondStCnstr46           1.0
+    y0996     SecondStCnstr70          -1.0
+    y0997     Objective        50.575   SecondStCnstr47           1.0
+    y0997     SecondStCnstr70          -1.0
+    y0998     Objective          42.3   SecondStCnstr48           1.0
+    y0998     SecondStCnstr70          -1.0
+    y0999     Objective         25.05   SecondStCnstr49           1.0
+    y0999     SecondStCnstr70          -1.0
+    y1000     Objective        15.025   SecondStCnstr50           1.0
+    y1000     SecondStCnstr70          -1.0
+    y1001     Objective        41.325   SecondStCnstr01           1.0
+    y1001     SecondStCnstr71          -1.0
+    y1002     Objective        33.225   SecondStCnstr02           1.0
+    y1002     SecondStCnstr71          -1.0
+    y1003     Objective          35.5   SecondStCnstr03           1.0
+    y1003     SecondStCnstr71          -1.0
+    y1004     Objective        37.075   SecondStCnstr04           1.0
+    y1004     SecondStCnstr71          -1.0
+    y1005     Objective          29.3   SecondStCnstr05           1.0
+    y1005     SecondStCnstr71          -1.0
+    y1006     Objective        33.425   SecondStCnstr06           1.0
+    y1006     SecondStCnstr71          -1.0
+    y1007     Objective          42.6   SecondStCnstr07           1.0
+    y1007     SecondStCnstr71          -1.0
+    y1008     Objective         30.25   SecondStCnstr08           1.0
+    y1008     SecondStCnstr71          -1.0
+    y1009     Objective         35.05   SecondStCnstr09           1.0
+    y1009     SecondStCnstr71          -1.0
+    y1010     Objective        28.625   SecondStCnstr10           1.0
+    y1010     SecondStCnstr71          -1.0
+    y1011     Objective         17.15   SecondStCnstr11           1.0
+    y1011     SecondStCnstr71          -1.0
+    y1012     Objective        24.175   SecondStCnstr12           1.0
+    y1012     SecondStCnstr71          -1.0
+    y1013     Objective         25.65   SecondStCnstr13           1.0
+    y1013     SecondStCnstr71          -1.0
+    y1014     Objective        38.825   SecondStCnstr14           1.0
+    y1014     SecondStCnstr71          -1.0
+    y1015     Objective        32.175   SecondStCnstr15           1.0
+    y1015     SecondStCnstr71          -1.0
+    y1016     Objective          29.4   SecondStCnstr16           1.0
+    y1016     SecondStCnstr71          -1.0
+    y1017     Objective        13.725   SecondStCnstr17           1.0
+    y1017     SecondStCnstr71          -1.0
+    y1018     Objective         23.95   SecondStCnstr18           1.0
+    y1018     SecondStCnstr71          -1.0
+    y1019     Objective         11.05   SecondStCnstr19           1.0
+    y1019     SecondStCnstr71          -1.0
+    y1020     Objective        42.875   SecondStCnstr20           1.0
+    y1020     SecondStCnstr71          -1.0
+    y1021     Objective          13.3   SecondStCnstr21           1.0
+    y1021     SecondStCnstr71          -1.0
+    y1022     Objective        38.775   SecondStCnstr22           1.0
+    y1022     SecondStCnstr71          -1.0
+    y1023     Objective         21.75   SecondStCnstr23           1.0
+    y1023     SecondStCnstr71          -1.0
+    y1024     Objective        44.225   SecondStCnstr24           1.0
+    y1024     SecondStCnstr71          -1.0
+    y1025     Objective         19.25   SecondStCnstr25           1.0
+    y1025     SecondStCnstr71          -1.0
+    y1026     Objective          31.5   SecondStCnstr26           1.0
+    y1026     SecondStCnstr71          -1.0
+    y1027     Objective        61.175   SecondStCnstr27           1.0
+    y1027     SecondStCnstr71          -1.0
+    y1028     Objective        24.525   SecondStCnstr28           1.0
+    y1028     SecondStCnstr71          -1.0
+    y1029     Objective        29.225   SecondStCnstr29           1.0
+    y1029     SecondStCnstr71          -1.0
+    y1030     Objective        53.375   SecondStCnstr30           1.0
+    y1030     SecondStCnstr71          -1.0
+    y1031     Objective          37.8   SecondStCnstr31           1.0
+    y1031     SecondStCnstr71          -1.0
+    y1032     Objective          28.3   SecondStCnstr32           1.0
+    y1032     SecondStCnstr71          -1.0
+    y1033     Objective        39.075   SecondStCnstr33           1.0
+    y1033     SecondStCnstr71          -1.0
+    y1034     Objective         39.85   SecondStCnstr34           1.0
+    y1034     SecondStCnstr71          -1.0
+    y1035     Objective         27.85   SecondStCnstr35           1.0
+    y1035     SecondStCnstr71          -1.0
+    y1036     Objective         15.95   SecondStCnstr36           1.0
+    y1036     SecondStCnstr71          -1.0
+    y1037     Objective         37.55   SecondStCnstr37           1.0
+    y1037     SecondStCnstr71          -1.0
+    y1038     Objective        28.875   SecondStCnstr38           1.0
+    y1038     SecondStCnstr71          -1.0
+    y1039     Objective        52.325   SecondStCnstr39           1.0
+    y1039     SecondStCnstr71          -1.0
+    y1040     Objective          38.7   SecondStCnstr40           1.0
+    y1040     SecondStCnstr71          -1.0
+    y1041     Objective          21.6   SecondStCnstr41           1.0
+    y1041     SecondStCnstr71          -1.0
+    y1042     Objective          7.25   SecondStCnstr42           1.0
+    y1042     SecondStCnstr71          -1.0
+    y1043     Objective          41.6   SecondStCnstr43           1.0
+    y1043     SecondStCnstr71          -1.0
+    y1044     Objective         38.95   SecondStCnstr44           1.0
+    y1044     SecondStCnstr71          -1.0
+    y1045     Objective        60.325   SecondStCnstr45           1.0
+    y1045     SecondStCnstr71          -1.0
+    y1046     Objective        50.875   SecondStCnstr46           1.0
+    y1046     SecondStCnstr71          -1.0
+    y1047     Objective        43.125   SecondStCnstr47           1.0
+    y1047     SecondStCnstr71          -1.0
+    y1048     Objective        50.675   SecondStCnstr48           1.0
+    y1048     SecondStCnstr71          -1.0
+    y1049     Objective        36.275   SecondStCnstr49           1.0
+    y1049     SecondStCnstr71          -1.0
+    y1050     Objective         24.55   SecondStCnstr50           1.0
+    y1050     SecondStCnstr71          -1.0
+    y1051     Objective        45.625   SecondStCnstr01           1.0
+    y1051     SecondStCnstr72          -1.0
+    y1052     Objective        45.325   SecondStCnstr02           1.0
+    y1052     SecondStCnstr72          -1.0
+    y1053     Objective        72.275   SecondStCnstr03           1.0
+    y1053     SecondStCnstr72          -1.0
+    y1054     Objective         78.75   SecondStCnstr04           1.0
+    y1054     SecondStCnstr72          -1.0
+    y1055     Objective        37.725   SecondStCnstr05           1.0
+    y1055     SecondStCnstr72          -1.0
+    y1056     Objective         68.65   SecondStCnstr06           1.0
+    y1056     SecondStCnstr72          -1.0
+    y1057     Objective          84.3   SecondStCnstr07           1.0
+    y1057     SecondStCnstr72          -1.0
+    y1058     Objective         71.95   SecondStCnstr08           1.0
+    y1058     SecondStCnstr72          -1.0
+    y1059     Objective        31.825   SecondStCnstr09           1.0
+    y1059     SecondStCnstr72          -1.0
+    y1060     Objective        33.975   SecondStCnstr10           1.0
+    y1060     SecondStCnstr72          -1.0
+    y1061     Objective         58.85   SecondStCnstr11           1.0
+    y1061     SecondStCnstr72          -1.0
+    y1062     Objective         65.45   SecondStCnstr12           1.0
+    y1062     SecondStCnstr72          -1.0
+    y1063     Objective         67.35   SecondStCnstr13           1.0
+    y1063     SecondStCnstr72          -1.0
+    y1064     Objective          77.8   SecondStCnstr14           1.0
+    y1064     SecondStCnstr72          -1.0
+    y1065     Objective        54.575   SecondStCnstr15           1.0
+    y1065     SecondStCnstr72          -1.0
+    y1066     Objective         35.25   SecondStCnstr16           1.0
+    y1066     SecondStCnstr72          -1.0
+    y1067     Objective        50.275   SecondStCnstr17           1.0
+    y1067     SecondStCnstr72          -1.0
+    y1068     Objective         65.65   SecondStCnstr18           1.0
+    y1068     SecondStCnstr72          -1.0
+    y1069     Objective         59.15   SecondStCnstr19           1.0
+    y1069     SecondStCnstr72          -1.0
+    y1070     Objective         51.95   SecondStCnstr20           1.0
+    y1070     SecondStCnstr72          -1.0
+    y1071     Objective        53.725   SecondStCnstr21           1.0
+    y1071     SecondStCnstr72          -1.0
+    y1072     Objective        61.175   SecondStCnstr22           1.0
+    y1072     SecondStCnstr72          -1.0
+    y1073     Objective          63.0   SecondStCnstr23           1.0
+    y1073     SecondStCnstr72          -1.0
+    y1074     Objective          79.6   SecondStCnstr24           1.0
+    y1074     SecondStCnstr72          -1.0
+    y1075     Objective         51.15   SecondStCnstr25           1.0
+    y1075     SecondStCnstr72          -1.0
+    y1076     Objective        71.025   SecondStCnstr26           1.0
+    y1076     SecondStCnstr72          -1.0
+    y1077     Objective        40.575   SecondStCnstr27           1.0
+    y1077     SecondStCnstr72          -1.0
+    y1078     Objective        63.825   SecondStCnstr28           1.0
+    y1078     SecondStCnstr72          -1.0
+    y1079     Objective        62.325   SecondStCnstr29           1.0
+    y1079     SecondStCnstr72          -1.0
+    y1080     Objective         88.75   SecondStCnstr30           1.0
+    y1080     SecondStCnstr72          -1.0
+    y1081     Objective          70.7   SecondStCnstr31           1.0
+    y1081     SecondStCnstr72          -1.0
+    y1082     Objective          68.3   SecondStCnstr32           1.0
+    y1082     SecondStCnstr72          -1.0
+    y1083     Objective          67.2   SecondStCnstr33           1.0
+    y1083     SecondStCnstr72          -1.0
+    y1084     Objective         81.55   SecondStCnstr34           1.0
+    y1084     SecondStCnstr72          -1.0
+    y1085     Objective        52.175   SecondStCnstr35           1.0
+    y1085     SecondStCnstr72          -1.0
+    y1086     Objective         46.65   SecondStCnstr36           1.0
+    y1086     SecondStCnstr72          -1.0
+    y1087     Objective         79.25   SecondStCnstr37           1.0
+    y1087     SecondStCnstr72          -1.0
+    y1088     Objective         70.55   SecondStCnstr38           1.0
+    y1088     SecondStCnstr72          -1.0
+    y1089     Objective          43.1   SecondStCnstr39           1.0
+    y1089     SecondStCnstr72          -1.0
+    y1090     Objective        79.975   SecondStCnstr40           1.0
+    y1090     SecondStCnstr72          -1.0
+    y1091     Objective          57.0   SecondStCnstr41           1.0
+    y1091     SecondStCnstr72          -1.0
+    y1092     Objective         55.35   SecondStCnstr42           1.0
+    y1092     SecondStCnstr72          -1.0
+    y1093     Objective          21.0   SecondStCnstr43           1.0
+    y1093     SecondStCnstr72          -1.0
+    y1094     Objective         61.35   SecondStCnstr44           1.0
+    y1094     SecondStCnstr72          -1.0
+    y1095     Objective        41.525   SecondStCnstr45           1.0
+    y1095     SecondStCnstr72          -1.0
+    y1096     Objective         47.65   SecondStCnstr46           1.0
+    y1096     SecondStCnstr72          -1.0
+    y1097     Objective         40.75   SecondStCnstr47           1.0
+    y1097     SecondStCnstr72          -1.0
+    y1098     Objective        53.125   SecondStCnstr48           1.0
+    y1098     SecondStCnstr72          -1.0
+    y1099     Objective         77.95   SecondStCnstr49           1.0
+    y1099     SecondStCnstr72          -1.0
+    y1100     Objective        48.175   SecondStCnstr50           1.0
+    y1100     SecondStCnstr72          -1.0
+    y1101     Objective       60.5875   SecondStCnstr01           1.0
+    y1101     SecondStCnstr73          -1.0
+    y1102     Objective       68.7875   SecondStCnstr02           1.0
+    y1102     SecondStCnstr73          -1.0
+    y1103     Objective       98.3125   SecondStCnstr03           1.0
+    y1103     SecondStCnstr73          -1.0
+    y1104     Objective      106.8375   SecondStCnstr04           1.0
+    y1104     SecondStCnstr73          -1.0
+    y1105     Objective       65.8125   SecondStCnstr05           1.0
+    y1105     SecondStCnstr73          -1.0
+    y1106     Objective       94.1375   SecondStCnstr06           1.0
+    y1106     SecondStCnstr73          -1.0
+    y1107     Objective      112.3875   SecondStCnstr07           1.0
+    y1107     SecondStCnstr73          -1.0
+    y1108     Objective      100.0375   SecondStCnstr08           1.0
+    y1108     SecondStCnstr73          -1.0
+    y1109     Objective       59.9125   SecondStCnstr09           1.0
+    y1109     SecondStCnstr73          -1.0
+    y1110     Objective       62.0625   SecondStCnstr10           1.0
+    y1110     SecondStCnstr73          -1.0
+    y1111     Objective       86.9375   SecondStCnstr11           1.0
+    y1111     SecondStCnstr73          -1.0
+    y1112     Objective       93.5375   SecondStCnstr12           1.0
+    y1112     SecondStCnstr73          -1.0
+    y1113     Objective       95.4375   SecondStCnstr13           1.0
+    y1113     SecondStCnstr73          -1.0
+    y1114     Objective      104.6375   SecondStCnstr14           1.0
+    y1114     SecondStCnstr73          -1.0
+    y1115     Objective       78.6125   SecondStCnstr15           1.0
+    y1115     SecondStCnstr73          -1.0
+    y1116     Objective       64.7125   SecondStCnstr16           1.0
+    y1116     SecondStCnstr73          -1.0
+    y1117     Objective       78.3625   SecondStCnstr17           1.0
+    y1117     SecondStCnstr73          -1.0
+    y1118     Objective       93.7375   SecondStCnstr18           1.0
+    y1118     SecondStCnstr73          -1.0
+    y1119     Objective       87.2375   SecondStCnstr19           1.0
+    y1119     SecondStCnstr73          -1.0
+    y1120     Objective       62.4625   SecondStCnstr20           1.0
+    y1120     SecondStCnstr73          -1.0
+    y1121     Objective       81.8125   SecondStCnstr21           1.0
+    y1121     SecondStCnstr73          -1.0
+    y1122     Objective       83.1375   SecondStCnstr22           1.0
+    y1122     SecondStCnstr73          -1.0
+    y1123     Objective       91.0875   SecondStCnstr23           1.0
+    y1123     SecondStCnstr73          -1.0
+    y1124     Objective      105.0875   SecondStCnstr24           1.0
+    y1124     SecondStCnstr73          -1.0
+    y1125     Objective       79.6125   SecondStCnstr25           1.0
+    y1125     SecondStCnstr73          -1.0
+    y1126     Objective       98.3625   SecondStCnstr26           1.0
+    y1126     SecondStCnstr73          -1.0
+    y1127     Objective       42.1125   SecondStCnstr27           1.0
+    y1127     SecondStCnstr73          -1.0
+    y1128     Objective       91.9125   SecondStCnstr28           1.0
+    y1128     SecondStCnstr73          -1.0
+    y1129     Objective       87.8125   SecondStCnstr29           1.0
+    y1129     SecondStCnstr73          -1.0
+    y1130     Objective      114.2375   SecondStCnstr30           1.0
+    y1130     SecondStCnstr73          -1.0
+    y1131     Objective       94.1875   SecondStCnstr31           1.0
+    y1131     SecondStCnstr73          -1.0
+    y1132     Objective       93.7875   SecondStCnstr32           1.0
+    y1132     SecondStCnstr73          -1.0
+    y1133     Objective       91.2625   SecondStCnstr33           1.0
+    y1133     SecondStCnstr73          -1.0
+    y1134     Objective      109.6375   SecondStCnstr34           1.0
+    y1134     SecondStCnstr73          -1.0
+    y1135     Objective       75.6375   SecondStCnstr35           1.0
+    y1135     SecondStCnstr73          -1.0
+    y1136     Objective       74.7375   SecondStCnstr36           1.0
+    y1136     SecondStCnstr73          -1.0
+    y1137     Objective      107.3375   SecondStCnstr37           1.0
+    y1137     SecondStCnstr73          -1.0
+    y1138     Objective       98.6375   SecondStCnstr38           1.0
+    y1138     SecondStCnstr73          -1.0
+    y1139     Objective       48.3125   SecondStCnstr39           1.0
+    y1139     SecondStCnstr73          -1.0
+    y1140     Objective      108.0625   SecondStCnstr40           1.0
+    y1140     SecondStCnstr73          -1.0
+    y1141     Objective       85.0875   SecondStCnstr41           1.0
+    y1141     SecondStCnstr73          -1.0
+    y1142     Objective       83.4375   SecondStCnstr42           1.0
+    y1142     SecondStCnstr73          -1.0
+    y1143     Objective       50.8875   SecondStCnstr43           1.0
+    y1143     SecondStCnstr73          -1.0
+    y1144     Objective       77.8875   SecondStCnstr44           1.0
+    y1144     SecondStCnstr73          -1.0
+    y1145     Objective       30.3625   SecondStCnstr45           1.0
+    y1145     SecondStCnstr73          -1.0
+    y1146     Objective       52.8625   SecondStCnstr46           1.0
+    y1146     SecondStCnstr73          -1.0
+    y1147     Objective       57.5125   SecondStCnstr47           1.0
+    y1147     SecondStCnstr73          -1.0
+    y1148     Objective       54.6625   SecondStCnstr48           1.0
+    y1148     SecondStCnstr73          -1.0
+    y1149     Objective      106.0625   SecondStCnstr49           1.0
+    y1149     SecondStCnstr73          -1.0
+    y1150     Objective       77.4625   SecondStCnstr50           1.0
+    y1150     SecondStCnstr73          -1.0
+    y1151     Objective       79.8375   SecondStCnstr01           1.0
+    y1151     SecondStCnstr74          -1.0
+    y1152     Objective       79.5375   SecondStCnstr02           1.0
+    y1152     SecondStCnstr74          -1.0
+    y1153     Objective       99.6625   SecondStCnstr03           1.0
+    y1153     SecondStCnstr74          -1.0
+    y1154     Objective      102.4875   SecondStCnstr04           1.0
+    y1154     SecondStCnstr74          -1.0
+    y1155     Objective       51.6375   SecondStCnstr05           1.0
+    y1155     SecondStCnstr74          -1.0
+    y1156     Objective       96.3375   SecondStCnstr06           1.0
+    y1156     SecondStCnstr74          -1.0
+    y1157     Objective      108.0375   SecondStCnstr07           1.0
+    y1157     SecondStCnstr74          -1.0
+    y1158     Objective       95.6875   SecondStCnstr08           1.0
+    y1158     SecondStCnstr74          -1.0
+    y1159     Objective       45.7375   SecondStCnstr09           1.0
+    y1159     SecondStCnstr74          -1.0
+    y1160     Objective       65.2625   SecondStCnstr10           1.0
+    y1160     SecondStCnstr74          -1.0
+    y1161     Objective       82.5875   SecondStCnstr11           1.0
+    y1161     SecondStCnstr74          -1.0
+    y1162     Objective       89.6125   SecondStCnstr12           1.0
+    y1162     SecondStCnstr74          -1.0
+    y1163     Objective       91.0875   SecondStCnstr13           1.0
+    y1163     SecondStCnstr74          -1.0
+    y1164     Objective      105.1875   SecondStCnstr14           1.0
+    y1164     SecondStCnstr74          -1.0
+    y1165     Objective       88.9125   SecondStCnstr15           1.0
+    y1165     SecondStCnstr74          -1.0
+    y1166     Objective       67.9125   SecondStCnstr16           1.0
+    y1166     SecondStCnstr74          -1.0
+    y1167     Objective       77.6625   SecondStCnstr17           1.0
+    y1167     SecondStCnstr74          -1.0
+    y1168     Objective       89.3875   SecondStCnstr18           1.0
+    y1168     SecondStCnstr74          -1.0
+    y1169     Objective       73.1125   SecondStCnstr19           1.0
+    y1169     SecondStCnstr74          -1.0
+    y1170     Objective       83.6625   SecondStCnstr20           1.0
+    y1170     SecondStCnstr74          -1.0
+    y1171     Objective       66.6375   SecondStCnstr21           1.0
+    y1171     SecondStCnstr74          -1.0
+    y1172     Objective       95.4625   SecondStCnstr22           1.0
+    y1172     SecondStCnstr74          -1.0
+    y1173     Objective       87.1875   SecondStCnstr23           1.0
+    y1173     SecondStCnstr74          -1.0
+    y1174     Objective      107.2875   SecondStCnstr24           1.0
+    y1174     SecondStCnstr74          -1.0
+    y1175     Objective       77.9125   SecondStCnstr25           1.0
+    y1175     SecondStCnstr74          -1.0
+    y1176     Objective       96.9375   SecondStCnstr26           1.0
+    y1176     SecondStCnstr74          -1.0
+    y1177     Objective       63.3125   SecondStCnstr27           1.0
+    y1177     SecondStCnstr74          -1.0
+    y1178     Objective       91.2125   SecondStCnstr28           1.0
+    y1178     SecondStCnstr74          -1.0
+    y1179     Objective       90.0125   SecondStCnstr29           1.0
+    y1179     SecondStCnstr74          -1.0
+    y1180     Objective      116.4375   SecondStCnstr30           1.0
+    y1180     SecondStCnstr74          -1.0
+    y1181     Objective      100.5875   SecondStCnstr31           1.0
+    y1181     SecondStCnstr74          -1.0
+    y1182     Objective       92.4875   SecondStCnstr32           1.0
+    y1182     SecondStCnstr74          -1.0
+    y1183     Objective      101.5625   SecondStCnstr33           1.0
+    y1183     SecondStCnstr74          -1.0
+    y1184     Objective      105.2875   SecondStCnstr34           1.0
+    y1184     SecondStCnstr74          -1.0
+    y1185     Objective       86.3875   SecondStCnstr35           1.0
+    y1185     SecondStCnstr74          -1.0
+    y1186     Objective       74.0375   SecondStCnstr36           1.0
+    y1186     SecondStCnstr74          -1.0
+    y1187     Objective      102.9875   SecondStCnstr37           1.0
+    y1187     SecondStCnstr74          -1.0
+    y1188     Objective       94.3125   SecondStCnstr38           1.0
+    y1188     SecondStCnstr74          -1.0
+    y1189     Objective       33.6125   SecondStCnstr39           1.0
+    y1189     SecondStCnstr74          -1.0
+    y1190     Objective      104.1375   SecondStCnstr40           1.0
+    y1190     SecondStCnstr74          -1.0
+    y1191     Objective       84.3875   SecondStCnstr41           1.0
+    y1191     SecondStCnstr74          -1.0
+    y1192     Objective       72.6875   SecondStCnstr42           1.0
+    y1192     SecondStCnstr74          -1.0
+    y1193     Objective       55.7125   SecondStCnstr43           1.0
+    y1193     SecondStCnstr74          -1.0
+    y1194     Objective       95.7125   SecondStCnstr44           1.0
+    y1194     SecondStCnstr74          -1.0
+    y1195     Objective       51.5625   SecondStCnstr45           1.0
+    y1195     SecondStCnstr74          -1.0
+    y1196     Objective       29.0625   SecondStCnstr46           1.0
+    y1196     SecondStCnstr74          -1.0
+    y1197     Objective       36.8125   SecondStCnstr47           1.0
+    y1197     SecondStCnstr74          -1.0
+    y1198     Objective       75.8625   SecondStCnstr48           1.0
+    y1198     SecondStCnstr74          -1.0
+    y1199     Objective      101.7125   SecondStCnstr49           1.0
+    y1199     SecondStCnstr74          -1.0
+    y1200     Objective       82.5375   SecondStCnstr50           1.0
+    y1200     SecondStCnstr74          -1.0
+    y1201     Objective       59.3375   SecondStCnstr01           1.0
+    y1201     SecondStCnstr75          -1.0
+    y1202     Objective       50.4125   SecondStCnstr02           1.0
+    y1202     SecondStCnstr75          -1.0
+    y1203     Objective       24.1125   SecondStCnstr03           1.0
+    y1203     SecondStCnstr75          -1.0
+    y1204     Objective        9.1125   SecondStCnstr04           1.0
+    y1204     SecondStCnstr75          -1.0
+    y1205     Objective       59.2375   SecondStCnstr05           1.0
+    y1205     SecondStCnstr75          -1.0
+    y1206     Objective       27.1875   SecondStCnstr06           1.0
+    y1206     SecondStCnstr75          -1.0
+    y1207     Objective       19.5125   SecondStCnstr07           1.0
+    y1207     SecondStCnstr75          -1.0
+    y1208     Objective       19.0125   SecondStCnstr08           1.0
+    y1208     SecondStCnstr75          -1.0
+    y1209     Objective       64.9875   SecondStCnstr09           1.0
+    y1209     SecondStCnstr75          -1.0
+    y1210     Objective       52.1375   SecondStCnstr10           1.0
+    y1210     SecondStCnstr75          -1.0
+    y1211     Objective       27.2625   SecondStCnstr11           1.0
+    y1211     SecondStCnstr75          -1.0
+    y1212     Objective       21.7625   SecondStCnstr12           1.0
+    y1212     SecondStCnstr75          -1.0
+    y1213     Objective       18.8375   SecondStCnstr13           1.0
+    y1213     SecondStCnstr75          -1.0
+    y1214     Objective       20.0625   SecondStCnstr14           1.0
+    y1214     SecondStCnstr75          -1.0
+    y1215     Objective       43.4125   SecondStCnstr15           1.0
+    y1215     SecondStCnstr75          -1.0
+    y1216     Objective       52.9125   SecondStCnstr16           1.0
+    y1216     SecondStCnstr75          -1.0
+    y1217     Objective       36.2125   SecondStCnstr17           1.0
+    y1217     SecondStCnstr75          -1.0
+    y1218     Objective       22.9625   SecondStCnstr18           1.0
+    y1218     SecondStCnstr75          -1.0
+    y1219     Objective       38.9875   SecondStCnstr19           1.0
+    y1219     SecondStCnstr75          -1.0
+    y1220     Objective       59.5625   SecondStCnstr20           1.0
+    y1220     SecondStCnstr75          -1.0
+    y1221     Objective       43.2375   SecondStCnstr21           1.0
+    y1221     SecondStCnstr75          -1.0
+    y1222     Objective       45.1125   SecondStCnstr22           1.0
+    y1222     SecondStCnstr75          -1.0
+    y1223     Objective       24.4875   SecondStCnstr23           1.0
+    y1223     SecondStCnstr75          -1.0
+    y1224     Objective       27.0625   SecondStCnstr24           1.0
+    y1224     SecondStCnstr75          -1.0
+    y1225     Objective       37.1625   SecondStCnstr25           1.0
+    y1225     SecondStCnstr75          -1.0
+    y1226     Objective       20.8375   SecondStCnstr26           1.0
+    y1226     SecondStCnstr75          -1.0
+    y1227     Objective       80.8125   SecondStCnstr27           1.0
+    y1227     SecondStCnstr75          -1.0
+    y1228     Objective       24.6125   SecondStCnstr28           1.0
+    y1228     SecondStCnstr75          -1.0
+    y1229     Objective       31.3875   SecondStCnstr29           1.0
+    y1229     SecondStCnstr75          -1.0
+    y1230     Objective       36.2125   SecondStCnstr30           1.0
+    y1230     SecondStCnstr75          -1.0
+    y1231     Objective       32.9375   SecondStCnstr31           1.0
+    y1231     SecondStCnstr75          -1.0
+    y1232     Objective       26.2375   SecondStCnstr32           1.0
+    y1232     SecondStCnstr75          -1.0
+    y1233     Objective       36.0375   SecondStCnstr33           1.0
+    y1233     SecondStCnstr75          -1.0
+    y1234     Objective       13.7875   SecondStCnstr34           1.0
+    y1234     SecondStCnstr75          -1.0
+    y1235     Objective       43.7625   SecondStCnstr35           1.0
+    y1235     SecondStCnstr75          -1.0
+    y1236     Objective       39.4625   SecondStCnstr36           1.0
+    y1236     SecondStCnstr75          -1.0
+    y1237     Objective       11.4875   SecondStCnstr37           1.0
+    y1237     SecondStCnstr75          -1.0
+    y1238     Objective       15.5625   SecondStCnstr38           1.0
+    y1238     SecondStCnstr75          -1.0
+    y1239     Objective       83.7875   SecondStCnstr39           1.0
+    y1239     SecondStCnstr75          -1.0
+    y1240     Objective       11.0875   SecondStCnstr40           1.0
+    y1240     SecondStCnstr75          -1.0
+    y1241     Objective       30.2125   SecondStCnstr41           1.0
+    y1241     SecondStCnstr75          -1.0
+    y1242     Objective       37.1875   SecondStCnstr42           1.0
+    y1242     SecondStCnstr75          -1.0
+    y1243     Objective       65.1125   SecondStCnstr43           1.0
+    y1243     SecondStCnstr75          -1.0
+    y1244     Objective       50.1875   SecondStCnstr44           1.0
+    y1244     SecondStCnstr75          -1.0
+    y1245     Objective       83.8625   SecondStCnstr45           1.0
+    y1245     SecondStCnstr75          -1.0
+    y1246     Objective       80.8125   SecondStCnstr46           1.0
+    y1246     SecondStCnstr75          -1.0
+    y1247     Objective       73.0625   SecondStCnstr47           1.0
+    y1247     SecondStCnstr75          -1.0
+    y1248     Objective       67.3625   SecondStCnstr48           1.0
+    y1248     SecondStCnstr75          -1.0
+    y1249     Objective        8.1625   SecondStCnstr49           1.0
+    y1249     SecondStCnstr75          -1.0
+    y1250     Objective       42.2375   SecondStCnstr50           1.0
+    y1250     SecondStCnstr75          -1.0
+RHS
+    RHS1      FirstStCnstr  78757.800606   SecondStCnstr01  159.77247387
+    RHS1      SecondStCnstr02  76.318156935   SecondStCnstr03   911.2356534
+    RHS1      SecondStCnstr04  905.36215147   SecondStCnstr05  39.732513845
+    RHS1      SecondStCnstr06  464.18658989   SecondStCnstr07  1979.6437273
+    RHS1      SecondStCnstr08  758.42881409   SecondStCnstr09  30.090952993
+    RHS1      SecondStCnstr10  41.096347993   SecondStCnstr11  3054.6163604
+    RHS1      SecondStCnstr12  610.36882105   SecondStCnstr13  1150.3932035
+    RHS1      SecondStCnstr14  117.75729803   SecondStCnstr15  748.01097726
+    RHS1      SecondStCnstr16   720.8495401   SecondStCnstr17  257.96564722
+    RHS1      SecondStCnstr18  6869.5707671   SecondStCnstr19  108.03258327
+    RHS1      SecondStCnstr20  240.81556068   SecondStCnstr21  42.430362275
+    RHS1      SecondStCnstr22  1132.3040391   SecondStCnstr23   667.5740905
+    RHS1      SecondStCnstr24  327.44628229   SecondStCnstr26  253.06008475
+    RHS1      SecondStCnstr27  948.84772382   SecondStCnstr28  179.82287216
+    RHS1      SecondStCnstr29  314.89817699   SecondStCnstr30  392.16867537
+    RHS1      SecondStCnstr31   314.5270409   SecondStCnstr32  36.428401842
+    RHS1      SecondStCnstr34  15936.443156   SecondStCnstr35  530.64657489
+    RHS1      SecondStCnstr36  306.91827767   SecondStCnstr37   1608.726026
+    RHS1      SecondStCnstr38  3098.5084926   SecondStCnstr39  629.15043679
+    RHS1      SecondStCnstr40  392.48008865   SecondStCnstr41  1764.2190515
+    RHS1      SecondStCnstr42  2131.8436273   SecondStCnstr43  256.82885717
+    RHS1      SecondStCnstr44  552.63800937   SecondStCnstr45  2390.0497704
+    RHS1      SecondStCnstr47  83.630579868   SecondStCnstr48  21.114301399
+    RHS1      SecondStCnstr49  2962.8783484   SecondStCnstr50   214.4966977
+BOUNDS
+ BV BOUND1    x01                1.0
+ BV BOUND1    x02                1.0
+ BV BOUND1    x03                1.0
+ BV BOUND1    x04                1.0
+ BV BOUND1    x05                1.0
+ BV BOUND1    x06                1.0
+ BV BOUND1    x07                1.0
+ BV BOUND1    x08                1.0
+ BV BOUND1    x09                1.0
+ BV BOUND1    x10                1.0
+ BV BOUND1    x11                1.0
+ BV BOUND1    x12                1.0
+ BV BOUND1    x13                1.0
+ BV BOUND1    x14                1.0
+ BV BOUND1    x15                1.0
+ BV BOUND1    x16                1.0
+ BV BOUND1    x17                1.0
+ BV BOUND1    x18                1.0
+ BV BOUND1    x19                1.0
+ BV BOUND1    x20                1.0
+ BV BOUND1    x21                1.0
+ BV BOUND1    x22                1.0
+ BV BOUND1    x23                1.0
+ BV BOUND1    x24                1.0
+ BV BOUND1    x25                1.0
+*
+ENDATA

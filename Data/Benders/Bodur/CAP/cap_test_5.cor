@@ -1,0 +1,59 @@
+*   
+*   cap_test_5_temp.mps
+*   
+*   Generated with the MPL Modeling System
+*   Copyright (c) 1988-2018  Maximal Software
+*   
+*   Date:               February 6, 2020
+*   Time:               18:07
+*   
+*   Constraints:        6
+*   Variables:          8
+*   Integers:           2
+*   Nonzeros:           42
+*   Density:            88 %
+*   
+NAME          CAP_extensive_form_cap_test_5 (MIN)
+ROWS
+  N Objective
+  G FirstStCnstr
+  G SecondStCnstr1
+  G SecondStCnstr2
+  G SecondStCnstr3
+  G SecondStCnstr4
+  G SecondStCnstr5
+COLUMNS
+    x1        Objective           1.0   FirstStCnstr         200.0
+    x1        SecondStCnstr1          11.0   SecondStCnstr2          21.0
+    x1        SecondStCnstr3          31.0   SecondStCnstr4          41.0
+    x1        SecondStCnstr5          51.0
+    x2        Objective           1.0   FirstStCnstr         300.0
+    x2        SecondStCnstr1          12.0   SecondStCnstr2          22.0
+    x2        SecondStCnstr3          32.0   SecondStCnstr4          42.0
+    x2        SecondStCnstr5          52.0
+    y1        Objective           1.0   SecondStCnstr1          11.0
+    y1        SecondStCnstr2          21.0   SecondStCnstr3          31.0
+    y1        SecondStCnstr4          41.0   SecondStCnstr5          51.0
+    y2        Objective           1.0   SecondStCnstr1          11.0
+    y2        SecondStCnstr2          21.0   SecondStCnstr3          31.0
+    y2        SecondStCnstr4          41.0   SecondStCnstr5          51.0
+    y3        Objective           2.0   SecondStCnstr1          12.0
+    y3        SecondStCnstr2          22.0   SecondStCnstr3          32.0
+    y3        SecondStCnstr4          42.0   SecondStCnstr5          52.0
+    y4        Objective           2.0   SecondStCnstr1          12.0
+    y4        SecondStCnstr2          22.0   SecondStCnstr3          32.0
+    y4        SecondStCnstr4          42.0   SecondStCnstr5          52.0
+    y5        Objective           3.0   SecondStCnstr1          13.0
+    y5        SecondStCnstr2          23.0   SecondStCnstr3          33.0
+    y5        SecondStCnstr4          43.0   SecondStCnstr5          53.0
+    y6        Objective           3.0   SecondStCnstr1          13.0
+    y6        SecondStCnstr2          23.0   SecondStCnstr3          33.0
+    y6        SecondStCnstr4          43.0   SecondStCnstr5          53.0
+RHS
+    RHS1      FirstStCnstr         156.0   SecondStCnstr1          11.0
+    RHS1      SecondStCnstr2          12.0   SecondStCnstr3          13.0
+BOUNDS
+ BV BOUND1    x1                 1.0
+ BV BOUND1    x2                 1.0
+*
+ENDATA
