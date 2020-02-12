@@ -52,8 +52,13 @@ public:
     int getNumInsubstantialIterations() const;
     int getNumInfeasibilityIterations() const;
 
-	double getUbForIteration(int iteration) const;
-	double getLbForIteration(int iteration) const;
+	double getUBForIteration(int iteration) const;
+	double getLBForIteration(int iteration) const;
+
+	double getUB() const;
+	double getLB() const;
+
+	double getRelativeGap() const;
 
     int getNumCriticalIteration() const ;
     int getMaximalLengthOfCriticalIterationSequence() const;

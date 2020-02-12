@@ -88,18 +88,32 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterat
 {
     return nested_benders_->insubstantial_iteration_;
 }
-double OsiStochasticParallelNestedBendersSolverInterface::getUbForIteration(int iteration) const
+double OsiStochasticParallelNestedBendersSolverInterface::getUBForIteration(int iteration) const
 {
-	LOG_IF(FATAL, iteration <= 0 || iteration > this->getNumIterations()) << "iteration arg in getUbForIteration() should be between 1 and number of iterations.";
+	LOG_IF(FATAL, iteration > getNumIterations()) << "iteration arg in getUbForIteration() should be between 1 and number of iterations.";
 	
 	return nested_benders_->iteration_u_and_l_bounds_[iteration - 1].first;
 }
-double OsiStochasticParallelNestedBendersSolverInterface::getLbForIteration(int iteration) const
+double OsiStochasticParallelNestedBendersSolverInterface::getLBForIteration(int iteration) const
 {
-	LOG_IF(FATAL, iteration <= 0 || iteration > this->getNumIterations()) << "iteration arg in getLbForIteration() should be between 1 and number of iterations.";
+	LOG_IF(FATAL, iteration > getNumIterations()) << "iteration arg in getLbForIteration() should be between 1 and number of iterations.";
 
 	return nested_benders_->iteration_u_and_l_bounds_[iteration - 1].second;
 }
+double OsiStochasticParallelNestedBendersSolverInterface::getUB() const
+{
+	return nested_benders_->upper_bound_;
+}
+double OsiStochasticParallelNestedBendersSolverInterface::getLB() const
+{
+	return nested_benders_->lower_bound_;
+}
+
+double OsiStochasticParallelNestedBendersSolverInterface::getRelativeGap() const
+{
+	return parallel_benders::ComputeRelativeGap(nested_benders_->upper_bound_, nested_benders_->lower_bound_, 1e-10);
+}
+
 void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 {
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ || nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK ){
@@ -219,28 +233,36 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 			int CPXresult = CPXgetstat(envPtr, lpPtr);
 			if (osi_solver_->isProvenOptimal()) {
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
+				nested_benders_->lower_bound_ = osi_->getObjValue();
 			}
 			// sometimes isProvenOptimal() does not work correct and returns false when it should be true. Check it "manually"
 			else if (CPXresult == CPX_STAT_OPTIMAL || CPXresult == CPX_STAT_OPTIMAL_INFEAS || CPXresult == CPXMIP_OPTIMAL || CPXresult == CPXMIP_OPTIMAL_TOL) {
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
+				nested_benders_->lower_bound_ = osi_->getObjValue();
 			}
 			else if (osi_solver_->isAbandoned()) { // can have multiple reasons
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
+				nested_benders_->lower_bound_ = -INFINITY;
 			}
 			else if (osi_solver_->isProvenPrimalInfeasible() || osi_solver_->isProvenDualInfeasible()) {
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
+				nested_benders_->lower_bound_ = -INFINITY;
 			}
 			else if (osi_solver_->isDualObjectiveLimitReached() || osi_solver_->isProvenDualInfeasible()) {
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
+				nested_benders_->lower_bound_ = -INFINITY;
 			}
 			else if (osi_solver_->isIterationLimitReached()) {
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_ITERATION_LIMIT;
+				nested_benders_->lower_bound_ = -INFINITY;
 			}
 			else if (CPXresult == CPX_STAT_UNBOUNDED || CPXresult == CPXMIP_UNBOUNDED) {
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_UNBOUNDED;
+				nested_benders_->lower_bound_ = -INFINITY;
 			}
 			else if (CPXresult == CPX_STAT_ABORT_TIME_LIM || CPXresult == CPXMIP_TIME_LIM_FEAS || CPXresult == CPXMIP_TIME_LIM_INFEAS) {
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_TIME_LIMIT;
+				nested_benders_->lower_bound_ = -INFINITY;
 			}
 			else {
 				nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
