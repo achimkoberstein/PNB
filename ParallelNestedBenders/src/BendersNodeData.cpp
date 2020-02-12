@@ -270,13 +270,18 @@ void Parameter::update_from_json_string( std::string json_string ) {
 			leaf.second.put_value(false);
 		// else the value should be int
 		else {
-			try
-			{
-				leaf.second.put_value(stoi(value));
+			if (value.find(".") != std::string::npos) { // float
+				leaf.second.put_value(stof(value)); // convert to float
 			}
-			catch (std::invalid_argument& e)
-			{
-				assert(false && "Values in parameter_ should be int or bool. Check Parameter::consts_");
+			else {
+				try
+				{
+					leaf.second.put_value(stoi(value)); // convert to int
+				}
+				catch (std::invalid_argument & e)
+				{
+					assert(false && "Values in parameter_ should be int, float or bool. Check Parameter::consts_");
+				}
 			}
 		}
 		parameter_.put_child(leaf.first, leaf.second);
