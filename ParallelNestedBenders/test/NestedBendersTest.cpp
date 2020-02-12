@@ -779,24 +779,24 @@ protected:
 		std::stringstream s;
 		// Header line of File should be this one
 		// We need to write the header line for this file
-		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; Solution value; Return Code; Infeasibility Iterations; Substantial Iterations; Insubstantial Iterations; Solver Wall Clock Time (s); Critical Iterations; Max Length between Crit. It.;";
-        s << "Created Optimality Cuts; Created Feasibility Cuts; ";
+		s << "Problem Name;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Return Code;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
+        s << "Created Optimality Cuts;Created Feasibility Cuts;";
 		// //TODO: Iterate over property tree
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
 		{   
 			std::string name = v.first;
-			s << name << "; ";
+			s << name << ";";
 		}
 		// Detailed Time for several stages. 
-        s << "Time Setup; ";
+        s << "Time Setup;";
         for (int i = 0; i < max_stages_; i++){
-            s << "Time Stage " << i << "; ";
+            s << "Time Stage " << i << ";";
         }
         // Detailled Time for several tasks
-        s << "Time Master; Time Projection; Time ODA; Time Sub; Build Master; Build Projection; Build ODA; Build Sub; Generate Cut;";
+        s << "Time Master;Time Projection;Time ODA;Time Sub;Build Master;Build Projection;Build ODA;Build Sub;Generate Cut;";
         // Date/Timestamp
-        s << "Date; Time; ";
-		s << "Min_CPU; Min_Solver; Max_CPU; Max_Solver;";
+        s << "Date;Time;";
+		s << "Min_CPU;Min_Solver;Max_CPU;Max_Solver;";
 		parameter_name_string_ = s.str();
 		
 		if ( !FileExists(testbed_log_file_string_.c_str()) )  {
@@ -856,6 +856,9 @@ protected:
         std::string substantial_iterations_string("substantial_iterations");
         std::string infeasibility_iterations_string("infeasibility_iterations");
         std::string objective_value_string("objective_value");
+		std::string ub_string("ub");
+		std::string lb_string("lb");
+		std::string relative_gap_string("relative_gap");
         std::string optimality_cuts_string("optimality_cuts");
         std::string feasibility_cuts_string("feasibility_cuts");
         std::string return_code_string("return_code");
@@ -951,13 +954,16 @@ protected:
 
             // We get the parameters from the solver back to evaluate it.
             benders_parameter_ = nested_benders.getParameters();
-
+			
             // File name Should have the following form based on Parameters: Single/Multi/Aggregate-NumberCuts/Aggregate-Percent-Number/Aggregate-Fixed-Number
             std::stringstream s;
             s.str("");
 
             // Write solution line
-            s << stoch_name << "; " << cpuTime << "; " << nested_benders.getNumIterations() << ";" << nested_benders.getObjValue() << "; " << nested_benders.getSolutionCode() << ";" << nested_benders.getNumInfeasibilityIterations() << ";" << nested_benders.getNumIterations()-nested_benders.getNumInsubstantialIterations() << ";" << nested_benders.getNumInsubstantialIterations() << "; "<< solver_time << "; " << nested_benders.getNumCriticalIteration() << ";" << nested_benders.getMaximalLengthOfCriticalIterationSequence() << ";";
+			s << stoch_name << ";" << cpuTime << ";" << nested_benders.getNumIterations() << ";" << nested_benders.getObjValue() << ";" << nested_benders.getUB() << ";" << nested_benders.getLB() << ";";
+			s << nested_benders.getRelativeGap() << ";" << nested_benders.getSolutionCode() << ";" << nested_benders.getNumInfeasibilityIterations() << ";";
+			s << nested_benders.getNumIterations() - nested_benders.getNumInsubstantialIterations() << ";" << nested_benders.getNumInsubstantialIterations() << ";";
+			s << solver_time << ";" << nested_benders.getNumCriticalIteration() << ";" << nested_benders.getMaximalLengthOfCriticalIterationSequence() << ";";
             // Write num cuts
             s << created_opt_cuts << ";" << created_feas_cuts << ";";
             // Store all of the above values in value_map!
@@ -968,6 +974,9 @@ protected:
             values_map[substantial_iterations_string] += nested_benders.getNumIterations()-nested_benders.getNumInsubstantialIterations();
             values_map[infeasibility_iterations_string] += nested_benders.getNumInfeasibilityIterations();
             values_map[objective_value_string] += nested_benders.getObjValue();
+			values_map[ub_string] += nested_benders.getUB();
+			values_map[lb_string] += nested_benders.getLB();
+			values_map[relative_gap_string] += nested_benders.getRelativeGap();
             values_map[optimality_cuts_string] += created_opt_cuts;
             values_map[feasibility_cuts_string] += created_feas_cuts;
             values_map[return_code_string] += nested_benders.getSolutionCode();
@@ -977,31 +986,31 @@ protected:
 			ub_for_iteration_.clear();
 			lb_for_iteration_.clear();
 			for (int i = 0; i < nested_benders.getNumIterations(); i++) {
-				ub_for_iteration_.push_back(nested_benders.getUbForIteration(i+1));
-				lb_for_iteration_.push_back(nested_benders.getLbForIteration(i+1));
+					ub_for_iteration_.push_back(nested_benders.getUBForIteration(i + 1));
+					lb_for_iteration_.push_back(nested_benders.getLBForIteration(i + 1));
 			}
-
+			
             // Write parameter values
             // Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
             BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
             {   
                 std::string name = v.first;
                 std::string value = benders_parameter_.parameter_.get<std::string>(name);
-                s << value << "; ";
+                s << value << ";";
             }
             // Write Detailed Time Statistics
             const parallel_benders::Timer& timer(nested_benders.getTimer());
-            s << timer.GetTime(timer.GetTimeStages()-1) << "; "; // num_stages is time for setup and stuff, because we set the timer to num_stages+1 many stages
+            s << timer.GetTime(timer.GetTimeStages()-1) << ";"; // num_stages is time for setup and stuff, because we set the timer to num_stages+1 many stages
             values_map[time_initial_string] += timer.GetTime(timer.GetTimeStages()-1);
 
             if ( num_stages >= max_stages_)
                 LOG(ERROR) << "Only the first " << num_stages << " stages get reported with wall clock time.";
             for (int i = 0; i < num_stages; i++){
-                s << timer.GetTime(i) << "; ";
+                s << timer.GetTime(i) << ";";
                 values_map["stage"+boost::lexical_cast<std::string>(i)] += timer.GetTime(i);
             }
             for (int i = 0; i < max_stages_-num_stages; i++)// Ensure that the date/time stamp is where it is supposed to be!
-                s << 0 << "; ";
+                s << 0 << ";";
 
             const parallel_benders::Timer& solution_timer(nested_benders.getComputingTimer());
             const parallel_benders::Timer& build_timer(nested_benders.getBuildTimer());
@@ -1040,7 +1049,7 @@ protected:
             value /= repetitions_;
         }
         // Prepare outputstring, according to ordering from above (bad coding..)
-        aggregated_s << stoch_name << "; " << values_map[cpu_time_string] << "; " << values_map[iterations_string] << ";"  << values_map[objective_value_string] << "; "<< values_map[return_code_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << "; "<< values_map[solver_time_string] << "; " << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
+        aggregated_s << stoch_name << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";"  << values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";" << values_map[relative_gap_string] << ";"<< values_map[return_code_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << ";"<< values_map[solver_time_string] << ";" << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
         // Write num cuts
         aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";";
 
@@ -1048,17 +1057,17 @@ protected:
         {   
             std::string name = v.first;
             std::string value = benders_parameter_.parameter_.get<std::string>(name);
-            aggregated_s << value << "; ";
+            aggregated_s << value << ";";
         }
         // Write Detailed Time Statistics
-        aggregated_s << values_map[time_initial_string] << "; "; // num_stages is time for setup and stuff
+        aggregated_s << values_map[time_initial_string] << ";"; // num_stages is time for setup and stuff
         if ( num_stages > max_stages_)
             LOG(ERROR) << "Only the first " << num_stages << " stages get reported with wall clock time.";
         for (int i = 0; i < num_stages; i++){
-            aggregated_s << values_map["stage"+boost::lexical_cast<std::string>(i)] << "; ";
+            aggregated_s << values_map["stage"+boost::lexical_cast<std::string>(i)] << ";";
         }
         for (int i = 0; i < max_stages_-num_stages; i++)// Ensure that the date/time stamp is where it is supposed to be by inserting missing zeroes
-            aggregated_s << 0 << "; ";
+            aggregated_s << 0 << ";";
 
         // Write Time for Master solves, etc. Write Building Time for Master solves etc.
         aggregated_s << values_map[computing_time_0_string] << ";";
@@ -1075,7 +1084,7 @@ protected:
         time_t timeStamp = time(NULL);
         tm * time = localtime(&timeStamp);
         char buffer[256];
-        strftime(buffer, 256, "%m/%d/%y; %H:%M:%S; ", time);
+        strftime(buffer, 256, "%m/%d/%y; %H:%M:%S;", time);
         aggregated_s << buffer;
 
 		// Min,Max times
@@ -1206,7 +1215,7 @@ public:
 			time_t timeStamp = time(NULL);
 			tm * time = localtime(&timeStamp);
 			char buffer[256];
-			strftime(buffer, 256, "%m/%d/%y; %H:%M:%S; ", time);
+			strftime(buffer, 256, "%m/%d/%y; %H:%M:%S;", time);
 			logfile << "Timestamp: " << buffer << "\n";
 			logfile << "--------------------------------------------\n";
 			logfile.close();

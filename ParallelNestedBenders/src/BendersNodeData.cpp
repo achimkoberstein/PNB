@@ -120,9 +120,9 @@ double Timer::GetAggregatedTime() const
 std::string Timer::GetFullTimeString() const
 {
     std::stringstream s;
-    s << GetAggregatedTime() << "; ";
+    s << GetAggregatedTime() << ";";
     for (int i = 0; i < stages_; i++) {
-        s << GetTime(i) << "; ";
+        s << GetTime(i) << ";";
     }
     return s.str();
 }
