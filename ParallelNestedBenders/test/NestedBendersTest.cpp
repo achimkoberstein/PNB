@@ -2652,7 +2652,7 @@ int main(int argc, char *argv[]) {
     //_CrtSetReportMode(_CRT_ASSERT,_CRTDBG_MODE_WNDW);
     int result = 0;
 
-	::testing::GTEST_FLAG(output) = "xml:NestedBendersTestLog.xml"; // store results in xml file //
+	::testing::GTEST_FLAG(output) = "xml:../../../../Data/Benders/NestedBendersTestLog.xml"; // store results in xml file //
 	//::testing::GTEST_FLAG(filter) = "UnitTest.*";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
     ::testing::InitGoogleTest(&argc, argv);
     google::InitGoogleLogging(argv[0]);
