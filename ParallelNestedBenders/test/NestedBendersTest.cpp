@@ -668,10 +668,15 @@ public:
 	void solveSMPSFromList(const char* filename) {
 		std::string line;
 		std::ifstream list;
+		std::string folder("../../../../Data/Benders/");
 		list.open(filename);
 
 		LOG_IF(FATAL, !list.is_open()) << "Could not open " << filename;
 
+		// Prepare the list of cor,tim,sto files
+		std::vector<std::string> cor_files;
+		std::vector<std::string> tim_files;
+		std::vector<std::string> sto_files;
 		while (getline(list, line)) { // cor;tim;sto OR cor_tim;sto OR cor_tim_sto
 			// Split path to testset, problem, instances
 			std::vector<std::string> splitted_line;
@@ -719,8 +724,21 @@ public:
 				sto = splitted_line[2];
 			}
 
-			solveSMPS(cor.c_str(), tim.c_str(), sto.c_str());
-		}	
+			//check if files exist
+			bool files_exist = (FileExists((folder + cor + ".cor").c_str()) || FileExists((folder + cor + ".core").c_str()))
+				&& (FileExists((folder + tim + ".tim").c_str()) || FileExists((folder + tim + ".time").c_str()))
+				&& (FileExists((folder + sto + ".sto").c_str()) || FileExists((folder + sto + ".stoch").c_str()));
+			LOG_IF(FATAL, !files_exist) << "One of .cor, .tim, .sto files for " << cor << " was not found.";
+
+			cor_files.push_back(cor);
+			tim_files.push_back(tim);
+			sto_files.push_back(sto);
+		}
+		
+		// solve all instances
+		for (int i = 0; i < cor_files.size(); i++) {
+			solveSMPS(cor_files[i].c_str(), tim_files[i].c_str(), sto_files[i].c_str());
+		}		
 	}
 
     bool FileExists(const char* filename) 
