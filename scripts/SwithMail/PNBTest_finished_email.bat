@@ -28,5 +28,3 @@ IF %errorlevel% ==0 (ECHO Email sent to %to%) ELSE (ECHO Error while sending ema
 
 endlocal
 
-timeout 10
-
