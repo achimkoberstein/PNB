@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros">
+    <CplexVersion>1290</CplexVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
+    <_PropertySheetDisplayName>CplexConfiguration</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+    <!--$(CplexVersion) is not supported in ItemDefinitionGroup-->
+      <AdditionalIncludeDirectories>../../../../ThirdParty/cplex/cplex1290/include/;../../../../ThirdParty/gurobi/gurobi501/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>cplex1290.lib;gurobi50.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../../../ThirdParty/cplex/cplex1290/lib/x64;../../../../ThirdParty/gurobi/gurobi501/win64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="CplexVersion">
+      <Value>$(CplexVersion)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
