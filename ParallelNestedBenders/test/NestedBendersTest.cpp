@@ -2804,5 +2804,7 @@ int main(int argc, char *argv[]) {
     result = RUN_ALL_TESTS();
     
     //_CrtDumpMemoryLeaks(); // outside of scoping { }
+	// Send email upon test end
+	system("..\\..\\..\\..\\scripts\\SwithMail\\PNBTest_finished_email.bat PNBTest yes");
     return result;
 }
