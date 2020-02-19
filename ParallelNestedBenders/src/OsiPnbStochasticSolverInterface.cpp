@@ -53,6 +53,16 @@ void OsiStochasticParallelNestedBendersSolverInterface::setTestsetProblemInstanc
 	nested_benders_->instance_name_ = instance;
 }
 
+std::vector<std::string> OsiStochasticParallelNestedBendersSolverInterface::getTestsetProblemInstanceNames() const {
+
+	std::vector<std::string> result;
+	result.push_back(nested_benders_->testset_name_);
+	result.push_back(nested_benders_->problem_name_);
+	result.push_back(nested_benders_->instance_name_);
+
+	return result;
+}
+
 void OsiStochasticParallelNestedBendersSolverInterface::setTestsetProblemInstanceNames(std::string path) {
 	// Split path to testset, problem, instances
 	std::vector<std::string> splitted_path(3, "NA");

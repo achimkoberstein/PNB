@@ -32,6 +32,7 @@ public:
 	void printSolutionToFile(const char* filename) const;
 	void setInstanceSpecsFile(const std::string& filename); //create if not exists
 	void setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance); // strings will be transformed to lower case
+	std::vector<std::string> getTestsetProblemInstanceNames() const;
 	void setTestsetProblemInstanceNames(std::string path); // use path to the .sto file
 
     void fixFirstStageVariables(const double* solution);
