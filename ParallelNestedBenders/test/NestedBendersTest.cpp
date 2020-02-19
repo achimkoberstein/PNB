@@ -797,7 +797,7 @@ protected:
 		std::stringstream s;
 		// Header line of File should be this one
 		// We need to write the header line for this file
-		s << "Problem Name;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Return Code;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
+		s << "Testset;Problem;Instance;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Return Code;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
         s << "Created Optimality Cuts;Created Feasibility Cuts;";
 		// //TODO: Iterate over property tree
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
@@ -978,7 +978,9 @@ protected:
             s.str("");
 
             // Write solution line
-			s << stoch_name << ";" << cpuTime << ";" << nested_benders.getNumIterations() << ";" << nested_benders.getObjValue() << ";" << nested_benders.getUB() << ";" << nested_benders.getLB() << ";";
+			//Testset;Problem;Instance
+			s << nested_benders.getTestsetProblemInstanceNames()[0] << ";" << nested_benders.getTestsetProblemInstanceNames()[1] << ";" << nested_benders.getTestsetProblemInstanceNames()[2] << ";";
+			s << cpuTime << ";" << nested_benders.getNumIterations() << ";" << nested_benders.getObjValue() << ";" << nested_benders.getUB() << ";" << nested_benders.getLB() << ";";
 			s << nested_benders.getRelativeGap() << ";" << nested_benders.getSolutionCode() << ";" << nested_benders.getNumInfeasibilityIterations() << ";";
 			s << nested_benders.getNumIterations() - nested_benders.getNumInsubstantialIterations() << ";" << nested_benders.getNumInsubstantialIterations() << ";";
 			s << solver_time << ";" << nested_benders.getNumCriticalIteration() << ";" << nested_benders.getMaximalLengthOfCriticalIterationSequence() << ";";
