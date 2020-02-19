@@ -1,0 +1,35 @@
+let
+    // get the not important cols
+    Params = Excel.CurrentWorkbook(){[Name="tblSettings"]}[Content],
+    #"Changed Type" = Table.TransformColumnTypes(Params,{{"Parameter", type text}, {"Value", type text}, {"Description", type text}}),
+    notImportantParams = Text.Split(#"Changed Type"{5}[Value], ";"),
+    
+    // read the file
+    RunData = RunDataFromCsv,
+    
+    // add Algorithm names
+    Algorithms = AlgorithmParameters,
+    #"Alg_cols" = Table.ColumnNames(#"Algorithms"),
+    #"ImportantParams" = List.Difference( #"Alg_cols", List.Combine({notImportantParams, {"Algorithm"}})),
+    #"Algs to Text" = Table.TransformColumnTypes(Algorithms, List.Transform(ImportantParams, each {_, type text})),
+    #"Params String Alg" = Table.AddColumn(#"Algs to Text", "Params String Alg", each Text.Combine(Record.ToList(Record.SelectFields(_, ImportantParams)), ";"), type text),
+    //#"Params String Alg" = Table.AddColumn(#"Algs to Text", "Params String Alg", each "PNB_INT_ALGORITHM_DETEQ;0;11;11;1;false;0;0;0;0,00000099999999999999995;0;false;true;5;0,10000000000000001;0;0;0,5;0,5;1;0;0,00000099999999999999995;0,00000099999999999999995;0,00000099999999999999995;0,00000099999999999999995;0,10000000000000001;0;false;-2;-2;false;false;0;1;1", type text),
+    //delete all columns except Params String Alg and Algorithm
+    #"Algorithms_for_Join" = Table.RemoveColumns(#"Params String Alg", List.Difference(Table.ColumnNames(#"Algorithms"), {"Algorithm"})),
+    #"Run to Text" = Table.TransformColumnTypes(RunData, List.Transform(ImportantParams, each {_, type text})),
+    #"Params String" = Table.AddColumn(#"Run to Text", "Params String", each Text.Combine(Record.ToList(Record.SelectFields(_, ImportantParams)), ";"), type text),
+    #"Merged Queries" = Table.Join(#"Params String", {"Params String"}, #"Algorithms_for_Join", {"Params String Alg"}, JoinKind.LeftOuter),
+    #"Removed coded cols" = Table.RemoveColumns(#"Merged Queries",{"Params String Alg", "Params String"}), 
+
+    // transform columns
+    DecimalCols = {"Overall Wall Clock Time (s)", "Solution value", "Solver Wall Clock Time (s)", "PNB_TREE_WALK_STRATEGY_EPSILON", "PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD", "PNB_LEVEL_LAMBDA", "PNB_ODA_KAPPA", "PNB_TOLERANCE_ZERO", "PNB_TOLERANCE_INTEGER", "PNB_EPSILON_ABSOLUTE", "PNB_EPSILON_RELATIVE", "PNB_CVAR_BETA", "PNB_MAXIMAL_SOLUTION_TIME", "Time Setup", "Time Stage 0", "Time Stage 1", "Time Stage 2", "Time Stage 3", "Time Stage 4", "Time Stage 5", "Time Stage 6", "Time Stage 7", "Time Stage 8", "Time Stage 9", "Time Stage 10", "Time Master", "Time Projection", "Time ODA", "Time Sub", "Build Master", "Build Projection", "Build ODA", "Build Sub", "Generate Cut"},
+    IntegerCols = {"Iterations", "Infeasibility Iterations", "Substantial Iterations", "Insubstantial Iterations", "Critical Iterations", "Max Length between Crit. It.", "Created Optimality Cuts", "Created Feasibility Cuts",  "PNB_WARM_START", "PNB_LP_METHOD", "PNB_FEAS_CUT_LP_METHOD", "PNB_AGGREGATED_OPTIMALITY_CUTS", "PNB_RELAXATION", "PNB_TREE_WALK_STRATEGY", "PNB_TREE_WALK_STRATEGY_STAGE", "PNB_HANDLE_FEAS_CUTS", "PNB_STAGE_AGGREGATION_START", "PNB_STAGE_AGGREGATION_END", "PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD", "PNB_USE_START_SOLUTION", "PNB_NUM_CPU", "PNB_CPU_USED", "PNB_ODA_AGGREGATES", "PNB_STAGE_LEVEL", "PNB_CVAR_RHO", "PNB_COMPUTE_PRIMAL_SOLUTIONS", "PNB_COMPUTE_DUAL_SOLUTIONS", "PNB_LP_ROUNDS_LIMIT"},
+    BooleanCols = {"PNB_PRINT_SUBPROBLEMS", "PNB_DYNAMIC_AGGREGATION", "PNB_STAGE_AGGREGATION", "PNG_STAGE_AGGREGATION_DIRECTION", "PNB_BOUNDS_IN_MATRIX", "PNB_CUT_CONSOLIDATION", "PNB_CUT_CONSOLIDATION_CUT_COMPUTATION", "PNB_CVAR_WITH_FIRST_STAGE", "PNB_COMPUTE_OBJECTIVE_VALUES"},
+    DecimalColsType = Table.TransformColumnTypes(#"Removed coded cols", List.Transform(DecimalCols, each {_, type number})),
+    IntegerColsType = Table.TransformColumnTypes(DecimalColsType, List.Transform(IntegerCols, each {_, Int64.Type})),
+    BooleanColsType = Table.TransformColumnTypes(IntegerColsType, List.Transform(BooleanCols, each {_, type logical})),
+    TimeColsType = Table.TransformColumnTypes(BooleanColsType,{{"Time", type time}}),
+    DateColsType = Table.TransformColumnTypes(TimeColsType, {{"Date", type date}}, "en-US"),
+    #"Reordered Columns" = Table.ReorderColumns(DateColsType,{"RunId", "Problem Name", "Algorithm", "Overall Wall Clock Time (s)", "Iterations", "Solution value", "Return Code", "PNB_RELAXATION", "PNB_BENDERS", "PNB_LP_ROUNDS_LIMIT", "PNB_WARM_START", "PNB_USE_START_SOLUTION", "PNB_AGGREGATED_OPTIMALITY_CUTS", "Infeasibility Iterations", "Substantial Iterations", "Insubstantial Iterations", "Solver Wall Clock Time (s)", "Critical Iterations", "Max Length between Crit. It.", "Created Optimality Cuts", "Created Feasibility Cuts", "PNB_PRINT_SUBPROBLEMS", "PNB_LP_METHOD", "PNB_FEAS_CUT_LP_METHOD", "PNB_DYNAMIC_AGGREGATION", "PNB_TREE_WALK_STRATEGY", "PNB_TREE_WALK_STRATEGY_STAGE", "PNB_TREE_WALK_STRATEGY_EPSILON", "PNB_HANDLE_FEAS_CUTS", "PNB_STAGE_AGGREGATION", "PNB_STAGE_AGGREGATION_START", "PNB_STAGE_AGGREGATION_END", "PNG_STAGE_AGGREGATION_DIRECTION", "PNB_BOUNDS_IN_MATRIX", "PNB_CUT_CONSOLIDATION", "PNB_CUT_CONSOLIDATION_CUT_COMPUTATION", "PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD", "PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD", "PNB_NUM_CPU", "PNB_CPU_USED", "PNB_MAXIMAL_SOLUTION_TIME", "PNB_LEVEL_LAMBDA", "PNB_ODA_KAPPA", "PNB_ODA_AGGREGATES", "PNB_STAGE_LEVEL", "PNB_TOLERANCE_ZERO", "PNB_TOLERANCE_INTEGER", "PNB_EPSILON_ABSOLUTE", "PNB_EPSILON_RELATIVE", "PNB_CVAR_BETA", "PNB_CVAR_RHO", "PNB_CVAR_WITH_FIRST_STAGE", "PNB_COMPUTE_PRIMAL_SOLUTIONS", "PNB_COMPUTE_DUAL_SOLUTIONS", "PNB_COMPUTE_OBJECTIVE_VALUES", "Time Setup", "Time Stage 0", "Time Stage 1", "Time Stage 2", "Time Stage 3", "Time Stage 4", "Time Stage 5", "Time Stage 6", "Time Stage 7", "Time Stage 8", "Time Stage 9", "Time Stage 10", "Time Master", "Time Projection", "Time ODA", "Time Sub", "Build Master", "Build Projection", "Build ODA", "Build Sub", "Generate Cut", "Date", "Time", "Min_CPU", "Min_Solver", "Max_CPU", "Max_Solver"})
+in
+    #"Reordered Columns"

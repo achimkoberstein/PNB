@@ -1,0 +1,70 @@
+let
+    // get the path to default params .xml file
+    Params = Excel.CurrentWorkbook(){[Name="tblSettings"]}[Content],
+    #"Changed Type" = Table.TransformColumnTypes(Params,{{"Parameter", type text}, {"Value", type text}, {"Description", type text}}),
+    defaultParamsFilePath = #"Changed Type"{4}[Value],
+
+    // read the file
+    RawContents = try Text.FromBinary(File.Contents(defaultParamsFilePath)), // returns a record [HasError: true/false, Value: table]
+    FileNotFound = RawContents[HasError],
+    AddRootToStart = Text.Replace(RawContents[Value], "<?xml version=""1.0"" encoding=""utf-8""?>", "<root>"),
+    AddRootToEnd = Text.Insert(AddRootToStart, Text.Length(AddRootToStart), "</root>"),
+    // now we have proper xml
+    #"Parse Params" = Xml.Tables(AddRootToEnd),
+    // Algorithms
+    Algorithms = Excel.CurrentWorkbook(){[Name="tblAlgorithms"]}[Content],
+    #"Clean JSON" = Table.ReplaceValue(Algorithms,"\","",Replacer.ReplaceText,{"Parameters"}),
+    #"Replaced empty algs" = Table.ReplaceValue(#"Clean JSON",null,"{""PNB_BENDERS"" : ""Algorithm is empty on Settings tab""}",Replacer.ReplaceValue,{"Algorithm", "Parameters"}),
+    #"Parsed JSON" = Table.TransformColumns(#"Replaced empty algs",{{"Parameters", Json.Document}}),
+    CorrectNAlgorithms = if Table.RowCount(#"Parsed JSON") = 20 then true else false,
+    #"Expanded Parameters" = Table.ExpandRecordColumn(#"Parsed JSON", "Parameters", Table.ColumnNames(#"Parse Params")),
+    #"Rename Coded cols" = Table.RenameColumns(#"Parse Params",{{"PNB_BENDERS", "PNB_BENDERS Code"}}),
+    
+    // PNB_BENDERS in Default parameters
+    PNB_BENDERS = Excel.CurrentWorkbook(){[Name="tblPNB_BENDERS"]}[Content],
+    #"PNB_BENDERS type" = Table.TransformColumnTypes(PNB_BENDERS,{{"PNB_BENDERS NumCode", type text}, {"PNB_BENDERS", type text}}),
+    Add_PNB_Benders_Value = Table.Join(#"Rename Coded cols", "PNB_BENDERS Code", #"PNB_BENDERS type", "PNB_BENDERS NumCode"),
+    #"Removed Columns" = Table.RemoveColumns(Add_PNB_Benders_Value,{"PNB_BENDERS Code", "PNB_BENDERS NumCode"}),
+    Default_Parameters = Table.AddColumn(#"Removed Columns", "Algorithm", each "Defaults", type text),
+
+    #"Appended Query" = Table.Combine({#"Expanded Parameters", Default_Parameters}),
+    Headers = Table.ColumnNames(#"Appended Query"),
+    #"Transposed Table" = Table.Transpose(#"Appended Query"),
+    #"Defaults for Alg 1" = Table.ReplaceValue(#"Transposed Table", null, each [Column21], Replacer.ReplaceValue, {"Column1"}),
+    #"Defaults for Alg 2" = Table.ReplaceValue(#"Defaults for Alg 1",null, each [Column21], Replacer.ReplaceValue, {"Column2"}),
+    #"Defaults for Alg 3" = Table.ReplaceValue(#"Defaults for Alg 2",null, each [Column21], Replacer.ReplaceValue, {"Column3"}),
+    #"Defaults for Alg 4" = Table.ReplaceValue(#"Defaults for Alg 3",null, each [Column21], Replacer.ReplaceValue, {"Column4"}),
+    #"Defaults for Alg 5" = Table.ReplaceValue(#"Defaults for Alg 4",null, each [Column21], Replacer.ReplaceValue, {"Column5"}),
+    #"Defaults for Alg 6" = Table.ReplaceValue(#"Defaults for Alg 5",null, each [Column21], Replacer.ReplaceValue, {"Column6"}),
+    #"Defaults for Alg 7" = Table.ReplaceValue(#"Defaults for Alg 6",null, each [Column21], Replacer.ReplaceValue, {"Column7"}),
+    #"Defaults for Alg 8" = Table.ReplaceValue(#"Defaults for Alg 7",null, each [Column21], Replacer.ReplaceValue, {"Column8"}),
+    #"Defaults for Alg 9" = Table.ReplaceValue(#"Defaults for Alg 8",null, each [Column21], Replacer.ReplaceValue, {"Column9"}),
+    #"Defaults for Alg 10" = Table.ReplaceValue(#"Defaults for Alg 9",null, each [Column21], Replacer.ReplaceValue, {"Column10"}),
+    #"Defaults for Alg 11" = Table.ReplaceValue(#"Defaults for Alg 10",null, each [Column21], Replacer.ReplaceValue, {"Column11"}),
+    #"Defaults for Alg 12" = Table.ReplaceValue(#"Defaults for Alg 11",null, each [Column21], Replacer.ReplaceValue, {"Column12"}),
+    #"Defaults for Alg 13" = Table.ReplaceValue(#"Defaults for Alg 12",null, each [Column21], Replacer.ReplaceValue, {"Column13"}),
+    #"Defaults for Alg 14" = Table.ReplaceValue(#"Defaults for Alg 13",null, each [Column21], Replacer.ReplaceValue, {"Column14"}),
+    #"Defaults for Alg 15" = Table.ReplaceValue(#"Defaults for Alg 14",null, each [Column21], Replacer.ReplaceValue, {"Column15"}),
+    #"Defaults for Alg 16" = Table.ReplaceValue(#"Defaults for Alg 15",null, each [Column21], Replacer.ReplaceValue, {"Column16"}),
+    #"Defaults for Alg 17" = Table.ReplaceValue(#"Defaults for Alg 16",null, each [Column21], Replacer.ReplaceValue, {"Column17"}),
+    #"Defaults for Alg 18" = Table.ReplaceValue(#"Defaults for Alg 17",null, each [Column21], Replacer.ReplaceValue, {"Column18"}),
+    #"Defaults for Alg 19" = Table.ReplaceValue(#"Defaults for Alg 18",null, each [Column21], Replacer.ReplaceValue, {"Column19"}),
+    #"Defaults for Alg 20" = Table.ReplaceValue(#"Defaults for Alg 19",null, each [Column21], Replacer.ReplaceValue, {"Column20"}),
+    Transposed_back = Table.Transpose(#"Defaults for Alg 20", Headers),
+
+    // data type transformatios
+    DecimalCols = {"PNB_TREE_WALK_STRATEGY_EPSILON", "PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD", "PNB_LEVEL_LAMBDA", "PNB_ODA_KAPPA", "PNB_TOLERANCE_ZERO", "PNB_TOLERANCE_INTEGER", "PNB_EPSILON_ABSOLUTE", "PNB_EPSILON_RELATIVE", "PNB_CVAR_BETA", "PNB_MAXIMAL_SOLUTION_TIME"},
+    IntegerCols = {"PNB_WARM_START", "PNB_LP_METHOD", "PNB_FEAS_CUT_LP_METHOD", "PNB_AGGREGATED_OPTIMALITY_CUTS", "PNB_RELAXATION", "PNB_TREE_WALK_STRATEGY", "PNB_TREE_WALK_STRATEGY_STAGE", "PNB_HANDLE_FEAS_CUTS", "PNB_STAGE_AGGREGATION_START", "PNB_STAGE_AGGREGATION_END", "PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD", "PNB_USE_START_SOLUTION", "PNB_NUM_CPU", "PNB_CPU_USED", "PNB_ODA_AGGREGATES", "PNB_STAGE_LEVEL", "PNB_CVAR_RHO", "PNB_COMPUTE_PRIMAL_SOLUTIONS", "PNB_COMPUTE_DUAL_SOLUTIONS", "PNB_LP_ROUNDS_LIMIT", "PNB_LP_SWITCHES_LIMIT", "PNB_LP_MAJOR_IT_LIMIT", "PNB_LP_ALLOW_TEST_CASES"},
+    BooleanCols = {"PNB_PRINT_SUBPROBLEMS", "PNB_DYNAMIC_AGGREGATION", "PNB_STAGE_AGGREGATION", "PNG_STAGE_AGGREGATION_DIRECTION", "PNB_BOUNDS_IN_MATRIX", "PNB_CUT_CONSOLIDATION", "PNB_CUT_CONSOLIDATION_CUT_COMPUTATION", "PNB_CVAR_WITH_FIRST_STAGE", "PNB_COMPUTE_OBJECTIVE_VALUES", "PNB_AUTO_D2_ALGORITHM", "PNB_SAVE_INSTANCE_SPECS"},
+    TextCols = {"Algorithm", "PNB_BENDERS"},
+    #". to comma" = Table.ReplaceValue(#"Transposed_back",".",",",Replacer.ReplaceText,DecimalCols),
+    DecimalColsType = Table.TransformColumnTypes(#". to comma", List.Transform(DecimalCols, each {_, type number})),
+    IntegerColsType = Table.TransformColumnTypes(DecimalColsType, List.Transform(IntegerCols, each {_, Int64.Type})),
+    BooleanColsType = Table.TransformColumnTypes(IntegerColsType, List.Transform(BooleanCols, each {_, type logical})),
+    TextColsType = Table.TransformColumnTypes(BooleanColsType, List.Transform(TextCols, each {_, type text})),
+    ErrorText = "",
+    ErrorOfNAlgorithms = if not CorrectNAlgorithms then " Algorithm table on Settings tab should have exactly 20 rows (some of them can be empty)." else ErrorText,
+    ErrorOfFile = if FileNotFound then Text.Combine({" The .xml file with default parameter not found. Check the defaultParamsFilePath on Settings tab.", ErrorOfNAlgorithms}) else ErrorOfNAlgorithms,
+    Result = if FileNotFound or not CorrectNAlgorithms then error ErrorOfFile else TextColsType
+in
+    Result
