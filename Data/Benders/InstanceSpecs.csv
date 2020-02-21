@@ -196,13 +196,13 @@ postponement;postponement;ptest_verteilung161012;2;1296;0;12;621;858;0;0;1275;85
 postponement;postponement;ts_256_new=sl600l2flex_2_end;2;256;0;12;621;858;0;0;1431;858;true;true;false;true;false;false;true;false;false;false
 postponement;postponement;ts_36_new=sl600l2flex_2_end;2;36;0;12;621;858;0;0;1431;858;true;true;false;true;false;false;true;false;false;false
 postponement;postponement;ts_81_new=sl600l2flex_2_end;2;81;0;12;621;858;0;0;1431;858;true;true;false;true;false;false;true;false;false;false
-postponement;smps 1;ptest_1;2;1;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
-postponement;smps 100;ptest_100;2;100;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
-postponement;smps 11;ptest_11;2;11;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
-postponement;smps 25;ptest_25;2;25;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
-postponement;smps 50;ptest_50;2;50;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
-postponement;smps 75;ptest_75;2;75;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
-postponement;smps lp 100;ptest_lp_100;2;100;0;0;633;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
+postponement;postponement;ptest_1;2;1;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
+postponement;postponement;ptest_100;2;100;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
+postponement;postponement;ptest_11;2;11;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
+postponement;postponement;ptest_25;2;25;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
+postponement;postponement;ptest_50;2;50;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
+postponement;postponement;ptest_75;2;75;0;12;621;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
+postponement;postponement;ptest_lp_100;2;100;0;0;633;858;0;0;1275;858;true;true;false;true;false;false;true;false;false;false
 posts;fxm;fxm2_16;2;16;0;0;114;92;0;0;343;238;true;false;true;true;false;false;true;false;false;false
 posts;fxm;fxm2_6;2;6;0;0;114;92;0;0;343;238;true;false;true;true;false;false;true;false;false;false
 posts;fxm;fxm3_16;3;256;0;0;114;92;0;0;99;82;true;false;true;true;false;false;true;false;false;false

@@ -199,13 +199,13 @@ postponement/postponement/ptest_verteilung161012
 postponement/postponement/ts_256_new=sl600l2flex_2_end
 postponement/postponement/ts_36_new=sl600l2flex_2_end
 postponement/postponement/ts_81_new=sl600l2flex_2_end
-postponement/smps 1/ptest_1
-postponement/smps 100/ptest_100
-postponement/smps 11/ptest_11
-postponement/smps 25/ptest_25
-postponement/smps 50/ptest_50
-postponement/smps 75/ptest_75
-postponement/smps lp 100/ptest_lp_100
+postponement/postponement/ptest_1
+postponement/postponement/ptest_100
+postponement/postponement/ptest_11
+postponement/postponement/ptest_25
+postponement/postponement/ptest_50
+postponement/postponement/ptest_75
+postponement/postponement/ptest_lp_100
 posts/fxm/fxm2_16
 posts/fxm/fxm2_6
 posts/fxm/fxm3_16

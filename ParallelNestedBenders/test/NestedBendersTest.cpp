@@ -1520,12 +1520,12 @@ TEST_F(NestedBendersTestInteger, for_LP) {
 	EXPECT_NEAR(solveSMPS("postponement/postponement/TS_36_new=SL600L2Flex_2_end"), 0, 1);
 	EXPECT_NEAR(solveSMPS("postponement/postponement/TS_81_new=SL600L2Flex_2_end"), 0, 1);
 	EXPECT_NEAR(solveSMPS("postponement/postponement/TS_256_new=SL600L2Flex_2_end"), 0, 1);
-	EXPECT_NEAR(solveSMPS("postponement/smps 11/pTest_11"), -515723, 10);
-	EXPECT_NEAR(solveSMPS("postponement/smps 100/ptest_100"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps 25/ptest_25"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps 50/ptest_50"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps 75/ptest_75"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps lp 100/ptest_lp_100"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/pTest_11"), -515723, 10);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_100"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_25"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_50"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_75"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_lp_100"), 0.0, 0.1);
 
 	//rahmaniani
 	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
@@ -2751,13 +2751,13 @@ TEST_F(NestedBendersTestInteger,postponement){// postponement
 	EXPECT_NEAR(solveSMPS("postponement/postponement/TS_36_new=SL600L2Flex_2_end"),0,1);
 	EXPECT_NEAR(solveSMPS("postponement/postponement/TS_81_new=SL600L2Flex_2_end"),0,1);
 	EXPECT_NEAR(solveSMPS("postponement/postponement/TS_256_new=SL600L2Flex_2_end"),0,1);
-    EXPECT_NEAR(solveSMPS("postponement/smps 11/pTest_11"), -515723, 10);
-	EXPECT_NEAR(solveSMPS("postponement/smps 1/ptest_1"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps 100/ptest_100"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps 25/ptest_25"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps 50/ptest_50"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps 75/ptest_75"), 0.0, 0.1);
-	EXPECT_NEAR(solveSMPS("postponement/smps lp 100/ptest_lp_100"), 0.0, 0.1);
+    EXPECT_NEAR(solveSMPS("postponement/postponement/pTest_11"), -515723, 10);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_1"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_100"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_25"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_50"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_75"), 0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_lp_100"), 0.0, 0.1);
 }
 
 TEST_F(NestedBendersTestInteger,mcfndsd_cr_RAHMANIANI){// postponement
