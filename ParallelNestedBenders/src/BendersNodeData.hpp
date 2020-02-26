@@ -101,9 +101,10 @@ namespace parallel_benders{
     const int PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY = 2;
 
     const int PNB_INT_NO_START_SOLUTION = 0;
-    const int PNB_INT_COMPUTE_EV_SOLUTION = 1;
-    const int PNB_INT_USE_EV_SOLUTION = 2;
+    const int PNB_INT_EV_SOLUTION_FROM_PNB = 1; // find EV solution using ev_pnb, use cuts from ev_pnb.
+    const int PNB_INT_USE_EV_SOLUTION = 2; // benders started using ev solution from osi solver
     const int PNB_INT_USE_SUPPLIED_SOLUTION = 3;
+	const int PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV = 4; // find EV solution using ev_pnb, use cuts from ev_pnb. ev_pnb is also started with ev solution from osi solver
 
     // Specify algorithm
     const int PNB_INT_ALGORITHM_DETEQ = 0;

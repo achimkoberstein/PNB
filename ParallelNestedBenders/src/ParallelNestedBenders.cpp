@@ -890,7 +890,7 @@ namespace parallel_benders {
                     //if ( lower_bound_ > -infinity_ ){
                     //    double regularized_gap = std::abs(regularized_solution_value_-lower_bound_)/(std::abs(regularized_solution_value_)+ten_to_minus_ten);
                     //    LOG(INFO) << "Current regularized gap " << regularized_gap;
-                    //    if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION )
+                    //    if ( start_solution_ == PNB_INT_EV_SOLUTION_FROM_PNB )
                     //        if ( current_iteration_ <= 2 )
                     //            not_stop_loop = true;
                     //}
@@ -5956,7 +5956,6 @@ namespace parallel_benders {
             }
 			else 
 				osi_solver->initialSolve(); 
-			
         }
     }
 
@@ -7084,7 +7083,7 @@ namespace parallel_benders {
         for (int i = 0; i < num_stages_-1;i++)
             num_cols_for_warm_up_solution += stage_data_[i]->num_columns_;
 		// Check if method is applicable!
-        if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION){
+        if ( warm_up_ && (start_solution_ == PNB_INT_EV_SOLUTION_FROM_PNB || start_solution_ == PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV)){
             for (int stage = 1; stage < num_stages_; stage++){
                 if ( stage_data_[stage]->stochastic_matrix_w_ || stage_data_[stage]->stochastic_objective_ || stage_data_[stage]->stochastic_bounds_ )
                 {
@@ -7096,9 +7095,9 @@ namespace parallel_benders {
         }
 
         // Warm up period
-        if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
-            // Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
-
+        if ( warm_up_ && (start_solution_ == PNB_INT_EV_SOLUTION_FROM_PNB || start_solution_ == PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV)){
+			LOG(FATAL) << "PNB_USE_START_SOLUTION = PNB_INT_EV_SOLUTION_FROM_PNB (1) or PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV(4) is not completely implemented and does not work properly. Set it to PNB_INT_USE_EV_SOLUTION (2)";
+			// Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
             //ev_smi->writeSmps("ev_problem",true);
             ParallelNestedBenders ev_pnb(ev_smi);
@@ -7107,20 +7106,53 @@ namespace parallel_benders {
             param.init();
             param.parameter_.put(PNB_EPSILON_RELATIVE,0.1);
             param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,1); // Single cut (only have one scenario anyway..)
-            param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,num_stages_-2); // We need to apply the solution later, otherwise we have a problem!
-            param.parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_SUPPLIED_SOLUTION);
+            param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_ALL); // We need to apply the solution later, otherwise we have a problem!
+            param.SetParameterValue(PNB_RELAXATION, solve_relaxation_);
             ev_pnb.parameter_ = param;
-            // Solve EV first with deteq, then use this as a start solution for EV problem
-            //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
-            //ev_smi->loadOsiSolverData();
-            //osi_solver_->initialSolve();
-            //if ( osi_solver_->isProvenOptimal() ){
-            //    // Set parallel benders solution
-            //    ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
-            //}
+			if (start_solution_ == PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV) {
+				param.parameter_.put(PNB_USE_START_SOLUTION, PNB_INT_USE_SUPPLIED_SOLUTION);
+				// Solve EV first with deteq, then use this as a start solution for EV problem
+				ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
+				ev_smi->loadStoredDataInSolver();
+				//ev_smi->loadOsiSolverData(); TODO: it was here before, what is the difference
+				// We need to differentiate between integer and not
+				// TODO: why not simply start here a PNB interface?
+				int num_ints = ev_smi->getIntegerLen();
+				if (num_ints && (!solve_relaxation_ || solve_relaxation_ > core_->getNumStages())) { // no relaxation
+					osi_solver_->branchAndBound();
+				}
+				else if (num_ints && solve_relaxation_ > 1) { // relax integers for stages starting from PNB_RELAXATION stage			
+					int relaxation_int_start = 0;
+					for (int stage_index = 0; stage_index < solve_relaxation_ - 1; stage_index++) {
+						relaxation_int_start += core_->getIntCols(stage_index).size();
+					}
+					if (relaxation_int_start < num_ints) {
+						const std::vector<int>& int_indices = ev_smi->getIntIndices();
+						osi_solver_->setContinuous(&int_indices[relaxation_int_start], int_indices.size() - relaxation_int_start);
+						osi_solver_->branchAndBound();
+					}
+					else { // all ints were relaxed
+						osi_solver_->initialSolve();
+					}
+
+				}
+				else { // not integer (nor binary) or we relax all stages
+					osi_solver_->initialSolve();
+				}
+
+				if (osi_solver_->isProvenOptimal()) {
+					// Set parallel benders solution
+					ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
+					LOG(INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
+				}
+				// Reenable osi_solver
+				osi_solver_->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+			}		
             ev_pnb.Init();
             ev_pnb.Solve();
+			LOG(INFO) << "Calculated EV Solution with value " << ev_pnb.upper_bound_;
             double * temp_ptr = new double[num_cols_for_warm_up_solution];
+			LOG_IF(FATAL, ev_pnb.solution_code_ != PNB_SOLUTION_OPTIMAL) << "PNB for EV starting solution is not solved to optimality";
             for (int i = 0; i < num_stages_-1; i++)
                 memcpy(temp_ptr+ (i>0?stage_data_[i-1]->num_columns_:0),&ev_pnb.tree_nodes_by_stage_[i][0]->getDataPtr()->incumbent_col_solution_[0],sizeof(double)*stage_data_[i]->num_columns_);
             warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
@@ -7159,8 +7191,6 @@ namespace parallel_benders {
                     (*it)->not_active_iterations_ = 0;
                     (*it)->cut_creation_iteration_ = 0;
                 }
-
-
             }
             delete ev_smi;
         }
@@ -7172,7 +7202,30 @@ namespace parallel_benders {
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
             ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
             ev_smi->loadStoredDataInSolver();
-            SolveSolverInterface(osi_solver_);
+			// We need to differentiate between integer and not
+			// TODO: why not simply start here a PNB interface?
+			int num_ints = ev_smi->getIntegerLen();
+			if (num_ints && (!solve_relaxation_ || solve_relaxation_ > core_->getNumStages())) { // no relaxation
+				osi_solver_->branchAndBound();
+			}
+			else if (num_ints && solve_relaxation_ > 1) { // relax integers for stages starting from PNB_RELAXATION stage			
+				int relaxation_int_start = 0;
+				for (int stage_index = 0; stage_index < solve_relaxation_ - 1; stage_index++) {
+					relaxation_int_start += core_->getIntCols(stage_index).size();
+				}
+				if (relaxation_int_start < num_ints) {
+					const std::vector<int>& int_indices = ev_smi->getIntIndices();
+					osi_solver_->setContinuous(&int_indices[relaxation_int_start], int_indices.size() - relaxation_int_start);
+					osi_solver_->branchAndBound();
+				}
+				else { // all ints were relaxed
+					osi_solver_->initialSolve();
+				}
+				
+			}
+			else { // not integer (nor binary) or we relax all stages
+				osi_solver_->initialSolve();
+			}
 
             if ( osi_solver_->isProvenOptimal() ){
                 double * temp_ptr = new double[num_cols_for_warm_up_solution];
@@ -7197,9 +7250,8 @@ namespace parallel_benders {
             }
             ev_smi->releaseSolver();
             ev_smi->releaseCore();
-            osi_solver_->loadProblem(0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr); // Reset osi_solver to get a clean first stage solver instance
-            delete ev_smi;
-
+			// Reenable osi_solver
+			osi_solver_->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
         }
         if ( warm_up_ ){
             current_stage_ = num_stages_-1;
@@ -7216,7 +7268,7 @@ namespace parallel_benders {
 /*                warm_up_ = false;
                 current_stage_ = 0;    */            
             }
-            if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
+            if ( start_solution_ == PNB_INT_EV_SOLUTION_FROM_PNB || start_solution_ == PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV ){
                 warm_up_ = false; // If this stays true, we set the first solution of the problem to the EV-solution
                 current_stage_ = 0;
             }
