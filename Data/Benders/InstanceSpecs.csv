@@ -2308,3 +2308,4 @@ wright;data-scenarios;storm-2000;2;2000;0;0;121;185;0;0;1259;528;true;true;false
 wright;data-scenarios;storm-3000;2;3000;0;0;121;185;0;0;1259;528;true;true;false;true;false;false;true;false;false;false
 wright;data-scenarios;storm-5000;2;5000;0;0;121;185;0;0;1259;528;true;true;false;true;false;false;true;false;false;false
 posts;pltexp;pltexpa7_6;7;46656;0;0;188;62;0;0;272;104;false;false;true;true;false;false;true;false;false;false
+glushko;sndp_mini_tests;sndp_testcase_14;2;3;0;2;0;0;3;0;5;12;false;false;false;false;false;false;true;false;false;false
