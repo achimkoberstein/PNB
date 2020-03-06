@@ -1621,6 +1621,10 @@ TEST_F(NestedBendersTestInteger, for_LP) {
 	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25e"), -253.602, 0.1);
 }
 
+TEST_F(NestedBendersTestInteger, lsfrp_GLUSHKO) {
+	EXPECT_NEAR(solveSMPS("glushko/lsfrp/LSFRP_instance10_stochastic"), -0.0, 0.1);
+}
+
 TEST_F(NestedBendersTestInteger, sndp) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_1"), -114935, 0.1);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.1);
