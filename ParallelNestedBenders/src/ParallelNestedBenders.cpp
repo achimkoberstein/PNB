@@ -680,23 +680,13 @@ namespace parallel_benders {
 		lp_rounds_limit_ = param.get(PNB_LP_ROUNDS_LIMIT, 0);
 		lp_switches_limit_ = param.get(PNB_LP_SWITCHES_LIMIT, 1);
 		lp_major_it_limit_ = param.get(PNB_LP_MAJOR_IT_LIMIT, 1);
-		int lp_allow_test_cases = param.get(PNB_LP_ALLOW_TEST_CASES, 1000000);
-		bool lp_check_passed = ProblemSuitableForLPCuts(lp_allow_test_cases);
 
 		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
 		timer_.Stop(num_stages_);
-		
-		if (!lp_check_passed) {
-			solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
-		}
     }
 
     void ParallelNestedBenders::Solve()
     {
-		if (solution_code_ == PNB_SOLUTION_PARAMETER_PROBLEM) { // may be found during the Init()
-			LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
-			return;
-		}
 
 		smi_->writeSmps("modeloutput");
 		
@@ -732,9 +722,6 @@ namespace parallel_benders {
             assert( !non_staircase_stochastic_problem_);
             LOG(INFO)<< "Done.";
         }
-		if (instance_specs_to_file_) {
-			SaveInstanceSpecs();
-		}
 		if (integer_problems_[0] && solve_relaxation_ == 1) { // stages are indexed as 0,1,2...
 			integer_problems_[0] = false;
 			LOG(INFO) << "We solve the LP relaxation for stage 1.";
@@ -789,6 +776,17 @@ namespace parallel_benders {
             AdjustProblem(); // We need to set the important properties again!
             // Best way would be to just recreate the benders_node_data tree from scratch!
         }
+
+		if (instance_specs_to_file_) {
+			SaveInstanceSpecs();
+		}
+
+		int lp_allow_test_cases = parameter_.GetIntParamValue(PNB_LP_ALLOW_TEST_CASES);
+		if (!ProblemSuitableForLPCuts(lp_allow_test_cases)) {
+			solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+			LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
+			return;
+		}
 
         // Some tests for sequencing protocols.
         if ( num_stages_ == 2 ){ // No need for sequencing protocols in the two-stage case
