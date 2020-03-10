@@ -772,19 +772,22 @@ protected:
         generate_initial_solution_ = false;
         compute_statistics_ = false;
 
-		parameter_strings_.push_back("{}"); // default parameters - single-cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 1 }"); // multi cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 2 }"); // multi cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 5, \"PNB_NUM_CPU\" : 0 }");
+		//parameter_strings_.push_back("{}"); // default parameters - single-cut
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
+		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0, \"PNB_STAGE_AGGREGATION\" : true, \"PNB_STAGE_AGGREGATION_START\" : 1 , \"PNB_STAGE_AGGREGATION_END\" : -1 }");
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_STAGE_AGGREGATION\" : true, \"PNB_STAGE_AGGREGATION_START\" : 1 , \"PNB_STAGE_AGGREGATION_END\" : -1 }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 1 }"); // multi cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 2 }"); // multi cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 5, \"PNB_NUM_CPU\" : 0 }");
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_USE_START_SOLUTION\" : 1 }"); // BUG#1
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_CUT_CONSOLIDATION\" : true, \"PNB_USE_START_SOLUTION\" : 2  }");
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_CUT_CONSOLIDATION\" : true, \"PNB_USE_START_SOLUTION\" : 2  }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\" }"); // ODA crashes and not working for multi stage
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }");
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\" }");
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\" }");
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\" }");
     }
     virtual ~NestedBendersTest(){}
@@ -1256,8 +1259,8 @@ protected:
 		//parameter_strings_.push_back("{}"); // default parameters
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
 
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0 }"); // single cut
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0 }"); // multi cut
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0 }"); // single cut
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0 }"); // multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1000, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut
@@ -1285,11 +1288,9 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 2 }"); // hybrid cut, warm start 2
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 2 }"); // hybrid cut, warm start 2
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1000, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 2 }"); // hybrid cut, warm start 2
-		
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_USE_START_SOLUTION\" : 1, \"PNB_NUM_CPU\" : 0 }"); // PNB_INT_EV_SOLUTION_FROM_PNB not completely implemented
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_USE_START_SOLUTION\" : 4, \"PNB_NUM_CPU\" : 0 }"); // PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV not completely implemented
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_USE_START_SOLUTION\" : 2, \"PNB_NUM_CPU\" : 0 }"); // multi cut, PNB_INT_USE_EV_SOLUTION start solution
-		
+
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_USE_START_SOLUTION\" : 2, \"PNB_NUM_CPU\" : 0 }"); // multi cut, PNB_INT_USE_EV_SOLUTION start solution
+
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 1 }"); // multi cut single core
 
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\" }"); // not working for MIP
@@ -1309,9 +1310,8 @@ protected:
 	LiftAndProjectCutsTest() { // override parameter_strings_
 		parameter_strings_.clear();
 		//TODO: now PNB_LP_ROUNDS_LIMIT makes not so much sense if L&P cuts are not generated
-		parameter_strings_.push_back("{ \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_ALLOW_TEST_CASES\" : 1110000}");
-		parameter_strings_.push_back("{ \"PNB_LP_MAJOR_IT_LIMIT\" : 3, \"PNB_LP_ALLOW_TEST_CASES\" : 1110000}");
-		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 0,   \"PNB_LP_ALLOW_TEST_CASES\" : 1110000}");
+		parameter_strings_.push_back("{ \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 100, \"PNB_LP_ALLOW_TEST_CASES\" : 1110000}");
+		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 0,   \"PNB_LP_ALLOW_TEST_CASES\" : 1110000}");
 		// TODO: what is with BOUNDS_IN_MATRIX parameter
 	}
 };
@@ -1385,23 +1385,29 @@ TEST_F(CollectInstanceSpecs, cap) {
 
 TEST_F(LiftAndProjectCutsTest, fast) {
 	// Binary 1st stage
-	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 4);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 2);
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250.00, 0.1); // matrix A with non-binding >= constr (in standard there is no matrix A)
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250.00, 0.1); // matrix A with non-binding <= constr (in standard there is no matrix A)
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250.00, 0.1); // matrix A with non-binding >= constr (in standard there is no matrix A)
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250.00, 0.1); // matrix A with non-binding <= constr (in standard there is no matrix A)
 	
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 1); // anyways as for now it makes now sence and only takes much time
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_2"), -54250.00, 0.1); // 3 bin vars on 1st stage (in standard there are 2)
 	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_3"), -5000.00, 0.1); // 2 cont vars on 1st stage (in standard - pure bin 1st stage)
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_9"), -19300, 0.1);
+	//benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 5); // anyways as for now it makes now sence and only takes much time
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_25"), -4793260, 0.1);
 
-	EXPECT_NEAR(solveSMPS("glushko/sndp/SNDP_20_4_2_1"), -87272, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/SNDP_20_4_2_1"), -87272, 0.1);
 	
 	// Integer 2 stages
-	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relaxation for the 2nd stage, ERROR otherwise
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1);
+	//benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relaxation for the 2nd stage, ERROR otherwise
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 882.615, 0.1); // 1834.87 for MIP
 	//EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224444.4, 0.1); // 224434.32 for MIP // I do not get these values
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // -121.6 for MIP // I do not get these values
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // -121.6 for MIP // I do not get these values
 }
 
 TEST_F(LiftAndProjectCutsTest, bounds_convergence) {
@@ -1469,8 +1475,31 @@ TEST_F(NestedBendersTest, fast) {
 
 TEST_F(NestedBendersTestInteger, fast) {
 	// 1st stage only is integer or MIP
-	EXPECT_NEAR(solveSMPS("glushko/sndp/SNDP_20_4_2_1"), -87272, 0.1);
-	
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250.00, 0.1); // matrix A with non-binding >= constr (in standard there is no matrix A)
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250.00, 0.1); // matrix A with non-binding <= constr (in standard there is no matrix A)
+
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_25"), -4793260, 0.1);
+
+	//sndp_mini_tests
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_2"), -54250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_3"), -5000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_1"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_4"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_7"), -1000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_9"), -19300, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_10"), 1, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_13"), -16000, 0.1);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_14"), -17600.4, 0.1);
 	
 	// 1st  stage is integer or MIP, 2nd has int vars
 		// 1st stage is not pure binary so we cannot use D^2 algorithm
@@ -1480,34 +1509,80 @@ TEST_F(NestedBendersTestInteger, fast) {
 	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1);
 }
 
+TEST_F(NestedBendersTestInteger, sndp_mini_tests_GLUSHKO) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 120);
+
+	//sndp_mini_tests
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_2"), -54250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_3"), -5000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_1"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_4"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_7"), -1000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_9"), -19300, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_10"), 1, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_13"), -16000, 0.1);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_14"), -17600.4, 0.1);
+}
+
 TEST_F(NestedBendersTestInteger, for_LP) {
 	//have bin and sometimes cont vars on the 1st stage
 	//need >0.2 secs to be solved on workstation with DETEQ
 	//second stage integrality is relaxed where necessary (see below)
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 120);
+
+	//sndp_mini_tests
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_2"), -54250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_3"), -5000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_1"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_4"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_7"), -1000, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_9"), -19300, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_10"), 1, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_13"), -16000, 0.1);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_14"), -17600.4, 0.1);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 0);
+
 	//sndp
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_125"), -147442, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_500"), -149375, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_125"), -137785, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_500"), -137664, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_125"), -487153, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_500"), -484816, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_125"), -2174732.8799, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_500"), -2.1727e+06, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_125"), -3.80379e+06, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_500"), -3.82522e+06, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_1"), -6.83685e+06, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_125"), -6612036.59199, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_500"), 0, 0.1); // never solved, what is obj value?
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_4_2_1"), -5.718e+06, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_4_2_25"), -5.6121e+06, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_125"), -147442, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_500"), -149375, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_125"), -137785, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_500"), -137664, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_125"), -487153, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_500"), -484816, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_125"), -2174732.8799, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_500"), -2.1727e+06, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_125"), -3.80379e+06, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_500"), -3.82522e+06, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_1"), -6.83685e+06, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_125"), -6612036.59199, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_500"), 0, 0.1); // never solved, what is obj value?
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_4_2_1"), -5.718e+06, 0.1);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_4_2_25"), -5.6121e+06, 0.1);
 	
 	//scdp 
-	//they are multistage!!!
+	//they are multistage
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION, true);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION_START, 1); // from the 2nd stage
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION_END, -1); // till the last stage
 	//EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-1024"), -6301005010, 10);
 	//EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-4096"), -5204538801, 10);
 	//EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-16384"), -5183755359, 10);
@@ -1515,117 +1590,210 @@ TEST_F(NestedBendersTestInteger, for_LP) {
 	//EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-64000"), -3860456379, 10);
 	//EXPECT_NEAR(solveSMPS("scdp/scdp/scdp-64000-reduced"), 0.0, 0.1); // TODO: what is the solution?
 	//EXPECT_NEAR(solveSMPS("scdp/scdp/scdp-8000-reduced"), 0.0, 0.1); // TODO: what is the solution?
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION, false);
 
 	//instances below have bins on the 2nd stage, therefore
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 	//sslp_SIPLIB //
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_15"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_20"), -260.500, 0.1); // TODO: crashes
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_15"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_20"), -260.500, 0.1); // TODO: crashes
+
+	//sslprf
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_10_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_10_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_10_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_25_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_25_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_25_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_50_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_50_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_50_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_5_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_5_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_5_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_10_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_10_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_10_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_25_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_25_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_25_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_50_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_50_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_50_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_5_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_5_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_5_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_10_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_10_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_10_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_25_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_25_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_25_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_50_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_50_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_50_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_5_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_5_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_5_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_100_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_100_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_100_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_10_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_10_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_10_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_25_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_25_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_25_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_50_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_50_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_50_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_5_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_5_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_5_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_100_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_100_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_100_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_10_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_10_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_10_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_25_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_25_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_25_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_50_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_50_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_50_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_5_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_5_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_5_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_100_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_100_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_100_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_10_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_10_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_10_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_25_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_25_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_25_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_50_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_50_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_50_3"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_5_1"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_5_2"), 0.0, 0.1); // what is the correct solution?
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_5_3"), 0.0, 0.1); // what is the correct solution?
 
 	//dcap_SIPLIB //
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
 
 	//sizes_SIPLIB //
 	// all are solved very fast for DETEQ
 
 	//ssch_OTHER //
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c1"), -184439, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c3"), -230268, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c4"), -201454, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c5"), 0, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c6"), -231369, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c7"), -137217, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c8"), -100523, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -139739, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c1"), -184439, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c3"), -230268, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c4"), -201454, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c5"), 0, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c6"), -231369, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c7"), -137217, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c8"), -100523, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -139739, 1.0);
 
 	//sslp_NTAIMO //
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -121.6, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -121.6, 0.1); // Solvable
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100a"), -127.37, 0.1); // Solvable 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100b"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100c"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100d"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100e"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100a"), -127.37, 0.1); // Solvable 
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100b"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100c"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100d"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100e"), -127.37, 0.1); // Solvable
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100a"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100c"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100d"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100e"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100a"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100c"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100d"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100e"), -127.37, 0.1); // Solvable
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50a"), -364.640, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50b"), -364.640, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50c"), -364.640, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50d"), -364.640, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50e"), -364.640, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50a"), -364.640, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50b"), -364.640, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50c"), -364.640, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50d"), -364.640, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50e"), -364.640, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100b"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100c"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100d"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100e"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100b"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100c"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100d"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100e"), -354.190, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500a"), -349.136, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500b"), -349.136, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500c"), -349.136, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500d"), -349.136, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500e"), -349.136, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500a"), -349.136, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500b"), -349.136, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500c"), -349.136, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500d"), -349.136, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500e"), -349.136, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000a"), -351.171, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000c"), -351.171, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000d"), -351.171, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000e"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000a"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000c"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000d"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000e"), -351.171, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000a"), -347.262, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000b"), -347.262, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000c"), -347.262, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000d"), -347.262, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000e"), -347.262, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000a"), -347.262, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000b"), -347.262, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000c"), -347.262, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000d"), -347.262, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000e"), -347.262, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10a"), -260.500, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10b"), -260.500, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10c"), -260.500, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10d"), -260.500, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10e"), -260.500, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10a"), -260.500, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10b"), -260.500, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10c"), -260.500, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10d"), -260.500, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10e"), -260.500, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15a"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15b"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15c"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15d"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15e"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15a"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15b"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15c"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15d"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15e"), -253.602, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20a"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20b"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20c"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20d"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20e"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20a"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20b"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20c"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20d"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20e"), -253.602, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25a"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25b"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25c"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25d"), -253.602, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25e"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25a"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25b"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25c"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25d"), -253.602, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25e"), -253.602, 0.1);
 }
 
 TEST_F(NestedBendersTestInteger, lsfrp_GLUSHKO) {
-	EXPECT_NEAR(solveSMPS("glushko/lsfrp/LSFRP_instance10_stochastic"), -0.0, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/lsfrp/LSFRP_instance10_stochastic"), -14382100, 0.1);
 }
 
-TEST_F(NestedBendersTestInteger, sndp) {
+TEST_F(NestedBendersTestInteger, sndp_GLUSHKO) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_1"), -114935, 0.1);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.1);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_125"), -147442, 0.1);
@@ -1659,126 +1827,126 @@ TEST_F(NestedBendersTestInteger, sndp) {
 
 TEST_F(NestedBendersTestInteger, cap) {
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 10);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_1000"), 0, 0.1); // never solved, what is obj value?
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_1000"), 0, 0.1); // never solved, what is obj value?
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_4000"), 0, 0.1);
 	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_5000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_1000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_2000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_250"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_3000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_4000"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_5"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_50"), 0, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap102_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap103_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap112_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap114_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap121_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap122_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap123_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap124_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap131_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap132_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap133_5000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_1000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_2000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_250"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_3000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_4000"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_5"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_50"), 0, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap134_5000"), 0, 0.1);
 }
 
 TEST_F(NestedBendersTestFeasibility, fast) {
@@ -1840,6 +2008,8 @@ TEST_F(RelaxationTest, fast) {
 
 TEST_F(LiftAndProjectCutsTest, slow) {
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 1); // anyways as for now it makes now sence at only takes much time
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 0.1);
 
 	// Integer on 2 stages
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
@@ -1871,6 +2041,8 @@ TEST_F(NestedBendersTest, slow) {
 
 TEST_F(NestedBendersTestInteger, slow){
 	// 1st stage only is integer or MIP
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 0.1);
 	
 	// 1st  stage is integer or MIP, 2nd has int vars
 		// 1st stage is not pure binary so we cannot use D^2 algorithm
@@ -2720,7 +2892,7 @@ TEST_F(NestedBendersTestInteger,postponement){// postponement
 	EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_lp_100"), 0.0, 0.1);
 }
 
-TEST_F(NestedBendersTestInteger,mcfndsd_cr_RAHMANIANI){// postponement
+TEST_F(NestedBendersTestInteger,mcfndsd_cr_RAHMANIANI){
 	//modified to avoid feas cuts
 	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
 	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_32_cr"), 58242.3, 0.1);
