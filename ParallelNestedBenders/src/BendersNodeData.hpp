@@ -271,6 +271,7 @@ public:
 	cut_container lift_and_project_cuts_;
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
+	cut_container::iterator last_lp_switch_start_optimality_;
 	cut_container::iterator last_round_start_lift_and_project_;
     cut_container::iterator last_iteration_start_feasibility_;
     cut_container::iterator level_opt_iterator_;
