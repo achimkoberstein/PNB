@@ -1497,10 +1497,19 @@ namespace parallel_benders {
 				prime_multiplier = (*lp_main_loop_col_solution_)[lp_fract_var_index_]; // lambda
 			}
 
+			double exptected_stage_solution_value(0);
             for ( auto node : tree_nodes_by_stage_[current_stage_]){
                 temporary_stage_lower_bound += node->getDataPtr()->lower_bound_*node->getDataPtr()->probability_*prime_multiplier; // TODO: what is here for 2nd stage
-                temporary_stage_upper_bound += node->getDataPtr()->solution_value_*node->getDataPtr()->probability_*prime_multiplier;
+				exptected_stage_solution_value += node->getDataPtr()->solution_value_* node->getDataPtr()->probability_; // q(x)
             }
+			if (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME || lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) { // for 2nd stage of L&P CGP
+				double theta_value = tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_[lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME ? 0 : 1];
+				double ub_base = std::max(exptected_stage_solution_value, theta_value); // max(q(x), theta)
+				temporary_stage_upper_bound += ub_base*prime_multiplier;
+			}
+			else {
+				temporary_stage_upper_bound += exptected_stage_solution_value;
+			}
 
             bool can_update_upper_bound = !warm_up_;
 			can_update_upper_bound = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME) ? false : can_update_upper_bound; // we do not update when solve prime subproblems in L&P cuts CGP
