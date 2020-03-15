@@ -3803,6 +3803,7 @@ namespace parallel_benders {
 			//-- Build the main part and load it to osi once
 			if (osi_solver == nullptr) {
 				osi_solver = new OsiCpxSolverInterface();
+				SetSolverOptions(osi_solver);
 				int rows_to_allocate = num_cols + 1 + 2 + num_bin*2 + num_rows*2;
 				// TODO: set up solver
 				CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(); // this is the matrix we put in the solver
@@ -4103,9 +4104,7 @@ namespace parallel_benders {
 			SolveSolverInterface(osi_solver);
 			std::cout << "Solution of Dual Zeta-normalized for L&P: " << osi_solver->getObjValue() << std::endl;
 
-			print_subproblems_ = true;// TODO: delete
-			PrintSubproblem(osi_solver, 1, " problem_20"); // TODO: does it work?
-			print_subproblems_ = false;// TODO: delete
+			PrintSubproblem(osi_solver, lp_round_, std::to_string(lp_cut_index));
 
 			assert(osi_solver->isProvenOptimal() && "Problem 20 should be optimal");
 
