@@ -59,9 +59,11 @@ namespace parallel_benders{
     const std::string PNB_ODA_AGGREGATES = "PNB_ODA_AGGREGATES";
     const std::string PNB_STAGE_LEVEL = "PNB_STAGE_LEVEL";
 	const std::string PNB_AUTO_D2_ALGORITHM = "PNB_AUTO_D2_ALGORITHM";
+	const std::string PNB_LIFT_AND_P_METHOD = "PNB_LIFT_AND_P_METHOD";
 	const std::string PNB_LP_ROUNDS_LIMIT = "PNB_LP_ROUNDS_LIMIT";
 	const std::string PNB_LP_SWITCHES_LIMIT = "PNB_LP_SWITCHES_LIMIT";
 	const std::string PNB_LP_MAJOR_IT_LIMIT = "PNB_LP_MAJOR_IT_LIMIT";
+	const std::string PNB_LP_CUTS_FOR_FRACT = "PNB_LP_CUTS_FOR_FRACT";
 	const std::string PNB_LP_ALLOW_TEST_CASES = "PNB_LP_ALLOW_TEST_CASES";
 
 
@@ -70,6 +72,7 @@ namespace parallel_benders{
     const std::string PNB_TOLERANCE_INTEGER = "PNB_TOLERANCE_INTEGER";       //
     const std::string PNB_EPSILON_ABSOLUTE = "PNB_EPSILON_ABSOLUTE";           //
     const std::string PNB_EPSILON_RELATIVE = "PNB_EPSILON_RELATIVE";           // 
+	const std::string PNB_CGP_EPSILON_RELATIVE = "PNB_CGP_EPSILON_RELATIVE";
 
     const std::string PNB_CVAR_BETA = "PNB_CVAR_BETA";
     const std::string PNB_CVAR_RHO = "PNB_CVAR_RHO";
@@ -161,6 +164,12 @@ namespace parallel_benders{
 	const int PNB_COL_SET_NONE = 0;
 	const int PNB_COL_SET_PRIME = 1;
 	const int PNB_COL_SET_DOUBLE_PRIME = 2;
+
+	// L&P cuts methods
+	const int PNB_LIFT_AND_P_METHOD_NO_2ND_STAGE = 0; //solve Dual of Zeta-normalized (DZN) w/o 2nd stage info
+	const int PNB_LIFT_AND_P_METHOD_STRENGTHENED = 1; //solve DZN with 2nd stage info (cuts from L&P CGP)
+	const int PNB_LIFT_AND_P_METHOD_STRENGTHENED_EFFICIENT = 2; //solve 23 with 2nd stage info (cuts from L&P CGP)
+	const int PNB_LIFT_AND_P_METHOD_STRENGTHENED_ACHIM = 3; //calculate the solution for 23 with 2nd stage info (cuts from L&P CGP) - Achims approach
 
     struct BendersNodeData;
 

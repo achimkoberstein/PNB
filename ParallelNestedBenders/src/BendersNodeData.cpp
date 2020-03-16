@@ -207,9 +207,12 @@ void Parameter::init()
 	//D2 algorithm
 	SetParameterValue(PNB_AUTO_D2_ALGORITHM, false);
 	// LiftAndProject Cuts
+	parameter_.put(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_STRENGTHENED);
 	parameter_.put(PNB_LP_ROUNDS_LIMIT, 0);
 	parameter_.put(PNB_LP_SWITCHES_LIMIT, 1);
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
+	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
+	parameter_.put(PNB_CGP_EPSILON_RELATIVE, 1e-06);
 	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 1000000);
 
 	// Fill in constants
