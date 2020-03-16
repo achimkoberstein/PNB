@@ -411,9 +411,12 @@ private:
     std::vector<double> old_discrepancies_;
     
 	//LiftAndProject cuts TODO: is not it too much variables
+	int lift_and_p_method_;
 	int lp_rounds_limit_;
 	int lp_switches_limit_;
 	int lp_major_it_limit_;
+	int cuts_for_fract_vars_;
+	double cgp_relative_epsilon_;
 	int lp_round_; // TODO: get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
 	int lp_switch_counter_;
 	bool generate_lp_cuts_;
