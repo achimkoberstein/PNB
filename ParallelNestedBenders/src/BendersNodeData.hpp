@@ -282,6 +282,7 @@ public:
     cut_container::iterator last_iteration_start_optimality_;
 	cut_container::iterator last_lp_switch_start_optimality_;
 	cut_container::iterator last_round_start_lift_and_project_;
+	cut_container::iterator last_in_extraction_problem_start_lift_and_project_;
     cut_container::iterator last_iteration_start_feasibility_;
     cut_container::iterator level_opt_iterator_;
 

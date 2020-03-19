@@ -297,7 +297,7 @@ namespace parallel_benders {
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
-		lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_col_solution_(nullptr),lp_main_loop_iteration_round_(std::make_pair(-1,-1)), lp_fract_var_index_(-1),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),
+		lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_col_solution_(nullptr),lp_main_loop_iteration_round_(std::make_pair(-1,-1)), lp_fract_var_index_(-1),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),osi_lift_and_project_extraction_solver_(nullptr),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
@@ -2392,7 +2392,6 @@ namespace parallel_benders {
 					next_lp_rounds_iteration_ = current_iteration_ + 1;
 				}
 				lp_round_ = 0;
-				benders_node_pointer->last_round_start_lift_and_project_ = benders_node_pointer->lift_and_project_cuts_.end();
 			}
 			LOG_IF(FATAL, generate_lp_cuts_ && current_iteration_ == 1) << "Never tested - in the first it. all vars were always int and we built no L&P cuts. Does active_aggregates_[i] works correct? Check!";
 		}
@@ -2948,6 +2947,7 @@ namespace parallel_benders {
     {
         // Delete all solver instances 
         delete osi_solver_;
+		delete osi_lift_and_project_extraction_solver_;
         for( auto id_solver_pair: osi_solver_map_ ){
             delete id_solver_pair.second;
         }
@@ -3300,7 +3300,6 @@ namespace parallel_benders {
                 benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate
             }
 			else {
-				LOG_IF(WARNING, lp_fract_var_index_ != -1) << "Optimality cut in L&P CGP not tight. Is it an error? Check again.";
 				cut_stuff->to_use_ = false;
 			}
 
@@ -3335,6 +3334,8 @@ namespace parallel_benders {
 			// Add first added cut to last_iteration start pointer
 			if (benders_tree_node_pointer->getDataPtr()->last_round_start_lift_and_project_ == benders_tree_node_pointer->getDataPtr()->lift_and_project_cuts_.end())
 				benders_tree_node_pointer->getDataPtr()->last_round_start_lift_and_project_ = --benders_tree_node_pointer->getDataPtr()->lift_and_project_cuts_.end();
+			if (benders_tree_node_pointer->getDataPtr()->last_in_extraction_problem_start_lift_and_project_ == benders_tree_node_pointer->getDataPtr()->lift_and_project_cuts_.end())
+				benders_tree_node_pointer->getDataPtr()->last_in_extraction_problem_start_lift_and_project_ = --benders_tree_node_pointer->getDataPtr()->lift_and_project_cuts_.end();
 		}
 	}
 
@@ -3698,14 +3699,16 @@ namespace parallel_benders {
     }
 
 	void ParallelNestedBenders::GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable) {
+		bool rebuild_l_and_p_extraction_problem = false; // false - rebuild Dual Zeta-Normalized for every variable in every LP round, true - modify the RHS and add the new L&P/Optimality cuts
+
 		LOG(INFO) << "Generating L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
 		
 		assert(current_stage_ == 0 && "We build L&P cuts for the MP.");
 		//TODO: what about 23 w/o 2nd stage approach
 
 		BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
-		OsiCpxSolverInterface* osi_lift_and_project_extration_solver_ = nullptr; // TODO: make it an pnb attribute, which osi should we use?, see osi_stopping_criterion_solver_
 		ParallelNestedBenders* cgp_pnb_ = nullptr;
+		int start_cgp_rows(0);
 
 		// Solve CGP
 		if (lift_and_p_method_ > parallel_benders::PNB_LIFT_AND_P_METHOD_NO_2ND_STAGE) {//TODO: no magic numbers
@@ -3795,7 +3798,7 @@ namespace parallel_benders {
 
 		// Extract Lift and Project cut
 		if (lift_and_p_method_ == parallel_benders::PNB_LIFT_AND_P_METHOD_NO_2ND_STAGE || lift_and_p_method_ == parallel_benders::PNB_LIFT_AND_P_METHOD_STRENGTHENED) {
-			OsiCpxSolverInterface* osi_solver = osi_lift_and_project_extration_solver_;
+			OsiCpxSolverInterface* dzn_solver = osi_lift_and_project_extraction_solver_; // dual of zeta-normalized
 			BendersStageData* stage_pointer = stage_data_[0];
 			int num_theta = benders_node_pointer->num_thetas_;
 			int num_cols = stage_pointer->num_columns_;
@@ -3806,23 +3809,23 @@ namespace parallel_benders {
 			int tau_start = num_cols * 2 + 2;
 			int v_start = num_cols * 2 + 2 + num_theta;
 			//-- Build the main part and load it to osi once
-			if (osi_solver == nullptr) {
-				osi_solver = new OsiCpxSolverInterface();
-				SetSolverOptions(osi_solver);
+			if (osi_lift_and_project_extraction_solver_ == nullptr) {
+				// TODO: write here the problem formulation with lines
+				// TODO: think about row_ordered / column_ordered vs efficiency
+				osi_lift_and_project_extraction_solver_ = new OsiCpxSolverInterface();
+				dzn_solver = osi_lift_and_project_extraction_solver_;
+				SetSolverOptions(dzn_solver);
 				int rows_to_allocate = num_cols + 1 + 2 + num_bin*2 + num_rows*2;
 				// TODO: set up solver
 				CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(); // this is the matrix we put in the solver
-				std::vector<double> problem_r_upper(num_cols); // TODO: check all the vectors and reserve enough space from the very start
-				std::vector<double> problem_r_lower(num_cols);
+				std::vector<double> problem_r_upper(num_cols + 3); // rows for lines 7, 8, 3, 6
+				std::vector<double> problem_r_lower(num_cols + 3); // TODO: check all the vectors and reserve enough space from the very start
 				problem_r_upper.reserve(rows_to_allocate);
 				problem_r_lower.reserve(rows_to_allocate);
 
 				// Line 7: -z + -y = -x_dash
-				for (int i = 0; i < num_cols; ++i) {
-					problem_r_upper[i] = -benders_node_pointer->col_solution_[i];
-					problem_r_lower[i] = -benders_node_pointer->col_solution_[i];
-				}
-				problem_matrix->setDimensions(num_cols + 1, 0);
+				// we copy solution (x_dash) to row UB and row LB later before solving DZN for every fractional
+				problem_matrix->setDimensions(num_cols + 2, 0); // rows for lines 7, 8, 3
 
 				std::vector<int> col_starts(num_cols + 1); //we need to get an identity matrix, therefore one vector will suit col start and rows. Cols starts should have one more element
 				std::iota(col_starts.begin(), col_starts.end(), 0); //fill in with 0, 1, 2, 3
@@ -3831,26 +3834,21 @@ namespace parallel_benders {
 				problem_matrix->appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // y cols
 
 				// Line 8: z_0 + y_0 = 1
-				problem_r_upper.push_back(1);
-				problem_r_lower.push_back(1);
+				problem_r_upper[num_cols] = 1;
+				problem_r_lower[num_cols] = 1;
 				col_starts = { 0, 1, 2 };
 				std::vector<int> row(2, num_cols);
 				elems = { 1, 1 };
 				problem_matrix->appendCols(2, col_starts.data(), row.data(), elems.data());
 
-				// Line 3: -z_i >= 0
-				problem_r_upper.push_back(infinity_);
-				problem_r_lower.push_back(0);
-				std::vector<int> indices(1, fractional_variable.first);
+				// Line 3: -z_i >= 0 and Line 6: y_i - y_0 >= 0
+				problem_r_upper[num_cols + 1] = infinity_;
+				problem_r_upper[num_cols + 2] = infinity_;
+				// we set the -z_1 and y_i coefficient in the matrix later before solving DZN for every fractional
+				// Line 3 is already added to the matrix, add Line 6
+				std::vector<int> indices(1, num_cols * 2 + 1);
 				elems = { -1.0 };
 				problem_matrix->appendRow(1, indices.data(), elems.data());
-
-				// Line 6: y_i - y_0 >= 0
-				problem_r_upper.push_back(infinity_);
-				problem_r_lower.push_back(0);
-				indices = { num_cols + fractional_variable.first, num_cols * 2 + 1 };
-				elems = { 1, -1.0 };
-				problem_matrix->appendRow(2, indices.data(), elems.data());
 
 				// Lines 2 and 6 (bounds): -1*z + 1*z_0 >= 0 and -1*y + 1*y_0 >= 0 for binary vars
 				problem_r_upper.insert(problem_r_upper.end(), num_bin*2, infinity_);
@@ -3972,16 +3970,24 @@ namespace parallel_benders {
 				assert(problem_r_lower.size() == rows_to_allocate);
 				assert(problem_r_upper.size() == rows_to_allocate);
 				
-				osi_solver->loadProblem(*problem_matrix, column_lower.data(), column_upper.data(), objective.data(), problem_r_lower.data(), problem_r_upper.data());
+				dzn_solver->loadProblem(*problem_matrix, column_lower.data(), column_upper.data(), objective.data(), problem_r_lower.data(), problem_r_upper.data());
 			}
 			
 			//-- At the beginning of every lp_round
 			// TODO: it can be somehow combined with what we do for PNB
 			// Problem columns: x1', x2', x1", x2", z0, y0, tau, v
 			// Cut columns: x1, x2, theta
+			// Set first rows RHS to x_dash vector (Line 7)
+			if (rebuild_l_and_p_extraction_problem || lp_cut_index == 0) {
+				for (int i = 0; i < num_cols; ++i) {
+					dzn_solver->setRowBounds(i, -benders_node_pointer->col_solution_[i], -benders_node_pointer->col_solution_[i]);
+				}
+			}
 			// append optimality cuts since the last major iteration: normally only for the first integer var in the round
-			//TODO: BendersNodeData::cut_container::iterator it = benders_node_pointer->last_lp_switch_start_optimality_;
-			BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin();
+			BendersNodeData::cut_container::iterator it = benders_node_pointer->last_lp_switch_start_optimality_;
+			if (rebuild_l_and_p_extraction_problem) { // add all L&P cuts
+				it = benders_node_pointer->optimality_cuts_.begin();
+			}
 			for (; it != benders_node_pointer->optimality_cuts_.end(); ++it) {
 				assert(num_theta == 1 && "Should be changed for multicut");
 				if ((*it)->to_use_) {
@@ -4000,7 +4006,7 @@ namespace parallel_benders {
 					assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
 					row->getIndices()[theta_position] = tau_start; // shift theta to the tau column
 					row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-					osi_solver->applyRowCuts(1, cut);
+					dzn_solver->applyRowCuts(1, cut);
 
 					// apply to the double-prime side
 					for (int i = 0; i < vector_size - 1; ++i) { // shift coefs to the right for y
@@ -4009,7 +4015,7 @@ namespace parallel_benders {
 					row->getIndices()[theta_position] = v_start; // shift theta to the v column
 					row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
 					row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-					osi_solver->applyRowCuts(1, cut);
+					dzn_solver->applyRowCuts(1, cut);
 
 					// set the indices and lb back
 					cut->setRow(old_row);
@@ -4018,9 +4024,12 @@ namespace parallel_benders {
 			}
 			benders_node_pointer->last_lp_switch_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
 
-			// append L&P cuts since the last round: normally only for the first integer var in the round
-			//TODO: it = benders_node_pointer->last_round_start_lift_and_project_;
-			it = benders_node_pointer->lift_and_project_cuts_.begin();
+			// append L&P cuts since the last round (or before the last round if last round yielded the integer/feasible relaxation)
+			// normally only for the first integer var in the round
+			it = benders_node_pointer->last_in_extraction_problem_start_lift_and_project_;
+			if (rebuild_l_and_p_extraction_problem) { // add all L&P cuts
+				it = benders_node_pointer->lift_and_project_cuts_.begin();
+			}
 			for (; it != benders_node_pointer->lift_and_project_cuts_.end(); ++it) {
 				assert(num_theta == 1 && "Should be changed for multicut");
 				if ((*it)->to_use_) {
@@ -4039,7 +4048,7 @@ namespace parallel_benders {
 					assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
 					row->getIndices()[theta_position] = tau_start; // shift theta to the tau column
 					row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-					osi_solver->applyRowCuts(1, cut);
+					dzn_solver->applyRowCuts(1, cut);
 
 					// apply to the double-prime side
 					for (int i = 0; i < vector_size - 1; ++i) { // shift coefs to the right for y
@@ -4048,7 +4057,7 @@ namespace parallel_benders {
 					row->getIndices()[theta_position] = v_start; // shift theta to the v column
 					row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
 					row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-					osi_solver->applyRowCuts(1, cut);
+					dzn_solver->applyRowCuts(1, cut);
 
 					// set the indices and lb back
 					cut->setRow(old_row);
@@ -4056,13 +4065,14 @@ namespace parallel_benders {
 				}
 			}
 
-			benders_node_pointer->last_round_start_lift_and_project_ = benders_node_pointer->lift_and_project_cuts_.end();
+			benders_node_pointer->last_in_extraction_problem_start_lift_and_project_ = benders_node_pointer->lift_and_project_cuts_.end();
 			// TODO: feasibility cuts
 
 			//-- For every fract var
+			start_cgp_rows = dzn_solver->getNumRows();
 			// add CGP cuts
 			if (lift_and_p_method_ == parallel_benders::PNB_LIFT_AND_P_METHOD_STRENGTHENED) {
-				// TODO: if CGP cuts added to the MP - can be done in a different way
+				// TODO: if CGP cuts added to the MP - can be done in some different way
 				it = cgp_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.begin();
 				for (; it != cgp_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end(); ++it) {
 					assert(num_theta == 1 && "Should be changed for multicut");
@@ -4084,7 +4094,7 @@ namespace parallel_benders {
 							assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
 							row->getIndices()[theta_position] = tau_start; // shift theta to the tau column
 							row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-							osi_solver->applyRowCuts(1, cut);
+							dzn_solver->applyRowCuts(1, cut);
 						}
 
 						if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
@@ -4094,7 +4104,7 @@ namespace parallel_benders {
 							row->getIndices()[theta_position] = v_start; // shift theta to the v column
 							row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
 							row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-							osi_solver->applyRowCuts(1, cut);
+							dzn_solver->applyRowCuts(1, cut);
 						}
 
 						// set the indices and lb back
@@ -4104,25 +4114,49 @@ namespace parallel_benders {
 				}
 
 			}
-			// TODO: later: update only x_dash vector and not rebuild the problem from scratch
+			// Modify coefs of Lines 3 and 6 (there is no method in OSI to modify the single element in the matrix)
+			// Line 3: -z_i >= 0 and Line 6 : y_i - y_0 >= 0
+			CPXENVptr env_ptr = dzn_solver->getEnvironmentPtr();
+			CPXLPptr lp_ptr = dzn_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+			std::array<int, 2> rowlist = {num_cols+1, num_cols+2};
+			std::array<int, 2> collist = { fractional_variable.first, num_cols + fractional_variable.first };
+			std::array<double, 2> vallist = {-1.0, 1.0};
+			CPXchgcoeflist(env_ptr, lp_ptr, 2, rowlist.data(), collist.data(), vallist.data());
+
 			// TODO: should we also append the L&P cut to the CGP of the next fract var
 
-			SolveSolverInterface(osi_solver);
-			std::cout << "Solution of Dual Zeta-normalized for L&P: " << osi_solver->getObjValue() << std::endl;
+			SolveSolverInterface(dzn_solver);
+			std::cout << "Solution of Dual Zeta-normalized for L&P: " << dzn_solver->getObjValue() << std::endl;
 
-			PrintSubproblem(osi_solver, lp_round_, std::to_string(lp_cut_index));
+			std::stringstream suffix;
+			suffix << "l&p_cut_index_" << lp_cut_index;
+			PrintSubproblem(dzn_solver, lp_round_, suffix.str());
 
-			assert(osi_solver->isProvenOptimal() && "Problem 20 should be optimal");
+			assert(dzn_solver->isProvenOptimal() && "Problem 20 should be optimal");
 
-			StoreValuesFromSolverInVector(lp_current_cuts_coefficients_[lp_cut_index], osi_solver->getRowPrice(), num_cols);
-			lp_current_cuts_rhs_[lp_cut_index] = osi_solver->getRowPrice()[num_cols];
+			StoreValuesFromSolverInVector(lp_current_cuts_coefficients_[lp_cut_index], dzn_solver->getRowPrice(), num_cols);
+			lp_current_cuts_rhs_[lp_cut_index] = dzn_solver->getRowPrice()[num_cols];
 
 			if (cgp_pnb_ != nullptr) {
-				assert(!RelativeGapLargerEpsilon(cgp_pnb_->upper_bound_, osi_solver->getObjValue(), infinity_, 0.01));
+				assert(!RelativeGapLargerEpsilon(cgp_pnb_->upper_bound_, dzn_solver->getObjValue(), infinity_, 0.01));
 			}
 
-			delete osi_solver;
+			if (rebuild_l_and_p_extraction_problem) {
+				delete dzn_solver;
+				osi_lift_and_project_extraction_solver_ = nullptr;
+			}
+			else {
+				// Delete L&P CGP cuts //TODO: probably we do not need to do it if opt cuts from CGP to be used in next fract vars
+				int num_cgp_cuts_to_delete = dzn_solver->getNumRows() - start_cgp_rows;
+				std::vector<int> row_indices(num_cgp_cuts_to_delete);
+				std::iota(row_indices.begin(), row_indices.end(), start_cgp_rows);
+				dzn_solver->deleteRows(num_cgp_cuts_to_delete, row_indices.data());
 
+				// set back values of z_i and y_i in Line 3: -z_i >= 0 and Line 6 : y_i - y_0 >= 0
+				// we will modify this lines for the next fractional variable
+				vallist = { 0, 0 };
+				CPXchgcoeflist(env_ptr, lp_ptr, 2, rowlist.data(), collist.data(), vallist.data());
+			}
 		}
 
 		// see GenerateOptimalityCut() for examples with bounds etc.
@@ -4752,6 +4786,7 @@ namespace parallel_benders {
 					osi_solver->applyRowCuts(1, (*it)->cut_.get());
 				}
 			}
+			benders_node_pointer->last_round_start_lift_and_project_ = benders_node_pointer->lift_and_project_cuts_.end();
         }
 
         if ( add_feas_cut_with_opt_cuts_present ){

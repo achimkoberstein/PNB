@@ -428,6 +428,7 @@ private:
 	const std::vector<double>* lp_main_loop_col_solution_; // this is the solution of 1st-stage in the main loop
 	std::pair<int, int> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
 	int lp_column_set_;
+	OsiCpxSolverInterface* osi_lift_and_project_extraction_solver_; // for Dual of Zeta-Normalized
 
     // TODO: REMOVE AGAIN
     int optimality_cut_counter_;
