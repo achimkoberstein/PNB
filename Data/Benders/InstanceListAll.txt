@@ -1847,6 +1847,7 @@ glushko/sndp_mini_tests/sndp_testcase_10
 glushko/sndp_mini_tests/sndp_testcase_12
 glushko/sndp_mini_tests/sndp_testcase_13
 glushko/sndp_mini_tests/sndp_testcase_14
+glushko/sndp_mini_tests/sndp_testcase_15
 glushko/sndp_mini_tests/sndp_testcase_2
 glushko/sndp_mini_tests/sndp_testcase_3
 glushko/sndp_mini_tests/sndp_testcase_4_1
