@@ -1,0 +1,14 @@
+STOCH         SNDP_TestCase_15 (MIN)
+SCENARIOS
+ SC Scen1     'ROOT'            0.25   Stage1    
+    RHS1      c10             2000.0
+    x_b13     Obj                1.0
+ SC Scen2     Scen1              0.5   Stage2    
+    RHS1      c10             5000.0
+    x_b13     Obj                3.0
+ SC Scen3     Scen1             0.25   Stage2    
+    RHS1      c10             8000.0
+    x_b13     Obj                5.0
+ENDATA
+
+
