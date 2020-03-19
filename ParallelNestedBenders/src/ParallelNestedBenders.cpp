@@ -980,6 +980,7 @@ namespace parallel_benders {
 					current_iteration_++;
 					minor_iteration_++;
 					uncritical_iteration_counter_++;
+					iteration_u_and_l_bounds_.push_back(make_pair(upper_bound_, lower_bound_));
 				}
 				if (lp_rounds_limit_) { // we use L&P cuts
 					fractional_variables_.clear();
@@ -1809,7 +1810,6 @@ namespace parallel_benders {
 						std::cout << "Lower Bound:  " << lower_bound_ << "\n";
 						std::cout << "Upper Bound:  " << upper_bound_ << "\n";
 						std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_, lower_bound_) << std::endl;
-						iteration_u_and_l_bounds_.push_back(make_pair(upper_bound_, lower_bound_));
 					}
                 }
             }
