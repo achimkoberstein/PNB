@@ -3816,22 +3816,21 @@ namespace parallel_benders {
 				dzn_solver = osi_lift_and_project_extraction_solver_;
 				SetSolverOptions(dzn_solver);
 				int rows_to_allocate = num_cols + 1 + 2 + num_bin*2 + num_rows*2;
-				// TODO: set up solver
-				CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(); // this is the matrix we put in the solver
-				std::vector<double> problem_r_upper(num_cols + 3); // rows for lines 7, 8, 3, 6
+				CoinPackedMatrix problem_matrix = CoinPackedMatrix(); // TODO: reserve the dimensions during the creation
+				std::vector<double> problem_r_upper(num_cols + 1); // rows for lines 7, 8
 				std::vector<double> problem_r_lower(num_cols + 3); // TODO: check all the vectors and reserve enough space from the very start
 				problem_r_upper.reserve(rows_to_allocate);
 				problem_r_lower.reserve(rows_to_allocate);
 
 				// Line 7: -z + -y = -x_dash
 				// we copy solution (x_dash) to row UB and row LB later before solving DZN for every fractional
-				problem_matrix->setDimensions(num_cols + 2, 0); // rows for lines 7, 8, 3
+				problem_matrix.setDimensions(num_cols + 2, 0); // rows for lines 7, 8, 3
 
 				std::vector<int> col_starts(num_cols + 1); //we need to get an identity matrix, therefore one vector will suit col start and rows. Cols starts should have one more element
 				std::iota(col_starts.begin(), col_starts.end(), 0); //fill in with 0, 1, 2, 3
 				std::vector<double> elems(num_cols, -1);
-				problem_matrix->appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // z cols
-				problem_matrix->appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // y cols
+				problem_matrix.appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // z cols
+				problem_matrix.appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // y cols
 
 				// Line 8: z_0 + y_0 = 1
 				problem_r_upper[num_cols] = 1;
@@ -3839,16 +3838,15 @@ namespace parallel_benders {
 				col_starts = { 0, 1, 2 };
 				std::vector<int> row(2, num_cols);
 				elems = { 1, 1 };
-				problem_matrix->appendCols(2, col_starts.data(), row.data(), elems.data());
+				problem_matrix.appendCols(2, col_starts.data(), row.data(), elems.data());
 
 				// Line 3: -z_i >= 0 and Line 6: y_i - y_0 >= 0
-				problem_r_upper[num_cols + 1] = infinity_;
-				problem_r_upper[num_cols + 2] = infinity_;
+				problem_r_upper.insert(problem_r_upper.end(), 2, infinity_);
 				// we set the -z_1 and y_i coefficient in the matrix later before solving DZN for every fractional
 				// Line 3 is already added to the matrix, add Line 6
 				std::vector<int> indices(1, num_cols * 2 + 1);
 				elems = { -1.0 };
-				problem_matrix->appendRow(1, indices.data(), elems.data());
+				problem_matrix.appendRow(1, indices.data(), elems.data());
 
 				// Lines 2 and 6 (bounds): -1*z + 1*z_0 >= 0 and -1*y + 1*y_0 >= 0 for binary vars
 				problem_r_upper.insert(problem_r_upper.end(), num_bin*2, infinity_);
@@ -3859,32 +3857,34 @@ namespace parallel_benders {
 				indices[1] = z0_col_index;
 				for (std::vector<int>::const_iterator it = core_->getBinaryCols(0).begin(); it != core_->getBinaryCols(0).end(); ++it) {
 					indices[0] = *it;
-					problem_matrix->appendRow(2, indices.data(), elems.data());
+					problem_matrix.appendRow(2, indices.data(), elems.data());
 				}
 				// double-prime side
 				indices[1] = y0_col_index;
 				for (std::vector<int>::const_iterator it = core_->getBinaryCols(0).begin(); it != core_->getBinaryCols(0).end(); ++it) {
 					indices[0] = *it + num_cols;
-					problem_matrix->appendRow(2, indices.data(), elems.data());
+					problem_matrix.appendRow(2, indices.data(), elems.data());
 				}
 
 				// Lines 2 and 6: A*z - b*z_0 >= 0 and A*y - b*y_0 >= 0
-				CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_;
-				if (A_matrix) {
+				if (num_rows) {
 					// TODO: do we need bounds in matrix A?		
 					// A matrix -> A' and A"
+					if (benders_node_pointer->matrix_ == nullptr) {
+						benders_node_pointer->matrix_ = core_->getNode(0)->generateCoinPackedWMatrix();
+					}
 					CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
 					assert(A_matrix->getNumRows() == num_rows);
 					assert(A_matrix->getNumCols() == num_cols);
-					CoinPackedMatrix* temp_matrix = new CoinPackedMatrix(*A_matrix);
-					temp_matrix->setDimensions(num_rows * 2, num_cols); // add rows
+					CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix);
+					temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
 					// double prime side
 					CoinPackedMatrix double_prime_cols;
 					double_prime_cols.reverseOrdering(); // RowOrdered now
 					double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
 					double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
 					// combine two matrices
-					temp_matrix->rightAppendPackedMatrix(double_prime_cols);
+					temp_matrix.rightAppendPackedMatrix(double_prime_cols);
 
 					// define and append b
 					CoinPackedVector vector_b;
@@ -3896,38 +3896,37 @@ namespace parallel_benders {
 							if (!CompareWithZero(r_upper[row])) {
 								vector_b.insert(row, r_upper[row]);
 							}
-							problem_r_upper.push_back(0.0);
-							problem_r_lower.push_back(0.0);
+							problem_r_upper.insert(problem_r_upper.end(), 2, 0.0);
+							problem_r_lower.insert(problem_r_lower.end(), 2, 0.0);
 						}
 						else if (r_lower[row] > -infinity_ + zero_tolerance_) { //G (>=) sense
 							if (!CompareWithZero(r_lower[row])) {
 								vector_b.insert(row, r_lower[row]);
 							}
-							problem_r_upper.push_back(infinity_);
-							problem_r_lower.push_back(0.0);
+							problem_r_upper.insert(problem_r_upper.end(), 2, infinity_);
+							problem_r_lower.insert(problem_r_lower.end(), 2, 0.0);
 						}
 						else { //L (<=) sense
 							if (!CompareWithZero(r_upper[row])) {
 								vector_b.insert(row, r_upper[row]);
 							}
-							problem_r_upper.push_back(0.0);
-							problem_r_lower.push_back(-infinity_);
+							problem_r_upper.insert(problem_r_upper.end(), 2, 0.0);
+							problem_r_lower.insert(problem_r_lower.end(), 2, -infinity_);
 						}
 					}
-					temp_matrix->appendCol(-1 * vector_b);
+					vector_b *= -1; // move to the LHS
+					temp_matrix.appendCol(vector_b);
 					//shift vector b down
 					indices.reserve(num_rows);
 					std::iota(indices.begin(), indices.end(), num_rows); //fill in with num_rows, num_rows+1, num_rows+2...
-					temp_matrix->appendCol(vector_b.getNumElements(), indices.data(), vector_b.getElements());
+					temp_matrix.appendCol(vector_b.getNumElements(), indices.data(), vector_b.getElements());
 
-					problem_matrix->bottomAppendPackedMatrix(*temp_matrix);
-					delete A_matrix; // TODO: should I do it
-					delete temp_matrix; // TODO: or this
+					problem_matrix.bottomAppendPackedMatrix(temp_matrix);
 				}
 
 				//Add tau and v columns
 				col_starts.assign(num_theta * 2 + 1, 0);
-				problem_matrix->appendCols(num_theta * 2, col_starts.data(), nullptr, nullptr);
+				problem_matrix.appendCols(num_theta * 2, col_starts.data(), nullptr, nullptr);
 
 				//Objective: min tau + v
 				std::vector<double> objective(num_cols * 2 + num_theta * 2 + 2); //incl. tau and v
@@ -3962,15 +3961,15 @@ namespace parallel_benders {
 					column_lower.insert(column_lower.end(), 2, -infinity_);
 				}
 
-				assert(problem_matrix->getNumRows() == rows_to_allocate);
-				assert(problem_matrix->getNumCols() == num_cols * 2 + 2 + num_theta * 2);
+				assert(problem_matrix.getNumRows() == rows_to_allocate);
+				assert(problem_matrix.getNumCols() == num_cols * 2 + 2 + num_theta * 2);
 				assert(column_lower.size() == num_cols * 2 + 2 + num_theta * 2);
 				assert(column_upper.size() == num_cols * 2 + 2 + num_theta * 2);
 				assert(objective.size() == num_cols * 2 + 2 + num_theta * 2);
 				assert(problem_r_lower.size() == rows_to_allocate);
 				assert(problem_r_upper.size() == rows_to_allocate);
 				
-				dzn_solver->loadProblem(*problem_matrix, column_lower.data(), column_upper.data(), objective.data(), problem_r_lower.data(), problem_r_upper.data());
+				dzn_solver->loadProblem(problem_matrix, column_lower.data(), column_upper.data(), objective.data(), problem_r_lower.data(), problem_r_upper.data());
 			}
 			
 			//-- At the beginning of every lp_round
