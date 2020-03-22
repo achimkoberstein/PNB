@@ -19,7 +19,7 @@ namespace parallel_benders{
 BendersNodeData::BendersNodeData():col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),unbounded_row_(-1),lower_bound_(-1e20),upper_bound_(1e20),
 mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
 smi_node_data_(nullptr),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),lift_and_project_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),last_round_start_lift_and_project_(lift_and_project_cuts_.end()),last_in_extraction_problem_start_lift_and_project_(lift_and_project_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_extraction_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),oda_iterations_(),
 cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
 
@@ -30,7 +30,7 @@ cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cu
 BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),unbounded_row_(-1),lower_bound_(-1e20),upper_bound_(1e20),
 mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(nullptr),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
 smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()), last_round_start_lift_and_project_(lift_and_project_cuts_.end()),last_in_extraction_problem_start_lift_and_project_(lift_and_project_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_extraction_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),oda_iterations_(),
 cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
 {
@@ -73,7 +73,7 @@ stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),s
 column_indices_(0),row_indices_(0),warm_start_(nullptr),problem_was_solved_in_this_iteration_(false),osi_solver_map_(),no_staircase_constraints_(),changed_aggregation_level_(false),num_d_square_cuts_(0),d_square_matrix_(nullptr),non_integer_scenarios(),violated_index_(-1),d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr),d_square_lambda_0_2_(0),d_square_lambda_1_2_(0),d_square_pi_(nullptr),d_square_disjunctive_indices_(),solve_binary_subproblems_(false),use_level_(false)
 {
 	added_optimality_cuts_ = 0;
-	added_lift_and_project_cuts_ = 0;
+	added_epigraph_cuts_ = 0;
 	added_feasibility_cuts_ = 0;
 }
 
@@ -207,7 +207,7 @@ void Parameter::init()
 	//D2 algorithm
 	SetParameterValue(PNB_AUTO_D2_ALGORITHM, false);
 	// LiftAndProject Cuts
-	parameter_.put(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_STRENGTHENED);
+	parameter_.put(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED);
 	parameter_.put(PNB_LP_ROUNDS_LIMIT, 0);
 	parameter_.put(PNB_LP_SWITCHES_LIMIT, 1);
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
@@ -384,7 +384,7 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
 
 double CutStuff::active_threshold_ = 1.0;
 int CutStuff::strike_threshold_ = -1;
-CutStuff::CutStuff( int iteration, std::shared_ptr<OsiRowCut>& cut_pointer): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
+CutStuff::CutStuff( int iteration, std::shared_ptr<OsiRowCut>& cut_pointer, int type): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),type_(type),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
 {
 }
 

@@ -160,16 +160,27 @@ namespace parallel_benders{
     const int PNB_SOLUTION_UPPER_LESS_LOWER_BOUND = 9;
     const int PNB_SOLUTION_CVAR_H_NEGATIVE = 10;
 
-	// L&P CGP master problem sides (column sets)
+	// L&P CGP PNB master problem sides (column sets)
 	const int PNB_COL_SET_NONE = 0;
 	const int PNB_COL_SET_PRIME = 1;
 	const int PNB_COL_SET_DOUBLE_PRIME = 2;
 
 	// L&P cuts methods
-	const int PNB_LIFT_AND_P_METHOD_NO_2ND_STAGE = 0; //solve Dual of Zeta-normalized (DZN) w/o 2nd stage info
-	const int PNB_LIFT_AND_P_METHOD_STRENGTHENED = 1; //solve DZN with 2nd stage info (cuts from L&P CGP)
-	const int PNB_LIFT_AND_P_METHOD_STRENGTHENED_EFFICIENT = 2; //solve 23 with 2nd stage info (cuts from L&P CGP)
-	const int PNB_LIFT_AND_P_METHOD_STRENGTHENED_ACHIM = 3; //calculate the solution for 23 with 2nd stage info (cuts from L&P CGP) - Achims approach
+	const int PNB_LIFT_AND_P_METHOD_DOMAIN = 0; //solve Dual of Alpha-normalized (DAN) w/o 2nd stage info and w/o theta
+	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_NO_2ND_STAGE = 1; //solve Dual of Zeta-normalized (DZN) w/o 2nd stage info
+	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED = 2; //solve DZN with 2nd stage info (cuts from L&P CGP)
+	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED_EFFICIENT = 3; //solve 23 with 2nd stage info (cuts from L&P CGP)
+	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED_ACHIM = 4; //calculate the solution for 23 with 2nd stage info (cuts from L&P CGP) - Achims approach
+
+	// Cut types
+	// Benders Cuts
+	const int PNB_CUT_TYPE_OPTIMALITY = 0; // for x and theta
+	const int PNB_CUT_TYPE_FEASIBILITY = 1; // for x only
+	// L&P Cuts
+	const int PNB_CUT_TYPE_EPIGRAPH = 2; // for x and theta
+	const int PNB_CUT_TYPE_DOMAIN = 3; // for x only
+
+	const int PNB_CUT_TYPE_CVAR = 4;
 
     struct BendersNodeData;
 
@@ -180,11 +191,12 @@ namespace parallel_benders{
         static double active_threshold_; // If active_value is less than
         static int strike_threshold_; // If non_active_iterations_ is more than
 
-        CutStuff(int iteration,std::shared_ptr<OsiRowCut>& cut_pointer);
+        CutStuff(int iteration,std::shared_ptr<OsiRowCut>& cut_pointer, int type);
 
         int cut_creation_iteration_;
         int not_active_iterations_;
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
+		int type_;
 		int column_set_; // used for L&P cuts CGP master problem
         std::shared_ptr<OsiRowCut> cut_;
         double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
@@ -277,12 +289,15 @@ public:
     // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
     typedef std::list<std::shared_ptr<CutStuff> > cut_container;
     cut_container optimality_cuts_;
-	cut_container lift_and_project_cuts_;
+	cut_container epigraph_cuts_;
+	cut_container domain_cuts_;
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
 	cut_container::iterator last_lp_switch_start_optimality_;
-	cut_container::iterator last_round_start_lift_and_project_;
-	cut_container::iterator last_in_extraction_problem_start_lift_and_project_;
+	cut_container::iterator last_round_start_epigraph_;
+	cut_container::iterator last_in_extraction_problem_start_epigraph_;
+	cut_container::iterator last_round_start_domain_;
+	cut_container::iterator last_in_extraction_problem_start_domain_;
     cut_container::iterator last_iteration_start_feasibility_;
     cut_container::iterator level_opt_iterator_;
 
@@ -383,7 +398,8 @@ struct BendersStageData {
     bool changed_aggregation_level_;
 
 	std::atomic_int added_optimality_cuts_;
-	std::atomic_int added_lift_and_project_cuts_;
+	std::atomic_int added_epigraph_cuts_;
+	std::atomic_int added_domain_cuts_;
 	std::atomic_int added_feasibility_cuts_;
 
     // D^2C^3 stuff
