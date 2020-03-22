@@ -82,10 +82,11 @@ private:
 
 	bool GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
-	void ApplyOptimalityCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff);
+	void ApplyCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff);
 	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+	void SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set);
 	/** Check if problem itself and parameters are suitable for L&P cuts method
 
 		Check if:
@@ -143,9 +144,8 @@ private:
 
     void HandleInitialSolutionProcedures();
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
-    void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
-	void AddLiftAndProjectCutToContainer(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
-    void SetSolverByThread();
+    void AddCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
+	void SetSolverByThread();
 
 	bool CheckForSameCut(const CutStuff& cut_to_check, const BendersNodeData::cut_container & container);
 
@@ -422,13 +422,15 @@ private:
 	bool generate_lp_cuts_;
 	int next_lp_rounds_iteration_;
 	std::map<double, std::pair<int, double>> fractional_variables_; //<fractional part, <var index, var value> > ordered ascending by int violation
-	std::vector<std::vector<double>> lp_current_cuts_coefficients_;
-	std::vector<double> lp_current_cuts_rhs_;
+	std::vector<std::vector<double>> epigraph_current_cuts_coefficients_;
+	std::vector<double> epigraph_current_cuts_rhs_;
+	std::vector<std::vector<double>> domain_current_cuts_coefficients_;
+	std::vector<double> domain_current_cuts_rhs_;
 	int lp_fract_var_index_;
 	const std::vector<double>* lp_main_loop_col_solution_; // this is the solution of 1st-stage in the main loop
 	std::pair<int, int> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
 	int lp_column_set_;
-	OsiCpxSolverInterface* osi_lift_and_project_extraction_solver_; // for Dual of Zeta-Normalized
+	OsiCpxSolverInterface* osi_lift_and_project_dual_cgp_solver_; // for Dual of Zeta-Normalized
 
     // TODO: REMOVE AGAIN
     int optimality_cut_counter_;
