@@ -101,9 +101,10 @@ private:
 			allow_non_standard_lb	- 5
 			allow_non_standard_ub	- 6
 			allow_cont_first_stage	- 7
+			allow_feas_cuts			- 8
 		
 	*/
-	bool ParallelNestedBenders::ProblemSuitableForLPCuts(int allowed_test_cases);
+	bool ParallelNestedBenders::ProblemSuitableForLPCuts();
 
     void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -431,6 +432,7 @@ private:
 	std::pair<int, int> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
 	int lp_column_set_;
 	OsiCpxSolverInterface* osi_lift_and_project_dual_cgp_solver_; // for Dual of Zeta-Normalized
+	int allowed_test_cases_;
 
     // TODO: REMOVE AGAIN
     int optimality_cut_counter_;
