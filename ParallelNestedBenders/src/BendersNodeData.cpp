@@ -19,7 +19,7 @@ namespace parallel_benders{
 BendersNodeData::BendersNodeData():col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),unbounded_row_(-1),lower_bound_(-1e20),upper_bound_(1e20),
 mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
 smi_node_data_(nullptr),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_extraction_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_extraction_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),last_lp_switch_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),oda_iterations_(),
 cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
 
@@ -30,7 +30,7 @@ cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cu
 BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),unbounded_row_(-1),lower_bound_(-1e20),upper_bound_(1e20),
 mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(nullptr),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
 smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_extraction_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_extraction_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),last_lp_switch_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),oda_iterations_(),
 cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
 {
@@ -74,6 +74,7 @@ column_indices_(0),row_indices_(0),warm_start_(nullptr),problem_was_solved_in_th
 {
 	added_optimality_cuts_ = 0;
 	added_epigraph_cuts_ = 0;
+	added_domain_cuts_ = 0;
 	added_feasibility_cuts_ = 0;
 }
 
@@ -213,7 +214,7 @@ void Parameter::init()
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
 	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
 	parameter_.put(PNB_CGP_EPSILON_RELATIVE, 1e-06);
-	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 1000000);
+	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 10000000);
 
 	// Fill in constants
 	// PNB_BENDERS
