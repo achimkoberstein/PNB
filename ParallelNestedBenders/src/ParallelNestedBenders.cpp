@@ -4027,6 +4027,7 @@ namespace parallel_benders {
 							problem_r_lower.insert(problem_r_lower.end(), 2, 0.0);
 						}
 						else { //L (<=) sense
+							assert(r_upper[row] < infinity_ - zero_tolerance_);
 							if (!CompareWithZero(r_upper[row])) {
 								vector_b.insert(row, r_upper[row]);
 							}
@@ -4037,9 +4038,11 @@ namespace parallel_benders {
 					vector_b *= -1; // move to the LHS
 					temp_matrix.appendCol(vector_b);
 					//shift vector b down
-					indices.reserve(num_rows);
-					std::iota(indices.begin(), indices.end(), num_rows); //fill in with num_rows, num_rows+1, num_rows+2...
-					temp_matrix.appendCol(vector_b.getNumElements(), indices.data(), vector_b.getElements());
+					int* vector_indices = vector_b.getIndices();
+					for (int i = 0; i < vector_b.getNumElements(); i++) {
+						vector_indices[i] += num_rows;
+					}
+					temp_matrix.appendCol(vector_b);
 
 					problem_matrix.bottomAppendPackedMatrix(temp_matrix);
 				}
