@@ -297,7 +297,7 @@ namespace parallel_benders {
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
-		lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_col_solution_(nullptr),lp_main_loop_iteration_round_(std::make_pair(-1,-1)), lp_fract_var_index_(-1),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),osi_lift_and_project_dual_cgp_solver_(nullptr),allowed_test_cases_(10000000),
+		lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_col_solution_(nullptr),lp_main_loop_iteration_round_(std::make_pair(-1,-1)), lp_fract_var_index_(-1),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),osi_lift_and_project_dual_cgp_solver_(nullptr),allowed_test_cases_(10000000),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
@@ -1829,14 +1829,7 @@ namespace parallel_benders {
             //}
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
-            if ( infeasible_problems_.any() ){
-				if (lp_rounds_limit_ && std::to_string(allowed_test_cases_)[7] != '1') {
-					solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
-					std::cout << "Feasibility cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
-					LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
-					return;
-				}
-                
+            if ( infeasible_problems_.any() ){               
 				// Set boolean variable to indicate that during this backward run, we do not generate optimality cuts!.
                 infeasible_problem_ = true;
                 if ( current_stage_ == 0){
@@ -1844,6 +1837,12 @@ namespace parallel_benders {
                     // We have to stop the algorithm, our master problem is infeasible..
                     solution_code_ = PNB_SOLUTION_INFEASIBLE;
                     break;
+                }
+				if (lp_rounds_limit_ && std::to_string(allowed_test_cases_)[7] != '1') {
+					solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+					std::cout << "Feasibility cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
+					LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
+					return;
                 }
                 // Change direction
                 forward_ = false;
@@ -2045,6 +2044,9 @@ namespace parallel_benders {
 
         if ( !seperate_first_stage_solver_ || current_stage_ > 0 || ( current_stage_ == 0 && current_iteration_ == 1 && (lp_round_ == 1 || !lp_rounds_limit_)) )
             BuildSubproblem(osi_solver, benders_tree_node_pointer);
+		if (lp_fract_var_index_ != -1 && current_stage_ == 0) {
+			SetAlphaNormalization(osi_solver, false);
+		}
         AppendColsToSubproblem(osi_solver,benders_tree_node_pointer);
         AppendCutsToSubproblem(osi_solver,benders_tree_node_pointer);
 
@@ -2332,6 +2334,25 @@ namespace parallel_benders {
                 if ( only_one_feasibility_cut_ && infeasible_problems_.any() ){ 
 					return;
                 }
+				
+				if (lp_fract_var_index_ != -1 && cgp_do_when_infeasible_ > PNB_CGP_STOP_WHEN_INFEASIBLE) { // L&P PNB CGP
+					LOG(INFO) << "Master problem is infeasible. We apply Alpha-Normalization";
+					SetAlphaNormalization(osi_solver, true);
+					SolveSolverInterface(osi_solver);
+					assert(osi_solver->isProvenOptimal());
+					assert(osi_solver->getObjValue() > 0 - zero_tolerance_ && "Cannot be negative.");
+					if (cgp_do_when_infeasible_ == PNB_CGP_ALPHA_AND_STOP_WHEN_INFEASIBLE) {
+						assert(current_iteration_ == 1);
+						StoreData(osi_solver, benders_tree_node_pointer);
+						upper_bound_ = osi_solver->getObjValue(); // to be used in the main loop TODO: still it is being overwritten when we quit to the main loop
+					}
+					if (cgp_do_when_infeasible_ == PNB_CGP_ALPHA_AND_CONTINUE_WHEN_INFEASIBLE) {
+						assert(!warm_start_ && "What to do with the warm start? How to store it below");
+						StoreWarmStart(osi_solver, benders_tree_node_pointer);
+						return;
+					}
+				}
+
                 if ( current_stage_ > 0 ){
                     bool generated_cut = GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
 					if ( generated_cut ){
@@ -2381,10 +2402,6 @@ namespace parallel_benders {
 		// We want to differentiate between column solution and theta variables 
 		StoreValuesFromSolverInVector(benders_node_pointer->col_solution_, osi_solver->getColSolution(), benders_node_pointer->cols_);
 
-		//TODO: delete it later
-		LOG_IF(FATAL, lp_fract_var_index_ != -1 && current_stage_ == 0 && osi_solver->getNumCols() - benders_node_pointer->cols_ != 2) << "Why would num_theta be not 2 if we do not use multicut / cut aggreagtion in CGP?";
-		LOG_IF(FATAL, lp_fract_var_index_ == -1 && lp_rounds_limit_ == 0 && benders_node_pointer->cols_ != stage_data_[current_stage_]->num_columns_) << "Why would it be different unless we use L&P cuts";
-
 		if (generate_lp_cuts_) {
 			assert(current_stage_ == 0 && lp_round_ > 0);
 			//Check for integrality
@@ -2418,9 +2435,17 @@ namespace parallel_benders {
 			LOG_IF(FATAL, generate_lp_cuts_ && current_iteration_ == 1) << "Never tested - in the first it. all vars were always int and we built no L&P cuts. Does active_aggregates_[i] works correct? Check!";
 		}
 
-        // Copy theta variables
-        int num_theta = osi_solver->getNumCols()-benders_node_pointer->cols_;
-		LOG_IF(FATAL, lp_fract_var_index_ != -1 && current_stage_ == 0 && num_theta != 2) << "In MP CGP we should always (for single cut) have 2 thetas - prime and double-prime.";
+		// Copy theta variables
+		int num_normaliz_cols = benders_node_pointer->alpha_normalized_ ? benders_node_pointer->cols_ + 1 : 0; // applicable for L&P PNB CGP with Alpha-Normalization
+		assert(!(lp_fract_var_index_ != -1 && current_stage_ == 0 && osi_solver->getNumCols() - benders_node_pointer->cols_ - num_normaliz_cols != 2) && "Why would num_theta be not 2 if we do not use multicut / cut aggreagtion in CGP?");
+		assert(!(lp_fract_var_index_ == -1 && lp_rounds_limit_ == 0 && benders_node_pointer->cols_ != stage_data_[current_stage_]->num_columns_) && "Why would it be different unless we use L&P cuts");
+		int num_theta = osi_solver->getNumCols()-benders_node_pointer->cols_-num_normaliz_cols;
+		if (lp_fract_var_index_ != -1 && current_stage_ == 0) { // TODO: delete after tested
+			assert(num_theta == 2 && "Not tested with multicut.");
+			// prime, d-prime cols; prime, d-prime theta, norm_cols, last_norm_col
+			assert(num_theta = osi_solver->getNumCols() - benders_node_pointer->cols_ - num_normaliz_cols);
+			assert(num_normaliz_cols == benders_node_pointer->cols_ + 1 || num_normaliz_cols == 0);
+		}
         assert(num_theta >= 0);
 
         // Store values for next stage approximation and column solution 
@@ -2498,6 +2523,11 @@ namespace parallel_benders {
 		for ( ; i < benders_node_pointer->cols_;i++){
             solution_value += benders_node_pointer->col_solution_[i]*obj_coefs[i];
         }
+		if (num_normaliz_cols) {
+			// in Alpha-Normalized L&P PNB CGP PNB only the last objective coefficient (belongs to the last norm cols) is non zero, it is 1
+			assert(CompareWithZero(solution_value));
+			LOG(INFO) << "Solution of Alpha-Normalized master problem: " << osi_solver->getObjValue() << ". Its column + thetas solution is 0.";
+		}
         benders_node_pointer->solution_value_ = solution_value;
 
         if ( oda_method_ && current_stage_ == 0)
@@ -2513,7 +2543,7 @@ namespace parallel_benders {
             }
         }
 
-		if ( !generate_lp_cuts_ ) { // for L&P cuts we force to solve the relaxation - we is not a lower bound
+		if ( !generate_lp_cuts_ && !num_normaliz_cols) { // for L&P cuts we force to solve the relaxation - it is not a lower bound. The same when we solve Alph-Normalization of L&P PNB CGP 
 			benders_node_pointer->lower_bound_ = solution_value;
 		}
 
@@ -2645,7 +2675,6 @@ namespace parallel_benders {
         // If we have a fixed_solution we change the bounds to the fixed solution!
         if ( current_stage_ == 0 && fixed_first_stage_ ){
             // Delete the old ones, otherwise: memory leak
-			assert(lp_fract_var_index_ != -1 && "if we delete col_upper or lower of smi model in CGP something bad might happen");
 			if ( node_pointer->getColLowerLength())
                 delete [] benders_node_pointer->column_lower_;
             if ( node_pointer->getColUpperLength())
@@ -2822,76 +2851,95 @@ namespace parallel_benders {
 
 		//	Modifications for L&P CGP MP
 		if (lp_fract_var_index_ != -1 && current_stage_ == 0) {
-			// be carefull with deleting stuff here: objects from main loop smi might be deleted
+			// NB: be carefull with delete stuff here: objects from main loop smi might be deleted. Dynamic objects will be delete[] in DeleteSubproblem()
 			int num_cols = stage_pointer->num_columns_;
 			int num_rows = stage_pointer->num_rows_;
 			
-			//*** A matrix rows
-			// A matrix -> A' and A"
-			CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
-			assert(A_matrix->getNumRows() == num_rows);
-			assert(A_matrix->getNumCols() == num_cols);
-
-			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(*A_matrix); // this is the matrix we put in the solver 
-			// add empty rows at the bottom of it.
-			problem_matrix->setDimensions(num_rows * 2, num_cols);
-			// double prime side
-			CoinPackedMatrix double_prime_cols;
-			double_prime_cols.reverseOrdering(); // RowOrdered now
-			double_prime_cols.setDimensions(num_rows, num_cols); // set empty matrix to original a_matrix dimensions
-			double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half, A-matrix in second half	
-			problem_matrix->rightAppendPackedMatrix(double_prime_cols);
+			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix();
+			problem_matrix->setDimensions(0, num_cols*2);
 
 			//*** (1-lambda) * x' + lambda * x"  TODO: is it correct with continuous variables, do we need to move bounds in matrix?
 			std::vector<int> rows_n_cols(num_cols);
 			std::iota(rows_n_cols.begin(), rows_n_cols.end(), 0); // 0,1,2,3...
 			std::vector<double> prime_elems(num_cols, 1 - (*lp_main_loop_col_solution_)[lp_fract_var_index_]); // 1 - lambda
 			std::vector<double> double_prime_elems(num_cols, (*lp_main_loop_col_solution_)[lp_fract_var_index_]); // lambda
-			CoinPackedMatrix last_line(true, rows_n_cols.data(), rows_n_cols.data(), prime_elems.data(), num_cols); // ColOrdered, matrix constructor copies the data
+			CoinPackedMatrix current_line(true, rows_n_cols.data(), rows_n_cols.data(), prime_elems.data(), num_cols); // ColOrdered, matrix constructor copies the data
 			CoinPackedMatrix double_prime_diag_matrix(true, rows_n_cols.data(), rows_n_cols.data(), double_prime_elems.data(), num_cols);
-			last_line.rightAppendPackedMatrix(double_prime_diag_matrix);
-			last_line.reverseOrdering(); // RowOrdered now
-			problem_matrix->bottomAppendPackedMatrix(last_line);
+			current_line.rightAppendPackedMatrix(double_prime_diag_matrix);
+			current_line.reverseOrdering(); // RowOrdered now
+			problem_matrix->bottomAppendPackedMatrix(current_line);
+
+			//*** Alpha-Normalization rows (activated when Alph-Normalization applied)
+			problem_matrix->setDimensions(problem_matrix->getNumRows() + num_cols, -1); // add num_cols empty rows
+
+			//*** A matrix rows
+			// A matrix -> A' and A"
+			CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
+			assert(A_matrix->getNumRows() == num_rows);
+			assert(A_matrix->getNumCols() == num_cols);
+			CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix);
+			temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
+			// double prime side
+			CoinPackedMatrix double_prime_cols;
+			double_prime_cols.reverseOrdering(); // RowOrdered now
+			double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
+			double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
+			// combine two matrices
+			temp_matrix.rightAppendPackedMatrix(double_prime_cols);
+			problem_matrix->bottomAppendPackedMatrix(temp_matrix);
 
 			// reassign
-			delete A_matrix; // no longer needed
+			delete benders_node_pointer->matrix_; // and A_matrix*
 			benders_node_pointer->matrix_ = problem_matrix;
 			benders_node_pointer->cols_ = problem_matrix->getNumCols();
-			benders_node_pointer->rows_ = problem_matrix->getNumRows();
+			benders_node_pointer->rows_ = problem_matrix->getNumRows();	
 
 			//*** Col Lower and Upper bounds (bounds) TODO: is it correct with continuous variables, do we need to move bounds in matrix?
 			// duplicate bounds for double-prime columns, we stick to the dynamic arrays here
 			double* problem_column_lower = new double[num_cols*2]; // prime, double prime
 			memcpy(problem_column_lower, benders_node_pointer->column_lower_, num_cols*sizeof(double)); // prime
-			CHECK_NEAR(problem_column_lower[lp_fract_var_index_], 0.0, integer_tolerance_);
+			assert(CompareForEquality(problem_column_lower[lp_fract_var_index_], 0.0, integer_tolerance_));
 			memcpy(&problem_column_lower[num_cols], benders_node_pointer->column_lower_, num_cols * sizeof(double)); // double prime
-			CHECK_NEAR(problem_column_lower[lp_fract_var_index_ + num_cols], 0.0, integer_tolerance_);
+			assert(CompareForEquality(problem_column_lower[lp_fract_var_index_ + num_cols], 0.0, integer_tolerance_));
 			problem_column_lower[lp_fract_var_index_ + num_cols] = 1;
+			if (node_pointer->getColLowerLength())
+				delete[] benders_node_pointer->column_lower_;
 			benders_node_pointer->column_lower_ = problem_column_lower;
 
 			double* problem_column_upper = new double[num_cols*2]; // prime, double prime
 			memcpy(problem_column_upper, benders_node_pointer->column_upper_, num_cols * sizeof(double)); // prime
-			CHECK_NEAR(problem_column_upper[lp_fract_var_index_], 1.0, integer_tolerance_);
+			assert(CompareForEquality(problem_column_upper[lp_fract_var_index_], 1.0, integer_tolerance_)); // TODO: we do not need it
 			problem_column_upper[lp_fract_var_index_] = 0;
 			memcpy(&problem_column_upper[num_cols], benders_node_pointer->column_upper_, num_cols * sizeof(double)); // double prime
-			CHECK_NEAR(problem_column_lower[lp_fract_var_index_ + num_cols], 1.0, integer_tolerance_);
+			assert(CompareForEquality(problem_column_upper[lp_fract_var_index_ + num_cols], 1.0, integer_tolerance_));
+			if (node_pointer->getColUpperLength())
+				delete[] benders_node_pointer->column_upper_;
 			benders_node_pointer->column_upper_ = problem_column_upper;
 
 			//*** Objective coefs (done above)
 
 			//*** Row Lower and Upper bounds (RHS)
 			// duplicate rhs for double-prime rows
-			double* problem_row_lower = new double[num_rows*2 + num_cols]; // prime, double prime, last line
-			memcpy(problem_row_lower, benders_node_pointer->row_lower_, num_rows * sizeof(double)); // prime
-			memcpy(&problem_row_lower[num_rows], benders_node_pointer->row_lower_, num_rows * sizeof(double)); // double prime
-			memcpy(&problem_row_lower[num_rows*2], lp_main_loop_col_solution_->data(), num_cols * sizeof(double)); // (1-lambda) * x' + lambda * x" = fract_solution
-			benders_node_pointer->row_lower_ = problem_row_lower;
+			int row_bounds_len = num_rows * 2 + num_cols * 2; // last line, Alpha-Normalization rows, prime, double prime RHS
+			std::vector<double> problem_row_lower;
+			problem_row_lower.reserve(row_bounds_len);
+			problem_row_lower.assign(lp_main_loop_col_solution_->begin(), lp_main_loop_col_solution_->end());  // (1-lambda) * x' + lambda * x" = fract_solution
+			problem_row_lower.insert(problem_row_lower.begin()+num_cols, num_cols, 0.0); // Alpha-Normalization rows
+			problem_row_lower.insert(problem_row_lower.begin()+num_cols*2, benders_node_pointer->row_lower_, benders_node_pointer->row_lower_+num_rows); // prime RHS
+			problem_row_lower.insert(problem_row_lower.begin()+num_cols*2+num_rows, benders_node_pointer->row_lower_, benders_node_pointer->row_lower_ + num_rows); // double prime RHS
+			delete[] benders_node_pointer->row_lower_;
+			benders_node_pointer->row_lower_ = new double[row_bounds_len];
+			std::copy_n(problem_row_lower.begin(), row_bounds_len, benders_node_pointer->row_lower_);
 
-			double* problem_row_upper = new double[num_rows*2 + num_cols]; // prime, double prime, last line
-			memcpy(problem_row_upper, benders_node_pointer->row_upper_, num_rows * sizeof(double)); // prime
-			memcpy(&problem_row_upper[num_rows], benders_node_pointer->row_upper_, num_rows * sizeof(double)); // double prime
-			memcpy(&problem_row_upper[num_rows * 2], lp_main_loop_col_solution_->data(), num_cols * sizeof(double)); // (1-lambda) * x' + lambda * x" = fract_solution
-			benders_node_pointer->row_upper_ = problem_row_upper;			
+			std::vector<double> problem_row_upper;
+			problem_row_upper.reserve(row_bounds_len);
+			problem_row_upper.assign(lp_main_loop_col_solution_->begin(), lp_main_loop_col_solution_->end());  // (1-lambda) * x' + lambda * x" = fract_solution
+			problem_row_upper.insert(problem_row_upper.begin()+num_cols, num_cols, infinity_); // Alpha-Normalization rows
+			problem_row_upper.insert(problem_row_upper.begin()+num_cols*2, benders_node_pointer->row_upper_, benders_node_pointer->row_upper_ + num_rows); // prime RHS
+			problem_row_upper.insert(problem_row_upper.begin()+num_cols*2+num_rows, benders_node_pointer->row_upper_, benders_node_pointer->row_upper_ + num_rows); // double prime RHS
+			delete[] benders_node_pointer->row_upper_;
+			benders_node_pointer->row_upper_ = new double[row_bounds_len];
+			std::copy_n(problem_row_upper.begin(), row_bounds_len, benders_node_pointer->row_upper_);
 
 			//TODO: now dimensions in benders_node_ponter do not correspond to values in Smi: node_pointer and deterministic_node_pointer...
 			// in particular stage_data_[current_stage_]->num_columns_
@@ -3762,6 +3810,7 @@ namespace parallel_benders {
 		bool use_2nd_stage_info(false);
 		bool solve_dual_of_cgp(false);
 		int lift_and_project_cut_type(PNB_CUT_TYPE_EPIGRAPH);
+		int cgp_do_when_infeasible = cgp_do_when_infeasible_; // TODO: for experimenting, can delete later
 
 		if (lift_and_p_method_ == parallel_benders::PNB_LIFT_AND_P_METHOD_DOMAIN) {
 			use_2nd_stage_info = false;
@@ -3842,6 +3891,7 @@ namespace parallel_benders {
 				cgp_pnb_->parameter_ = cgp_parameter;
 				cgp_pnb_->Init();
 				//cgp_pnb_->upper_bound_ = upper_bound_; // TODO: will it be valid when we implement the algorithm, do we need it
+				cgp_pnb_->cgp_do_when_infeasible_ = cgp_do_when_infeasible; // as for now check if cgp solution is equal to one of DAN problem
 				cgp_pnb_->lp_fract_var_index_ = fractional_variable.first;
 				cgp_pnb_->lp_main_loop_col_solution_ = &tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
 				cgp_pnb_->lp_main_loop_iteration_round_ = std::make_pair(current_iteration_, lp_round_);
@@ -3896,7 +3946,7 @@ namespace parallel_benders {
 			}
 			else if (cgp_pnb_->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
 				// TODO: we could get domain cut from MP of CGP PNB w/o solving the DAN
-				use_2nd_stage_info = false; // infeasible in the first iteration -> no cuts to use
+				assert(!(cgp_pnb_->cgp_do_when_infeasible_ == parallel_benders::PNB_CGP_ALPHA_AND_CONTINUE_WHEN_INFEASIBLE && cgp_pnb_->current_iteration_ > 2) && "We still should get infeasible MP in PNB CGP and it should not converge");
 				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
 			}
 			else if (cgp_pnb_->solution_code_ != PNB_SOLUTION_OPTIMAL) {
@@ -4262,21 +4312,12 @@ namespace parallel_benders {
 			}
 
 			//-- For every fract var
-			// no optimality-like cuts -> unbounded theta -> unbounded Dual of Zeta-Normalized (dual of epigraph cut generation problem)
-			// -> solve Dual of Alpha-Normalized (dual of domain cut generation problem)
-			if (!use_2nd_stage_info && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty()) {
-				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
-			}
-			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
-				SetAlphaNormalization(dual_cgp_solver, true);
-			}
-			else {
-				SetAlphaNormalization(dual_cgp_solver, false);
-			}
 			// add PNB CGP cuts
+			int opt_cuts_from_cgp(0);
 			start_cgp_rows = dual_cgp_solver->getNumRows();
 			if (use_2nd_stage_info) {
 				// TODO: if CGP cuts added to the MP - can be done in some different way
+				opt_cuts_from_cgp = cgp_pnb_->stage_data_[0]->added_optimality_cuts_;
 				BendersNodeData* cgp_first_stage_pointer = cgp_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr();
 				for (it = cgp_first_stage_pointer->optimality_cuts_.begin(); it != cgp_first_stage_pointer->optimality_cuts_.end(); ++it) {
 					assert(num_theta == 1 && "Should be changed for multicut");
@@ -4346,7 +4387,20 @@ namespace parallel_benders {
 						cut->setLb(old_lb);
 					}
 				}
-
+			}
+			// no optimality-like cuts -> unbounded theta -> unbounded Dual of Zeta-Normalized (dual of epigraph cut generation problem)
+			// -> solve Dual of Alpha-Normalized (dual of domain cut generation problem)
+			if (opt_cuts_from_cgp == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty()) {
+#ifdef SPEC_CASES
+				assert(false && "Just to note: no optimality like cuts for L&P CGP");
+#endif		
+				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+			}
+			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
+				SetAlphaNormalization(dual_cgp_solver, true);
+			}
+			else {
+				SetAlphaNormalization(dual_cgp_solver, false);
 			}
 			
 			// Modify coefs of Lines 3 and 6 (there is no method in OSI to modify the single element in the matrix)
@@ -4371,6 +4425,9 @@ namespace parallel_benders {
 			// if infeasible -> DZN unbounded (DAN should be always solvable) -> AddAlphaNormalization and resolve
 			if (dual_cgp_solver->isProvenPrimalInfeasible()) {
 				assert(lift_and_project_cut_type != PNB_CUT_TYPE_DOMAIN); // domain cgp should be always solvable
+#ifdef SPEC_CASES
+	assert(!(cgp_pnb_ != nullptr && cgp_pnb_->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) && "Just to note: DZN is infeasible even though PNB CGP was solved");
+#endif				
 				LOG(INFO) << "Dual of L&P Cut Generation Problem is infeasible, set Alpha-Normalization and build domain cut.";
 				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
 				SetAlphaNormalization(dual_cgp_solver, true);
@@ -4382,7 +4439,7 @@ namespace parallel_benders {
 			}
 
 			assert(dual_cgp_solver->isProvenOptimal());
-			if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && use_2nd_stage_info) {
+			if (use_2nd_stage_info && (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH || (cgp_pnb_->cgp_do_when_infeasible_ > parallel_benders::PNB_CGP_STOP_WHEN_INFEASIBLE))) {
 				assert(!RelativeGapLargerEpsilon(cgp_pnb_->upper_bound_, dual_cgp_solver->getObjValue(), infinity_, 0.01));
 			}
 
@@ -4569,27 +4626,26 @@ namespace parallel_benders {
 
 	void ParallelNestedBenders::SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set)
 	{
-		// TODO: write down here the problem modifications in math notation
-		assert(current_stage_ == 0 && "We build L&P cuts for the MP.");
+		// TODO: write down here the problem modifications in math notation (Dual CGP and PNB CGP)
+		assert(current_stage_ == 0 && "We build L&P cuts for the MP or apply Alpha-Normalization to PNB CGP MP.");
 		BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		BendersStageData* stage_pointer = stage_data_[0];
-		int num_theta = benders_node_pointer->num_thetas_;
+		int num_theta = benders_node_pointer->num_thetas_; // these is the "real" number of theta in prime (or double prime, but not both)
 		if (num_theta == 0) {
 			num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
 		}
 		int num_cols = stage_pointer->num_columns_;
-		int tau_start = num_cols * 2 + 2;
-		int v_start = tau_start + num_theta;
+		int extra_columns = (lp_fract_var_index_ == -1 ? 2 : 0); // in PNB CGP MP we do not have z_0 and y_0 columns
+		int tau_start = num_cols * 2 + extra_columns; // tau col index in DZN or theta prime in PNB CGP MP
+		int v_start = tau_start + num_theta;  // v start index in DZN or theta double-prime in PNB CGP MP
 		int alpha_normalization_start = v_start + num_theta;
-		int cols_in_alpha_normalized = num_cols * 2 + 2 + num_theta * 2 + num_cols * 2 + 1;
+		int cols_in_alpha_normalized = num_cols * 2 + extra_columns + num_theta * 2 + num_cols * 2 + 1; // incl. theta
 		//int num_rows = stage_pointer->num_rows_;
 		//int num_bin = core_->getBinaryCols(0).size();
 		//int z0_col_index = num_cols * 2;
 		//int y0_col_index = num_cols * 2 + 1;
 		
-
 		// check if already Alpha-Normalized
-		
 		bool alpha_normalized = osi_solver->getNumCols() == cols_in_alpha_normalized;
 
 		if (alpha_normalized == set) {
@@ -4607,10 +4663,15 @@ namespace parallel_benders {
 		std::vector<double> values(num_theta * 2, 0.0);
 		
 		if (set) {  // set Alpha-Normalization
-			// obj coefs of tau and v are 0
+			int extra_rows(3);
+			if (lp_fract_var_index_ != -1) {
+				int extra_rows = 0; // in PNB CGP MP we do not have rows 3, 6, 8
+				benders_node_pointer->alpha_normalized_ = false; // i.e., MP is Alpha-Normalized
+			}		
+			// obj coefs of tau and v (prime and double-prime thetas in PNB CGP MP) are 0
 			CPXchgobj(env_ptr, lp_ptr, num_theta*2, indices.data(), values.data());
 			
-			// add y columns
+			// add columns (except last one)
 			std::array<int, 3> columnStarts = {0,2,4};
 			std::vector<int> rows;
 			rows.reserve(max(4, num_cols)); // in the for loop we need the size 4 but later num_cols
@@ -4619,19 +4680,24 @@ namespace parallel_benders {
 			std::array<double, 2> colub = {infinity_, infinity_};
 			std::array<double, 2> obj{};
 			for (int i = 0; i < num_cols; i++) {
-				rows = { i, num_cols + 3 + i, i, num_cols + 3 + i };
+				rows = { i, num_cols + extra_rows + i, i, num_cols + extra_rows + i };
 				osi_cpx->addCols(2, columnStarts.data(), rows.data(), elements.data(), collb.data(), colub.data(), obj.data());
 			}
-			// add z column
+			// add the last column
 			rows.resize(num_cols);
-			std::iota(rows.begin(), rows.begin() + num_cols, num_cols + 3);
+			std::iota(rows.begin(), rows.begin() + num_cols, num_cols + extra_rows);
 			elements.assign(num_cols, 1);
 			osi_cpx->addCol(num_cols, rows.data(), elements.data(), 0, infinity_, 1.0);
 			assert(osi_cpx->getNumCols() == cols_in_alpha_normalized);
 		}
 		else { // set Zeta-Normalization
-			// obj coefs of tau and v are 1
-			values.assign(num_theta * 2, 1.0);
+			values.assign(num_theta * 2, 1.0); // obj coefs of tau and v are 1 in DAN
+			if (lp_fract_var_index_ != -1) { // PNB CGP MP
+				double lambda = (*lp_main_loop_col_solution_)[lp_fract_var_index_];
+				std::fill_n(values.begin(), num_theta, 1.0-lambda);
+				std::fill_n(values.begin()+num_theta, num_theta, lambda);
+				benders_node_pointer->alpha_normalized_ = false; // i.e., MP is Zeta-Normalized
+			}
 			CPXchgobj(env_ptr, lp_ptr, num_theta * 2, indices.data(), values.data());
 			
 			// delete columns
@@ -5187,8 +5253,9 @@ namespace parallel_benders {
 			BendersNodeData::cut_container::iterator it;
             for (it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end();++it) {
 				if (it == feas_it) {
-					new_cuts = true;
+					new_cuts = true; // this cut was generated in the current iteration and not present in the problem
 				}
+				// apply feas cuts
 				if (new_cuts) {
 					assert((*feas_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
 					if (!benders_node_pointer->warm_start_added_ && ((*feas_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*feas_it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
@@ -5201,6 +5268,7 @@ namespace parallel_benders {
 					new_feas_rows += new_rows;
 					feas_rows += new_rows;
 				}
+				// just calculate the feas cuts
 				else if (lp_fract_var_index_ != -1 && (*it)->column_set_ == PNB_COL_SET_NONE){
 					feas_rows += 2;
 				}
@@ -5222,8 +5290,6 @@ namespace parallel_benders {
 			}
 			assert(!(lp_fract_var_index_ != -1 && !benders_node_pointer->domain_cuts_.empty())); // in L&P PNB CGP num domain cuts == 0
 			feas_rows += benders_node_pointer->domain_cuts_.size();
-
-			osi_solver->writeLp("Problem D.lp");
 
 			if (warm_start_ || level_decomp_) {
 				// Now we have the problem with all cuts, that we can solve right now! (with applied warm start)
@@ -6710,7 +6776,7 @@ namespace parallel_benders {
         if ( level_decomp_ && (level_manhattan_ || level_infinity_)&& current_stage_ <= level_stage_ && current_stage_ < num_stages_-1)
             return stage_data_[current_stage_]->num_rows_+2*stage_data_[current_stage_]->num_columns_;
 		else if (lp_fract_var_index_ != -1 && current_stage_ == 0) { // MP of PNB CGP for L&P cuts
-			return stage_data_[current_stage_]->num_rows_ * 2 + stage_data_[current_stage_]->num_columns_;
+			return stage_data_[current_stage_]->num_columns_ * 2 + stage_data_[current_stage_]->num_rows_ * 2;
 		}
 		else
             return stage_data_[current_stage_]->num_rows_;

@@ -179,8 +179,12 @@ namespace parallel_benders{
 	// L&P Cuts
 	const int PNB_CUT_TYPE_EPIGRAPH = 2; // for x and theta
 	const int PNB_CUT_TYPE_DOMAIN = 3; // for x only
-
 	const int PNB_CUT_TYPE_CVAR = 4;
+
+	// What to do when L&P PNB CGP is not feasible in the 1st iteration
+	const int PNB_CGP_STOP_WHEN_INFEASIBLE = 0; // we immediately quit when cgp is infeasible in the first iteration
+	const int PNB_CGP_ALPHA_AND_STOP_WHEN_INFEASIBLE = 1; // we apply Alpha-Normalization, solve it and quit. It can be used to double check the solution of DAN 
+	const int PNB_CGP_ALPHA_AND_CONTINUE_WHEN_INFEASIBLE = 2; // we apply Alpha-Normalization and continue to 2nd stage. I assume that problem will not converge. Optimality cuts can be used in main loop
 
     struct BendersNodeData;
 
@@ -350,6 +354,7 @@ public:
     std::vector<double> cvar_current_cut_coefficients_;
     double cvar_current_cut_rhs_;
     int cvar_cut_index_;
+	bool alpha_normalized_; // for MP of L&P PNB CGP
 
 
     // Time spent!
