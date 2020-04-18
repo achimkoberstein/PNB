@@ -418,6 +418,7 @@ private:
 	int lp_major_it_limit_;
 	int cuts_for_fract_vars_;
 	double cgp_relative_epsilon_;
+	int cgp_do_when_infeasible_; // whether we quit OR apply Alpha-Normalization and solve OR apply Alpha-Normalization and continue when L&P CGP PNB is infeasible
 	int lp_round_; // TODO: get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
 	int lp_switch_counter_;
 	bool generate_lp_cuts_;
