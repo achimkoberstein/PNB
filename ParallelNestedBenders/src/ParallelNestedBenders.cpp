@@ -683,7 +683,7 @@ namespace parallel_benders {
 		lp_switches_limit_ = param.get(PNB_LP_SWITCHES_LIMIT, 1);
 		lp_major_it_limit_ = param.get(PNB_LP_MAJOR_IT_LIMIT, 1);
 		cuts_for_fract_vars_ = param.get(PNB_LP_CUTS_FOR_FRACT, 100);
-		cgp_relative_epsilon_ = param.get(PNB_CGP_EPSILON_RELATIVE, 0.0);
+		cgp_relative_epsilon_ = param.get(PNB_CGP_EPSILON_RELATIVE, relative_epsilon_);
 		allowed_test_cases_ = parameter_.GetIntParamValue(PNB_LP_ALLOW_TEST_CASES);
 
 		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -3938,7 +3938,7 @@ namespace parallel_benders {
 
 			if (cgp_pnb_->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND) {
 				LOG(WARNING) << "UB < LB in L&P CGP.";
-				LOG_IF(FATAL, ComputeRelativeGap(cgp_pnb_->upper_bound_, cgp_pnb_->lower_bound_) > 0.000001) << "Relative gap in CGP is too big.";
+				LOG_IF(FATAL, ComputeRelativeGap(cgp_pnb_->upper_bound_, cgp_pnb_->lower_bound_) > cgp_relative_epsilon_) << "Relative gap in CGP is too big.";
 			}
 			else if (cgp_pnb_->solution_code_ == PNB_SOLUTION_SIMILARITY_LIMIT) {
 				LOG(WARNING) << "Finished due to the similarity limit.";
@@ -4439,8 +4439,8 @@ namespace parallel_benders {
 			}
 
 			assert(dual_cgp_solver->isProvenOptimal());
-			if (use_2nd_stage_info && (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH || (cgp_pnb_->cgp_do_when_infeasible_ > parallel_benders::PNB_CGP_STOP_WHEN_INFEASIBLE))) {
-				assert(!RelativeGapLargerEpsilon(cgp_pnb_->upper_bound_, dual_cgp_solver->getObjValue(), infinity_, 0.01));
+			if (use_2nd_stage_info && cgp_pnb_->solution_code_ != PNB_SOLUTION_SIMILARITY_LIMIT && (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH || (cgp_pnb_->cgp_do_when_infeasible_ > parallel_benders::PNB_CGP_STOP_WHEN_INFEASIBLE))) {
+				assert(!RelativeGapLargerEpsilon(cgp_pnb_->upper_bound_, dual_cgp_solver->getObjValue(), infinity_, cgp_relative_epsilon_ + zero_tolerance_));
 			}
 
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
