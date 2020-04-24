@@ -1310,9 +1310,9 @@ class LiftAndProjectCutsTest : public NestedBendersTest
 protected:
 	LiftAndProjectCutsTest() { // override parameter_strings_
 		parameter_strings_.clear();
-		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 11100001, \"PNB_LIFT_AND_P_METHOD\" : 0, \"PNB_PRINT_SUBPROBLEMS\" : true }"); // DAN (domain cut)
-		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 11100001, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_PRINT_SUBPROBLEMS\" : true }"); // DZN w/o 2nd stage info
-		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 11100001, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_PRINT_SUBPROBLEMS\" : true }"); // DZN w 2nd stage info
+		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 111000011, \"PNB_LIFT_AND_P_METHOD\" : 0, \"PNB_PRINT_SUBPROBLEMS\" : true }"); // DAN (domain cut)
+		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 111000011, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_PRINT_SUBPROBLEMS\" : true }"); // DZN w/o 2nd stage info
+		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 111000011, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_PRINT_SUBPROBLEMS\" : true }"); // DZN w 2nd stage info
 	}
 };
 
@@ -1557,7 +1557,7 @@ TEST_F(LiftAndProjectCutsTest, bounds_convergence_fast) {
 	}
 
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
-	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ALLOW_TEST_CASES, 11100001);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ALLOW_TEST_CASES, 111000011);
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_MAJOR_IT_LIMIT, 1);
@@ -2207,7 +2207,7 @@ TEST_F(LiftAndProjectCutsTest, bounds_convergence_slow) {
 	}
 
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
-	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ALLOW_TEST_CASES, 11100001);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ALLOW_TEST_CASES, 111000011);
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_MAJOR_IT_LIMIT, 1);
