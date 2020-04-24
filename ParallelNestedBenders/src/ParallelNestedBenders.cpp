@@ -1417,6 +1417,13 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
+            if (lp_rounds_limit_ && std::to_string(allowed_test_cases_)[8] != '1' && stage_data_[current_stage_]->added_domain_cuts_) { // TODO: do smth with magic numbers in allowed_test_cases_ std::to_string(allowed_test_cases_)[8]
+                solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+                std::cout << "Domain cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
+                LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
+                return;
+            }
+
             if ( cvar_constr_decomp_ && (infeasible_problem_ || infeasible_problems_.any()) ){
                 cvar_stopping_first_round_ = false;
                 cvar_stopping_second_round_ = false;
@@ -4709,7 +4716,7 @@ namespace parallel_benders {
 
 	bool ParallelNestedBenders::ProblemSuitableForLPCuts() {
 		
-		assert(allowed_test_cases_ >= 10000000 && allowed_test_cases_ <= 11111111);
+		assert(allowed_test_cases_ >= 100000000 && allowed_test_cases_ <= 111111111);
 		std::ostringstream test_cases_str;
 		test_cases_str << allowed_test_cases_;
 		// Parse allowed_test_cases and define which properties of the problem / parameters are allowed.
@@ -4720,6 +4727,7 @@ namespace parallel_benders {
 		bool allow_non_standard_ub = test_cases_str.str()[5] == '1';
 		bool allow_cont_first_stage = test_cases_str.str()[6] == '1';
 		//bool allow_feas_cuts = test_cases_str.str()[7] == '1'; // checked not here
+        //bool allow_domain_cuts = test_cases_str.str()[8] == '1'; // checked not here
 
 		bool lp_check_passed = true;
 		//Parameter validity
