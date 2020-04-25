@@ -2137,16 +2137,18 @@ namespace parallel_benders {
 					++rit; // goes backwards
 				}
 				
-				// If no L&P cuts build - we can switch
-				if (epigraph_current_cuts_coefficients_.empty() && domain_current_cuts_coefficients_.empty()) {
-					LOG(INFO) << "No L&P cuts build in this round. Switching to minor iteration.";
-					if (lp_round_ == 1) {
-						lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
-					}
-					lp_round_ = lp_rounds_limit_;
-				}
+                int num_lp_cuts_before_aggregation = stage_data_[current_stage_]->added_epigraph_cuts_ + stage_data_[current_stage_]->added_domain_cuts_;
 
 				AggregateLiftAndProjectCuts(benders_tree_node_pointer); // TODO: or maybe do it later in Solve() main routine
+
+                // If no L&P cuts build - we can switch
+                if (num_lp_cuts_before_aggregation == stage_data_[current_stage_]->added_epigraph_cuts_ + stage_data_[current_stage_]->added_domain_cuts_){
+                    LOG(INFO) << "No L&P cuts build in this round. Switching to minor iteration.";
+                    if (lp_round_ == 1) {
+                        lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
+                    }
+                    lp_round_ = lp_rounds_limit_;
+                }
 
 				epigraph_current_cuts_coefficients_.clear();
 				epigraph_current_cuts_rhs_.clear();
@@ -2439,8 +2441,10 @@ namespace parallel_benders {
 				}
 				lp_round_ = 0;
 			}
-			LOG_IF(FATAL, generate_lp_cuts_ && current_iteration_ == 1) << "Never tested - in the first it. all vars were always int and we built no L&P cuts. Does active_aggregates_[i] works correct? Check!";
-		}
+#ifdef SPEC_CASES
+            assert(!(generate_lp_cuts_ && current_iteration_ == 1) && "Just to note: Build L&P cuts in first iteration."); // Does active_aggregates_[i]
+#endif
+        }
 
 		// Copy theta variables
 		int num_normaliz_cols = benders_node_pointer->alpha_normalized_ ? benders_node_pointer->cols_ + 1 : 0; // applicable for L&P PNB CGP with Alpha-Normalization
@@ -3962,6 +3966,10 @@ namespace parallel_benders {
 			assert(!(solution_code_ == PNB_SOLUTION_INFEASIBLE && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty())
 				&& "Before we only had the case when PNB CGP w/o opt cuts in the main loop if infeasible, even after it was bounded.");
 
+#ifdef SPEC_CASES
+            //assert(!CompareWithZero(cgp_pnb_->upper_bound_) && "Just to note: L&P PNB CGP optimal solution is 0.");
+#endif	
+
 			// TODO: add the cuts to container if we use them in the main loop
 		}
 
@@ -4431,7 +4439,7 @@ namespace parallel_benders {
 			assert(dual_cgp_solver->isProvenOptimal() || dual_cgp_solver->isProvenPrimalInfeasible());
 			// if infeasible -> DZN unbounded (DAN should be always solvable) -> AddAlphaNormalization and resolve
 			if (dual_cgp_solver->isProvenPrimalInfeasible()) {
-				assert(lift_and_project_cut_type != PNB_CUT_TYPE_DOMAIN); // domain cgp should be always solvable
+				assert(lift_and_project_cut_type != PNB_CUT_TYPE_DOMAIN && "DAN should be always solvable"); 
 #ifdef SPEC_CASES
 	assert(!(cgp_pnb_ != nullptr && cgp_pnb_->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) && "Just to note: DZN is infeasible even though PNB CGP was solved");
 #endif				
@@ -4447,19 +4455,39 @@ namespace parallel_benders {
 
 			assert(dual_cgp_solver->isProvenOptimal());
 			if (use_2nd_stage_info && cgp_pnb_->solution_code_ != PNB_SOLUTION_SIMILARITY_LIMIT && (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH || (cgp_pnb_->cgp_do_when_infeasible_ > parallel_benders::PNB_CGP_STOP_WHEN_INFEASIBLE))) {
-				assert(!RelativeGapLargerEpsilon(cgp_pnb_->upper_bound_, dual_cgp_solver->getObjValue(), infinity_, cgp_relative_epsilon_ + zero_tolerance_));
+				assert(ComputeRelativeGap(cgp_pnb_->upper_bound_, dual_cgp_solver->getObjValue(), zero_tolerance_) < cgp_relative_epsilon_ + zero_tolerance_);
 			}
 
-			if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
-				epigraph_current_cuts_coefficients_.push_back(std::vector<double>(num_cols));
-				StoreValuesFromSolverInVector(epigraph_current_cuts_coefficients_.back(), dual_cgp_solver->getRowPrice(), num_cols);
-				epigraph_current_cuts_rhs_.push_back(dual_cgp_solver->getRowPrice()[num_cols]);
-			}
-			else if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && !CompareWithZero(dual_cgp_solver->getObjValue())) { // we add domain cut only if it cuts anything
-				assert(dual_cgp_solver->getObjValue() > 0 - zero_tolerance_ && "Cannot be negative.");
-				domain_current_cuts_coefficients_.push_back(std::vector<double>(num_cols));
-				StoreValuesFromSolverInVector(domain_current_cuts_coefficients_.back(), dual_cgp_solver->getRowPrice(), num_cols);
-				domain_current_cuts_rhs_.push_back(dual_cgp_solver->getRowPrice()[num_cols]);
+#ifdef SPEC_CASES
+            if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && CompareWithZero(dual_cgp_solver->getObjValue())) {
+                assert(false && "Just to note: Solution of DAN is zero.");
+            }
+            else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && CompareWithZero(dual_cgp_solver->getObjValue())){
+                assert(false && "Just to note: Solution of DZN is zero.");
+                SetAlphaNormalization(dual_cgp_solver, true);
+                SolveSolverInterface(dual_cgp_solver);
+                assert(dual_cgp_solver->isProvenOptimal() && "DAN should be always solvable");
+                assert(CompareWithZero(dual_cgp_solver->getObjValue()) && "Just to note: Solution of DZN is zero and solution of DAN is not.");
+            }
+#endif
+			if (!CompareWithZero(dual_cgp_solver->getObjValue())) { // we add L&P cut only if it cuts anything
+                std::vector<std::vector<double>>* current_cuts_coefficients;
+                std::vector<double>* current_cuts_rhs;
+                if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
+#ifdef SPEC_CASES
+                    assert(dual_cgp_solver->getObjValue() < 0 + zero_tolerance_ && "Just to note: DZN CGP solution is positive. Cannot be positive... I guess. It is positive for .../sizes and .../dcap");
+#endif
+                    current_cuts_coefficients = &epigraph_current_cuts_coefficients_;
+                    current_cuts_rhs = &epigraph_current_cuts_rhs_;
+                }
+                else if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
+                    assert(dual_cgp_solver->getObjValue() > 0 - zero_tolerance_ && "Cannot be negative.");
+                    current_cuts_coefficients = &domain_current_cuts_coefficients_;
+                    current_cuts_rhs = &domain_current_cuts_rhs_;
+                }
+                current_cuts_coefficients->push_back(std::vector<double>(num_cols));
+				StoreValuesFromSolverInVector(current_cuts_coefficients->back(), dual_cgp_solver->getRowPrice(), num_cols);
+                current_cuts_rhs->push_back(dual_cgp_solver->getRowPrice()[num_cols]);
 			}
 
 			if (rebuild_l_and_p_extraction_problem) {
@@ -4503,8 +4531,7 @@ namespace parallel_benders {
 
 		// Add epigraph cuts
 		if (num_fracts_with_epigraph_cuts) {
-			// TODO: Not sure how it works, copied from AggregateOptimalityCuts()
-			int num_theta = stage_data_[current_stage_]->num_thetas_;
+			int num_theta = getNumThetasByStage(benders_tree_node_pointer);
 			int node_num_cuts = benders_node_pointer->num_thetas_;
 			if (num_theta != node_num_cuts) {
 				if (node_num_cuts > 0) // Initialized with 0, so in first iteration not reasonable
@@ -4513,11 +4540,11 @@ namespace parallel_benders {
 
 			bool change_aggregation_level = benders_node_pointer->changed_aggregation_level_;
 			assert(current_iteration_ != 1 && "Not tested when aggreg level changes after L&P round. Probably it is the first iteration.");
-			assert(!change_aggregation_level && "Not tested when aggreg level changes after L&P round. Probably it is the first iteration.");
+			assert(!change_aggregation_level && "Not tested when aggreg level changes before L&P round. Probably it is the first iteration.");
 			assert(num_theta == 1 && "Check whether L&P cuts are build correct for aggregation schemes.");
+            assert(num_theta > 0);
 			if (num_theta != benders_node_pointer->num_thetas_) {
-				LOG_IF(FATAL, true) << "Not tested when aggreg level changes after L&P round. Probably it is the first iteration.";
-				LOG_IF(FATAL, benders_node_pointer->changed_aggregation_level_ && current_iteration_ > 1) << "Not tested when aggreg level changed during L&P round.";
+				assert(false && "Not tested when aggreg level changed during L&P round.");
 				change_aggregation_level = true;
 				benders_node_pointer->changed_aggregation_level_ = true;
 				// Set new values
@@ -4525,10 +4552,11 @@ namespace parallel_benders {
 				benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
 				benders_node_pointer->was_under_threshold_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
 			}
-		
 
 			for (int fract_index = 0; fract_index < num_fracts_with_epigraph_cuts; fract_index++) {
 				// TODO: here we will call AggregateOptimalityCuts() method
+                // for cut_index in num aggregates (see the aggrregation of Opt Cuts)
+                int cut_index = 0;
 				double cut_lower_bound = epigraph_current_cuts_rhs_[fract_index];
 			
 				std::vector<double> cut_elements = epigraph_current_cuts_coefficients_[fract_index];
@@ -4580,10 +4608,12 @@ namespace parallel_benders {
 				cut_stuff->aggregate_number_ = 1;
 				if (change_aggregation_level || sum > benders_node_pointer->next_stage_approximation_[0]) {
 					stage_data_[current_stage_]->added_epigraph_cuts_++;
-					benders_node_pointer->active_aggregates_[0] = true;  // Set aggregate to active: We have a cut for this aggregate
+					benders_node_pointer->active_aggregates_[cut_index] = true;  // Set aggregate to active: We have a cut for this aggregate
 				}
 				else {
-					LOG_IF(FATAL, true) << "What does it mean for L&P cuts? Should not L&P cuts always cut smth. See Csabas comments in article about it.";
+//#ifdef SPEC_CASES
+					assert("Just to note: Epigraph Cut is not tight and not added to master.");
+//#endif
 					cut_stuff->to_use_ = false;
 				}
 				AddCutToContainer(benders_tree_node_pointer, cut_stuff);
@@ -4845,7 +4875,7 @@ namespace parallel_benders {
 					if (!CompareWithZero(col_lower[i])) {
 						non_standard_lb = true;
 					}
-					if (col_upper[i] <= infinity_ - zero_tolerance_) {
+					if (col_upper[i] < infinity_ - zero_tolerance_) {
 						non_standard_ub = true;
 					}
 					// we do not need iterating further
@@ -4883,14 +4913,13 @@ namespace parallel_benders {
 			}
 
 			// Stochastic elements not only in rhs
-			// TODO: these are probably wrong since second_stage_pointer is not filled in
 			if (second_stage_pointer->stochastic_bounds_) {
 				std::cout << "Never tested L&P cuts for problems with stochastic bounds" << std::endl;
 				lp_check_passed = false;
 			}
 			if (second_stage_pointer->stochastic_matrix_w_) {
-				std::cout << "Never tested L&P cuts for problems with stochastic matrix W" << std::endl;
-				lp_check_passed = false;
+				//std::cout << "Never tested L&P cuts for problems with stochastic matrix W" << std::endl;
+				//lp_check_passed = false;
 			}
 			if (second_stage_pointer->stochastic_matrix_t_) {
 				std::cout << "Never tested L&P cuts for problems with stochastic matrix T" << std::endl;
@@ -4899,10 +4928,6 @@ namespace parallel_benders {
 			if (second_stage_pointer->stochastic_objective_) {
 				std::cout << "Your problems has stochastic objective" << std::endl;
 				//lp_check_passed = false;
-			}
-			if (second_stage_pointer->stochastic_matrix_w_) {
-				std::cout << "Never tested L&P cuts for problems with stochastic matrix W" << std::endl;
-				lp_check_passed = false;
 			}
 		}
 
@@ -8740,9 +8765,7 @@ namespace parallel_benders {
 
     double ComputeRelativeGap(double upper_bound, double lower_bound, double comparison_epsilon){
         return std::abs(upper_bound-lower_bound)/ (std::abs(upper_bound)+comparison_epsilon);
-
     }
-
 
     bool RelativeGapLargerEpsilon(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
