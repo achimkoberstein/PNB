@@ -52,8 +52,10 @@ public:
     /*! Clear all solution process information and reset to the after Init() state.
      Optionally new parameter can be supplied.
      The aim of Reset() is to clear the pnb and prepare it for one more Solve() but avoid reinitialization of all the internal structures.
+
+     TODO: finish
     */
-	void Reset(Parameter* parameter = nullptr);
+	void Reset(int delete_cuts_start_it = -1, Parameter* parameter = nullptr);
     // Access solution methods
     double computeScenarioValue(int scenario);
     void fixFirstStageVariables(const double* solution);
@@ -66,6 +68,16 @@ public:
 
 private:
     void Init();
+    
+    /*!
+ *
+ *
+ * \param b
+ * \return
+ TODO: finish
+ */
+    void SetForLnPCut(ParallelNestedBenders* cgp_pnb, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, int iteration, int round, int fract_var_index, bool keep_cgp_cuts);
+
     // High-level methods we need during the algorithm
     void AdjustProblem(); // Adjust the problem and store characteristics about it
     void AdjustProblemInStage(int stage);
@@ -92,7 +104,8 @@ private:
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set);
-	/** Check if problem itself and parameters are suitable for L&P cuts method
+	
+    /** Check if problem itself and parameters are suitable for L&P cuts method
 
 		Check if:
 		1) L&P related parameters are valid.
@@ -439,6 +452,7 @@ private:
 	std::pair<int, int> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
 	int lp_column_set_;
 	OsiCpxSolverInterface* osi_lift_and_project_dual_cgp_solver_; // for Dual of Zeta-Normalized
+    ParallelNestedBenders* cgp_pnb_; // strengthened epigraph cuts
 	int allowed_test_cases_;
 
     // TODO: REMOVE AGAIN

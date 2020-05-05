@@ -240,9 +240,9 @@ public:
 * We use it to prepare L&P PNB CGP for the other fract var.
 *
 * \param
-* \return void
+* \return void TODO: finish
 */
-    void Clear();
+    void Clear(int delete_cuts_start_it = 0);
 
     // Information about the solution
     std::vector<double> col_solution_;
