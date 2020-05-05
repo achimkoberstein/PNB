@@ -153,7 +153,6 @@ void BendersNodeData::Clear(int delete_cuts_start_it, bool keep_warm_start)
     // Warm start
     assert(warm_start_ == nullptr && "What to do with warm start?");
     //warm_start_();
-    assert(!warm_start_added_);
     //warm_start_added_(false);
 
     assert(warm_start_ == nullptr && level_warm_start_ == nullptr && level_warm_start_cstat_ == nullptr && level_warm_start_rstat_ == nullptr 
@@ -166,9 +165,9 @@ void BendersNodeData::Clear(int delete_cuts_start_it, bool keep_warm_start)
     //level_regularized_solution_();
     //level_regularized_start_row_(-1);
     
-    
-    assert(!changed_aggregation_level_ && "What to do in this case?");
-    changed_aggregation_level_ = false;
+#ifdef SPEC_CASES
+    assert(!changed_aggregation_level_ && "Just to note : changed_aggregation_level_ == true after we Solved() the PNB CGP and want to solve it again.");
+#endif
     delete d_square_cut_t_matrix_; d_square_cut_t_matrix_ = nullptr;
     d_square_cut_rhs_.clear();
     delete solver_rhs_; solver_rhs_ = nullptr;
