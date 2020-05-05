@@ -101,12 +101,14 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterat
 double OsiStochasticParallelNestedBendersSolverInterface::getUBForIteration(int iteration) const
 {
 	LOG_IF(FATAL, iteration > getNumIterations()) << "iteration arg in getUbForIteration() should be between 1 and number of iterations.";
+    assert(iteration <= nested_benders_->iteration_u_and_l_bounds_.size() && "In some cases Benders stops earlier and does not record ub and lb for the last iteration. It should have been fixed.");
 	
 	return nested_benders_->iteration_u_and_l_bounds_[iteration - 1].first;
 }
 double OsiStochasticParallelNestedBendersSolverInterface::getLBForIteration(int iteration) const
 {
 	LOG_IF(FATAL, iteration > getNumIterations()) << "iteration arg in getLbForIteration() should be between 1 and number of iterations.";
+    assert(iteration <= nested_benders_->iteration_u_and_l_bounds_.size() && "In some cases Benders stops earlier and does not record ub and lb for the last iteration. It should have been fixed.");
 
 	return nested_benders_->iteration_u_and_l_bounds_[iteration - 1].second;
 }
@@ -310,6 +312,11 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 		}
         nested_benders_->Init();
         nested_benders_->Solve();
+
+        // If we quit (e.g., time limit) during the iteration in which we would generate L&P cuts, LB and UB were not added to the iteration_u_and_l_bounds_ vector
+        if (nested_benders_->generate_lp_cuts_) {
+            nested_benders_->iteration_u_and_l_bounds_.push_back(make_pair(nested_benders_->upper_bound_, nested_benders_->lower_bound_));
+        }
     }
 }
 
