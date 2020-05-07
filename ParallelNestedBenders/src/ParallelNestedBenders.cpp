@@ -293,7 +293,7 @@ namespace parallel_benders {
     smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(nullptr),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),
+        current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),solved_counter_(0),
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
@@ -692,127 +692,137 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Solve()
     {
+        bool resolve = solved_counter_ > 0; // we call Solve() for the second time, have you called Reset()?
 
 		smi_->writeSmps("modeloutput");
 		
         if ( thread_pool_.size() == 0){
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+            solved_counter_++;
             return;
         }
 		
         int setup_timer = num_stages_;
         timer_.Start(setup_timer);
-        AdjustProblem();
-        // Initialize cvar_current_cut_coefficients
-        if ( cvar_constr_decomp_ ){
-            // For all nodes in the second stage: initialize cvar_cut_coefficients_
-            for ( auto node : tree_nodes_by_stage_[1] )
-                node->getDataPtr()->cvar_current_cut_coefficients_.resize(stage_data_[0]->num_columns_);
-        }
-        // We can stop here, if we have integer variables on more than the second stage..
-        if ( integer_problems_[0] ){ // In the first stage.
-            LOG(INFO) << "Your problem contains first-stage integer variables.";
-        }
-        std::vector<int> new_columns(num_stages_,0);
-        if ( non_staircase_problem_ ){
-            // We need to generate the non1300-staircase constraints
-            LOG(INFO) << "Transforming to a non-staircase problem..";
-            smi_->transformToStaircaseStructure(non_staircase_coefficients_);
-            non_staircase_problem_ = false;
-            non_staircase_stochastic_problem_ = false;
-            non_staircase_coefficients_.clear();
-            // Accomodate the changes we did in the transformation step!
-            AdjustProblem();
-            assert( !non_staircase_problem_ );
-            assert( !non_staircase_stochastic_problem_);
-            LOG(INFO)<< "Done.";
-        }
-		if (integer_problems_[0] && solve_relaxation_ == 1) { // stages are indexed as 0,1,2...
-			integer_problems_[0] = false;
-			LOG(INFO) << "We solve the LP relaxation for stage 1.";
-		}
-        for (int i = 1; i < num_stages_;i++){
-            LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ".";
-            if (solve_relaxation_ != 0 && solve_relaxation_ - 1 <= i && integer_problems_[i]){
-                integer_problems_[i] = false; // Ensure we do solve the LP relaxation! (for second stage?)
-                LOG(INFO) << "We solve the LP relaxation for stage "  << i+1 << ".";
-            }
 
-            // TODO: If we want D_square_ we have to remove the && false statement
-            if ( integer_problems_[i] ){ // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
-                // We could enable the D^2 algorithm (with LaporteLouveaux Cuts) only if we have no mixed-integer first stage!
-                const std::vector<int>& binary_cols(core_->getBinaryCols(0)); // Get binary cols of first stage!
-                if ( binary_cols.size() == stage_data_[0]->num_columns_)
-                {
-					if (auto_d2_algorithm_){
-						d_square_ = true;
-						store_primal_and_dual_ = true; // We need primal solution after we solved the subproblems!
-						// If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
-						integer_problems_[i] = false;
-						// We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
-						d_square_translation_term_ = 20000; // Is taken for LaporteLoveaux Cuts as the minimum value of second stage problems!
-						d_square_w_iteration_.resize(stage_data_[1]->num_columns_, -1);
-						LOG(INFO) << "Enabling D^2 algorithm.";
-					}
-					else {
-						// We have a problem with first-stage pure binary and second stage integers. We can use D^2 algorithm
-						LOG(ERROR) << "You tried to solve a pure first stage binary problem and mixed-integers at another stage. You can activate the D^2 algorithm with param PNB_AUTO_D2_ALGORITHM or solve relaxation by specifying the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
-						solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
-						return;
-					}
-                }
-                else {
-                    // We have a problem with first-stage mixed-integer and second stage integers. We can not solve such a problem!
-                    LOG(ERROR) << "You tried to solve a problem with mixed-integer or pure integer first stage and mixed-integers at another stage. We can not solve this, only the relaxation. You can specify the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
-                    solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
-                    return;
-                }
-            }
-        }
-        // Stage Aggregation!
-        if ( stage_aggregation_){
-            //smi_->writeSmps("beforeStageAgg",true,false);
-            smi_->aggregateStages(begin_aggregation_stage_,end_aggregation_stage_, aggregate_from_start_); // Aggregate stage 0 and 1
-            /*smi_->writeSmps("stageAggreg",true,false);*/
-            num_stages_ = core_->getNumStages();
-            num_scenarios_ = smi_->getNumScenarios();
-            InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
-			LOG_IF(FATAL, lp_rounds_limit_ > 0 || lp_fract_var_index_ != -1) << "Never tested for L&P cuts. Adjust problem will update benders_node->num_cols_ and num_rows_";
-            AdjustProblem(); // We need to set the important properties again!
-            // Best way would be to just recreate the benders_node_data tree from scratch!
-        }
-
-		if (instance_specs_to_file_) {
-			SaveInstanceSpecs();
-		}
-
-		if (lp_rounds_limit_ && !ProblemSuitableForLPCuts()) {
-			solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
-			LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
-			return;
-		}
-
-        // Some tests for sequencing protocols.
-        if ( num_stages_ == 2 ){ // No need for sequencing protocols in the two-stage case
-            sequencing_protocol_ = 0;
-        }
-        if ( second_iteration_stage_ > num_stages_-2 && sequencing_protocol_ == PNB_INT_SECOND_ITERATION) // Fix second iteration stage by disabling it!
-            sequencing_protocol_ = PNB_INT_FASTPASS;
         bool made_one_turn = false;
 
-        // Initialize solver instance for every thread!
-        current_stage_ = 1;
-        for ( int i = 0; i < num_cpu_*4; i++ ){ // Should suffice to get every thread its own solver..
-            // Schedule the tasks for this stage
-            thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread,this));
-        }
-        thread_pool_.wait(0); // We wait until all threads are done
-        current_stage_ = 0;
-        // Check if we actually created all threads!
-        LOG_IF(FATAL,osi_solver_map_.size() != num_cpu_) << "Not all threads were created."; 
+        if (!resolve){
 
-        // Compute or Use initial solutions!
-        HandleInitialSolutionProcedures();
+            AdjustProblem();
+            // Initialize cvar_current_cut_coefficients
+            if (cvar_constr_decomp_) {
+                // For all nodes in the second stage: initialize cvar_cut_coefficients_
+                for (auto node : tree_nodes_by_stage_[1])
+                    node->getDataPtr()->cvar_current_cut_coefficients_.resize(stage_data_[0]->num_columns_);
+            }
+            // We can stop here, if we have integer variables on more than the second stage..
+            if (integer_problems_[0]) { // In the first stage.
+                LOG(INFO) << "Your problem contains first-stage integer variables.";
+            }
+            std::vector<int> new_columns(num_stages_, 0);
+            if (non_staircase_problem_) {
+                // We need to generate the non1300-staircase constraints
+                LOG(INFO) << "Transforming to a non-staircase problem..";
+                smi_->transformToStaircaseStructure(non_staircase_coefficients_);
+                non_staircase_problem_ = false;
+                non_staircase_stochastic_problem_ = false;
+                non_staircase_coefficients_.clear();
+                // Accomodate the changes we did in the transformation step!
+                AdjustProblem();
+                assert(!non_staircase_problem_);
+                assert(!non_staircase_stochastic_problem_);
+                LOG(INFO) << "Done.";
+            }
+            if (integer_problems_[0] && solve_relaxation_ == 1) { // stages are indexed as 0,1,2...
+                integer_problems_[0] = false;
+                LOG(INFO) << "We solve the LP relaxation for stage 1.";
+            }
+            for (int i = 1; i < num_stages_; i++) {
+                LOG_IF(WARNING, integer_problems_[i]) << "Your problem contains integer variables at stage " << i + 1 << ".";
+                if (solve_relaxation_ != 0 && solve_relaxation_ - 1 <= i && integer_problems_[i]) {
+                    integer_problems_[i] = false; // Ensure we do solve the LP relaxation! (for second stage?)
+                    LOG(INFO) << "We solve the LP relaxation for stage " << i + 1 << ".";
+                }
+
+                // TODO: If we want D_square_ we have to remove the && false statement
+                if (integer_problems_[i]) { // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
+                    // We could enable the D^2 algorithm (with LaporteLouveaux Cuts) only if we have no mixed-integer first stage!
+                    const std::vector<int>& binary_cols(core_->getBinaryCols(0)); // Get binary cols of first stage!
+                    if (binary_cols.size() == stage_data_[0]->num_columns_)
+                    {
+                        if (auto_d2_algorithm_) {
+                            d_square_ = true;
+                            store_primal_and_dual_ = true; // We need primal solution after we solved the subproblems!
+                            // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
+                            integer_problems_[i] = false;
+                            // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
+                            d_square_translation_term_ = 20000; // Is taken for LaporteLoveaux Cuts as the minimum value of second stage problems!
+                            d_square_w_iteration_.resize(stage_data_[1]->num_columns_, -1);
+                            LOG(INFO) << "Enabling D^2 algorithm.";
+                        }
+                        else {
+                            // We have a problem with first-stage pure binary and second stage integers. We can use D^2 algorithm
+                            LOG(ERROR) << "You tried to solve a pure first stage binary problem and mixed-integers at another stage. You can activate the D^2 algorithm with param PNB_AUTO_D2_ALGORITHM or solve relaxation by specifying the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
+                            solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+                            solved_counter_++;
+                            return;
+                        }
+                    }
+                    else {
+                        // We have a problem with first-stage mixed-integer and second stage integers. We can not solve such a problem!
+                        LOG(ERROR) << "You tried to solve a problem with mixed-integer or pure integer first stage and mixed-integers at another stage. We can not solve this, only the relaxation. You can specify the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
+                        solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+                        solved_counter_++;
+                        return;
+                    }
+                }
+            }
+            // Stage Aggregation!
+            if (stage_aggregation_) {
+                //smi_->writeSmps("beforeStageAgg",true,false);
+                smi_->aggregateStages(begin_aggregation_stage_, end_aggregation_stage_, aggregate_from_start_); // Aggregate stage 0 and 1
+                /*smi_->writeSmps("stageAggreg",true,false);*/
+                num_stages_ = core_->getNumStages();
+                num_scenarios_ = smi_->getNumScenarios();
+                InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
+                LOG_IF(FATAL, lp_rounds_limit_ > 0 || lp_fract_var_index_ != -1) << "Never tested for L&P cuts. Adjust problem will update benders_node->num_cols_ and num_rows_";
+                AdjustProblem(); // We need to set the important properties again!
+                // Best way would be to just recreate the benders_node_data tree from scratch!
+            }
+
+            if (instance_specs_to_file_) {
+                SaveInstanceSpecs();
+            }
+
+            if (lp_rounds_limit_ && !ProblemSuitableForLPCuts()) {
+                solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+                solved_counter_++;
+                LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
+                return;
+            }
+
+            // Some tests for sequencing protocols.
+            if (num_stages_ == 2) { // No need for sequencing protocols in the two-stage case
+                sequencing_protocol_ = 0;
+            }
+            if (second_iteration_stage_ > num_stages_ - 2 && sequencing_protocol_ == PNB_INT_SECOND_ITERATION) // Fix second iteration stage by disabling it!
+                sequencing_protocol_ = PNB_INT_FASTPASS;
+
+            // Initialize solver instance for every thread!
+            current_stage_ = 1;
+            for (int i = 0; i < num_cpu_ * 4; i++) { // Should suffice to get every thread its own solver..
+                // Schedule the tasks for this stage
+                thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread, this));
+            }
+            thread_pool_.wait(0); // We wait until all threads are done
+            current_stage_ = 0;
+            // Check if we actually created all threads!
+            LOG_IF(FATAL, osi_solver_map_.size() != num_cpu_) << "Not all threads were created.";
+
+            // Compute or Use initial solutions!
+            HandleInitialSolutionProcedures();
+        }
 
         double old_gap = 0;
         double gap = 0;
@@ -832,8 +842,6 @@ namespace parallel_benders {
             time_not_measured = false;
         }
         double percent_threshold = 0.1;
-
-
 
         // Variables for pretty printing
         int last_major_iteration = 0;
@@ -912,6 +920,7 @@ namespace parallel_benders {
                     solution_code_ = PNB_SOLUTION_ITERATION_LIMIT;
                 if ( !cvar_constr_decomp_ && upper_bound_ < lower_bound_-zero_tolerance_ )
                     solution_code_ = PNB_SOLUTION_UPPER_LESS_LOWER_BOUND;
+                solved_counter_++;
                 break;// We stop solving the problem
             }
             wall_clock_solution_time_.Stop(0);
@@ -919,6 +928,7 @@ namespace parallel_benders {
             if ( ((int) wall_clock_solution_time_.GetTime(0)) > maximal_solution_time_ ){
                 LOG(ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
                 solution_code_ = PNB_SOLUTION_TIME_LIMIT;
+                solved_counter_++;
                 break; // We stop solving the problem
             }
             wall_clock_solution_time_.Start(0);
@@ -957,6 +967,7 @@ namespace parallel_benders {
                     if ( gap_counter > gap_counter_maximum ){
                         LOG(INFO) << "Algorithm stops as gap does not narrow anymore for " << gap_counter << " successive iterations.";
                         solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
+                        solved_counter_++;
                         break;
                     }
                     // Count critical iterations!
@@ -1419,6 +1430,7 @@ namespace parallel_benders {
 
             if (lp_rounds_limit_ && std::to_string(allowed_test_cases_)[8] != '1' && stage_data_[current_stage_]->added_domain_cuts_) { // TODO: do smth with magic numbers in allowed_test_cases_ std::to_string(allowed_test_cases_)[8]
                 solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+                solved_counter_++;
                 std::cout << "Domain cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
                 LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
                 return;
@@ -1829,6 +1841,7 @@ namespace parallel_benders {
             //    //else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() ){// Lets see if we already have optimality cuts added to the problem?!
             //    //    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
             //    //    solution_code_ = PNB_SOLUTION_UNBOUNDED;
+            //    //    solved_counter_++;
             //    //    break;
             //    //}
             //    //else
@@ -1843,10 +1856,12 @@ namespace parallel_benders {
                     LOG(INFO) << "First stage problem is infeasible.";
                     // We have to stop the algorithm, our master problem is infeasible..
                     solution_code_ = PNB_SOLUTION_INFEASIBLE;
+                    solved_counter_++;
                     break;
                 }
 				if (lp_rounds_limit_ && std::to_string(allowed_test_cases_)[7] != '1') {
 					solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+                    solved_counter_++;
 					std::cout << "Feasibility cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
 					LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
 					return;
@@ -2030,6 +2045,107 @@ namespace parallel_benders {
         LOG_IF(WARNING,max_similarity_iteration_ < solution_similiarity_counter_) << "Algorithm stopped, because solution did not changed for " << solution_similiarity_counter_ << " consecutive iterations.";
         LOG_IF(INFO,d_square_) << "Spent " << d_square_c_triple_timer_ << " seconds to compute C^3 problems.";
         LOG_IF(INFO,d_square_) << "Spent "  << d_square_c_rhs_timer_ << " seconds to compute D^2 RHS problems.";
+    }
+
+
+    void ParallelNestedBenders::Reset(Parameter* parameter) {
+        assert(parameter == nullptr && "Not implemented for supplied parameter. Compare the changes in parameter_ and supplied parameter and see which changes should be done.");
+        //Reset timers
+        timer_.Reset();
+        wall_clock_solution_time_.Reset();
+        detailed_timer_.Reset();
+        solution_times_.Reset();
+        intra_cut_aggregation_time_ = 0;
+        adaptive_cut_time_ = 0;
+        d_square_c_triple_timer_ = 0.0;
+        d_square_c_rhs_timer_ = 0.0;
+        
+        int setup_timer = num_stages_;
+        timer_.Start(setup_timer);
+        assert(num_stages_ >= 2);
+        assert(num_scenarios_ >= 1);
+        assert(osi_solver_ != nullptr);
+        assert(tree_.getNumScenarios() > 0);
+        assert(tree_nodes_by_stage_.size() == num_stages_);
+        assert(stage_data_.size() == num_stages_);
+
+        lower_bound_ = -infinity_;
+        upper_bound_ = infinity_;
+        old_lower_bound_ = lower_bound_;
+        regularized_solution_value_ = infinity_;
+
+        // Clean the info in stage_data_ and tree_
+        for (int stage = 0; stage < num_stages_; stage++) {
+            stage_lower_upper_bounds_[stage].first = -infinity_;
+            stage_lower_upper_bounds_[stage].second = infinity_;
+            stage_old_lower_upper_bounds_[stage].first = -infinity_;
+            stage_old_lower_upper_bounds_[stage].second = infinity_;
+            stage_data_[stage]->Clear();
+            // Set empty warm start object
+            if (warm_start_ && warm_start_stage_) {
+                assert(false && "What to do here with warm start. Also check BendersStageData::clear()");
+                stage_data_.back()->warm_start_.reset(osi_solver_->getEmptyWarmStart());
+            }
+            for (auto node : tree_nodes_by_stage_[stage]) {
+                node->getDataPtr()->Clear();
+            }
+        }
+        stage_lower_upper_bounds_[num_stages_ - 1].first = 0; // We do not have another stage in the last one.
+        iteration_u_and_l_bounds_.clear();
+
+        // other memebers
+        current_iteration_ = 0;
+        insubstantial_iteration_ = 0;
+        minor_iteration_ = 0;
+        major_iteration_ = 0;
+        feasible_iteration_ = 0;
+        current_stage_ = 0;
+        forward_ = true;
+        infeasible_problem_ = false;
+        unbounded_problem_ = false;
+        infeasible_problems_.reset();
+        num_added_feasibility_cuts_ = 0;
+        regularized_solution_value_ = infinity_;
+        solution_code_ = 0;
+        lp_round_ = 0;
+        lp_switch_counter_ = 0;
+        generate_lp_cuts_ = false;
+        next_lp_rounds_iteration_ = 1;
+        lp_main_loop_col_solution_ = nullptr;
+        lp_main_loop_iteration_round_ = std::make_pair(-1, -1);
+        lp_fract_var_index_ = -1;
+        lp_column_set_ = PNB_COL_SET_NONE;
+        at_last_iteration_ = false;
+        cuts_added_last_round_ = 0;
+        theta_approximations_everywhere_ = false;
+        enforce_direction_ = false;
+        level_loop_forward_ = false;
+        level_loop_backward_ = false;
+        oda_gap_ = infinity_;
+        oda_lower_ = -infinity_;
+        oda_upper_ = infinity_;
+        oda_first_stage_ = -infinity_;
+        oda_phi_i_ = -infinity_;
+        oda_tilde_q_ = -infinity_;
+        oda_chosen_optimality_cut_by_scenario_.clear();
+        oda_current_tilde_q_s_.clear();
+        critical_iteration_ = false;
+        uncritical_iteration_counter_ = 0;
+        maximal_number_of_uncritical_iterations_ = 0;
+        critical_iteration_counter_ = 0;
+        last_critical_iteration_gap_ = infinity_;
+        cvar_H_ = infinity_;
+        cvar_problem_lower_bound_ = -infinity_;
+        stop_cvar_ = false;
+        assert(warm_up_ == false && "What to do with this guy in case of warm up");
+        //warm_up_solution_(nullptr);
+        regularized_update_incumbent_ = false;
+        old_discrepancies_.assign(old_discrepancies_.size(), infinity_);
+        optimality_cut_counter_ = 0;
+        current_solution_value_ = 0.0;
+        solution_similiarity_counter_ = 0;
+
+        timer_.Stop(setup_timer);
     }
 
 

@@ -236,6 +236,14 @@ public:
 
     void CleanUnusedMemory(bool direction);
 
+/*! Clean the solution related data (reset to the state after ParallelNestedBenders::Init())
+* We use it to prepare L&P PNB CGP for the other fract var.
+*
+* \param
+* \return void
+*/
+    void Clear();
+
     // Information about the solution
     std::vector<double> col_solution_;
     std::vector<double> dual_solution_;
@@ -374,6 +382,14 @@ struct BendersStageData {
     BendersStageData();
     ~BendersStageData();
 
+/*! Clean the solution related data (reset to the state after ParallelNestedBenders::Init())
+* We use it to prepare L&P PNB CGP for the other fract var.
+*
+* \param
+* \return void
+*/
+    void Clear();
+
     // Store problem data for each stage
     int num_columns_;
     int num_rows_;
@@ -461,6 +477,8 @@ public:
     void Stop(int stg);
 
     void AddTime(int stg, double time);
+
+	void Reset();
 
     double GetTime(int stg) const { return overall_time_[stg]; }
 

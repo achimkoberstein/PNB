@@ -67,6 +67,131 @@ void BendersNodeData::CleanUnusedMemory( bool direction )
     }
 }
 
+void BendersNodeData::Clear(int delete_cuts_start_it, bool keep_warm_start)
+{
+    col_solution_.clear();
+    dual_solution_.clear();
+    incumbent_col_solution_.clear();
+    reduced_cost_.clear();
+    next_stage_approximation_.clear();
+
+    if (unbounded_ && unbounded_row_ > 0) {
+        assert(false && "What to do with solver?");
+        //osi_solver->deleteRows(1, &benders_node_pointer->unbounded_row_);
+        //SolveSolverInterface(osi_solver);
+        unbounded_row_ = -1;
+        // Add this to all methods that resolve the problem in one way or another!
+    }
+    unbounded_ = false;
+    unbounded_problem_ = false;
+    feasible_ = true;
+
+    delete matrix_; matrix_ = nullptr;
+    if (smi_node_data_->getColLowerLength())
+        delete[] column_lower_;
+    column_lower_ = nullptr;
+
+    if (smi_node_data_->getColUpperLength())
+        delete[] column_upper_;
+    column_upper_ = nullptr;
+
+    if (smi_node_data_->getObjectiveLength())
+        delete[] objective_;
+    objective_ = nullptr;
+
+    delete[] row_upper_; row_upper_ = nullptr;
+    delete[] row_lower_; row_lower_ = nullptr;
+
+    // Delete cuts
+    if (delete_cuts_start_it > -1) {
+        for (auto container : { &optimality_cuts_, &epigraph_cuts_, &domain_cuts_, &feasibility_cuts_ }) {
+            // we assume here that cuts are ordered according to the iteration
+#ifndef NDEBUG
+            int max_creation_iteration = -1;
+            for (cut_container::iterator it = container->begin(); it != container->end(); it++) {
+                if ((*it)->cut_creation_iteration_ < max_creation_iteration) {
+                    assert(false && "Cuts in the container are not ordered according to the creation iteration.");
+                }
+                else {
+                    max_creation_iteration = (*it)->cut_creation_iteration_;
+                }
+            }
+#endif // !NDEBUG
+            for (cut_container::iterator it = container->begin(); it != container->end(); it++) {
+                if ((*it)->cut_creation_iteration_ >= delete_cuts_start_it) {
+                    container->erase(it, container->end());
+                    break;
+                }
+            }
+        }
+    }
+
+    last_iteration_start_optimality_ = optimality_cuts_.end();
+    last_lp_switch_start_optimality_ = optimality_cuts_.end();
+    level_opt_iterator_ = optimality_cuts_.end();
+    last_round_start_epigraph_ = epigraph_cuts_.end();
+    last_in_extraction_problem_start_epigraph_ = epigraph_cuts_.end();
+    last_round_start_domain_ = domain_cuts_.end();
+    last_in_extraction_problem_start_domain_ = domain_cuts_.end();
+    last_iteration_start_feasibility_ = feasibility_cuts_.end();
+    last_lp_switch_start_feasibility_ = feasibility_cuts_.end();
+
+    delete[] discrepancy_; discrepancy_ = nullptr;
+    was_under_threshold_.reset();
+    dual_value_variable_bounds_ = 0.0;
+    lower_bound_ = -1e20;
+    upper_bound_ = 1e20;
+    assert(mip_solution_ == nullptr && "Smth to do with warm start");
+    //mip_solution_(nullptr);
+    unbounded_extreme_ray_ = nullptr;
+    unbounded_right_hand_side_ = nullptr;
+    solve_ray_right_hand_side_ = false;
+    
+    assert(active_aggregates_.all() && "What to do with non active aggregates. E.g., if we added cuts??? and want to resolve the problem");
+    //active_aggregates_(0);
+    
+    // Warm start
+    assert(warm_start_ == nullptr && "What to do with warm start?");
+    //warm_start_();
+    assert(!warm_start_added_);
+    //warm_start_added_(false);
+
+    assert(warm_start_ == nullptr && level_warm_start_ == nullptr && level_warm_start_cstat_ == nullptr && level_warm_start_rstat_ == nullptr 
+        && level_warm_start_dnorm_ == nullptr && level_warm_start_length_ == 0);
+    //level_warm_start_(nullptr);
+    //level_warm_start_cstat_(nullptr);
+    //level_warm_start_rstat_(nullptr);
+    //level_warm_start_dnorm_(nullptr);
+    //level_warm_start_length_(0);
+    //level_regularized_solution_();
+    //level_regularized_start_row_(-1);
+    
+    
+    assert(!changed_aggregation_level_ && "What to do in this case?");
+    changed_aggregation_level_ = false;
+    delete d_square_cut_t_matrix_; d_square_cut_t_matrix_ = nullptr;
+    d_square_cut_rhs_.clear();
+    delete solver_rhs_; solver_rhs_ = nullptr;
+    can_safely_reuse_ = true;
+    assert(oda_optimality_cuts_.empty() && "What to do with ODA?");
+    //oda_optimality_cuts_() //??? should we clear() it
+    //oda_cut_evaluation_() //??? should we clear() it
+    assert(oda_lambdas_.empty() && "What to do with ODA?");
+    // oda_lambdas_()
+    assert(oda_iterations_.empty() && "What to do with ODA?");
+    //oda_iterations_()
+    assert(cvar_cuts_.empty() && "What to do with CVaR?");
+    //cvar_cuts_()
+    cvar_current_cut_coefficients_.clear();
+    cvar_current_cut_rhs_ = 0.0;
+    cvar_cut_index_ = 0;
+
+    // Timers
+    build_time_ = 0.0;
+    solution_time_ = 0.0;
+    cut_generation_time_ = 0.0;
+}
+
 BendersStageData::BendersStageData()
 : num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),
 stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),stochastic_objective_(false),stochastic_bounds_(false),non_zero_bounds_(false),
@@ -80,6 +205,41 @@ column_indices_(0),row_indices_(0),warm_start_(nullptr),problem_was_solved_in_th
 
 BendersStageData::~BendersStageData()
 {
+}
+
+void BendersStageData::Clear() {
+    
+    //??? what is with thetas
+    //num_thetas_(1)
+    
+    //what is with warm start - it makes sense for MP and subproblems
+    assert(warm_start_ == nullptr && "Never tested with warm start");
+    warm_start_ = nullptr;
+    // it also related to warm start
+    problem_was_solved_in_this_iteration_ = false;
+    
+    // MP solver is not included here
+    for (auto id_solver_pair : osi_solver_map_) {
+        //id_solver_pair.second->reset(); // This method throws exception with Cplex
+        id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+        // Workaround: Load empty problem. 
+        assert(id_solver_pair.second->getNumCols() == 0);
+    }
+    
+    changed_aggregation_level_ = false;
+    
+    // d_square stuff - not implemented
+    assert(num_d_square_cuts_ == 0 && d_square_matrix_ == nullptr);
+    //num_d_square_cuts_(0), d_square_matrix_(nullptr), non_integer_scenarios(), violated_index_(-1), d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr), d_square_lambda_0_2_(0), d_square_lambda_1_2_(0), d_square_pi_(nullptr), d_square_disjunctive_indices_(), solve_binary_subproblems_(false)
+    
+    // level is never used in pnb
+    assert(!use_level_);
+    //use_level_(false)
+
+    added_optimality_cuts_ = 0;
+    added_epigraph_cuts_ = 0;
+    added_domain_cuts_ = 0;
+    added_feasibility_cuts_ = 0;
 }
 
 RowOrderedSparseMatrix::RowOrderedSparseMatrix(const std::vector<double>& elements, const std::vector<int>& indices, const std::vector<int>& start):
@@ -140,6 +300,12 @@ void Timer::AddTime( int stg, double time )
     else
         assert(false);
 }
+
+void Timer::Reset() {
+    start_time_.assign(start_time_.size(), 0.0);
+    overall_time_.assign(overall_time_.size(), 0.0);
+}
+
 void Parameter::init()
 {
     // Save .lp files on disc (many files are saved on disk and might take a lot of space)

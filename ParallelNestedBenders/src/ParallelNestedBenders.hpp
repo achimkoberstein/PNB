@@ -49,6 +49,11 @@ public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
     ~ParallelNestedBenders();
     void Solve();
+    /*! Clear all solution process information and reset to the after Init() state.
+     Optionally new parameter can be supplied.
+     The aim of Reset() is to clear the pnb and prepare it for one more Solve() but avoid reinitialization of all the internal structures.
+    */
+	void Reset(Parameter* parameter = nullptr);
     // Access solution methods
     double computeScenarioValue(int scenario);
     void fixFirstStageVariables(const double* solution);
@@ -200,6 +205,7 @@ private:
     double old_lower_bound_;
     std::vector<double> old_first_stage_solution_;
 	std::vector<std::pair<double, double>> iteration_u_and_l_bounds_;
+    int solved_counter_; // number of times Solve() was applied to this pnb
 
     int current_stage_;
     // Characteristic of problem
