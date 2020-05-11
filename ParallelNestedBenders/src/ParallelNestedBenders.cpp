@@ -3553,6 +3553,62 @@ namespace parallel_benders {
 		}
 	}
 
+    void ParallelNestedBenders::ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff, BendersNodeData* benders_node_data) {
+        
+        assert(current_stage_ == 0);
+        bool cut_with_theta = cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH;
+        int num_theta = benders_node_data->num_thetas_;
+        if (num_theta == 0) {
+            num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
+        }
+        assert(num_theta == 1);
+        int num_cols = stage_data_[current_stage_]->num_columns_;
+        int z0_col_index = num_cols * 2;
+        int y0_col_index = num_cols * 2 + 1;
+        int tau_start = num_cols * 2 + 2;
+        int v_start = num_cols * 2 + 2 + num_theta;
+        
+        int vector_size = cut_stuff->cut_->row().getNumElements();
+        assert(vector_size <= num_cols + 1); // element with value 0 are not included
+        OsiRowCut* cut = cut_stuff->cut_.get();
+        const CoinPackedVector old_row(cut->row());
+        double old_lb = cut->lb();
+        cut->setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
+        CoinPackedVector* row = &cut->mutableRow();
+        row->reserve(vector_size + 2); // incl. z_0 and y_0 columns
+
+        // apply to the prime side
+        int theta_position;
+        if (cut_with_theta) {
+            theta_position = row->findIndex(num_cols); // theta position in vector, -1 if theta is 0 and is not present in the row
+            assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
+            row->getIndices()[theta_position] = tau_start; // shift theta to the tau column
+        }
+        row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
+        osi_lift_and_project_dual_cgp_solver_->applyRowCuts(1, cut);
+
+        // apply to the double-prime side
+        int i = 0;
+        if (cut_with_theta) {
+            for (int i = 0; i < vector_size - 1; ++i) {
+                row->getIndices()[i] += num_cols;
+            }
+            row->getIndices()[theta_position] = v_start; // shift theta to the v column
+        }
+        else {
+            for (int i = 0; i < vector_size; ++i) { // shift coefs to the right for y   // !!!! for (int i = 0; i < vector_size - 1; ++i)
+                row->getIndices()[i] += num_cols;
+            }
+        }
+        row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
+        row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
+        osi_lift_and_project_dual_cgp_solver_->applyRowCuts(1, cut);
+
+        // set the indices and lb back
+        cut->setRow(old_row);
+        cut->setLb(old_lb);
+    }
+
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
         if ( infeasible_problems_.any() && !generate_feasibility_and_optimality_cuts_){
@@ -4170,21 +4226,17 @@ namespace parallel_benders {
 		int start_cgp_rows(0);
 
 		// Get the 2nd stage info (cuts from PNB CGP)
+        BendersNodeData::cut_container* cgp_optimality_cuts;
+        BendersNodeData::cut_container* cgp_feasibility_cuts;
+        BendersNodeData::cut_container::iterator old_cgp_pnb_opt_cuts_back;
+        BendersNodeData::cut_container::iterator old_cgp_pnb_feas_cuts_back;
 		if (use_2nd_stage_info) {
-			// see HandleInitialSolutionProcedures for example
 			assert(lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && "How to add the 2nd stage information (for theta var) to domain cut?");
-			/*
-			NB: beware of multithreading issues that arise due to the share of osi among threads.
-			As for now osi is cloned in cgp_pnb_->Init() and reset
-
-			TODO: silence osi solver and log in CGP
-			*/
-
+			//NB: beware of multithreading issues that arise due to the share of osi among threads.
 			//TODO: Build L&P cut w/o 2nd stage information and compare
 
 			if (cgp_pnb_ == nullptr) {
-				parallel_benders::Parameter cgp_parameter(parameter_); // TODO: we do not need to redifine it every time! (maybe move all L&P guts here and rename the function GenerateLiftAndProjectCutS)?
-
+				parallel_benders::Parameter cgp_parameter(parameter_);
 				//int threads_per_CGP = thread_pool_.size() / ceil(fractional_variables_.size() * (100.0 / 100.0)); // hardware_concurrency()/num_cuts
 				int threads_per_CGP = 1; // TODO: threads are expensive, let us first try the simplest case. Easier for debugging
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_CPU_USED, threads_per_CGP);
@@ -4202,7 +4254,7 @@ namespace parallel_benders {
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_USE_START_SOLUTION, 0);
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 0);
 
-				//Initialize the new PNB //TODO: can we reuse it, use stack instead of heap?
+				//Initialize the new PNB
 				cgp_pnb_ = new ParallelNestedBenders(smi_);
 				cgp_pnb_->parameter_ = cgp_parameter;
                 cgp_pnb_->cgp_do_when_infeasible_ = cgp_do_when_infeasible; // as for now check if cgp solution is equal to one of DAN problem
@@ -4210,6 +4262,16 @@ namespace parallel_benders {
 			}
             SetForLnPCut(cgp_pnb_, tree_nodes_by_stage_[0][0], current_iteration_, lp_round_, fractional_variable.first, false);
 			
+            cgp_optimality_cuts = &cgp_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_;
+            old_cgp_pnb_opt_cuts_back = cgp_optimality_cuts->end();
+            if (!cgp_optimality_cuts->empty()) {
+                old_cgp_pnb_opt_cuts_back--;
+            }
+            cgp_feasibility_cuts = &cgp_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_;
+            old_cgp_pnb_feas_cuts_back = cgp_feasibility_cuts->end();
+            if (!cgp_feasibility_cuts->empty()) {
+                old_cgp_pnb_feas_cuts_back--;
+            }
 			cgp_pnb_->Solve();
 
 			if (cgp_pnb_->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND) {
@@ -4218,7 +4280,7 @@ namespace parallel_benders {
 			}
 			else if (cgp_pnb_->solution_code_ == PNB_SOLUTION_SIMILARITY_LIMIT) {
 				LOG(WARNING) << "Finished due to the similarity limit.";
-				LOG_IF(FATAL, ComputeRelativeGap(cgp_pnb_->upper_bound_, cgp_pnb_->lower_bound_) > 0.01) << "Relative gap in CGP is too big."; // TODO: it should be a parameter set in CGP PNB. Also check the assertion for Dual Zeta-Normalized wheger CGP obj value = DZN obj value
+				LOG_IF(FATAL, ComputeRelativeGap(cgp_pnb_->upper_bound_, cgp_pnb_->lower_bound_) > 0.01) << "Relative gap in CGP is too big.";
 			}
 			else if (cgp_pnb_->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
 				// TODO: we could get domain cut from MP of CGP PNB w/o solving the DAN
@@ -4240,189 +4302,20 @@ namespace parallel_benders {
 
 		// Solve the Dual of CGP (Zeta- or Alpha-Normalized) w or w/o the 2nd stage info
 		if (solve_dual_of_cgp) {
-			OsiCpxSolverInterface* dual_cgp_solver = osi_lift_and_project_dual_cgp_solver_; // dual of zeta-normalized
 			BendersStageData* stage_pointer = stage_data_[0];
 			int num_theta = benders_node_pointer->num_thetas_;
 			if (num_theta == 0) {
 				num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
 			}
 			int num_cols = stage_pointer->num_columns_;
-			int num_rows = stage_pointer->num_rows_;
-			int num_bin = core_->getBinaryCols(0).size();
 			int z0_col_index = num_cols * 2;
 			int y0_col_index = num_cols * 2 + 1;
 			int tau_start = num_cols * 2 + 2;
 			int v_start = num_cols * 2 + 2 + num_theta;
-			//-- Build the main part and load it to osi once
-			if (osi_lift_and_project_dual_cgp_solver_ == nullptr) {
-				// TODO: write here the problem formulation with lines
-				// TODO: think about row_ordered / column_ordered vs efficiency
-				osi_lift_and_project_dual_cgp_solver_ = new OsiCpxSolverInterface();
-				dual_cgp_solver = osi_lift_and_project_dual_cgp_solver_;
-				SetSolverOptions(dual_cgp_solver);
-				int rows_to_allocate = num_cols + 1 + 2 + num_cols + num_bin*2 + num_rows*2;
-				CoinPackedMatrix problem_matrix = CoinPackedMatrix(); // TODO: reserve the dimensions during the creation
-				std::vector<double> problem_r_upper(num_cols + 1); // rows for lines 7, 8
-				std::vector<double> problem_r_lower(num_cols + 1 + 2 + num_cols); // TODO: check all the vectors and reserve enough space from the very start
-				problem_r_upper.reserve(rows_to_allocate);
-				problem_r_lower.reserve(rows_to_allocate);
-
-				// Line 7: -z + -y = -x_dash
-				// we copy solution (x_dash) to row UB and row LB later before solving DZN for every fractional
-				problem_matrix.setDimensions(num_cols + 2, 0); // rows for lines 7, 8, 3, Alpha-Normalization empty rows
-
-				std::vector<int> col_starts(num_cols + 1); //we need to get an identity matrix, therefore one vector will suit col start and rows. Cols starts should have one more element
-				std::iota(col_starts.begin(), col_starts.end(), 0); //fill in with 0, 1, 2, 3
-				std::vector<double> elems(num_cols, -1);
-				problem_matrix.appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // z cols
-				problem_matrix.appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // y cols
-
-				// Line 8: z_0 + y_0 = 1
-				problem_r_upper[num_cols] = 1;
-				problem_r_lower[num_cols] = 1;
-				col_starts = { 0, 1, 2 };
-				std::vector<int> row(2, num_cols);
-				elems = { 1, 1 };
-				problem_matrix.appendCols(2, col_starts.data(), row.data(), elems.data());
-
-				// Line 3: -z_i >= 0 and Line 6: y_i - y_0 >= 0
-				problem_r_upper.insert(problem_r_upper.end(), 2, infinity_);
-				// we set the -z_1 and y_i coefficient in the matrix later before solving DZN for every fractional
-				// Line 3 is already added to the matrix, add Line 6
-				std::vector<int> indices(1, num_cols * 2 + 1);
-				elems = { -1.0 };
-				problem_matrix.appendRow(1, indices.data(), elems.data());
-
-				// Alpha-Normalization empty rows
-				problem_r_upper.insert(problem_r_upper.end(), num_cols, infinity_);
-				assert(problem_matrix.isColOrdered());
-				problem_matrix.setMinorDim(problem_matrix.getNumRows() + num_cols); // add num_cols empty rows
-
-				// Lines 2 and 6 (bounds): -1*z + 1*z_0 >= 0 and -1*y + 1*y_0 >= 0 for binary vars
-				problem_r_upper.insert(problem_r_upper.end(), num_bin*2, infinity_);
-				problem_r_lower.insert(problem_r_lower.end(), num_bin*2, 0);
-				elems = {-1, 1};
-				indices.resize(2);
-				// prime side
-				indices[1] = z0_col_index;
-				for (std::vector<int>::const_iterator it = core_->getBinaryCols(0).begin(); it != core_->getBinaryCols(0).end(); ++it) {
-					indices[0] = *it;
-					problem_matrix.appendRow(2, indices.data(), elems.data());
-				}
-				// double-prime side
-				indices[1] = y0_col_index;
-				for (std::vector<int>::const_iterator it = core_->getBinaryCols(0).begin(); it != core_->getBinaryCols(0).end(); ++it) {
-					indices[0] = *it + num_cols;
-					problem_matrix.appendRow(2, indices.data(), elems.data());
-				}
-
-				// Lines 2 and 6: A*z - b*z_0 >= 0 and A*y - b*y_0 >= 0
-				if (num_rows) {
-					// TODO: do we need bounds in matrix A?		
-					// A matrix -> A' and A"
-					if (benders_node_pointer->matrix_ == nullptr) {
-						benders_node_pointer->matrix_ = core_->getNode(0)->generateCoinPackedWMatrix();
-					}
-					CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
-					assert(A_matrix->getNumRows() == num_rows);
-					assert(A_matrix->getNumCols() == num_cols);
-					CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix);
-					temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
-					// double prime side
-					CoinPackedMatrix double_prime_cols;
-					double_prime_cols.reverseOrdering(); // RowOrdered now
-					double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
-					double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
-					// combine two matrices
-					temp_matrix.rightAppendPackedMatrix(double_prime_cols);
-
-					// define and append b
-					CoinPackedVector vector_b;
-					vector_b.reserve(num_rows);
-					const double* r_upper = core_->getDenseRowUpper(0);
-					const double* r_lower = core_->getDenseRowLower(0);
-					for (int row = 0; row < num_rows; row++) {
-						if (CompareForEquality(r_upper[row], r_lower[row], zero_tolerance_)) { // E(=) sense
-							if (!CompareWithZero(r_upper[row])) {
-								vector_b.insert(row, r_upper[row]);
-							}
-							problem_r_upper.insert(problem_r_upper.end(), 2, 0.0);
-							problem_r_lower.insert(problem_r_lower.end(), 2, 0.0);
-						}
-						else if (r_lower[row] > -infinity_ + zero_tolerance_) { //G (>=) sense
-							if (!CompareWithZero(r_lower[row])) {
-								vector_b.insert(row, r_lower[row]);
-							}
-							problem_r_upper.insert(problem_r_upper.end(), 2, infinity_);
-							problem_r_lower.insert(problem_r_lower.end(), 2, 0.0);
-						}
-						else { //L (<=) sense
-							assert(r_upper[row] < infinity_ - zero_tolerance_);
-							if (!CompareWithZero(r_upper[row])) {
-								vector_b.insert(row, r_upper[row]);
-							}
-							problem_r_upper.insert(problem_r_upper.end(), 2, 0.0);
-							problem_r_lower.insert(problem_r_lower.end(), 2, -infinity_);
-						}
-					}
-					vector_b *= -1; // move to the LHS
-					temp_matrix.appendCol(vector_b);
-					//shift vector b down
-					int* vector_indices = vector_b.getIndices();
-					for (int i = 0; i < vector_b.getNumElements(); i++) {
-						vector_indices[i] += num_rows;
-					}
-					temp_matrix.appendCol(vector_b);
-
-					problem_matrix.bottomAppendPackedMatrix(temp_matrix);
-				}
-
-				//Add tau and v columns
-				col_starts.assign(num_theta * 2 + 1, 0);
-				problem_matrix.appendCols(num_theta * 2, col_starts.data(), nullptr, nullptr);
-
-				//Objective: min tau + v
-				std::vector<double> objective(num_cols * 2 + num_theta * 2 + 2); //incl. tau and v
-				assert(num_theta == 1);
-				objective[tau_start] = 1; //tau
-				objective[v_start] = 1; //v
-
-				//Column bounds
-				//x and z have bounds from the original problem
-				//TODO: what is with UB for binaries
-				const double* c_upper = core_->getDenseColUpper(0);
-				const double* c_lower = core_->getDenseColLower(0);
-				for (auto binary_index : core_->getBinaryCols(0)) { // for bin x ub should be 1 and lb should be 0
-					assert(CompareForEquality(c_lower[binary_index], 0, zero_tolerance_));
-					assert(CompareForEquality(c_upper[binary_index], 1, zero_tolerance_));
-				}
-
-				std::vector<double> column_upper;
-				column_upper.reserve(num_cols * 2 + num_theta * 2 + 2);
-				column_upper.insert(column_upper.end(), c_upper, c_upper + num_cols); // for z
-				column_upper.insert(column_upper.end(), c_upper, c_upper + num_cols); // for y
-				std::vector<double> column_lower;
-				column_lower.reserve(num_cols * 2 + num_theta * 2 + 2);
-				column_lower.insert(column_lower.end(), c_lower, c_lower + num_cols); // for z
-				column_lower.insert(column_lower.end(), c_lower, c_lower + num_cols); // for y
-				// z0 and y0 are nn
-				column_upper.insert(column_upper.end(), 2, infinity_);
-				column_lower.insert(column_lower.end(), 2, 0);
-				// tau and v are free
-				for (int i = 0; i < num_theta; i++) {
-					column_upper.insert(column_upper.end(), 2, infinity_);
-					column_lower.insert(column_lower.end(), 2, -infinity_);
-				}
-
-				assert(problem_matrix.getNumRows() == rows_to_allocate);
-				assert(problem_matrix.getNumCols() == num_cols * 2 + 2 + num_theta * 2);
-				assert(column_lower.size() == num_cols * 2 + 2 + num_theta * 2);
-				assert(column_upper.size() == num_cols * 2 + 2 + num_theta * 2);
-				assert(objective.size() == num_cols * 2 + 2 + num_theta * 2);
-				assert(problem_r_lower.size() == rows_to_allocate);
-				assert(problem_r_upper.size() == rows_to_allocate);
 			
-				dual_cgp_solver->loadProblem(problem_matrix, column_lower.data(), column_upper.data(), objective.data(), problem_r_lower.data(), problem_r_upper.data());
+            if (osi_lift_and_project_dual_cgp_solver_ == nullptr) {
+                osi_lift_and_project_dual_cgp_solver_ = new OsiCpxSolverInterface();
+                BuildDZNProblem(osi_lift_and_project_dual_cgp_solver_, benders_node_pointer, stage_pointer);
 			}
 			
 			//-- At the beginning of every lp_round
@@ -4432,7 +4325,7 @@ namespace parallel_benders {
 			if (!reuse_cgp_ || lp_cut_index == 0) { // TODO: we might append the cuts for every fract var if we use PNB CGP cuts intra round
 				// Set first rows RHS to x_dash vector (Line 7)
 				for (int i = 0; i < num_cols; ++i) {
-					dual_cgp_solver->setRowBounds(i, -benders_node_pointer->col_solution_[i], -benders_node_pointer->col_solution_[i]);
+                    osi_lift_and_project_dual_cgp_solver_->setRowBounds(i, -benders_node_pointer->col_solution_[i], -benders_node_pointer->col_solution_[i]);
 				}
 
 				// Append feasibility cuts since the last major iteration: normally only for the first integer var in the round, i.e., at the beginning of every lp_switch
@@ -4443,30 +4336,7 @@ namespace parallel_benders {
 				for (; it != benders_node_pointer->feasibility_cuts_.end(); ++it) {
 					assert(num_theta == 1 && "Should be changed for multicut");
 					if ((*it)->to_use_) {
-						int vector_size = (*it)->cut_->row().getNumElements();
-						assert(vector_size <= num_cols + 1); // element with value 0 are not included
-						OsiRowCut* cut = (*it)->cut_.get();
-						const CoinPackedVector old_row(cut->row());
-						double old_lb = cut->lb();
-						cut->setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
-						CoinPackedVector* row = &cut->mutableRow();
-						row->reserve(vector_size + 2); // incl. z_0 and y_0 columns
-
-						// apply to the prime side
-						row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// apply to the double-prime side
-						for (int i = 0; i < vector_size; ++i) { // shift coefs to the right for y
-							row->getIndices()[i] += num_cols;
-						}
-						row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
-						row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// set the indices and lb back
-						cut->setRow(old_row);
-						cut->setLb(old_lb);
+                        ApplyCutToLnPCGP(osi_lift_and_project_dual_cgp_solver_, (*it), benders_node_pointer);
 					}
 				}
 				benders_node_pointer->last_lp_switch_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
@@ -4479,30 +4349,7 @@ namespace parallel_benders {
 				for (; it != benders_node_pointer->domain_cuts_.end(); ++it) {
 					assert(num_theta == 1 && "Should be changed for multicut");
 					if ((*it)->to_use_) {
-						int vector_size = (*it)->cut_->row().getNumElements();
-						assert(vector_size <= num_cols + 1); // element with value 0 are not included
-						OsiRowCut* cut = (*it)->cut_.get();
-						const CoinPackedVector old_row(cut->row());
-						double old_lb = cut->lb();
-						cut->setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
-						CoinPackedVector* row = &cut->mutableRow();
-						row->reserve(vector_size + 2); // incl. z_0 and y_0 columns
-
-						// apply to the prime side
-						row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// apply to the double-prime side
-						for (int i = 0; i < vector_size; ++i) { // shift coefs to the right for y
-							row->getIndices()[i] += num_cols;
-						}
-						row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
-						row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// set the indices and lb back
-						cut->setRow(old_row);
-						cut->setLb(old_lb);
+                        ApplyCutToLnPCGP(osi_lift_and_project_dual_cgp_solver_, (*it), benders_node_pointer);
 					}
 				}
 				benders_node_pointer->last_in_extraction_problem_start_domain_ = benders_node_pointer->domain_cuts_.end();
@@ -4515,35 +4362,7 @@ namespace parallel_benders {
 				for (; it != benders_node_pointer->optimality_cuts_.end(); ++it) {
 					assert(num_theta == 1 && "Should be changed for multicut");
 					if ((*it)->to_use_) {
-						int vector_size = (*it)->cut_->row().getNumElements();
-						assert(vector_size <= num_cols + 1); // element with value 0 are not included
-						OsiRowCut* cut = (*it)->cut_.get();
-						const CoinPackedVector old_row(cut->row());
-						double old_lb = cut->lb();
-						cut->setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
-						CoinPackedVector* row = &cut->mutableRow();
-						row->reserve(vector_size + 2); // incl. z_0 and y_0 columns
-
-						// apply to the prime side
-						assert(num_theta == 1);
-						int theta_position = row->findIndex(num_cols); // theta position in vector, -1 if theta is 0 and is not present in the row
-						assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
-						row->getIndices()[theta_position] = tau_start; // shift theta to the tau column
-						row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// apply to the double-prime side
-						for (int i = 0; i < vector_size - 1; ++i) { // shift coefs to the right for y
-							row->getIndices()[i] += num_cols;
-						}
-						row->getIndices()[theta_position] = v_start; // shift theta to the v column
-						row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
-						row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// set the indices and lb back
-						cut->setRow(old_row);
-						cut->setLb(old_lb);
+                        ApplyCutToLnPCGP(osi_lift_and_project_dual_cgp_solver_, (*it), benders_node_pointer);
 					}
 				}
 				benders_node_pointer->last_lp_switch_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
@@ -4557,35 +4376,7 @@ namespace parallel_benders {
 				for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
 					assert(num_theta == 1 && "Should be changed for multicut");
 					if ((*it)->to_use_) {
-						int vector_size = (*it)->cut_->row().getNumElements();
-						assert(vector_size <= num_cols + 1); // element with value 0 are not included
-						OsiRowCut* cut = (*it)->cut_.get();
-						const CoinPackedVector old_row(cut->row());
-						double old_lb = cut->lb();
-						cut->setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
-						CoinPackedVector* row = &cut->mutableRow();
-						row->reserve(vector_size + 2); // incl. z_0 and y_0 columns
-
-						// apply to the prime side
-						assert(num_theta == 1);
-						int theta_position = row->findIndex(num_cols); // theta position in vector, -1 if theta is 0 and is not present in the row
-						assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
-						row->getIndices()[theta_position] = tau_start; // shift theta to the tau column
-						row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// apply to the double-prime side
-						for (int i = 0; i < vector_size - 1; ++i) { // shift coefs to the right for y
-							row->getIndices()[i] += num_cols;
-						}
-						row->getIndices()[theta_position] = v_start; // shift theta to the v column
-						row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
-						row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// set the indices and lb back
-						cut->setRow(old_row);
-						cut->setLb(old_lb);
+                        ApplyCutToLnPCGP(osi_lift_and_project_dual_cgp_solver_, (*it), benders_node_pointer);
 					}
 				}
 				benders_node_pointer->last_in_extraction_problem_start_epigraph_ = benders_node_pointer->epigraph_cuts_.end();
@@ -4593,100 +4384,60 @@ namespace parallel_benders {
 
 			//-- For every fract var
 			// add PNB CGP cuts
-			int opt_cuts_from_cgp(0);
-			start_cgp_rows = dual_cgp_solver->getNumRows();
+			int new_cgp_pnb_opt_cuts(0);
+			start_cgp_rows = osi_lift_and_project_dual_cgp_solver_->getNumRows();
 			if (use_2nd_stage_info) {
-				// TODO: if CGP cuts added to the MP - can be done in some different way
-				opt_cuts_from_cgp = cgp_pnb_->stage_data_[0]->added_optimality_cuts_;
-				BendersNodeData* cgp_first_stage_pointer = cgp_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr();
-				for (it = cgp_first_stage_pointer->optimality_cuts_.begin(); it != cgp_first_stage_pointer->optimality_cuts_.end(); ++it) {
-					assert(num_theta == 1 && "Should be changed for multicut");
-					// TODO: use iterator pointing to the start of newly cgp created cuts
-					if ((*it)->to_use_ && (*it->get()).cut_creation_iteration_ != 0) {
-						int vector_size = (*it)->cut_->row().getNumElements();
-						assert(vector_size <= num_cols + 1); // element with value 0 are not included
-						OsiRowCut* cut = (*it)->cut_.get();
-						int column_set = (*it->get()).column_set_;
-						const CoinPackedVector old_row(cut->row());
-						double old_lb = cut->lb();
-						cut->setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
-						CoinPackedVector* row = &cut->mutableRow();
-						row->reserve(vector_size + 2); // incl. z_0 and y_0 columns
-						int theta_position = row->findIndex(num_cols); // theta position in vector, -1 if theta is 0 and is not present in the row
-
-						if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_PRIME) {
-							assert(num_theta == 1);
-							assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
-							row->getIndices()[theta_position] = tau_start; // shift theta to the tau column
-							row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-							dual_cgp_solver->applyRowCuts(1, cut);
-						}
-
-						if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
-							for (int i = 0; i < vector_size - 1; ++i) { // shift coefs to the right for y
-								row->getIndices()[i] += num_cols;
-							}
-							row->getIndices()[theta_position] = v_start; // shift theta to the v column
-							row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
-							row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-							dual_cgp_solver->applyRowCuts(1, cut);
-						}
-
-						// set the indices and lb back
-						cut->setRow(old_row);
-						cut->setLb(old_lb);
-					}
-				}
-				for (it = cgp_first_stage_pointer->feasibility_cuts_.begin(); it != cgp_first_stage_pointer->feasibility_cuts_.end(); ++it) {
-					assert(num_theta == 1 && "Should be changed for multicut");
-					// TODO: use iterator pointing to the start of newly cgp created cuts
-					if ((*it)->to_use_ && (*it->get()).cut_creation_iteration_ != 0) {
-						int vector_size = (*it)->cut_->row().getNumElements();
-						assert(vector_size <= num_cols + 1); // element with value 0 are not included
-						OsiRowCut* cut = (*it)->cut_.get();
-						const CoinPackedVector old_row(cut->row());
-						double old_lb = cut->lb();
-						cut->setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
-						CoinPackedVector* row = &cut->mutableRow();
-						row->reserve(vector_size + 2); // incl. z_0 and y_0 columns
-
-						// apply to the prime side
-						row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// apply to the double-prime side
-						for (int i = 0; i < vector_size; ++i) { // shift coefs to the right for y
-							row->getIndices()[i] += num_cols;
-						}
-						row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
-						row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-						dual_cgp_solver->applyRowCuts(1, cut);
-
-						// set the indices and lb back
-						cut->setRow(old_row);
-						cut->setLb(old_lb);
-					}
-				}
+				// TODO: if CGP cuts to be added to the MP - also add cuts here (what if we do not use 2nd stage info becuase there were issues with PNB CGP but have generated the cuts. Do we need that cuts?)
+                // TODO: we could also set here iteration to 0 for CGP cuts if we use them intra iteration
+                new_cgp_pnb_opt_cuts = cgp_pnb_->stage_data_[0]->added_optimality_cuts_;
+                if (old_cgp_pnb_opt_cuts_back == cgp_optimality_cuts->end()) { // there were no opt cuts in PNB CGP before we solved it
+                    it = cgp_optimality_cuts->begin(); // therefore, add all cuts
+                }
+                else {
+                    it = std::next(old_cgp_pnb_opt_cuts_back);
+                }
+                for ( ; it != cgp_optimality_cuts->end(); ++it) {
+                    assert(num_theta == 1 && "Should be changed for multicut");
+                    // TODO: use iterator pointing to the start of newly cgp created cuts
+                    if ((*it)->to_use_) {
+                        assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
+                        ApplyCutToLnPCGP(osi_lift_and_project_dual_cgp_solver_, (*it), benders_node_pointer);
+                    }
+                }
+				
+                if (old_cgp_pnb_feas_cuts_back == cgp_feasibility_cuts->end()) { // there were no opt cuts in PNB CGP before we solved it
+                    it = cgp_feasibility_cuts->begin(); // therefore, add all cuts
+                }
+                else {
+                    it = std::next(old_cgp_pnb_feas_cuts_back);
+                }
+                for ( ; it != cgp_feasibility_cuts->end(); ++it) {
+                    assert(num_theta == 1 && "Should be changed for multicut");
+                    if ((*it)->to_use_) {
+                        assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
+                        ApplyCutToLnPCGP(osi_lift_and_project_dual_cgp_solver_, (*it), benders_node_pointer);
+                    }
+                }
 			}
 			// no optimality-like cuts -> unbounded theta -> unbounded Dual of Zeta-Normalized (dual of epigraph cut generation problem)
 			// -> solve Dual of Alpha-Normalized (dual of domain cut generation problem)
-			if (opt_cuts_from_cgp == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty()) {
+			if (new_cgp_pnb_opt_cuts == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty()) {
 #ifdef SPEC_CASES
 				assert(false && "Just to note: no optimality like cuts for L&P CGP");
 #endif		
 				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
 			}
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
-				SetAlphaNormalization(dual_cgp_solver, true);
+				SetAlphaNormalization(osi_lift_and_project_dual_cgp_solver_, true);
 			}
 			else {
-				SetAlphaNormalization(dual_cgp_solver, false);
+				SetAlphaNormalization(osi_lift_and_project_dual_cgp_solver_, false);
 			}
 			
 			// Modify coefs of Lines 3 and 6 (there is no method in OSI to modify the single element in the matrix)
 			// Line 3: -z_i >= 0 and Line 6 : y_i - y_0 >= 0
-			CPXENVptr env_ptr = dual_cgp_solver->getEnvironmentPtr();
-			CPXLPptr lp_ptr = dual_cgp_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+			CPXENVptr env_ptr = osi_lift_and_project_dual_cgp_solver_->getEnvironmentPtr();
+			CPXLPptr lp_ptr = osi_lift_and_project_dual_cgp_solver_->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
 			std::array<int, 2> rowlist = {num_cols+1, num_cols+2};
 			std::array<int, 2> collist = { fractional_variable.first, num_cols + fractional_variable.first };
 			std::array<double, 2> vallist = {-1.0, 1.0};
@@ -4694,79 +4445,79 @@ namespace parallel_benders {
 
 			// TODO: should we also append the L&P cut to the CGP of the next fract var
 
-			SolveSolverInterface(dual_cgp_solver);
-			std::cout << "Solution of Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
+			SolveSolverInterface(osi_lift_and_project_dual_cgp_solver_);
+			std::cout << "Solution of Dual L&P Cut Generation Problem: " << osi_lift_and_project_dual_cgp_solver_->getObjValue() << std::endl;
 
 			std::stringstream suffix;
 			suffix << "l&p_cut_index_" << lp_cut_index;
-			PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
+			PrintSubproblem(osi_lift_and_project_dual_cgp_solver_, lp_round_, suffix.str());
 
-			assert(dual_cgp_solver->isProvenOptimal() || dual_cgp_solver->isProvenPrimalInfeasible());
+			assert(osi_lift_and_project_dual_cgp_solver_->isProvenOptimal() || osi_lift_and_project_dual_cgp_solver_->isProvenPrimalInfeasible());
 			// if infeasible -> DZN unbounded (DAN should be always solvable) -> AddAlphaNormalization and resolve
-			if (dual_cgp_solver->isProvenPrimalInfeasible()) {
+			if (osi_lift_and_project_dual_cgp_solver_->isProvenPrimalInfeasible()) {
 				assert(lift_and_project_cut_type != PNB_CUT_TYPE_DOMAIN && "DAN should be always solvable"); 
 #ifdef SPEC_CASES
 	assert(!(cgp_pnb_ != nullptr && cgp_pnb_->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) && "Just to note: DZN is infeasible even though PNB CGP was solved");
 #endif				
 				LOG(INFO) << "Dual of L&P Cut Generation Problem is infeasible, set Alpha-Normalization and build domain cut.";
 				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
-				SetAlphaNormalization(dual_cgp_solver, true);
-				SolveSolverInterface(dual_cgp_solver);
+				SetAlphaNormalization(osi_lift_and_project_dual_cgp_solver_, true);
+				SolveSolverInterface(osi_lift_and_project_dual_cgp_solver_);
 				
-				std::cout << "Solution of Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
+				std::cout << "Solution of Dual L&P Cut Generation Problem: " << osi_lift_and_project_dual_cgp_solver_->getObjValue() << std::endl;
 				suffix << "_with_Alpha_Normalization";
-				PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
+				PrintSubproblem(osi_lift_and_project_dual_cgp_solver_, lp_round_, suffix.str());
 			}
 
-			assert(dual_cgp_solver->isProvenOptimal());
+			assert(osi_lift_and_project_dual_cgp_solver_->isProvenOptimal());
 			if (use_2nd_stage_info && cgp_pnb_->solution_code_ != PNB_SOLUTION_SIMILARITY_LIMIT && (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH || (cgp_pnb_->cgp_do_when_infeasible_ > parallel_benders::PNB_CGP_STOP_WHEN_INFEASIBLE))) {
-				assert(ComputeRelativeGap(cgp_pnb_->upper_bound_, dual_cgp_solver->getObjValue(), zero_tolerance_) < cgp_relative_epsilon_ + zero_tolerance_);
+				assert(ComputeRelativeGap(cgp_pnb_->upper_bound_, osi_lift_and_project_dual_cgp_solver_->getObjValue(), zero_tolerance_) < cgp_relative_epsilon_ + zero_tolerance_);
 			}
 
 #ifdef SPEC_CASES
-            if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && CompareWithZero(dual_cgp_solver->getObjValue())) {
+            if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && CompareWithZero(osi_lift_and_project_dual_cgp_solver_->getObjValue())) {
                 assert(false && "Just to note: Solution of DAN is zero.");
             }
-            else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && CompareWithZero(dual_cgp_solver->getObjValue())){
+            else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && CompareWithZero(osi_lift_and_project_dual_cgp_solver_->getObjValue())){
                 assert(false && "Just to note: Solution of DZN is zero.");
-                SetAlphaNormalization(dual_cgp_solver, true);
-                SolveSolverInterface(dual_cgp_solver);
-                assert(dual_cgp_solver->isProvenOptimal() && "DAN should be always solvable");
-                assert(CompareWithZero(dual_cgp_solver->getObjValue()) && "Just to note: Solution of DZN is zero and solution of DAN is not.");
+                SetAlphaNormalization(osi_lift_and_project_dual_cgp_solver_, true);
+                SolveSolverInterface(osi_lift_and_project_dual_cgp_solver_);
+                assert(osi_lift_and_project_dual_cgp_solver_->isProvenOptimal() && "DAN should be always solvable");
+                assert(CompareWithZero(osi_lift_and_project_dual_cgp_solver_->getObjValue()) && "Just to note: Solution of DZN is zero and solution of DAN is not.");
             }
 #endif
-			if (!CompareWithZero(dual_cgp_solver->getObjValue())) { // we add L&P cut only if it cuts anything
+			if (!CompareWithZero(osi_lift_and_project_dual_cgp_solver_->getObjValue())) { // we add L&P cut only if it cuts anything
                 std::vector<std::vector<double>>* current_cuts_coefficients;
                 std::vector<double>* current_cuts_rhs;
                 if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
 #ifdef SPEC_CASES
-                    assert(dual_cgp_solver->getObjValue() < 0 + zero_tolerance_ && "Just to note: DZN CGP solution is positive. Cannot be positive... I guess. It is positive for .../sizes and .../dcap");
+                    assert(osi_lift_and_project_dual_cgp_solver_->getObjValue() < 0 + zero_tolerance_ && "Just to note: DZN CGP solution is positive. Cannot be positive... I guess. It is positive for .../sizes and .../dcap");
 #endif
                     current_cuts_coefficients = &epigraph_current_cuts_coefficients_;
                     current_cuts_rhs = &epigraph_current_cuts_rhs_;
                 }
                 else if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
-                    assert(dual_cgp_solver->getObjValue() > 0 - zero_tolerance_ && "Cannot be negative.");
+                    assert(osi_lift_and_project_dual_cgp_solver_->getObjValue() > 0 - zero_tolerance_ && "Cannot be negative.");
                     current_cuts_coefficients = &domain_current_cuts_coefficients_;
                     current_cuts_rhs = &domain_current_cuts_rhs_;
                 }
                 current_cuts_coefficients->push_back(std::vector<double>(num_cols));
-				StoreValuesFromSolverInVector(current_cuts_coefficients->back(), dual_cgp_solver->getRowPrice(), num_cols);
-                current_cuts_rhs->push_back(dual_cgp_solver->getRowPrice()[num_cols]);
+				StoreValuesFromSolverInVector(current_cuts_coefficients->back(), osi_lift_and_project_dual_cgp_solver_->getRowPrice(), num_cols);
+                current_cuts_rhs->push_back(osi_lift_and_project_dual_cgp_solver_->getRowPrice()[num_cols]);
 			}
 
 			if (!reuse_cgp_) {
                 delete cgp_pnb_;
                 cgp_pnb_ = nullptr;
-				delete dual_cgp_solver;
-				osi_lift_and_project_dual_cgp_solver_ = nullptr;
+				delete osi_lift_and_project_dual_cgp_solver_;
+                osi_lift_and_project_dual_cgp_solver_ = nullptr;
 			}
 			else {
 				// Delete L&P CGP cuts //TODO: probably we do not need to do it if opt cuts from CGP to be used in next fract vars
-				int num_cgp_cuts_to_delete = dual_cgp_solver->getNumRows() - start_cgp_rows;
+				int num_cgp_cuts_to_delete = osi_lift_and_project_dual_cgp_solver_->getNumRows() - start_cgp_rows;
 				std::vector<int> row_indices(num_cgp_cuts_to_delete);
 				std::iota(row_indices.begin(), row_indices.end(), start_cgp_rows);
-				dual_cgp_solver->deleteRows(num_cgp_cuts_to_delete, row_indices.data());
+                osi_lift_and_project_dual_cgp_solver_->deleteRows(num_cgp_cuts_to_delete, row_indices.data());
 
 				// set back values of z_i and y_i in Line 3: -z_i >= 0 and Line 6 : y_i - y_0 >= 0
 				// we will modify this lines for the next fractional variable
@@ -4925,6 +4676,189 @@ namespace parallel_benders {
 			AddCutToContainer(benders_tree_node_pointer, cut_stuff);
 		}	
 	}
+
+    void ParallelNestedBenders::BuildDZNProblem(OsiSolverInterface* osi_solver, BendersNodeData*  benders_node_data, BendersStageData* stage_data)
+    {
+        assert(osi_solver != nullptr);
+        // TODO: write here the problem formulation with lines
+        // TODO: think about row_ordered / column_ordered vs efficiency
+        int num_theta = benders_node_data->num_thetas_;
+        if (num_theta == 0) {
+            num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
+        }
+        int num_cols = stage_data->num_columns_;
+        int num_rows = stage_data->num_rows_;
+        int num_bin = core_->getBinaryCols(0).size();
+        int z0_col_index = num_cols * 2;
+        int y0_col_index = num_cols * 2 + 1;
+        int tau_start = num_cols * 2 + 2;
+        int v_start = num_cols * 2 + 2 + num_theta;
+
+        SetSolverOptions(osi_solver);
+        int rows_to_allocate = num_cols + 1 + 2 + num_cols + num_bin * 2 + num_rows * 2;
+        CoinPackedMatrix problem_matrix = CoinPackedMatrix(); // TODO: reserve the dimensions during the creation
+        std::vector<double> problem_r_upper(num_cols + 1); // rows for lines 7, 8
+        std::vector<double> problem_r_lower(num_cols + 1 + 2 + num_cols); // TODO: check all the vectors and reserve enough space from the very start
+        problem_r_upper.reserve(rows_to_allocate);
+        problem_r_lower.reserve(rows_to_allocate);
+
+        // Line 7: -z + -y = -x_dash
+        // we copy solution (x_dash) to row UB and row LB later before solving DZN for every fractional
+        problem_matrix.setDimensions(num_cols + 2, 0); // rows for lines 7, 8, 3, Alpha-Normalization empty rows
+
+        std::vector<int> col_starts(num_cols + 1); //we need to get an identity matrix, therefore one vector will suit col start and rows. Cols starts should have one more element
+        std::iota(col_starts.begin(), col_starts.end(), 0); //fill in with 0, 1, 2, 3
+        std::vector<double> elems(num_cols, -1);
+        problem_matrix.appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // z cols
+        problem_matrix.appendCols(num_cols, col_starts.data(), col_starts.data(), elems.data()); // y cols
+
+        // Line 8: z_0 + y_0 = 1
+        problem_r_upper[num_cols] = 1;
+        problem_r_lower[num_cols] = 1;
+        col_starts = { 0, 1, 2 };
+        std::vector<int> row(2, num_cols);
+        elems = { 1, 1 };
+        problem_matrix.appendCols(2, col_starts.data(), row.data(), elems.data());
+
+        // Line 3: -z_i >= 0 and Line 6: y_i - y_0 >= 0
+        problem_r_upper.insert(problem_r_upper.end(), 2, infinity_);
+        // we set the -z_1 and y_i coefficient in the matrix later before solving DZN for every fractional
+        // Line 3 is already added to the matrix, add Line 6
+        std::vector<int> indices(1, num_cols * 2 + 1);
+        elems = { -1.0 };
+        problem_matrix.appendRow(1, indices.data(), elems.data());
+
+        // Alpha-Normalization empty rows
+        problem_r_upper.insert(problem_r_upper.end(), num_cols, infinity_);
+        assert(problem_matrix.isColOrdered());
+        problem_matrix.setMinorDim(problem_matrix.getNumRows() + num_cols); // add num_cols empty rows
+
+        // Lines 2 and 6 (bounds): -1*z + 1*z_0 >= 0 and -1*y + 1*y_0 >= 0 for binary vars
+        problem_r_upper.insert(problem_r_upper.end(), num_bin * 2, infinity_);
+        problem_r_lower.insert(problem_r_lower.end(), num_bin * 2, 0);
+        elems = { -1, 1 };
+        indices.resize(2);
+        // prime side
+        indices[1] = z0_col_index;
+        for (std::vector<int>::const_iterator it = core_->getBinaryCols(0).begin(); it != core_->getBinaryCols(0).end(); ++it) {
+            indices[0] = *it;
+            problem_matrix.appendRow(2, indices.data(), elems.data());
+        }
+        // double-prime side
+        indices[1] = y0_col_index;
+        for (std::vector<int>::const_iterator it = core_->getBinaryCols(0).begin(); it != core_->getBinaryCols(0).end(); ++it) {
+            indices[0] = *it + num_cols;
+            problem_matrix.appendRow(2, indices.data(), elems.data());
+        }
+
+        // Lines 2 and 6: A*z - b*z_0 >= 0 and A*y - b*y_0 >= 0
+        if (num_rows) {
+            // TODO: do we need bounds in matrix A?		
+            // A matrix -> A' and A"
+            if (benders_node_data->matrix_ == nullptr) {
+                benders_node_data->matrix_ = core_->getNode(0)->generateCoinPackedWMatrix();
+            }
+            CoinPackedMatrix* A_matrix = benders_node_data->matrix_; // RowOrdered
+            assert(A_matrix->getNumRows() == num_rows);
+            assert(A_matrix->getNumCols() == num_cols);
+            CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix);
+            temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
+            // double prime side
+            CoinPackedMatrix double_prime_cols;
+            double_prime_cols.reverseOrdering(); // RowOrdered now
+            double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
+            double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
+            // combine two matrices
+            temp_matrix.rightAppendPackedMatrix(double_prime_cols);
+
+            // define and append b
+            CoinPackedVector vector_b;
+            vector_b.reserve(num_rows);
+            const double* r_upper = core_->getDenseRowUpper(0);
+            const double* r_lower = core_->getDenseRowLower(0);
+            for (int row = 0; row < num_rows; row++) {
+                if (CompareForEquality(r_upper[row], r_lower[row], zero_tolerance_)) { // E(=) sense
+                    if (!CompareWithZero(r_upper[row])) {
+                        vector_b.insert(row, r_upper[row]);
+                    }
+                    problem_r_upper.insert(problem_r_upper.end(), 2, 0.0);
+                    problem_r_lower.insert(problem_r_lower.end(), 2, 0.0);
+                }
+                else if (r_lower[row] > -infinity_ + zero_tolerance_) { //G (>=) sense
+                    if (!CompareWithZero(r_lower[row])) {
+                        vector_b.insert(row, r_lower[row]);
+                    }
+                    problem_r_upper.insert(problem_r_upper.end(), 2, infinity_);
+                    problem_r_lower.insert(problem_r_lower.end(), 2, 0.0);
+                }
+                else { //L (<=) sense
+                    assert(r_upper[row] < infinity_ - zero_tolerance_);
+                    if (!CompareWithZero(r_upper[row])) {
+                        vector_b.insert(row, r_upper[row]);
+                    }
+                    problem_r_upper.insert(problem_r_upper.end(), 2, 0.0);
+                    problem_r_lower.insert(problem_r_lower.end(), 2, -infinity_);
+                }
+            }
+            vector_b *= -1; // move to the LHS
+            temp_matrix.appendCol(vector_b);
+            //shift vector b down
+            int* vector_indices = vector_b.getIndices();
+            for (int i = 0; i < vector_b.getNumElements(); i++) {
+                vector_indices[i] += num_rows;
+            }
+            temp_matrix.appendCol(vector_b);
+
+            problem_matrix.bottomAppendPackedMatrix(temp_matrix);
+        }
+
+        //Add tau and v columns
+        col_starts.assign(num_theta * 2 + 1, 0);
+        problem_matrix.appendCols(num_theta * 2, col_starts.data(), nullptr, nullptr);
+
+        //Objective: min tau + v
+        std::vector<double> objective(num_cols * 2 + num_theta * 2 + 2); //incl. tau and v
+        assert(num_theta == 1);
+        objective[tau_start] = 1; //tau
+        objective[v_start] = 1; //v
+
+        //Column bounds
+        //x and z have bounds from the original problem
+        //TODO: what is with UB for binaries
+        const double* c_upper = core_->getDenseColUpper(0);
+        const double* c_lower = core_->getDenseColLower(0);
+        for (auto binary_index : core_->getBinaryCols(0)) { // for bin x ub should be 1 and lb should be 0
+            assert(CompareForEquality(c_lower[binary_index], 0, zero_tolerance_));
+            assert(CompareForEquality(c_upper[binary_index], 1, zero_tolerance_));
+        }
+
+        std::vector<double> column_upper;
+        column_upper.reserve(num_cols * 2 + num_theta * 2 + 2);
+        column_upper.insert(column_upper.end(), c_upper, c_upper + num_cols); // for z
+        column_upper.insert(column_upper.end(), c_upper, c_upper + num_cols); // for y
+        std::vector<double> column_lower;
+        column_lower.reserve(num_cols * 2 + num_theta * 2 + 2);
+        column_lower.insert(column_lower.end(), c_lower, c_lower + num_cols); // for z
+        column_lower.insert(column_lower.end(), c_lower, c_lower + num_cols); // for y
+        // z0 and y0 are nn
+        column_upper.insert(column_upper.end(), 2, infinity_);
+        column_lower.insert(column_lower.end(), 2, 0);
+        // tau and v are free
+        for (int i = 0; i < num_theta; i++) {
+            column_upper.insert(column_upper.end(), 2, infinity_);
+            column_lower.insert(column_lower.end(), 2, -infinity_);
+        }
+
+        assert(problem_matrix.getNumRows() == rows_to_allocate);
+        assert(problem_matrix.getNumCols() == num_cols * 2 + 2 + num_theta * 2);
+        assert(column_lower.size() == num_cols * 2 + 2 + num_theta * 2);
+        assert(column_upper.size() == num_cols * 2 + 2 + num_theta * 2);
+        assert(objective.size() == num_cols * 2 + 2 + num_theta * 2);
+        assert(problem_r_lower.size() == rows_to_allocate);
+        assert(problem_r_upper.size() == rows_to_allocate);
+
+        osi_solver->loadProblem(problem_matrix, column_lower.data(), column_upper.data(), objective.data(), problem_r_lower.data(), problem_r_upper.data());
+    }
 
 	void ParallelNestedBenders::SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set)
 	{
