@@ -1409,7 +1409,6 @@ TEST_F(LiftAndProjectCutsTest, fast) {
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 882.615, 0.1); // 1834.87 for MIP
 		// generate feasibility cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_15"), -10750, 0.1); // similar characteristics to ssch/c...
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0); // same characteristics as SNDP_TestCase_15
 }
 
 TEST_F(LiftAndProjectCutsTest, bounds_convergence_fast) {
@@ -1586,6 +1585,7 @@ TEST_F(LiftAndProjectCutsTest, bounds_convergence_fast) {
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", bounds_list_sslp_5_25_50_lp_5_major_1_switch_2_method_0));
 
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 5); // with L&P cuts
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LIFT_AND_P_METHOD, 1); // DZN (epigraph cut) w/o 2nd stage info
 	// solve problems
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_0", bounds_list_SNDP_TestCase_0_lp_5_major_1_switch_2_method_1));
@@ -1596,14 +1596,15 @@ TEST_F(LiftAndProjectCutsTest, bounds_convergence_fast) {
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_1));
 	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", bounds_list_sslp_5_25_50_lp_5_major_1_switch_2_method_1));
 
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 5); // with L&P cuts
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LIFT_AND_P_METHOD, 2); // // DZN (epigraph cut) with 2nd stage info
 	// solve problems
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_0", bounds_list_SNDP_TestCase_0_lp_5_major_1_switch_2_method_2));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_5_major_1_switch_2_method_2));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_5_major_1_switch_2_method_2)); // seems to be different for: (not)rebuild cgp)
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_9", bounds_list_SNDP_TestCase_9_lp_5_major_1_switch_2_method_2));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_14", bounds_list_SNDP_TestCase_14_lp_5_major_1_switch_2_method_2));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_15", bounds_list_SNDP_TestCase_15_lp_5_major_1_switch_2_method_2));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_2));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_2)); // seems to be different for: (not)rebuild cgp)
 	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", bounds_list_sslp_5_25_50_lp_5_major_1_switch_2_method_2));
 }
 
@@ -2175,6 +2176,7 @@ TEST_F(LiftAndProjectCutsTest, slow) {
 	//!!! EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 223753.66, 0.1); // w/o relaxation  224486.00, MP CGP is always infeasible (even when DZN is), see BUG#4
 	//EXPECT_NEAR(solveSMPS("felt/phone/phone-int", "felt/phone/phone", "felt/phone/phone"), 36.9, 0.1); // Stochastic problem with 2^15 scenarios and integer
 		// generate feasibility  cuts:
+	EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0); // same characteristics as SNDP_TestCase_15
 	EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -154654, 1.0);
 }
 
