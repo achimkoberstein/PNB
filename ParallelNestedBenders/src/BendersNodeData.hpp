@@ -65,6 +65,7 @@ namespace parallel_benders{
 	const std::string PNB_LP_MAJOR_IT_LIMIT = "PNB_LP_MAJOR_IT_LIMIT";
 	const std::string PNB_LP_CUTS_FOR_FRACT = "PNB_LP_CUTS_FOR_FRACT";
 	const std::string PNB_LP_ALLOW_TEST_CASES = "PNB_LP_ALLOW_TEST_CASES";
+    const std::string PNB_LP_REUSE_CGP = "PNB_LP_REUSE_CGP";
 
 
     // Here come the double parameters

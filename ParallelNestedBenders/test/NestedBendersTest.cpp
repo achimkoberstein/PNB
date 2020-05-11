@@ -1538,6 +1538,13 @@ TEST_F(LiftAndProjectCutsTest, bounds_convergence_fast) {
 	for (int i = 0; i < ub.size(); i++) {
 		bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_2.push_back(make_pair(ub[i], lb[i]));
 	}
+	// DZN w 2nd stage info (not reuse but rebuild cgp)
+	lb = { -1.0e+20,-41000.00,-15207.5 };
+	ub = { 1.0e+20,     0.00, -15207.5 };
+	std::vector<std::pair<double, double>> bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_2_rebuild;
+	for (int i = 0; i < ub.size(); i++) {
+		bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_2_rebuild.push_back(make_pair(ub[i], lb[i]));
+	}
 	
 	// sslp_5_25_50
 	lb = { -1.0e+20,-886618.2,-215.38, -208.38,-195.38,-195.38,-187.38,-168.38,-155.38,-155.38,-148.38,-148.38,-147.38,-140.38,-135.38,-127.38,-127.38,-121.6 };
@@ -1565,47 +1572,50 @@ TEST_F(LiftAndProjectCutsTest, bounds_convergence_fast) {
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_MAJOR_IT_LIMIT, 1);
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_SWITCHES_LIMIT, 2);
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 0); //w/o L&P cuts
-	// solve problems
+		// solve problems
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_0", bounds_list_SNDP_TestCase_0_lp_0_major_1_switch_2_method_0));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_0_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_9", bounds_list_SNDP_TestCase_9_lp_0_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_14", bounds_list_SNDP_TestCase_14_lp_0_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_15", bounds_list_SNDP_TestCase_15_lp_0_major_1_switch_2_method_0));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_0_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", bounds_list_sslp_5_25_50_lp_0_major_1_switch_2_method_0));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_0_major_1_switch_2_method_0));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_0_major_1_switch_2_method_0));
 
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 5); // with L&P cuts
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LIFT_AND_P_METHOD, 0); // DAN (domain cut)
 	// solve problems
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_0", bounds_list_SNDP_TestCase_0_lp_5_major_1_switch_2_method_0));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_5_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_9", bounds_list_SNDP_TestCase_9_lp_5_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_14", bounds_list_SNDP_TestCase_14_lp_5_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_15", bounds_list_SNDP_TestCase_15_lp_5_major_1_switch_2_method_0));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_0));
 	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", bounds_list_sslp_5_25_50_lp_5_major_1_switch_2_method_0));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_5_major_1_switch_2_method_0));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_0));
 
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 5); // with L&P cuts
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LIFT_AND_P_METHOD, 1); // DZN (epigraph cut) w/o 2nd stage info
 	// solve problems
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_0", bounds_list_SNDP_TestCase_0_lp_5_major_1_switch_2_method_1));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_5_major_1_switch_2_method_1));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_9", bounds_list_SNDP_TestCase_9_lp_5_major_1_switch_2_method_1));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_14", bounds_list_SNDP_TestCase_14_lp_5_major_1_switch_2_method_1));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_15", bounds_list_SNDP_TestCase_15_lp_5_major_1_switch_2_method_1));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_1));
 	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", bounds_list_sslp_5_25_50_lp_5_major_1_switch_2_method_1));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_5_major_1_switch_2_method_1));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_1));
 
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 5); // with L&P cuts
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_LIFT_AND_P_METHOD, 2); // // DZN (epigraph cut) with 2nd stage info
 	// solve problems
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_0", bounds_list_SNDP_TestCase_0_lp_5_major_1_switch_2_method_2));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_5_major_1_switch_2_method_2)); // seems to be different for: (not)rebuild cgp)
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_9", bounds_list_SNDP_TestCase_9_lp_5_major_1_switch_2_method_2));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_14", bounds_list_SNDP_TestCase_14_lp_5_major_1_switch_2_method_2));
 	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_15", bounds_list_SNDP_TestCase_15_lp_5_major_1_switch_2_method_2));
-	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_2)); // seems to be different for: (not)rebuild cgp)
 	EXPECT_TRUE(checkConvergence("siplib/sslp/sslp_5_25_50", bounds_list_sslp_5_25_50_lp_5_major_1_switch_2_method_2));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_2", bounds_list_SNDP_TestCase_2_lp_5_major_1_switch_2_method_2));
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_2));
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_LP_REUSE_CGP, false); // behave differently when (not)rebuild cgp (multiple dual solutions)
+	// SNDP_TestCase_2 also behaved differently
+	EXPECT_TRUE(checkConvergence("glushko/sndp_mini_tests/SNDP_TestCase_16", bounds_list_SNDP_TestCase_16_lp_5_major_1_switch_2_method_2_rebuild));
 }
 
 TEST_F(NestedBendersTest, fast) {

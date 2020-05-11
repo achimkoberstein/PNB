@@ -380,6 +380,7 @@ void Parameter::init()
 	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
 	parameter_.put(PNB_CGP_EPSILON_RELATIVE, 1e-06);
 	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 10000000);
+    parameter_.put(PNB_LP_REUSE_CGP, true);
 
 	// Fill in constants
 	// PNB_BENDERS

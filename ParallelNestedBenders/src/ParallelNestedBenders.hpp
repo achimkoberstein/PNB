@@ -440,6 +440,7 @@ private:
 	int cgp_do_when_infeasible_; // whether we quit OR apply Alpha-Normalization and solve OR apply Alpha-Normalization and continue when L&P CGP PNB is infeasible
 	int lp_round_; // TODO: get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
 	int lp_switch_counter_;
+    bool reuse_cgp_; // false - rebuild Dual Zeta-Normalized for every variable in every LP round, true - modify the RHS and add the new L&P/Optimality cuts
 	bool generate_lp_cuts_;
 	int next_lp_rounds_iteration_;
 	std::map<double, std::pair<int, double>> fractional_variables_; //<fractional part, <var index, var value> > ordered ascending by int violation
