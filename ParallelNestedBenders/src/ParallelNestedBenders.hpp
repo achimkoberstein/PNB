@@ -100,9 +100,11 @@ private:
 	bool GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	int ApplyCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff);
+    void ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff, BendersNodeData* benders_node_data);
 	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+    void BuildDZNProblem(OsiSolverInterface* osi_solver, BendersNodeData*  benders_node_data, BendersStageData* stage_data);
 	void SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set);
 	
     /** Check if problem itself and parameters are suitable for L&P cuts method
