@@ -4955,12 +4955,7 @@ namespace parallel_benders {
 			return;
 		}
 		
-		
-		OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-		assert(osi_cpx != nullptr && "Works only if CPLEX solver is used as osi_solver");
-		CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-		CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-		std::vector<int> indices(num_theta * 2); // last coefs are theta coefs
+		std::vector<int> indices(num_theta * 2 + 1); // last coefs are theta coefs. indices should have one dummy element at the end for setObjCoeffSet()
 		std::iota(indices.begin(), indices.end(), tau_start);
 		std::vector<double> values(num_theta * 2, 0.0);
 		
@@ -4971,7 +4966,7 @@ namespace parallel_benders {
 				benders_node_pointer->alpha_normalized_ = false; // i.e., MP is Alpha-Normalized
 			}		
 			// obj coefs of tau and v (prime and double-prime thetas in PNB CGP MP) are 0
-			CPXchgobj(env_ptr, lp_ptr, num_theta*2, indices.data(), values.data());
+            osi_solver->setObjCoeffSet(indices.data(), &indices.back(), values.data());
 			
 			// add columns (except last one)
 			std::array<int, 3> columnStarts = {0,2,4};
@@ -4983,14 +4978,14 @@ namespace parallel_benders {
 			std::array<double, 2> obj{};
 			for (int i = 0; i < num_cols; i++) {
 				rows = { i, num_cols + extra_rows + i, i, num_cols + extra_rows + i };
-				osi_cpx->addCols(2, columnStarts.data(), rows.data(), elements.data(), collb.data(), colub.data(), obj.data());
+                osi_solver->addCols(2, columnStarts.data(), rows.data(), elements.data(), collb.data(), colub.data(), obj.data());
 			}
 			// add the last column
 			rows.resize(num_cols);
 			std::iota(rows.begin(), rows.begin() + num_cols, num_cols + extra_rows);
 			elements.assign(num_cols, 1);
-			osi_cpx->addCol(num_cols, rows.data(), elements.data(), 0, infinity_, 1.0);
-			assert(osi_cpx->getNumCols() == cols_in_alpha_normalized);
+            osi_solver->addCol(num_cols, rows.data(), elements.data(), 0, infinity_, 1.0);
+			assert(osi_solver->getNumCols() == cols_in_alpha_normalized);
 		}
 		else { // set Zeta-Normalization
 			values.assign(num_theta * 2, 1.0); // obj coefs of tau and v are 1 in DAN
@@ -5000,12 +4995,12 @@ namespace parallel_benders {
 				std::fill_n(values.begin()+num_theta, num_theta, lambda);
 				benders_node_pointer->alpha_normalized_ = false; // i.e., MP is Zeta-Normalized
 			}
-			CPXchgobj(env_ptr, lp_ptr, num_theta * 2, indices.data(), values.data());
+            osi_solver->setObjCoeffSet(indices.data(), &indices.back(), values.data());
 			
 			// delete columns
 			indices.resize(num_cols*2 + 1);
 			std::iota(indices.begin(), indices.end(), alpha_normalization_start);
-			osi_cpx->deleteCols(cols_in_alpha_normalized - alpha_normalization_start, indices.data());
+            osi_solver->deleteCols(cols_in_alpha_normalized - alpha_normalization_start, indices.data());
 		}
 	}
 
