@@ -829,6 +829,17 @@ namespace parallel_benders {
         }
     }
 
+    void ParallelNestedBenders::SetLogging(int logging_level) {
+        
+        if (logging_level > google::INFO) { // block console output if logging leve > INFO
+            std::cout.setstate(std::ios_base::failbit);
+        }
+        else {
+            std::cout.clear(); // else unblock it
+        }
+        google::SetStderrLogging(logging_level);
+    }
+
     void ParallelNestedBenders::Solve()
     {
         bool resolve = solved_counter_ > 0; // we call Solve() for the second time, have you called Reset()?
@@ -1237,7 +1248,11 @@ namespace parallel_benders {
 
             if ( !pretty_printing_ && lp_round_ <= 1){
                 std::string direction(forward_ ? "F " : "B ");
-					std::cout << minor_iteration_ << " Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
+                std::string side("");
+                if (current_stage_ > 0 && lp_fract_var_index_ != -1) {
+                    side = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME ? " prime" : " double-prime");
+                }
+				std::cout << minor_iteration_ << " Iteration " << direction << current_iteration_ << "." << current_stage_ << side << std::endl;
             }
             if ( current_stage_ == 0) // lower_bound_ is only computed in the first stage!
                 old_lower_bound_ = lower_bound_;
@@ -2157,6 +2172,18 @@ namespace parallel_benders {
             cut_counter += stage_data_[i]->added_feasibility_cuts_;
         }
         LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
+        if (lp_rounds_limit_) { // if we use L&P cuts
+            cut_counter = 0;
+            for (int i = 0; i < num_stages_; i++) {
+                cut_counter += stage_data_[i]->added_epigraph_cuts_;
+            }
+            LOG(INFO) << "Added " << cut_counter << " L&P epigraph cuts.";
+            cut_counter = 0;
+            for (int i = 0; i < num_stages_; i++) {
+                cut_counter += stage_data_[i]->added_domain_cuts_;
+            }
+            LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
+        }        
 
         // Compute solution times for subproblems!
 #ifdef COMPUTING_TIMER
@@ -2436,7 +2463,7 @@ namespace parallel_benders {
 				
 				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0); // normally we have only one theta
 				std::cout << "Solution of MP relaxation: " << benders_tree_node_pointer->getDataPtr()->solution_value_ + theta_sum << std::endl;
-				LOG(INFO) << "L&P round " << lp_round_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate." << std::endl;
+                std::cout << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate." << std::endl;
 
 				std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values
 				epigraph_current_cuts_coefficients_.reserve(num_cuts);
@@ -2445,6 +2472,7 @@ namespace parallel_benders {
 				domain_current_cuts_rhs_.reserve(num_cuts);
 
 				for (int i = 0; i < num_cuts; i++) {
+                    DLOG(INFO) << current_iteration_ << " Iteration - L&P round " << lp_round_ << ": fractional variable " << i + 1 << "/" << num_cuts << std::endl;;
 					GenerateLiftAndProjectCut(i, rit->second);
 					++rit; // goes backwards
 				}
@@ -2455,7 +2483,7 @@ namespace parallel_benders {
 
                 // If no L&P cuts build - we can switch
                 if (num_lp_cuts_before_aggregation == stage_data_[current_stage_]->added_epigraph_cuts_ + stage_data_[current_stage_]->added_domain_cuts_){
-                    LOG(INFO) << "No L&P cuts build in this round. Switching to minor iteration.";
+                    DLOG(INFO) << "No L&P cuts build in this round. Switching to minor iteration." << std::endl;
                     if (lp_round_ == 1) {
                         lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
                     }
@@ -2740,7 +2768,7 @@ namespace parallel_benders {
 			}
 
 			if (fractional_variables_.empty()) {
-				LOG(INFO) << "L&P round " << lp_round_ << ": No fractional variables, no L&P cuts to generate." << std::endl;
+				LOG(INFO) << "Iteration " << current_iteration_ << " - L&P round " << lp_round_ << ": no fractional variables in MP relaxation and no L&P cuts to generate." << std::endl;
 
 				generate_lp_cuts_ = false;
 				if (lp_round_ > 1) { // we do not count as a switch the L&P rounds session in which no cuts were build
@@ -4219,7 +4247,8 @@ namespace parallel_benders {
 			assert(false && "Not implemented");
 		}
 
-		LOG(INFO) << "Generating L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
+        DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) << "Generating " << ("strengthened" ? use_2nd_stage_info : "") << " L&P Epigraph cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
+        DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) << "Generating L&P Domain cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
 		assert(current_stage_ == 0 && "We build L&P cuts for the MP.");
 
 		BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
@@ -4272,7 +4301,12 @@ namespace parallel_benders {
             if (!cgp_feasibility_cuts->empty()) {
                 old_cgp_pnb_feas_cuts_back--;
             }
+
+#ifdef NDEBUG
+            SetLogging(google::ERROR); // no output for cgp_pnb_ in release
+#endif // NDEBUG           
 			cgp_pnb_->Solve();
+            SetLogging(google::INFO);
 
 			if (cgp_pnb_->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND) {
 				LOG(WARNING) << "UB < LB in L&P CGP.";
@@ -4285,6 +4319,7 @@ namespace parallel_benders {
 			else if (cgp_pnb_->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
 				// TODO: we could get domain cut from MP of CGP PNB w/o solving the DAN
 				assert(!(cgp_pnb_->cgp_do_when_infeasible_ == parallel_benders::PNB_CGP_ALPHA_AND_CONTINUE_WHEN_INFEASIBLE && cgp_pnb_->current_iteration_ > 2) && "We still should get infeasible MP in PNB CGP and it should not converge");
+                DLOG(WARNING) << "Will generate L&P Domain cut. Reason: PNB CGP is infeasible." << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
 				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
 			}
 			else if (cgp_pnb_->solution_code_ != PNB_SOLUTION_OPTIMAL) {
@@ -4421,11 +4456,12 @@ namespace parallel_benders {
 			}
 			// no optimality-like cuts -> unbounded theta -> unbounded Dual of Zeta-Normalized (dual of epigraph cut generation problem)
 			// -> solve Dual of Alpha-Normalized (dual of domain cut generation problem)
-			if (new_cgp_pnb_opt_cuts == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty()) {
+			if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && new_cgp_pnb_opt_cuts == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty()) {
 #ifdef SPEC_CASES
-				assert(false && "Just to note: no optimality like cuts for L&P CGP");
+				assert(false && "Just to note: no optimality-like cuts for L&P CGP");
 #endif		
-				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+                DLOG(WARNING) << "Will generate L&P Domain cut. Reason: no optimality-like cuts (with theta) are present: optimality cuts, strengthened information from PNB CGP, epigraph cuts." << std::endl;
+                lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
 			}
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
 				SetAlphaNormalization(osi_lift_and_project_dual_cgp_solver_, true);
@@ -4446,7 +4482,7 @@ namespace parallel_benders {
 			// TODO: should we also append the L&P cut to the CGP of the next fract var
 
 			SolveSolverInterface(osi_lift_and_project_dual_cgp_solver_);
-			std::cout << "Solution of Dual L&P Cut Generation Problem: " << osi_lift_and_project_dual_cgp_solver_->getObjValue() << std::endl;
+			DLOG(INFO) << "Solution of "<< (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? "Alpha" : "Zeta") <<"-normalized Dual L&P Cut Generation Problem: " << osi_lift_and_project_dual_cgp_solver_->getObjValue() << std::endl;
 
 			std::stringstream suffix;
 			suffix << "l&p_cut_index_" << lp_cut_index;
@@ -4459,12 +4495,12 @@ namespace parallel_benders {
 #ifdef SPEC_CASES
 	assert(!(cgp_pnb_ != nullptr && cgp_pnb_->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) && "Just to note: DZN is infeasible even though PNB CGP was solved");
 #endif				
-				LOG(INFO) << "Dual of L&P Cut Generation Problem is infeasible, set Alpha-Normalization and build domain cut.";
-				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+                DLOG(WARNING) << "Will set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is infeasible." << std::endl;
+                lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
 				SetAlphaNormalization(osi_lift_and_project_dual_cgp_solver_, true);
 				SolveSolverInterface(osi_lift_and_project_dual_cgp_solver_);
 				
-				std::cout << "Solution of Dual L&P Cut Generation Problem: " << osi_lift_and_project_dual_cgp_solver_->getObjValue() << std::endl;
+                DLOG(INFO) << "Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << osi_lift_and_project_dual_cgp_solver_->getObjValue() << std::endl;
 				suffix << "_with_Alpha_Normalization";
 				PrintSubproblem(osi_lift_and_project_dual_cgp_solver_, lp_round_, suffix.str());
 			}
@@ -4486,7 +4522,8 @@ namespace parallel_benders {
                 assert(CompareWithZero(osi_lift_and_project_dual_cgp_solver_->getObjValue()) && "Just to note: Solution of DZN is zero and solution of DAN is not.");
             }
 #endif
-			if (!CompareWithZero(osi_lift_and_project_dual_cgp_solver_->getObjValue())) { // we add L&P cut only if it cuts anything
+			DLOG_IF(WARNING, CompareWithZero(osi_lift_and_project_dual_cgp_solver_->getObjValue())) << "L&P cut will not be added to the container. Reason: solution of Dual L&P Cut Generation Problem is 0." << std::endl;
+            if (!CompareWithZero(osi_lift_and_project_dual_cgp_solver_->getObjValue())) {
                 std::vector<std::vector<double>>* current_cuts_coefficients;
                 std::vector<double>* current_cuts_rhs;
                 if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {

@@ -78,6 +78,9 @@ private:
  */
     void SetForLnPCut(ParallelNestedBenders* cgp_pnb, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, int iteration, int round, int fract_var_index, bool keep_cgp_cuts);
 
+    // Adjust google logging to the logging_level: 0 - console and INFO, 1 - WARNING, 2 - ERROR, 3 - FATAL
+    void SetLogging(int logging_level);
+
     // High-level methods we need during the algorithm
     void AdjustProblem(); // Adjust the problem and store characteristics about it
     void AdjustProblemInStage(int stage);
