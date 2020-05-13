@@ -802,7 +802,7 @@ protected:
 		// Header line of File should be this one
 		// We need to write the header line for this file
 		s << "Testset;Problem;Instance;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Return Code;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
-		s << "Created Optimality Cuts;Created Feasibility Cuts;";
+		s << "Created Optimality Cuts;Created Feasibility Cuts;Created Epigraph Cuts;Created Domain Cuts;";
 		// //TODO: Iterate over property tree
 		BOOST_FOREACH(boost::property_tree::ptree::value_type & v, benders_parameter_.parameter_)
 		{
@@ -883,6 +883,8 @@ protected:
 		std::string relative_gap_string("relative_gap");
 		std::string optimality_cuts_string("optimality_cuts");
 		std::string feasibility_cuts_string("feasibility_cuts");
+		std::string epigraph_cuts_string("epigraph_cuts");
+		std::string domain_cuts_string("domain_cuts");
 		std::string return_code_string("return_code");
 		std::string critical_iteration_sequence_length_string("critical_iteration_sequence");
 		std::string critical_iterations_string("critical_iterations");
@@ -973,6 +975,8 @@ protected:
 			}
 			int created_opt_cuts = nested_benders.getNumOptimalityCuts();
 			int created_feas_cuts = nested_benders.getNumFeasibilityCuts();
+			int created_epigraph_cuts = nested_benders.getNumEpigraphCuts();
+			int created_domain_cuts = nested_benders.getNumDomainCuts();
 
 			// We get the parameters from the solver back to evaluate it.
 			benders_parameter_ = nested_benders.getParameters();
@@ -989,7 +993,7 @@ protected:
 			s << nested_benders.getNumIterations() - nested_benders.getNumInsubstantialIterations() << ";" << nested_benders.getNumInsubstantialIterations() << ";";
 			s << solver_time << ";" << nested_benders.getNumCriticalIteration() << ";" << nested_benders.getMaximalLengthOfCriticalIterationSequence() << ";";
 			// Write num cuts
-			s << created_opt_cuts << ";" << created_feas_cuts << ";";
+			s << created_opt_cuts << ";" << created_feas_cuts << ";" << created_epigraph_cuts << ";" << created_domain_cuts << ";";
 			// Store all of the above values in value_map!
 			values_map[cpu_time_string] += cpuTime;
 			values_map[solver_time_string] += solver_time;
@@ -1003,6 +1007,8 @@ protected:
 			values_map[relative_gap_string] += nested_benders.getRelativeGap();
 			values_map[optimality_cuts_string] += created_opt_cuts;
 			values_map[feasibility_cuts_string] += created_feas_cuts;
+			values_map[epigraph_cuts_string] += created_epigraph_cuts;
+			values_map[domain_cuts_string] += created_domain_cuts;
 			values_map[return_code_string] += nested_benders.getSolutionCode();
 			values_map[critical_iterations_string] += nested_benders.getNumCriticalIteration();
 			values_map[critical_iteration_sequence_length_string] += nested_benders.getMaximalLengthOfCriticalIterationSequence();
@@ -1075,7 +1081,7 @@ protected:
 		// Prepare outputstring, according to ordering from above (bad coding..)
 		aggregated_s << stoch_name << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";" << values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";" << values_map[relative_gap_string] << ";" << values_map[return_code_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << ";" << values_map[solver_time_string] << ";" << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
 		// Write num cuts
-		aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";";
+		aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";" << values_map[epigraph_cuts_string] << ";" << values_map[domain_cuts_string] << ";";
 
 		BOOST_FOREACH(boost::property_tree::ptree::value_type & v, benders_parameter_.parameter_)
 		{

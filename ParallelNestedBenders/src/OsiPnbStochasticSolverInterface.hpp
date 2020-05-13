@@ -42,6 +42,8 @@ public:
 
     int getNumOptimalityCuts() const;
     int getNumFeasibilityCuts() const;
+	int getNumEpigraphCuts() const;
+	int getNumDomainCuts() const;
     void setParameters(const parallel_benders::Parameter& parameters);
     int getNumIterations() const;
 	const parallel_benders::Parameter& getParameters() const;
