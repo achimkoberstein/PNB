@@ -166,7 +166,7 @@ void BendersNodeData::Clear(int delete_cuts_start_it, bool keep_warm_start)
     //level_regularized_start_row_(-1);
     
 #ifdef SPEC_CASES
-    assert(!changed_aggregation_level_ && "Just to note : changed_aggregation_level_ == true after we Solved() the PNB CGP and want to solve it again.");
+    LOG_IF(WARNING, changed_aggregation_level_) << "Just to note : changed_aggregation_level_ == true after we Solved() the PNB CGP and want to solve it again." << std::endl;
 #endif
     delete d_square_cut_t_matrix_; d_square_cut_t_matrix_ = nullptr;
     d_square_cut_rhs_.clear();
