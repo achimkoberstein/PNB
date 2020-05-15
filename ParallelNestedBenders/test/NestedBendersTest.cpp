@@ -3379,8 +3379,9 @@ int main(int argc, char* argv[]) {
 #ifndef _MSC_VER
 	google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
 #endif
-	google::LogToStderr();
-	google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0 (Different logging under release builds?)
+	google::SetLogDestination(google::WARNING, "google_log_"); // output file
+	//google::LogToStderr(); // only to console
+	google::SetStderrLogging(google::INFO); // logging to std::err enabled for all logging levels >= 0 (Different logging under release builds?)
 	result = RUN_ALL_TESTS();
 
 	//_CrtDumpMemoryLeaks(); // outside of scoping { }
