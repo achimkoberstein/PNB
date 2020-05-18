@@ -151,11 +151,12 @@ void BendersNodeData::Clear(int delete_cuts_start_it, bool keep_warm_start)
     //active_aggregates_(0);
     
     // Warm start
-    assert(warm_start_ == nullptr && "What to do with warm start?");
-    //warm_start_();
-    //warm_start_added_(false);
+    if (!keep_warm_start) {
+        warm_start_ = nullptr;
+    }
+    warm_start_added_ = false;
 
-    assert(warm_start_ == nullptr && level_warm_start_ == nullptr && level_warm_start_cstat_ == nullptr && level_warm_start_rstat_ == nullptr 
+    assert(level_warm_start_ == nullptr && level_warm_start_cstat_ == nullptr && level_warm_start_rstat_ == nullptr 
         && level_warm_start_dnorm_ == nullptr && level_warm_start_length_ == 0);
     //level_warm_start_(nullptr);
     //level_warm_start_cstat_(nullptr);
@@ -206,23 +207,15 @@ BendersStageData::~BendersStageData()
 {
 }
 
-void BendersStageData::Clear() {
+void BendersStageData::Clear(bool keep_warm_start) {
     
     //??? what is with thetas
     //num_thetas_(1)
     
-    //what is with warm start - it makes sense for MP and subproblems
-    assert(warm_start_ == nullptr && "Never tested with warm start");
-    // Set empty warm start object
-    // below was in PNB::Reset
-    //if (warm_start_ && warm_start_stage_) {
-    //    assert(false && "What to do here with warm start. Also check BendersStageData::clear()");
-    //    stage_data_.back()->warm_start_.reset(osi_solver_->getEmptyWarmStart());
-    //}
-    warm_start_ = nullptr;
-
-    // it also related to warm start
-    assert(!problem_was_solved_in_this_iteration_ && "What does it mean");
+    //WarmStart
+    if (!keep_warm_start) {
+        warm_start_ = nullptr; // during the initialization we do this: warm_start_.reset(osi_solver_->getEmptyWarmStart()); Is it necessary?
+    }
     problem_was_solved_in_this_iteration_ = false;
     
     // MP solver is not included here

@@ -55,7 +55,7 @@ public:
 
      TODO: finish
     */
-	void Reset(int delete_cuts_start_it = -1, Parameter* parameter = nullptr);
+	void Reset(int delete_cuts_start_it = -1, bool keep_warm_start = false, Parameter* parameter = nullptr);
     // Access solution methods
     double computeScenarioValue(int scenario);
     void fixFirstStageVariables(const double* solution);
