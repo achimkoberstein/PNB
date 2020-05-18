@@ -213,8 +213,16 @@ void BendersStageData::Clear() {
     
     //what is with warm start - it makes sense for MP and subproblems
     assert(warm_start_ == nullptr && "Never tested with warm start");
+    // Set empty warm start object
+    // below was in PNB::Reset
+    //if (warm_start_ && warm_start_stage_) {
+    //    assert(false && "What to do here with warm start. Also check BendersStageData::clear()");
+    //    stage_data_.back()->warm_start_.reset(osi_solver_->getEmptyWarmStart());
+    //}
     warm_start_ = nullptr;
+
     // it also related to warm start
+    assert(!problem_was_solved_in_this_iteration_ && "What does it mean");
     problem_was_solved_in_this_iteration_ = false;
     
     // MP solver is not included here
@@ -317,7 +325,7 @@ void Parameter::init()
     parameter_.put(PNB_BENDERS,PNB_INT_ALGORITHM_BENDERS); // 0: No Benders (detEq), 1 Benders
     
 	// WarmStart
-    parameter_.put(PNB_WARM_START, 0); // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario (in the same iteration)
+    parameter_.put(PNB_WARM_START, PNB_INT_NO_WARM_START);
 
     parameter_.put(PNB_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
     parameter_.put(PNB_FEAS_CUT_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
@@ -418,6 +426,11 @@ void Parameter::init()
 	consts_["PNB_INT_USE_EV_SOLUTION"] = PNB_INT_USE_EV_SOLUTION;
 	consts_["PNB_INT_USE_SUPPLIED_SOLUTION"] = PNB_INT_USE_SUPPLIED_SOLUTION;
 	consts_["PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV"] = PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV;
+
+    //PNB_WARM_START
+    consts_["PNB_INT_NO_WARM_START"] = PNB_INT_NO_WARM_START;
+    consts_["PNB_INT_WARM_START_SCENARIO_WISE"] = PNB_INT_WARM_START_SCENARIO_WISE; // WarmStart with solution from the previous iteration
+    consts_["PNB_INT_WARM_START_STAGE_WISE"] = PNB_INT_WARM_START_STAGE_WISE; // WarmStart with solution from the first scenario (in the same iteration)
 }
 
 void Parameter::update_from_json_string( std::string json_string ) {
