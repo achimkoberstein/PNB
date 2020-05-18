@@ -718,11 +718,11 @@ namespace parallel_benders {
             }
             
             assert(!keep_cgp_cuts && "Not implemented. Probably just do not delete the cuts");
-            if (!keep_cgp_cuts) {
-                cgp_pnb->Reset(1);
+            if (keep_cgp_cuts) {
+                cgp_pnb->Reset(-1, true); // keep all cuts, keep warm start
             }
             else {
-                cgp_pnb->Reset();
+                cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
             }
 
             OsiSolverInterface* first_stage_osi = cgp_pnb_->osi_solver_;
@@ -766,6 +766,25 @@ namespace parallel_benders {
                 first_stage_osi->setColBounds(fract_var_index + num_cols, 1, 1);
             }
             LogSpecialCase(cgp_first_stage->getDataPtr()->optimality_cuts_.empty() && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty(), "Solve CGP PNB w/o optimality-like cuts");
+        } // reuse_cgp
+        else { // we do not reuse PNB CGP or have just initalized it (never Solve() before)
+            // Copy warm start
+            if (warm_start_) {
+                assert(num_stages_ == 2 && "Never tested for multistage");
+                for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
+                    CoinWarmStart* ws;
+                    if (stage_data_[stage]->warm_start_) {
+                        ws = (stage_data_[stage]->warm_start_.get())->clone();
+                        cgp_pnb->stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
+                    }
+                    for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
+                        if (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
+                            ws = (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
+                            cgp_pnb->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
+                        } 
+                    }
+                }                
+            }
         }
         
         // Set for current node
@@ -1095,7 +1114,9 @@ namespace parallel_benders {
             wall_clock_solution_time_.Start(0);
             timer_.Start(current_stage_);
             // Reset warm start indicator
-            stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = false;
+            if (lp_column_set_ != PNB_COL_SET_DOUBLE_PRIME) { // we do not want to overwrite warm start with values from double-prime
+                stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = false;
+            }
             if ( upper_bound_ < lower_bound_ ){
                 if ( !regularization_ )
                     LOG(INFO) << "Upper Bound is lower than lower Bound. Iteration: " << current_iteration_;
@@ -2229,7 +2250,7 @@ namespace parallel_benders {
     }
 
 
-    void ParallelNestedBenders::Reset(int delete_cuts_start_it, Parameter* parameter) {
+    void ParallelNestedBenders::Reset(int delete_cuts_start_it, bool keep_warm_start, Parameter* parameter) {
         assert(parameter == nullptr && "Not implemented for supplied parameter. Compare the changes in parameter_ and supplied parameter and see which changes should be done.");
         LOG_IF(FATAL, solved_counter_ < 1) << "Call ParallelNestedBenders::Solve() at least once before Reset()";
         bool lp_pnb_cgp = lp_fract_var_index_ > -1; // this benders is a CGP for Lift and Project Cuts
@@ -2267,9 +2288,9 @@ namespace parallel_benders {
             stage_lower_upper_bounds_[stage].second = infinity_;
             stage_old_lower_upper_bounds_[stage].first = -infinity_;
             stage_old_lower_upper_bounds_[stage].second = infinity_;
-            stage_data_[stage]->Clear();
+            stage_data_[stage]->Clear(keep_warm_start);
             for (auto node : tree_nodes_by_stage_[stage]) {
-                node->getDataPtr()->Clear(delete_cuts_start_it);
+                node->getDataPtr()->Clear(delete_cuts_start_it, keep_warm_start);
             }
         }
         // Delete and reapply cuts from the 1st stage OSI (master problem)
@@ -2589,6 +2610,7 @@ namespace parallel_benders {
                 }
             }
             else if ( osi_solver->isProvenDualInfeasible() ){
+                LogSpecialCase(lp_fract_var_index_ != -1 && current_stage_ == 0, "PNB CGP is unbounded");
 				// Primal problem is unbounded. => dual infeasible
                 // If we are in a problem with theta variables, we might have success in restricting the theta variables
                 if ( current_stage_ < num_stages_-1){
@@ -2622,6 +2644,7 @@ namespace parallel_benders {
 					if (lp_fract_var_index_ != -1) {
 						assert(current_stage_ == 0);
 						assert(benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() && "Why else whould we have it?");
+                        assert(current_stage_ == 0 && current_iteration_ == 1 && "Why would PNB CGP MP be unbounded in > 1 iterations");
 						num_thetas = getNumThetasByStage(benders_tree_node_pointer);
 						num_thetas *= 2; // prime and double prime
 					}
@@ -2654,9 +2677,27 @@ namespace parallel_benders {
                         else 
                             SolveSolverInterface(osi_solver);
                         // Depending on the solution to this
-                        assert(!(lp_fract_var_index_ != -1 && warm_start_)  && "Never tested for PNB CGP - what is with warm start");
-                        assert(lp_rounds_limit_ == 0 && "Never tested with L&P cuts");
-                        StoreWarmStart(osi_solver,benders_tree_node_pointer);
+                        if (osi_solver->isProvenOptimal()) {
+                            assert(lp_rounds_limit_ == 0 && "Never tested with L&P cuts");
+                            assert(lp_fract_var_index_ == -1 && "Never tested with L&P PNB CGP");
+                            StoreWarmStart(osi_solver, benders_tree_node_pointer);
+                        }
+                        else if (osi_solver->isProvenPrimalInfeasible()) {
+                            assert(lp_fract_var_index_ != -1 && "Never tested with not L&P PNB CGP");
+                            if (lp_fract_var_index_ != -1 && cgp_do_when_infeasible_ == PNB_CGP_STOP_WHEN_INFEASIBLE) {
+                                // see below for what we would do if problem was infeasible right away
+                                PrintSubproblem(osi_solver, 0, "master_infeasible");
+                                infeasible_problem_ = true;
+                                infeasible_problems_[0] = true;
+                                LOG(ERROR) << "Your master problem is infeasible.";
+                            }
+                            else {
+                                assert(false && "See below for what we would do if PNB CGP MP was infeasible right away: maybe define some method, e.g., HandleInfeasibleLnPCGP");
+                            }
+                        }
+                        else {
+                            assert(false && "Never tested with not L&P PNB CGP");
+                        }
                     }
                     else {
                         // We can not handle this correctly for now
@@ -2717,8 +2758,8 @@ namespace parallel_benders {
 						StoreData(osi_solver, benders_tree_node_pointer);
 						upper_bound_ = osi_solver->getObjValue(); // to be used in the main loop TODO: still it is being overwritten when we quit to the main loop
 					}
-					if (cgp_do_when_infeasible_ == PNB_CGP_ALPHA_AND_CONTINUE_WHEN_INFEASIBLE) {
-						assert(!warm_start_ && "What to do with the warm start? How to store it below");
+					else if (cgp_do_when_infeasible_ == PNB_CGP_ALPHA_AND_CONTINUE_WHEN_INFEASIBLE) {
+						assert(!warm_start_ && "Never tested"); // maybe we should store and set warm start if we unset Alpha-Normalization later
 						StoreWarmStart(osi_solver, benders_tree_node_pointer);
 						return;
 					}
@@ -2798,7 +2839,7 @@ namespace parallel_benders {
 					lp_switch_counter_++;
 					next_lp_rounds_iteration_ = current_iteration_ + lp_major_it_limit_;
                     
-                    if (lp_major_it_limit_ > 1) { // lp_round_ == lp_rounds_limit_ => StoreWarmStart() really stores LP WS. Do it only if we solve in the next iteration as MIP
+                    if (lp_major_it_limit_ > 1) { // lp_round_ == lp_rounds_limit_ => StoreWarmStart() really stores LP WS. Do it only if we solve MP in the next iteration as MIP
                         lp_round_ = lp_rounds_limit_;
                         StoreWarmStart(osi_solver, benders_tree_node_pointer); // we will solve it as MIP and want to store the LP warm start
                     } 
@@ -3985,9 +4026,10 @@ namespace parallel_benders {
 
                 CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_ON );
                 cpx_stat = CPXgetstat(env_ptr,lp_ptr);
-                if ( cpx_stat == CPX_STAT_INFEASIBLE )
+                if (cpx_stat == CPX_STAT_INFEASIBLE) {
                     assert(!(lp_fract_var_index_ != -1 && warm_start_) && "Never tested for PNB CGP - what is with warm start");
-                    StoreWarmStart(osi_solver,benders_tree_node_pointer);
+                    StoreWarmStart(osi_solver, benders_tree_node_pointer);
+                }
             }
 
             double proof = 0;
@@ -4315,7 +4357,7 @@ namespace parallel_benders {
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, PNB_INT_SOLUTION_PRIMAL_NO);
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS, PNB_INT_SOLUTION_DUAL_NO);
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES, false);
-				cgp_parameter.SetParameterValue(parallel_benders::PNB_WARM_START, PNB_INT_NO_WARM_START);
+				cgp_parameter.SetParameterValue(parallel_benders::PNB_WARM_START, parameter_.GetIntParamValue(parallel_benders::PNB_WARM_START));
 				//parameter_.SetParameterValue(parallel_benders::PNB_BOUNDS_IN_MATRIX, true); //what is this?
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_USE_START_SOLUTION, 0);
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 0);
@@ -5674,7 +5716,6 @@ namespace parallel_benders {
             //}
             CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_node_pointer->warm_start_.get());
             if ( warm_start_basis != nullptr ){
-				assert(lp_fract_var_index_ == -1 && "Never tested for L&P PNB CGP");
                 std::vector<CoinWarmStartBasis::Status> status_array;
 				// Problem with pushing into the array ( which I do not think is the case)
 				// So the problem is probably that the warm_start_basis->getArtifStatus method can not be called!
@@ -6870,7 +6911,9 @@ namespace parallel_benders {
                     stage_data_[current_stage_]->warm_start_.reset(osi_solver->getWarmStart());
                     stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = true;
                 }
-                benders_tree_node_pointer->getDataPtr()->warm_start_.reset(osi_solver->getWarmStart());
+                if (lp_column_set_ != PNB_COL_SET_DOUBLE_PRIME) { // anyways after double-prime we solve prime subproblems in the next iteration. Makes no sense to overwrite
+                    benders_tree_node_pointer->getDataPtr()->warm_start_.reset(osi_solver->getWarmStart());
+                }
             }
             else if ( warm_start_stage_ &&  !stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){
                 // We only generate a warm start for the first scenario and use it then for all the problems. Needs std::mutex

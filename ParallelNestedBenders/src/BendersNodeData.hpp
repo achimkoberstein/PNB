@@ -249,7 +249,7 @@ public:
 * \param
 * \return void TODO: finish
 */
-    void Clear(int delete_cuts_start_it = 0);
+    void Clear(int delete_cuts_start_it = 0, bool keep_warm_start = false);
 
     // Information about the solution
     std::vector<double> col_solution_;
@@ -395,7 +395,7 @@ struct BendersStageData {
 * \param
 * \return void
 */
-    void Clear();
+    void Clear(bool keep_warm_start = false);
 
     // Store problem data for each stage
     int num_columns_;
