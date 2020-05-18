@@ -369,15 +369,18 @@ namespace parallel_benders {
         // Solution time
         maximal_solution_time_ = param.get(PNB_MAXIMAL_SOLUTION_TIME,3600); // Maximal solution time is 1 hour by default!
         // WarmStart
-        int warm_start_version = param.get(PNB_WARM_START,0);
+        int warm_start_version = param.get(PNB_WARM_START,PNB_INT_NO_WARM_START);
         if ( warm_start_version > 0 )
             warm_start_ = true;
-        if ( warm_start_version == 1 )
+        if ( warm_start_version == PNB_INT_WARM_START_SCENARIO_WISE)
             warm_start_scenarios_ = true;
-        if ( warm_start_version == 2 )
+        if ( warm_start_version == PNB_INT_WARM_START_STAGE_WISE)
             warm_start_stage_ = true;
-        if ( warm_start_version > 2 )
-            warm_start_scenarios_; // We assume warm_start_scenarios
+        if (warm_start_version > PNB_INT_WARM_START_STAGE_WISE) {
+            solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+            LOG(ERROR) << "Unknown value of PNB_WARM_START parameter. Possible values: 0 - no warm start, 1 - warm start with the solution from the previous iteration, 2 - warm start with solution from the first scenario (in the same iteration)";
+            return;
+        }
 
         // Problem formulation
         bounds_in_matrix_ = param.get(PNB_BOUNDS_IN_MATRIX,false);
@@ -1158,10 +1161,14 @@ namespace parallel_benders {
 							lp_round_++;
 						}
 						else {
+                            StoreWarmStart(osi_solver_, tree_nodes_by_stage_[0][0]); // we will solve MP as MIP and want to store the LP warm start
 							generate_lp_cuts_ = false;
 							lp_round_ = 0;
 							lp_switch_counter_++;
 							next_lp_rounds_iteration_ = current_iteration_ + lp_major_it_limit_;
+                            OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+                            assert(osi_cpx != nullptr && "switchToMIP() works for CPLEX only. If not switched, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP WarmStart.");
+                            osi_cpx->switchToMIP();
 						}
 					}
 				}
@@ -2261,11 +2268,6 @@ namespace parallel_benders {
             stage_old_lower_upper_bounds_[stage].first = -infinity_;
             stage_old_lower_upper_bounds_[stage].second = infinity_;
             stage_data_[stage]->Clear();
-            // Set empty warm start object
-            if (warm_start_ && warm_start_stage_) {
-                assert(false && "What to do here with warm start. Also check BendersStageData::clear()");
-                stage_data_.back()->warm_start_.reset(osi_solver_->getEmptyWarmStart());
-            }
             for (auto node : tree_nodes_by_stage_[stage]) {
                 node->getDataPtr()->Clear(delete_cuts_start_it);
             }
@@ -2496,6 +2498,8 @@ namespace parallel_benders {
                         lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
                     }
                     lp_round_ = lp_rounds_limit_;
+                    // we will switch osi to MIP in Solve() when switch to minor iteration
+                    // if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
                 }
 
 				epigraph_current_cuts_coefficients_.clear();
@@ -2525,10 +2529,11 @@ namespace parallel_benders {
             }
         }
 		std::string suffix;
-		if (old_generate_lp_cuts != generate_lp_cuts_) { // we tried to build an L&P cut but had no fractional vars
+		if (old_generate_lp_cuts != generate_lp_cuts_) { // we tried to build an L&P cut but had no fractional vars - feasible relaxation
+            assert(old_generate_lp_cuts == true && "It means that we changed generate_lp_cuts_ false => true in HandleSubproblem. Why?");
 			suffix = "round_" + std::to_string(old_lp_round) + "_feasible_relaxation";
 		}	
-		else if (generate_lp_cuts_) {// we have MP relaxation with fractional variables and build an L&P cuts
+        else if (generate_lp_cuts_) {// we have MP relaxation with fractional variables and: build an L&P cuts or all cuts were not efficient
 			suffix = "round_" + std::to_string(lp_round_) + "_relaxation";
 		}
 		else if (lp_fract_var_index_ != -1 && current_stage_ > 0) {// subproblems in CGP
@@ -2537,6 +2542,12 @@ namespace parallel_benders {
 		PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), suffix);
         DeleteSubproblem(osi_solver,benders_tree_node_pointer);
 
+        if (old_generate_lp_cuts != generate_lp_cuts_) { // we tried to build an L&P cut but had no fractional vars - feasible relaxation
+            // osi what set to LP in initialSolve(). Set it back to MIP
+            OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+            assert(osi_cpx != nullptr && "switchToMIP() works for CPLEX only. If not switched, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.");
+            osi_cpx->switchToMIP();
+        }
     }
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
@@ -2643,6 +2654,8 @@ namespace parallel_benders {
                         else 
                             SolveSolverInterface(osi_solver);
                         // Depending on the solution to this
+                        assert(!(lp_fract_var_index_ != -1 && warm_start_)  && "Never tested for PNB CGP - what is with warm start");
+                        assert(lp_rounds_limit_ == 0 && "Never tested with L&P cuts");
                         StoreWarmStart(osi_solver,benders_tree_node_pointer);
                     }
                     else {
@@ -2784,11 +2797,21 @@ namespace parallel_benders {
 				if (lp_round_ > 1) { // we do not count as a switch the L&P rounds session in which no cuts were build
 					lp_switch_counter_++;
 					next_lp_rounds_iteration_ = current_iteration_ + lp_major_it_limit_;
+                    
+                    if (lp_major_it_limit_ > 1) { // lp_round_ == lp_rounds_limit_ => StoreWarmStart() really stores LP WS. Do it only if we solve in the next iteration as MIP
+                        lp_round_ = lp_rounds_limit_;
+                        StoreWarmStart(osi_solver, benders_tree_node_pointer); // we will solve it as MIP and want to store the LP warm start
+                    } 
 				}
 				else {
 					next_lp_rounds_iteration_ = current_iteration_ + 1;
 				}
-				lp_round_ = 0;
+                lp_round_ = 2; // lp_round_ == lp_rounds_limit_ => StoreWarmStart() stores LP WS instead of MIP WS
+                StoreWarmStart(osi_solver, benders_tree_node_pointer); // store this solution as MIP WS (since it is valid for MIP MP)
+				
+                lp_round_ = 0;
+                // we will switch osi to MIP in HandleSubproblem() after problem is printed
+                // if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
 			}
             LogSpecialCase(generate_lp_cuts_ && current_iteration_ == 1, "Build L&P cuts in first iteration");
         }
@@ -3963,6 +3986,7 @@ namespace parallel_benders {
                 CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_ON );
                 cpx_stat = CPXgetstat(env_ptr,lp_ptr);
                 if ( cpx_stat == CPX_STAT_INFEASIBLE )
+                    assert(!(lp_fract_var_index_ != -1 && warm_start_) && "Never tested for PNB CGP - what is with warm start");
                     StoreWarmStart(osi_solver,benders_tree_node_pointer);
             }
 
@@ -4256,9 +4280,13 @@ namespace parallel_benders {
 			assert(false && "Not implemented");
 		}
 
-        DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) << "Generating " << (use_2nd_stage_info ? "" : "strengthened") << " L&P Epigraph cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
-        DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) << "Generating L&P Domain cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
-		assert(current_stage_ == 0 && "We build L&P cuts for the MP.");
+        {
+            std::lock_guard<std::mutex> unique_lock(console_mutex_);
+            DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) << "Generating " << (use_2nd_stage_info ? "strengthened" : "plain") << " L&P Epigraph cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
+            DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) << "Generating L&P Domain cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
+        }
+		
+        assert(current_stage_ == 0 && "We build L&P cuts for the MP.");
 
 		BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		int start_cgp_rows(0);
@@ -4287,7 +4315,7 @@ namespace parallel_benders {
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, PNB_INT_SOLUTION_PRIMAL_NO);
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS, PNB_INT_SOLUTION_DUAL_NO);
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES, false);
-				cgp_parameter.SetParameterValue(parallel_benders::PNB_WARM_START, 0);
+				cgp_parameter.SetParameterValue(parallel_benders::PNB_WARM_START, PNB_INT_NO_WARM_START);
 				//parameter_.SetParameterValue(parallel_benders::PNB_BOUNDS_IN_MATRIX, true); //what is this?
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_USE_START_SOLUTION, 0);
 				cgp_parameter.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, 0);
@@ -4990,7 +5018,7 @@ namespace parallel_benders {
 
 	bool ParallelNestedBenders::ProblemSuitableForLPCuts() {
 		
-		assert(allowed_test_cases_ >= 100000000 && allowed_test_cases_ <= 111111111);
+		assert(allowed_test_cases_ >= 1000000000 && allowed_test_cases_ <= 1111111111);
 		std::ostringstream test_cases_str;
 		test_cases_str << allowed_test_cases_;
 		// Parse allowed_test_cases and define which properties of the problem / parameters are allowed.
@@ -5002,6 +5030,7 @@ namespace parallel_benders {
 		bool allow_cont_first_stage = test_cases_str.str()[6] == '1';
 		//bool allow_feas_cuts = test_cases_str.str()[7] == '1'; // checked not here
         //bool allow_domain_cuts = test_cases_str.str()[8] == '1'; // checked not here
+        bool allow_warm_start = test_cases_str.str()[9] == '1'; // warm start
 
 		bool lp_check_passed = true;
 		//Parameter validity
@@ -5050,7 +5079,7 @@ namespace parallel_benders {
 				std::cout << "CVAR not implemented for L&P cuts! Change PNB_BENDERS parameter." << std::endl;
 				lp_check_passed = false;
 			}
-			if (warm_start_scenarios_ || warm_start_stage_) {
+			if ((warm_start_ || warm_start_scenarios_ || warm_start_stage_) && !allow_warm_start) {
 				std::cout << "Warm start is not implemented for L&P cuts! Change solver parameter." << std::endl;
 				lp_check_passed = false;
 			}
@@ -5510,10 +5539,12 @@ namespace parallel_benders {
 			benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
 
 			for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
-				//if (!benders_node_pointer->warm_start_added_ && ((*it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
-				if (parameter_.GetBoolParamValue(PNB_WARM_START)) {
-					assert(false && "Warm start for L&P cuts not tested.");
-				}
+                if (!benders_node_pointer->warm_start_added_ && ((*it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
+                    // Add warm start
+                    SetWarmStart(osi_solver, benders_tree_node_pointer);
+                    benders_node_pointer->warm_start_added_ = true;
+                }
+
 				if ((*it)->to_use_) {
 					osi_solver->applyRowCuts(1, (*it)->cut_.get());
 				}
@@ -6154,6 +6185,8 @@ namespace parallel_benders {
                     SolveSolverInterface(osi_solver); 
                     if ( osi_solver->isProvenOptimal() ){
                         // Store warmstart
+                        assert(lp_fract_var_index_ == -1 && "Never tested for PNB CGP - what is with warm start");
+                        assert(lp_rounds_limit_ == 0 && "Never tested with L&P cuts");
                         StoreWarmStart(osi_solver,benders_tree_node_pointer);      
                     }
                     else{
@@ -6574,6 +6607,8 @@ namespace parallel_benders {
             SolveSolverInterface(osi_solver);
 
             if ( osi_solver->isProvenOptimal() ){
+                assert(lp_fract_var_index_ == -1 && "Never tested for PNB CGP - what is with warm start");
+                assert(lp_rounds_limit_ == 0 && "Never tested with L&P cuts");
                 StoreWarmStart(osi_solver,benders_tree_node_pointer);
                 StoreValuesFromSolverInVector(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows()); // Store duals
                 StoreValuesFromSolverInVector(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,new_thetas); // Store new approximation
@@ -6764,8 +6799,8 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SetWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        if ( !integer_problems_[current_stage_] ){
-            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){ // We add a warm_start if configured and first stage solver is not seperate!
+        if ( !integer_problems_[current_stage_] || generate_lp_cuts_){
+            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_ || lp_round_ == 1)){ // We add a warm_start if configured and first stage solver is not seperate!
                 if ( warm_start_scenarios_ ){
                     if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ){ // If we have a warm start object, we tell the solver to use it
                         osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_.get());
@@ -6783,7 +6818,7 @@ namespace parallel_benders {
         }//Integer problems. No Warm start for MIP problems, but we need to set an incumbent solution!
         else {
             // Set incumbent of last solution?
-            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ ){
+            if ( warm_start_ && !generate_lp_cuts_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ ){
                 double* mip_solution = nullptr;
                 std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
                 if ( warm_start_scenarios_ ){
@@ -6823,11 +6858,12 @@ namespace parallel_benders {
                 } // End OsiCpx
             } // End If WarmStartAdded
         } // End Else
+        std::cout << std::flush; // show CPLEX error messages (if any)
     } // End Method
 
     void ParallelNestedBenders::StoreWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){ // Store WarmStart Information, otherwise we reuse the old one..
+        if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_ || lp_round_ == lp_rounds_limit_)){ // Store WarmStart Information, otherwise we reuse the old one..
             if ( warm_start_scenarios_ ){
                 if ( benders_tree_node_pointer->getDataPtr()->warm_start_ == nullptr && !stage_data_[current_stage_]->problem_was_solved_in_this_iteration_){
                     std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
@@ -6841,10 +6877,10 @@ namespace parallel_benders {
                 std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
                 stage_data_[current_stage_]->warm_start_.reset(osi_solver->getWarmStart());
                 stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = true;
-
             }
         }
-        else if ( warm_start_ && integer_problems_[current_stage_] && osi_solver->isProvenOptimal() ){
+        else if ( warm_start_ && !generate_lp_cuts_ && integer_problems_[current_stage_] && osi_solver->isProvenOptimal() ){
+            assert(lp_fract_var_index_ == -1 && "Will not work for PNB CGP MP. We have more columns than specified in stage_date_ and why would we have MIP in PNB CGP.");
             // Update current mip solution start!
 
             const double* col_solution = osi_solver->getColSolution();
@@ -6866,6 +6902,7 @@ namespace parallel_benders {
         }
         benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
         if ( current_stage_ == 0 && level_decomp_ && integer_problems_[current_stage_] == false ){ // TODO: Store Warm Start via tree nodes! Set a boolean to indicate if we solve projection problem or benders type problem
+            assert(lp_rounds_limit_ == 0 && "Never tested with L&P cuts");
 			if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX ){
 				// Store warm start for first stage
 				OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
@@ -6883,6 +6920,7 @@ namespace parallel_benders {
 				}
 			}
         }
+        std::cout << std::flush; // show CPLEX error messages (if any)
     }
 
     int ParallelNestedBenders::GetNumberOfAggregatesFromCut( std::shared_ptr<CutStuff>& cut )
@@ -7146,8 +7184,9 @@ namespace parallel_benders {
                     }
                 }
             }
-			else 
-				osi_solver->initialSolve(); 
+            else {
+                osi_solver->initialSolve();
+            }
         }
     }
 

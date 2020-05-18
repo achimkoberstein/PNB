@@ -119,13 +119,14 @@ private:
 		3) Problem structure is valid for L&P cuts and L&P cuts for the problems of the problem class implemented.
 
 		allowed_test_cases: every digit in the integer is related to parameter setting or instance properties. If digit is 1, than property / parameter is allowed. First digit should always be 1.
-			allow_le_constr			- 2nd digit, e.g., 1100000
-			allow_ge_constr			- 3rd digit, e.g., 1010000
+			allow_le_constr			- 2nd digit, e.g., 11000000
+			allow_ge_constr			- 3rd digit, e.g., 10100000
 			allow_eq_constr			- 4
 			allow_non_standard_lb	- 5
 			allow_non_standard_ub	- 6
 			allow_cont_first_stage	- 7
 			allow_feas_cuts			- 8
+            allow_warm_start		- 9
 		
 	*/
 	bool ParallelNestedBenders::ProblemSuitableForLPCuts();
