@@ -687,7 +687,8 @@ namespace parallel_benders {
 		lp_major_it_limit_ = param.get(PNB_LP_MAJOR_IT_LIMIT, 1);
 		cuts_for_fract_vars_ = param.get(PNB_LP_CUTS_FOR_FRACT, 100);
 		cgp_relative_epsilon_ = param.get(PNB_CGP_EPSILON_RELATIVE, relative_epsilon_);
-		allowed_test_cases_ = parameter_.GetIntParamValue(PNB_LP_ALLOW_TEST_CASES);
+		std::string allowed_str = std::to_string(parameter_.GetIntParamValue(PNB_LP_ALLOW_TEST_CASES));
+        allowed_test_cases_ = std::bitset<10>(std::string(allowed_str.rbegin(), allowed_str.rend())); // due to technical momemnts - bits are initialized in revers order from string
         reuse_cgp_ = parameter_.GetBoolParamValue(PNB_LP_REUSE_CGP);
 
 		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -1618,7 +1619,7 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            if (lp_rounds_limit_ && std::to_string(allowed_test_cases_)[8] != '1' && stage_data_[current_stage_]->added_domain_cuts_) { // TODO: do smth with magic numbers in allowed_test_cases_ std::to_string(allowed_test_cases_)[8]
+            if (lp_rounds_limit_ && !allowed_test_cases_.test(7) && stage_data_[current_stage_]->added_domain_cuts_) {
                 solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
                 solved_counter_++;
                 std::cout << "Domain cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
@@ -2049,7 +2050,7 @@ namespace parallel_benders {
                     solved_counter_++;
                     break;
                 }
-				if (lp_rounds_limit_ && std::to_string(allowed_test_cases_)[7] != '1') {
+				if (lp_rounds_limit_ && !allowed_test_cases_.test(6)) {
 					solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
                     solved_counter_++;
 					std::cout << "Feasibility cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
@@ -5060,19 +5061,17 @@ namespace parallel_benders {
 
 	bool ParallelNestedBenders::ProblemSuitableForLPCuts() {
 		
-		assert(allowed_test_cases_ >= 1000000000 && allowed_test_cases_ <= 1111111111);
-		std::ostringstream test_cases_str;
-		test_cases_str << allowed_test_cases_;
 		// Parse allowed_test_cases and define which properties of the problem / parameters are allowed.
-		bool allow_le_constr = test_cases_str.str()[1] == '1';
-		bool allow_ge_constr = test_cases_str.str()[2] == '1';
-		bool allow_eq_constr = test_cases_str.str()[3] == '1';
-		bool allow_non_standard_lb = test_cases_str.str()[4] == '1';
-		bool allow_non_standard_ub = test_cases_str.str()[5] == '1';
-		bool allow_cont_first_stage = test_cases_str.str()[6] == '1';
-		//bool allow_feas_cuts = test_cases_str.str()[7] == '1'; // checked not here
-        //bool allow_domain_cuts = test_cases_str.str()[8] == '1'; // checked not here
-        bool allow_warm_start = test_cases_str.str()[9] == '1'; // warm start
+        bool allow_le_constr = allowed_test_cases_.test(0);
+        bool allow_ge_constr = allowed_test_cases_.test(1);
+        bool allow_eq_constr = allowed_test_cases_.test(2);
+        bool allow_non_standard_lb = allowed_test_cases_.test(3);
+        bool allow_non_standard_ub = allowed_test_cases_.test(4);
+        bool allow_cont_first_stage = allowed_test_cases_.test(5);
+        //bool allow_feas_cuts = allowed_test_cases_.test(6); // checked not here
+        //bool allow_domain_cuts = allowed_test_cases_.test(7); // checked not here
+        bool allow_warm_start = allowed_test_cases_.test(8); // warm start
+        bool allow_multiprocessing = allowed_test_cases_.test(9); // multiprocessing
 
 		bool lp_check_passed = true;
 		//Parameter validity
@@ -5141,7 +5140,7 @@ namespace parallel_benders {
 				std::cout << "Start solution is not implemented for L&P cuts! Change solver parameter." << std::endl;
 				lp_check_passed = false;
 			}
-			if (num_cpu_ > 1) {
+			if (num_cpu_ > 1 && !allow_multiprocessing) {
 				std::cout << "Multithread is not tested for L&P cuts! Change solver parameter." << std::endl;
 				lp_check_passed = false;
 			}
