@@ -111,22 +111,23 @@ private:
     void BuildDZNProblem(OsiSolverInterface* osi_solver, BendersNodeData*  benders_node_data, BendersStageData* stage_data);
 	void SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set);
 	
-    /** Check if problem itself and parameters are suitable for L&P cuts method
+    /** Checks if problem itself and parameters are suitable for L&P cuts method
 
-		Check if:
+		Checks if:
 		1) L&P related parameters are valid.
 		2) Additional methods of PNB are implemented for L&P cuts methods.
 		3) Problem structure is valid for L&P cuts and L&P cuts for the problems of the problem class implemented.
 
-		allowed_test_cases: every digit in the integer is related to parameter setting or instance properties. If digit is 1, than property / parameter is allowed. First digit should always be 1.
-			allow_le_constr			- 2nd digit, e.g., 11000000
-			allow_ge_constr			- 3rd digit, e.g., 10100000
-			allow_eq_constr			- 4
-			allow_non_standard_lb	- 5
-			allow_non_standard_ub	- 6
-			allow_cont_first_stage	- 7
-			allow_feas_cuts			- 8
-            allow_warm_start		- 9
+		allowed_test_cases: every digit in the integer is related to parameter setting or instance properties. If digit is 1, than property / parameter is allowed.
+			allow_le_constr			- 1st bit, e.g., 100...
+			allow_ge_constr			- 2nd bit, e.g., 110...
+			allow_eq_constr			- 3
+			allow_non_standard_lb	- 4
+			allow_non_standard_ub	- 5
+			allow_cont_first_stage	- 6
+			allow_feas_cuts			- 7
+            allow_warm_start		- 8
+            allow_multithreading	- 9
 		
 	*/
 	bool ParallelNestedBenders::ProblemSuitableForLPCuts();
@@ -461,7 +462,7 @@ private:
 	int lp_column_set_;
 	OsiCpxSolverInterface* osi_lift_and_project_dual_cgp_solver_; // for Dual of Zeta-Normalized
     ParallelNestedBenders* cgp_pnb_; // strengthened epigraph cuts
-	int allowed_test_cases_;
+	std::bitset<10> allowed_test_cases_;
 
     // TODO: REMOVE AGAIN
     int optimality_cut_counter_;

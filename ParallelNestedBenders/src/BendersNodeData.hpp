@@ -7,6 +7,7 @@
 #include <memory>
 #include <atomic>
 #include <unordered_map>
+#include <bitset>
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/property_tree/ptree.hpp>
