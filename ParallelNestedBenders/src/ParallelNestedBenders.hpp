@@ -49,9 +49,11 @@ public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
     ~ParallelNestedBenders();
     void Solve();
+    ParallelNestedBenders* clone();
     /*! Clear all solution process information and reset to the after Init() state.
      Optionally new parameter can be supplied.
      The aim of Reset() is to clear the pnb and prepare it for one more Solve() but avoid reinitialization of all the internal structures.
+     We keep solvers
 
      TODO: finish
     */
@@ -76,11 +78,17 @@ private:
  * \return
  TODO: finish
  */
-    void SetForLnPCut(ParallelNestedBenders* cgp_pnb, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, int iteration, int round, int fract_var_index, bool keep_cgp_cuts);
+    void SetLnPCGPRoundSpecifics(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+
+
+    /*!
+ TODO: finish
+ */
+    void SetLnPCGPFractVarSpecifics(ParallelNestedBenders* cgp_pnb, const std::pair<int, double>& fractional_variable);
 
     // Adjust google logging to the logging_level: 0 - console and INFO, 1 - WARNING, 2 - ERROR, 3 - FATAL
     void SetLogging(int logging_level);
-    void LogSpecialCase(bool condition, std::string log_message) const;
+    void LogSpecialCase(bool condition, std::string log_message);
 
     // High-level methods we need during the algorithm
     void AdjustProblem(); // Adjust the problem and store characteristics about it
@@ -105,10 +113,11 @@ private:
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	int ApplyCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff);
     void ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff, BendersNodeData* benders_node_data);
-	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
+	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable, bool multiprocessing);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
-    void BuildDZNProblem(OsiSolverInterface* osi_solver, BendersNodeData*  benders_node_data, BendersStageData* stage_data);
+    void SetDualCGPRoundSpecifics(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void SetDualCGPFractVarSpecifics(OsiSolverInterface* cgp_pnb, const std::pair<int, double>& fractional_variable);
 	void SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set);
 	
     /** Checks if problem itself and parameters are suitable for L&P cuts method
@@ -302,8 +311,10 @@ private:
     std::mutex upper_bound_mutex_; // std::mutex for access to upper bound
     std::mutex infeasible_problem_mutex_; // std::mutex for access to infeasible problem setter 
     std::mutex osi_solver_mutex_; // std::mutex that is used if we want to clone an OsiSolverInterface
+    std::mutex osi_pnb_cgp_mutex_; // std::mutex that is used if we want to clone/modify L&P Cuts PNB CGP
     std::mutex add_cut_counter_mutex_; // std::mutex that is used if we increase the cut counter
 	std::mutex stage_lower_upper_bounds_mutex_;  
+    std::mutex lp_cuts_coefficients_mutex_; // std::mutex that is used if we store the L&P cut coefficients for a specific fract var
     std::mutex misc_mutex_; // std::mutex for miscellanious stuff
     std::mutex debug_mutex_;
     // Further thread management stuff
@@ -448,7 +459,6 @@ private:
 	int cgp_do_when_infeasible_; // whether we quit OR apply Alpha-Normalization and solve OR apply Alpha-Normalization and continue when L&P CGP PNB is infeasible
 	int lp_round_; // TODO: get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
 	int lp_switch_counter_;
-    bool reuse_cgp_; // false - rebuild Dual Zeta-Normalized for every variable in every LP round, true - modify the RHS and add the new L&P/Optimality cuts
 	bool generate_lp_cuts_;
 	int next_lp_rounds_iteration_;
 	std::map<double, std::pair<int, double>> fractional_variables_; //<fractional part, <var index, var value> > ordered ascending by int violation
@@ -456,12 +466,13 @@ private:
 	std::vector<double> epigraph_current_cuts_rhs_;
 	std::vector<std::vector<double>> domain_current_cuts_coefficients_;
 	std::vector<double> domain_current_cuts_rhs_;
-	int lp_fract_var_index_;
-	const std::vector<double>* lp_main_loop_col_solution_; // this is the solution of 1st-stage in the main loop
-	std::pair<int, int> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
+	double lp_main_loop_fract_var_value_; // this is the value of the fractional variable from the main loop
+	std::unique_ptr<std::pair<int, int>> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
 	int lp_column_set_;
-	OsiCpxSolverInterface* osi_lift_and_project_dual_cgp_solver_; // for Dual of Zeta-Normalized
-    ParallelNestedBenders* cgp_pnb_; // strengthened epigraph cuts
+	OsiSolverInterface* global_dual_cgp_solver_; // for Dual of Zeta-Normalized
+    std::atomic<bool> dual_cgp_solver_round_specifics_applied_; // wheather we have already applied to the L&P dual CGP: solution of MP as RHS and cuts
+    std::atomic<bool> pnb_cgp_round_specifics_applied_; // wheather we have already applied to the L&P CGP PNB changes necessary in current round
+    ParallelNestedBenders* global_cgp_pnb_; // strengthened epigraph cuts
 	std::bitset<10> allowed_test_cases_;
 
     // TODO: REMOVE AGAIN
