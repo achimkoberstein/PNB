@@ -152,7 +152,7 @@ void BendersNodeData::Clear(int delete_cuts_start_it, bool keep_warm_start)
     
     // Warm start
     if (!keep_warm_start) {
-        warm_start_ = nullptr;
+        warm_start_.reset();
     }
     warm_start_added_ = false;
 
@@ -214,7 +214,8 @@ void BendersStageData::Clear(bool keep_warm_start) {
     
     //WarmStart
     if (!keep_warm_start) {
-        warm_start_ = nullptr; // during the initialization we do this: warm_start_.reset(osi_solver_->getEmptyWarmStart()); Is it necessary?
+        assert(false && "Never tested: during the initialization we do this: warm_start_.reset(osi_solver_->getEmptyWarmStart()); Is it necessary?");
+        warm_start_.reset(); 
     }
     problem_was_solved_in_this_iteration_ = false;
     
