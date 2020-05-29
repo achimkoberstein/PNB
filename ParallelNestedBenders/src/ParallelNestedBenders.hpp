@@ -181,7 +181,7 @@ private:
     void HandleInitialSolutionProcedures();
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
     void AddCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
-	void SetSolverByThread();
+    OsiSolverInterface* SetSolverByThread();
 
 	bool CheckForSameCut(const CutStuff& cut_to_check, const BendersNodeData::cut_container & container);
 
