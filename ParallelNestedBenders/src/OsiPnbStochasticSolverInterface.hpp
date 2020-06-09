@@ -52,6 +52,7 @@ public:
     const parallel_benders::Timer& getComputingTimer() const;
 
     SmiScnModel* getSmiModel();
+	parallel_benders::ParallelNestedBenders* getPNB();
     int getNumInsubstantialIterations() const;
     int getNumInfeasibilityIterations() const;
 
