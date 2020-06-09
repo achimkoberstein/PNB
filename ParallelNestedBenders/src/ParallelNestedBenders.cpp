@@ -2292,12 +2292,267 @@ namespace parallel_benders {
         LOG_IF(INFO,d_square_) << "Spent " << d_square_c_triple_timer_ << " seconds to compute C^3 problems.";
         LOG_IF(INFO,d_square_) << "Spent "  << d_square_c_rhs_timer_ << " seconds to compute D^2 RHS problems.";
     }
-
+    
+    /*
+    contents of smi_ pointer are not copied
+    all solvers in ParallelNestedBenders are cloned
+    */
     ParallelNestedBenders* ParallelNestedBenders::clone()
     {
-        return this;
-    }
+        ParallelNestedBenders* other =  new ParallelNestedBenders(smi_);
+        
+        // these are probably ok after constructor
+        //core_(smi_->getCore())
+        //num_stages_(core_->getNumStages())
+        //num_scenarios_(smi_->getNumScenarios())
+        // TODO: check what we do in reset
+        // TODO: did we miss any members that were not present in constructor
+        
+        // Threads (we do not copy them)
+        other->num_cpu_ = num_cpu_;
+        assert(num_cpu_ == thread_pool_.size());
+        other->thread_pool_ = boost::threadpool::pool(thread_pool_.size());
+        // and Mutexes
+        //solver_map_mutex_(), stage_warm_start_mutex_(), upper_bound_mutex_(), infeasible_problem_mutex_(), osi_solver_mutex_(), add_cut_counter_mutex_(), stage_lower_upper_bounds_mutex_(), misc_mutex_()
+        // only console resource (and file output) is shared among pnb instances
+        other->console_mutex_ptr_ = console_mutex_ptr_;
+        
+        // Solvers
+        other->osi_solver_ = osi_solver_->clone(true);
+        // clone thread solvers
+        for (auto id_solver_pair : osi_solver_map_) {
+            other->thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread, other, id_solver_pair.second));
+        }
+        other->thread_pool_.wait(0); // We wait until all threads are done
 
+        // tree_
+        std::vector<std::vector<BendersNodeData*>> nodeVec;
+        assert(other->num_scenarios_ == num_scenarios_);
+        nodeVec.reserve(other->num_scenarios_);
+
+        for (int i = 0; i < other->num_scenarios_; i++) {
+            nodeVec.emplace_back(std::vector<BendersNodeData*>());
+        }
+        // Clone the nodes
+        std::vector<BendersNodeData*>::iterator it = tree_.treeBegin();
+        while (it != tree_.treeEnd()) {
+            nodeVec[(*it)->scenario_index_].emplace_back(new BendersNodeData(**it));
+            it++;
+        }
+        // Fill the tree
+        for (int i = 0; i < other->num_scenarios_; i++) {
+            BendersNodeData* node = nodeVec[i][0];
+            other->tree_.addPathtoLeaf(node->branch_scenario_, node->smi_node_data_->getStage() - 1, nodeVec[i]);
+        }
+
+        // Create tree nodes by stage
+        other->tree_nodes_by_stage_.clear();
+        assert(num_stages_ == other->num_stages_);
+        for (int i = 0; i < other->num_stages_; i++) {
+            std::vector<SmiTreeNode<BendersNodeData*>*> vec;
+            other->tree_nodes_by_stage_.push_back(vec);
+        }
+        if (other->tree_.getRoot() != nullptr) {
+            other->tree_nodes_by_stage_[0].push_back(other->tree_.getRoot());
+        }
+        for (int i = 1; i < other->num_stages_; i++) {
+            for (unsigned int j = 0; j < other->tree_nodes_by_stage_[i - 1].size(); j++) {
+                std::vector<SmiTreeNode<BendersNodeData*>*>* children = other->tree_nodes_by_stage_[i - 1][j]->getChildren();
+                for (int k = 0; k < children->size(); k++) {
+                    other->tree_nodes_by_stage_[i].emplace_back((*children)[k]);
+                }
+                delete children;
+            }
+        }
+
+        // Stage data
+        other->stage_data_.reserve(other->num_stages_);
+        assert(other->num_stages_ = num_stages_);
+        for (int i = 0; i < other->num_stages_; i++) {
+            other->stage_data_.emplace_back(new BendersStageData(*stage_data_[i]));
+        }
+
+        other->infinity_ = infinity_;
+        other->integer_problems_ = integer_problems_;
+        
+        other->parameter_ = parameter_;
+
+        other->zero_tolerance_ = zero_tolerance_;
+        other->integer_tolerance_ = integer_tolerance_;
+
+        // Advanced copy
+        if (lp_main_loop_iteration_round_) {
+            other->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(*lp_main_loop_iteration_round_);
+        }
+        if (osi_stopping_criterion_solver_ != nullptr) {
+            other->osi_stopping_criterion_solver_ = osi_stopping_criterion_solver_->clone(true);
+        }
+        if (global_dual_cgp_solver_ != nullptr) {
+            other->global_dual_cgp_solver_ = global_dual_cgp_solver_->clone(true);
+        }
+        if (global_cgp_pnb_ != nullptr) {
+            other->global_cgp_pnb_ = global_cgp_pnb_->clone();
+        }
+        assert(warm_up_ == false && "What to do with this guy in case of warm up");
+        //other->warm_up_solution_ = ..;
+        assert(!fixed_first_stage_ && "What to do with related members, never tested.");
+        other->fixed_first_stage_ = fixed_first_stage_;
+        //first_stage_original_col_lower_,first_stage_original_col_lower_(nullptr), first_stage_original_col_upper_(nullptr), fixed_solution_(nullptr),
+
+        assert(!regularization_ && "What to do with related members, never tested.");
+        other->regularization_ = regularization_;
+        /*other->regularized_solution_value_ = regularized_solution_value_;
+        other->regularized_sigma_ = regularized_sigma_;
+        other->regularized_gamma_ = regularized_gamma_;
+        other->regularized_initialized_cols_ = regularized_initialized_cols_;
+        other->regularized_initialized_rows_ = regularized_initialized_rows_;
+        other->regularized_start_row_ = regularized_start_row_;*/
+
+        //Timers
+        other->timer_ = timer_;
+        other->wall_clock_solution_time_ = wall_clock_solution_time_;
+        other->detailed_timer_ = detailed_timer_;
+        other->solution_times_ = solution_times_;
+        other->maximal_solution_time_ = maximal_solution_time_;
+        other->solution_code_ = solution_code_;
+
+        // simple copy
+        other->non_staircase_coefficients_ = non_staircase_coefficients_;
+        other->stage_lower_upper_bounds_ = stage_lower_upper_bounds_;
+        other->stage_old_lower_upper_bounds_ = stage_old_lower_upper_bounds_;
+        other->absolute_epsilon_ = absolute_epsilon_;
+        other->relative_epsilon_ = relative_epsilon_;
+        other->current_iteration_ = current_iteration_;
+        other->insubstantial_iteration_ = insubstantial_iteration_;
+        //other->max_iteration_ = max_iteration_; set to 5000 in init list of constructor
+        other->minor_iteration_ = minor_iteration_;
+        other->major_iteration_ = major_iteration_;
+        other->feasible_iteration_ = feasible_iteration_;
+        other->lower_bound_ = lower_bound_;
+        other->upper_bound_ = upper_bound_;
+        other->old_lower_bound_ = old_lower_bound_;
+        other->solved_counter_ = solved_counter_;
+        other->current_stage_ = current_stage_;
+        other->non_staircase_problem_ = non_staircase_problem_;
+        other->instance_specification_file_ = instance_specification_file_;
+        other->testset_name_ = testset_name_;
+        other->problem_name_ = problem_name_;
+        other->instance_name_ = instance_name_;
+        other->instance_specs_to_file_ = instance_specs_to_file_;
+        other->forward_ = forward_;
+        other->infeasible_problem_ = infeasible_problem_;
+        other->unbounded_problem_ = unbounded_problem_;
+        other->infeasible_problems_ = infeasible_problems_;
+        other->num_added_feasibility_cuts_ = num_added_feasibility_cuts_;
+        other->store_cut_information_ = store_cut_information_;
+        other->adaptive_ = adaptive_;
+        other->aggregation_scheme_ = aggregation_scheme_;
+        other->no_aggregation_ = no_aggregation_;
+        other->cut_consolidation_add_cut_ = cut_consolidation_add_cut_;
+        other->cut_consolidation_strike_threshold_ = cut_consolidation_strike_threshold_;
+        other->cut_consolidation_partial_threshold_ = cut_consolidation_partial_threshold_;
+        other->start_solution_ = start_solution_;
+        other->auto_d2_algorithm_ = auto_d2_algorithm_;
+        other->d_square_ = d_square_;
+        other->d_square_translation_term_ = d_square_translation_term_;
+        other->warm_start_ = warm_start_;
+        other->warm_start_scenarios_ = warm_start_scenarios_;
+        other->warm_start_stage_ = warm_start_stage_;
+        other->only_one_feasibility_cut_ = only_one_feasibility_cut_;
+        other->generate_feasibility_and_optimality_cuts_ = generate_feasibility_and_optimality_cuts_;
+        other->lift_and_p_method_ = lift_and_p_method_;
+        other->lp_rounds_limit_ = lp_rounds_limit_;
+        other->lp_switches_limit_ = lp_switches_limit_;
+        other->lp_major_it_limit_ = lp_major_it_limit_;
+        other->cuts_for_fract_vars_ = cuts_for_fract_vars_;
+        other->cgp_relative_epsilon_ = cgp_relative_epsilon_;
+        other->cgp_do_when_infeasible_ = cgp_do_when_infeasible_;
+        other->lp_round_ = lp_round_;
+        other->lp_switch_counter_ = lp_switch_counter_;
+        other->generate_lp_cuts_ = generate_lp_cuts_;
+        other->next_lp_rounds_iteration_ = next_lp_rounds_iteration_;
+        other->lp_main_loop_fract_var_value_ = lp_main_loop_fract_var_value_;
+        other->lp_column_set_ = lp_column_set_;
+        other->dual_cgp_solver_round_specifics_applied_ = dual_cgp_solver_round_specifics_applied_.load();
+        other->pnb_cgp_round_specifics_applied_ = pnb_cgp_round_specifics_applied_.load();
+        other->store_primal_and_dual_ = store_primal_and_dual_;
+        other->global_dual_cgp_solver_ = global_dual_cgp_solver_;
+        other->global_cgp_pnb_ = global_cgp_pnb_;
+        other->allowed_test_cases_ = allowed_test_cases_;
+        other->sequencing_protocol_ = sequencing_protocol_;
+        other->second_iteration_stage_ = second_iteration_stage_;
+        other->strategy_epsilon_ = strategy_epsilon_;
+        other->warm_up_ = warm_up_;
+        other->compute_stage_bounds_ = compute_stage_bounds_;
+        other->at_last_iteration_ = at_last_iteration_;
+        other->cuts_added_last_round_ = cuts_added_last_round_;
+        other->theta_approximations_everywhere_ = theta_approximations_everywhere_;
+        other->enforce_direction_ = enforce_direction_;
+        other->enforce_stage_ = enforce_stage_;
+        other->level_loop_forward_ = level_loop_forward_;
+        other->level_loop_backward_ = level_loop_backward_;
+        other->level_decomp_ = level_decomp_;
+        other->level_stage_ = level_stage_;
+        other->level_euclidean_ = level_euclidean_;
+        other->level_manhattan_ = level_manhattan_;
+        other->level_infinity_ = level_infinity_;
+        other->oda_method_ = oda_method_;
+        other->level_lambda_ = level_lambda_;
+        other->oda_kappa_ = oda_kappa_;
+        other->oda_gap_ = oda_gap_;
+        other->oda_lower_ = oda_lower_;
+        other->oda_upper_ = oda_upper_;
+        other->oda_first_stage_ = oda_first_stage_;
+        other->oda_phi_i_ = oda_phi_i_;
+        other->oda_tilde_q_ = oda_tilde_q_;
+        other->num_oda_aggregates_ = num_oda_aggregates_;
+        other->oda_chosen_optimality_cut_by_scenario_ = oda_chosen_optimality_cut_by_scenario_;
+        other->oda_current_tilde_q_s_ = oda_current_tilde_q_s_;
+        other->critical_iteration_ = critical_iteration_;
+        other->uncritical_iteration_counter_ = uncritical_iteration_counter_;
+        other->maximal_number_of_uncritical_iterations_ = maximal_number_of_uncritical_iterations_;
+        other->critical_iteration_counter_ = critical_iteration_counter_;
+        other->last_critical_iteration_gap_ = last_critical_iteration_gap_;
+        other->cvar_constr_decomp_ = cvar_constr_decomp_;
+        other->cvar_beta_ = cvar_beta_;
+        other->cvar_rho_ = cvar_rho_;
+        other->cvar_H_ = cvar_H_;
+        other->cvar_alpha_ = cvar_alpha_;
+        other->cvar_problem_lower_bound_ = cvar_problem_lower_bound_;
+        other->cvar_first_stage_ = cvar_first_stage_;
+        other->cvar_stopping_first_round_ = cvar_stopping_first_round_;
+        other->cvar_stopping_second_round_ = cvar_stopping_second_round_;
+        other->cvar_feasible_first_stage_solution_ = cvar_feasible_first_stage_solution_;
+        other->cvar_next_iterate_problem_ = cvar_next_iterate_problem_;
+        other->change_cvar_alpha_ = change_cvar_alpha_;
+        other->stop_cvar_ = stop_cvar_;
+        other->regularized_update_incumbent_ = regularized_update_incumbent_;
+        other->stage_aggregation_ = stage_aggregation_;
+        other->begin_aggregation_stage_ = begin_aggregation_stage_;
+        other->end_aggregation_stage_ = end_aggregation_stage_;
+        other->aggregate_from_start_ = aggregate_from_start_;
+        other->seperate_first_stage_solver_ = seperate_first_stage_solver_;
+        other->seperate_stage_solver_ = seperate_stage_solver_;
+        other->solve_relaxation_ = solve_relaxation_;
+        other->debug_test_duplicate_indices_ = debug_test_duplicate_indices_;
+        other->pretty_printing_ = pretty_printing_;
+        other->pretty_printing_verbose_ = pretty_printing_verbose_;
+        other->print_subproblems_ = print_subproblems_;
+        other->compute_primal_solutions_for_stage_ = compute_primal_solutions_for_stage_;
+        other->compute_dual_solutions_for_stage_ = compute_dual_solutions_for_stage_;
+        other->compute_objective_values_ = compute_objective_values_;
+        other->final_solution_run_ = final_solution_run_;
+        other->optimality_cut_counter_ = optimality_cut_counter_;
+        other->intra_cut_aggregation_time_ = intra_cut_aggregation_time_;
+        other->adaptive_cut_time_ = adaptive_cut_time_;
+        other->current_solution_value_ = current_solution_value_;
+        other->d_square_c_triple_timer_ = d_square_c_triple_timer_;
+        other->d_square_c_rhs_timer_ = d_square_c_rhs_timer_;
+        other->solution_similiarity_counter_ = solution_similiarity_counter_;
+        other->max_similarity_iteration_ = max_similarity_iteration_;
+
+        return other;
+    }
 
     void ParallelNestedBenders::Reset(int delete_cuts_start_it, bool keep_warm_start, Parameter* parameter) {
         assert(parameter == nullptr && "Not implemented for supplied parameter. Compare the changes in parameter_ and supplied parameter and see which changes should be done.");
