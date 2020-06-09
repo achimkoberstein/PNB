@@ -305,7 +305,7 @@ private:
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
 
-    std::mutex console_mutex_; // std::mutex for console output
+    std::shared_ptr<std::mutex> console_mutex_ptr_; // std::mutex for console output, might be shared with other classes
     std::mutex solver_map_mutex_; // std::mutex for access to solver map
     std::mutex stage_warm_start_mutex_; // std::mutex for access to warm start 
     std::mutex upper_bound_mutex_; // std::mutex for access to upper bound
