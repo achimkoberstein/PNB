@@ -47,8 +47,11 @@ class ParallelNestedBenders {
 
 public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
+    ParallelNestedBenders(const ParallelNestedBenders& pnb) = delete;
     ~ParallelNestedBenders();
+    void Init();
     void Solve();
+    ParallelNestedBenders& operator= (const ParallelNestedBenders& pnb) = delete;
     ParallelNestedBenders* clone();
     /*! Clear all solution process information and reset to the after Init() state.
      Optionally new parameter can be supplied.
@@ -69,7 +72,6 @@ public:
     void unfixFirstStageVariables();
 
 private:
-    void Init();
     
     /*!
  *
