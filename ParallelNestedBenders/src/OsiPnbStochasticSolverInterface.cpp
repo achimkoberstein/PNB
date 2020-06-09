@@ -408,6 +408,12 @@ SmiScnModel* OsiStochasticParallelNestedBendersSolverInterface::getSmiModel()
     return nested_benders_->smi_;
 }
 
+parallel_benders::ParallelNestedBenders* OsiStochasticParallelNestedBendersSolverInterface::getPNB()
+{
+    assert(nested_benders_);
+    return nested_benders_;
+}
+
 const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByNodeAndStage( int node_number, int stage ) const
 {
     assert(nested_benders_);
