@@ -797,7 +797,7 @@ namespace parallel_benders {
         current_stage_ = 1;
         for (int i = 0; i < num_cpu_ * 4; i++) { // Should suffice to get every thread its own solver..
             // Schedule the tasks for this stage
-            thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread, this));
+            thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread, this, nullptr));
         }
         thread_pool_.wait(0); // We wait until all threads are done
         current_stage_ = 0;
@@ -5360,35 +5360,41 @@ namespace parallel_benders {
             return (*it).second;
         else {
             assert(false && "Never tested");
-            return SetSolverByThread();
+            return SetSolverByThread(nullptr);
         }
         return nullptr;
     }
 
-    OsiSolverInterface* ParallelNestedBenders::SetSolverByThread(){
+    OsiSolverInterface* ParallelNestedBenders::SetSolverByThread(OsiSolverInterface* osi_solver){
         // Used in the beginning to set a solver for every thread
-        OsiSolverInterface* osi_solver = nullptr;
+        OsiSolverInterface* osi_solver_result = nullptr;
         {
             std::lock_guard<std::mutex> lock_guardener(solver_map_mutex_); 
             std::map<boost::thread::id,OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
             if ( it == osi_solver_map_.end() )
             {
-                // Create new osi_solver object from seperate first stage solver? if we have a mip
-                if ( seperate_first_stage_solver_ && integer_problems_[0] ){ // If we have a seperate first stage solver AND a MIP, we need to get rid of the mip first before we clone!
-                    // If we call this method we are not in the first stage.
-                    osi_solver_->initialSolve(); // Get rid of the integers!
+                // Clone provided solver
+                if (osi_solver != nullptr) {
+                    osi_solver_result = osi_solver->clone(true);
                 }
-                osi_solver = osi_solver_->clone(false); // The boolean does not alway do what it is supposed to do.: We can only clone it if it is a LP problem
-                // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
-                osi_solver->loadProblem(0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr);
-                // We want to emphasize numerical stability / for CPLEX
-                SetSolverOptions(osi_solver);
+                else {
+                    // Create new osi_solver object from seperate first stage solver? if we have a mip
+                    if (seperate_first_stage_solver_ && integer_problems_[0]) { // If we have a seperate first stage solver AND a MIP, we need to get rid of the mip first before we clone!
+                        // If we call this method we are not in the first stage.
+                        osi_solver_->initialSolve(); // Get rid of the integers!
+                    }
+                    osi_solver_result = osi_solver_->clone(false); // The boolean does not alway do what it is supposed to do.: We can only clone it if it is a LP problem
+                    // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
+                    osi_solver_result->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+                    // We want to emphasize numerical stability / for CPLEX
+                    SetSolverOptions(osi_solver_result);
+                }
                 // Set primal algorithm
-                osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
+                osi_solver_map_[boost::this_thread::get_id()] = osi_solver_result;
             }
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-        return osi_solver;
+        return osi_solver_result;
     }
 
     void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const std::vector<double>& dual_solution, std::vector<double>* cut_coefficients_pointer )
