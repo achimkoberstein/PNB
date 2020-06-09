@@ -238,7 +238,7 @@ namespace parallel_benders {
 
 
                 if (!( node_ptr->getCoreCombineRule() == SmiCoreCombineReplace::Instance() || node_ptr->getCoreCombineRule() == SmiCoreCombineAdd::Instance())){
-                    std::lock_guard<std::mutex> unique_lock(console_mutex_);
+                    std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
                     LOG(FATAL) << "The supplied SMPS format is not understood. You used something that is not REPLACE in your stoch file.";
 
                 }
@@ -295,7 +295,7 @@ namespace parallel_benders {
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),solved_counter_(0),
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
-        num_cpu_(1),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
+        num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
 		lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),dual_cgp_solver_round_specifics_applied_(false),pnb_cgp_round_specifics_applied_(false),store_primal_and_dual_(false),global_dual_cgp_solver_(nullptr),global_cgp_pnb_(nullptr),allowed_test_cases_(),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
@@ -1021,7 +1021,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::LogSpecialCase(bool condition, std::string log_message)
     {
 #ifdef SPEC_CASES
-        std::lock_guard<std::mutex>unique_lock(console_mutex_);
+        std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
         LOG_IF(WARNING, condition) << instance_name_ << " - It: " << current_iteration_ << " L&P round: " << lp_round_ << " Just to note: "  << log_message << " (warning saved to log file)" << std::endl;
 #endif
     }
@@ -2677,7 +2677,7 @@ namespace parallel_benders {
                         CPXdualopt(env_ptr,lp_ptr);
                     }
                     if ( CPXgetstat(env_ptr,lp_ptr) == 0){
-                        std::lock_guard<std::mutex> unique_lock(console_mutex_);
+                        std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
                         LOG(FATAL) << "Solution process abandoned. Cplex returned with status code " << CPXgetstat(env_ptr,lp_ptr);
                         CPXwriteprob(env_ptr,lp_ptr,"abandonedProblem","lp");
                     }
@@ -2866,7 +2866,7 @@ namespace parallel_benders {
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
                     LOG_IF(ERROR, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
-					std::unique_lock<std::mutex> u_lock(console_mutex_);
+					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
                     CPXwriteprob(env_ptr,lp_ptr,"not_optimal","lp");
                 }
             }
@@ -3782,7 +3782,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
         if ( infeasible_problems_.any() && !generate_feasibility_and_optimality_cuts_){
-            std::lock_guard<std::mutex> unique_lock(console_mutex_);
+            std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
             LOG(WARNING) << "Attempting to generate optimality cuts in the presence of infeasible problems in this stage.";
             return;
         }
@@ -4151,12 +4151,12 @@ namespace parallel_benders {
             }//End If infeasible
             else {
                 // Print out the stat
-                std::lock_guard<std::mutex> u_lock(console_mutex_);
+                std::lock_guard<std::mutex> u_lock(*console_mutex_ptr_);
                 LOG(INFO) << "Solver returned with status code : " << cpx_stat << " instead infeasible, while solving the original problem again with primal or dual simplex during generation of feasibility cuts.";
 
                 use_cplex = false;
                 if ( cpx_stat == CPX_STAT_OPTIMAL ){
-					std::unique_lock<std::mutex> u_lock(console_mutex_);
+					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
                     CPXwriteprob(env_ptr,lp_ptr,"optimal_infeasible_problem.lp","lp");
                     return false;
                 }
@@ -4394,7 +4394,7 @@ namespace parallel_benders {
 
         {
             int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
-            std::lock_guard<std::mutex> unique_lock(console_mutex_);
+            std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
             DLOG(INFO) << current_iteration_ << " Iteration - L&P round " << lp_round_ << ": fractional variable " << lp_cut_index + 1 << "/" << num_cuts << std::endl;
             DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) << "Generating " << (use_2nd_stage_info ? "strengthened" : "plain") << " L&P Epigraph cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
             DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) << "Generating L&P Domain cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
@@ -4447,12 +4447,12 @@ namespace parallel_benders {
             SetLogging(google::INFO);
 
 			if (fract_var_cgp_pnb->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND) {
-                std::lock_guard<std::mutex>unique_lock(console_mutex_);
+                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
 				LOG(WARNING) << "Fract var with index " << fractional_variable.first << ": UB < LB in L&P CGP.";
 				LOG_IF(FATAL, ComputeRelativeGap(fract_var_cgp_pnb->upper_bound_, fract_var_cgp_pnb->lower_bound_) > cgp_relative_epsilon_) << "Fract var with index " << fractional_variable.first << ": Relative gap in CGP is too big.";
 			}
 			else if (fract_var_cgp_pnb->solution_code_ == PNB_SOLUTION_SIMILARITY_LIMIT) {
-                std::lock_guard<std::mutex>unique_lock(console_mutex_);
+                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
 				LOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Finished due to the similarity limit.";
 				LOG_IF(FATAL, ComputeRelativeGap(fract_var_cgp_pnb->upper_bound_, fract_var_cgp_pnb->lower_bound_) > 0.01) << "Fract var with index " << fractional_variable.first << ": Relative gap in CGP is too big.";
 			}
@@ -4462,11 +4462,11 @@ namespace parallel_benders {
                 lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
                 LogSpecialCase(fract_var_cgp_pnb->current_iteration_ == 1, "PNB CGP is infeasible in its first iteration");
                 LogSpecialCase(fract_var_cgp_pnb->current_iteration_ > 1, "PNB CGP is infeasible in 2nd or later iteration");
-                std::lock_guard<std::mutex>unique_lock(console_mutex_);
+                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                 LOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Will generate L&P Domain cut. Reason: PNB CGP is infeasible." << std::endl;
 			}
 			else if (fract_var_cgp_pnb->solution_code_ != PNB_SOLUTION_OPTIMAL) {
-                std::lock_guard<std::mutex>unique_lock(console_mutex_);
+                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
 				LOG(FATAL) << "Fract var with index " << fractional_variable.first << ": L&P CGP is not solved to optimality. Is it an ERROR?";
 			}
 
@@ -4546,7 +4546,7 @@ namespace parallel_benders {
 			if (new_cgp_pnb_opt_cuts == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty()) {
                 lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
                 LogSpecialCase(true, "Solve DAN w/o optimality-like cuts");
-                std::lock_guard<std::mutex>unique_lock(console_mutex_);
+                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                 DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Will generate L&P Domain cut. Reason: no optimality-like cuts (with theta) are present: optimality cuts, strengthened information from PNB CGP, epigraph cuts." << std::endl;
 			}
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
@@ -4561,7 +4561,7 @@ namespace parallel_benders {
 			SolveSolverInterface(fract_var_dual_cgp_solver);
             
             {
-                std::lock_guard<std::mutex>unique_lock(console_mutex_);
+                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                 DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of " << (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? "Alpha" : "Zeta") << "-normalized Dual L&P Cut Generation Problem: " << fract_var_dual_cgp_solver->getObjValue() << std::endl;
             }
 
@@ -4585,7 +4585,7 @@ namespace parallel_benders {
                 LogSpecialCase(CompareWithZero(fract_var_dual_cgp_solver->getObjValue()), "DZN infeasible <=> DAN > 0. It is not"); // whether it is not smaller 0 we check below
 				PrintSubproblem(fract_var_dual_cgp_solver, lp_round_, suffix.str());
 
-                std::lock_guard<std::mutex>unique_lock(console_mutex_);
+                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                 DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is infeasible." << std::endl;
                 DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << fract_var_dual_cgp_solver->getObjValue() << std::endl;
 			}
@@ -4615,7 +4615,7 @@ namespace parallel_benders {
             delete temp_osi;
 #endif
             {
-                std::lock_guard<std::mutex>unique_lock(console_mutex_);
+                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                 DLOG_IF(WARNING, CompareWithZero(fract_var_dual_cgp_solver->getObjValue())) << "Fract var with index " << fractional_variable.first << ": L&P cut will not be added to the container. Reason: solution of Dual L&P Cut Generation Problem is 0." << std::endl;
             }
 			if (!CompareWithZero(fract_var_dual_cgp_solver->getObjValue())) {
@@ -6314,7 +6314,7 @@ namespace parallel_benders {
                         StoreWarmStart(osi_solver,benders_tree_node_pointer);      
                     }
                     else{
-                        std::lock_guard<std::mutex> unique_lock(console_mutex_);
+                        std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
                         LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
                     }
 
@@ -6738,7 +6738,7 @@ namespace parallel_benders {
                 StoreValuesFromSolverInVector(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,new_thetas); // Store new approximation
             }
             else{
-                std::lock_guard<std::mutex> unique_lock(console_mutex_);
+                std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
                 LOG(ERROR) << "Solver did not solve problem to optimality after aggregation.";
                 // Get CPLEX error code
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -7255,7 +7255,7 @@ namespace parallel_benders {
                         CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
                     }
                     if ( code != CPXMIP_OPTIMAL ){
-                        std::lock_guard<std::mutex> unique_lock(console_mutex_);
+                        std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
                         LOG(WARNING) << "MIQP solved with status " << code;
                     }
                 }
@@ -7305,7 +7305,7 @@ namespace parallel_benders {
                     if ( code != CPX_STAT_OPTIMAL ){
 						double kappa_value;
 						CPXgetdblquality(env_ptr,lp_ptr,&kappa_value,CPX_KAPPA);
-                        std::lock_guard<std::mutex> unique_lock(console_mutex_);
+                        std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
                         LOG(WARNING) << "Quadratic problem solved with status " << code << " and has condition number " << kappa_value;
                     }
                 }
@@ -7742,7 +7742,7 @@ namespace parallel_benders {
 				if ( cpx_stat != CPX_STAT_OPTIMAL ){
 					double kappa_value;
 					int status = CPXgetdblquality(env_ptr, lp_ptr, &kappa_value, CPX_KAPPA);
-					std::lock_guard<std::mutex> console_lock(console_mutex_);
+					std::lock_guard<std::mutex> console_lock(*console_mutex_ptr_);
 					LOG(INFO) << "Level projection problem returned with status " << cpx_stat << " and has a basis condition number of " << kappa_value << ".";
 
 				}
@@ -8731,14 +8731,14 @@ namespace parallel_benders {
             if ( append != "")
                 stream << "_" << append;
             // we could use two lines below but than for L&P MP relaxation integer vars are printed as ints
-			//std::lock_guard<std::mutex> lock(console_mutex_ptr_);
+			//std::lock_guard<std::mutex> lock(*console_mutex_ptr_);
             //osi_solver->writeLp(stream.str().c_str());
             OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
             if ( cpx_ptr ){
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                 CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
 				// we could delete two lines below but than for L&P MP relaxation integer vars are printed as ints
-                std::lock_guard<std::mutex> lock(console_mutex_);
+                std::lock_guard<std::mutex> lock(*console_mutex_ptr_);
                 std::string name = stream.str()+ ".lp";
                 CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"lp");
                 //name = stream.str()+"mps";
@@ -8748,7 +8748,7 @@ namespace parallel_benders {
             }
             else {
 				// we could delete this block but than for L&P MP relaxation integer vars are printed as ints
-                std::lock_guard<std::mutex> lock(console_mutex_);
+                std::lock_guard<std::mutex> lock(*console_mutex_ptr_);
                 osi_solver->writeLp(stream.str().c_str());
             }
         }
