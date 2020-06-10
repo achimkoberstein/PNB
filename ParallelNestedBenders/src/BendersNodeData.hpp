@@ -239,7 +239,9 @@ struct BendersNodeData
     friend class CutManager;
 public:
     BendersNodeData();
-    BendersNodeData(SmiNodeData* nodeData);
+    BendersNodeData(const BendersNodeData& nodeData);
+    BendersNodeData(SmiNodeData * smiNodeData);
+    BendersNodeData& operator=(const BendersNodeData& nodeData) = delete;
     ~BendersNodeData();
 
     void CleanUnusedMemory(bool direction);
