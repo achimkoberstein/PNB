@@ -390,6 +390,8 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity );
 struct BendersStageData {
 
     BendersStageData();
+    BendersStageData(const BendersStageData& stageData);
+    BendersStageData& operator=(const BendersStageData& stageData) = delete;
     ~BendersStageData();
 
 /*! Clean the solution related data (reset to the state after ParallelNestedBenders::Init())
@@ -420,8 +422,6 @@ struct BendersStageData {
     // Coin Warm Start object
     std::unique_ptr<CoinWarmStart> warm_start_;
     bool problem_was_solved_in_this_iteration_;
-
-	std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_; // Store solver interfaces for every stage 
 
     // In the non-staircase case
     std::vector< std::vector<std::pair<int,double> > > no_staircase_constraints_;
