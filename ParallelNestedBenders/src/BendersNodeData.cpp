@@ -74,15 +74,12 @@ cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficie
     for (; it != nodeData.optimality_cuts_.end(); ++it) {
         optimality_cuts_.push_back(std::make_shared<CutStuff>(*it->get()));
         if (nodeData.last_iteration_start_optimality_ == it) {
-            assert(false && "Never tested");
             last_iteration_start_optimality_ = --optimality_cuts_.end();
         }
         if (nodeData.last_lp_switch_start_optimality_ == it) {
-            assert(false && "Never tested");
             last_lp_switch_start_optimality_ = --optimality_cuts_.end();
         }
         if (nodeData.level_opt_iterator_ == it) {
-            assert(false && "Never tested");
             level_opt_iterator_ = --optimality_cuts_.end();
         }
     }
@@ -91,11 +88,9 @@ cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficie
     for (; it != nodeData.feasibility_cuts_.end(); ++it) {
         feasibility_cuts_.push_back(std::make_shared<CutStuff>(*it->get()));
         if (nodeData.last_iteration_start_feasibility_ == it) {
-            assert(false && "Never tested");
             last_iteration_start_feasibility_ = --feasibility_cuts_.end();
         }
         if (nodeData.last_lp_switch_start_feasibility_ == it) {
-            assert(false && "Never tested");
             last_lp_switch_start_feasibility_ = --feasibility_cuts_.end();
         }
     }
@@ -104,11 +99,9 @@ cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficie
     for (; it != nodeData.epigraph_cuts_.end(); ++it) {
         epigraph_cuts_.push_back(std::make_shared<CutStuff>(*it->get()));
         if (nodeData.last_round_start_epigraph_ == it) {
-            assert(false && "Never tested");
             last_round_start_epigraph_ = --epigraph_cuts_.end();
         }
         if (nodeData.last_in_extraction_problem_start_epigraph_ == it) {
-            assert(false && "Never tested");
             last_in_extraction_problem_start_epigraph_ = --epigraph_cuts_.end();
         }
     }
@@ -117,11 +110,9 @@ cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficie
     for (; it != nodeData.domain_cuts_.end(); ++it) {
         domain_cuts_.push_back(std::make_shared<CutStuff>(*it->get()));
         if (nodeData.last_round_start_domain_ == it) {
-            assert(false && "Never tested");
             last_round_start_domain_ = --domain_cuts_.end();
         }
         if (nodeData.last_in_extraction_problem_start_epigraph_ == it) {
-            assert(false && "Never tested");
             last_in_extraction_problem_start_domain_ = --domain_cuts_.end();
         }
     }
@@ -308,12 +299,26 @@ void BendersNodeData::Clear(int delete_cuts_start_it, bool keep_warm_start)
 BendersStageData::BendersStageData()
 : num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),
 stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),stochastic_objective_(false),stochastic_bounds_(false),non_zero_bounds_(false),
-column_indices_(0),row_indices_(0),warm_start_(nullptr),problem_was_solved_in_this_iteration_(false),osi_solver_map_(),no_staircase_constraints_(),changed_aggregation_level_(false),num_d_square_cuts_(0),d_square_matrix_(nullptr),non_integer_scenarios(),violated_index_(-1),d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr),d_square_lambda_0_2_(0),d_square_lambda_1_2_(0),d_square_pi_(nullptr),d_square_disjunctive_indices_(),solve_binary_subproblems_(false),use_level_(false)
+column_indices_(0),row_indices_(0),warm_start_(nullptr),problem_was_solved_in_this_iteration_(false),no_staircase_constraints_(),changed_aggregation_level_(false),num_d_square_cuts_(0),d_square_matrix_(nullptr),non_integer_scenarios(),violated_index_(-1),d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr),d_square_lambda_0_2_(0),d_square_lambda_1_2_(0),d_square_pi_(nullptr),d_square_disjunctive_indices_(),solve_binary_subproblems_(false),use_level_(false),
+added_optimality_cuts_(0), added_epigraph_cuts_(0), added_domain_cuts_(0), added_feasibility_cuts_(0)
 {
-	added_optimality_cuts_ = 0;
-	added_epigraph_cuts_ = 0;
-	added_domain_cuts_ = 0;
-	added_feasibility_cuts_ = 0;
+	
+}
+BendersStageData::BendersStageData(const BendersStageData& stageData)
+    : num_columns_(stageData.num_columns_), num_rows_(stageData.num_rows_), stage_(stageData.stage_), num_thetas_(stageData.num_thetas_),
+    stochastic_matrix_w_(stageData.stochastic_matrix_w_), stochastic_matrix_t_(stageData.stochastic_matrix_t_), stochastic_rhs_(stageData.stochastic_rhs_), stochastic_objective_(stageData.stochastic_objective_), stochastic_bounds_(stageData.stochastic_bounds_), non_zero_bounds_(stageData.non_zero_bounds_),
+    column_indices_(stageData.column_indices_), row_indices_(stageData.row_indices_), warm_start_(stageData.warm_start_ == nullptr ? nullptr : stageData.warm_start_->clone()), problem_was_solved_in_this_iteration_(stageData.problem_was_solved_in_this_iteration_), no_staircase_constraints_(stageData.no_staircase_constraints_), changed_aggregation_level_(stageData.changed_aggregation_level_), num_d_square_cuts_(stageData.num_d_square_cuts_), d_square_matrix_(stageData.d_square_matrix_ ? new CoinPackedMatrix(*stageData.d_square_matrix_) : nullptr), non_integer_scenarios(stageData.non_integer_scenarios), violated_index_(stageData.violated_index_), d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr), d_square_lambda_0_2_(stageData.d_square_lambda_0_2_), d_square_lambda_1_2_(stageData.d_square_lambda_1_2_), d_square_pi_(nullptr), d_square_disjunctive_indices_(stageData.d_square_disjunctive_indices_), solve_binary_subproblems_(stageData.solve_binary_subproblems_), use_level_(stageData.use_level_),
+    added_optimality_cuts_(stageData.added_optimality_cuts_.load()), added_epigraph_cuts_(stageData.added_epigraph_cuts_.load()), added_domain_cuts_(stageData.added_domain_cuts_.load()), added_feasibility_cuts_(stageData.added_feasibility_cuts_.load())
+{
+    if (stageData.d_square_pi_) {
+        assert(false && "Never tested");
+        d_square_pi_ = new double[stageData.num_columns_];
+        std::copy_n(stageData.d_square_pi_, stageData.num_columns_, d_square_pi_);
+    }
+
+    assert(stageData.d_square_lambda_1_1_ == nullptr && "Implement copy of this member and its initialization in the member list.");
+    assert(stageData.d_square_lambda_0_1_ == nullptr && "Implement copy of this member and its initialization in the member list.");
+
 }
 
 BendersStageData::~BendersStageData()
@@ -331,15 +336,7 @@ void BendersStageData::Clear(bool keep_warm_start) {
         warm_start_.reset(); 
     }
     problem_was_solved_in_this_iteration_ = false;
-    
-    // MP solver is not included here
-    for (auto id_solver_pair : osi_solver_map_) {
-        //id_solver_pair.second->reset(); // This method throws exception with Cplex
-        id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-        // Workaround: Load empty problem. 
-        assert(id_solver_pair.second->getNumCols() == 0);
-    }
-    
+       
     changed_aggregation_level_ = false;
     
     // d_square stuff - not implemented
