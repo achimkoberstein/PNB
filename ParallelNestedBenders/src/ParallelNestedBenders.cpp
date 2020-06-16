@@ -1871,10 +1871,11 @@ namespace parallel_benders {
                     assert( integer_cols.size() == cut_coefficients.size());
 
                     // Add cut
-                    std::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
-                    cut_pointer->setLb(cut_rhs);
-                    cut_pointer->setUb(infinity_);
-                    cut_pointer->setRow(integer_cols.size(),&integer_cols[0],&cut_coefficients[0]);
+                    OsiRowCut* cut = new OsiRowCut();
+                    cut->setLb(cut_rhs);
+                    cut->setUb(infinity_);
+                    cut->setRow(integer_cols.size(),&integer_cols[0],&cut_coefficients[0]);
+					std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
                     std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY));
                     cut_stuff->aggregate_number_ = -1;
                     cut_stuff->to_use_ = true;
@@ -3922,52 +3923,49 @@ namespace parallel_benders {
     }
 
 	int ParallelNestedBenders::ApplyCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff) {
-		OsiRowCut* cut = cut_stuff->cut_.get();
+		const OsiRowCut* original_cut = cut_stuff->cut_.get();
 		
 		if (!lp_main_loop_iteration_round_) {
-			osi_solver->applyRowCuts(1, cut);
+			osi_solver->applyRowCuts(1, original_cut);
 			return 1;
 		}
 		else {
-			int num_rows(0);
             assert(current_stage_ == 0 && "Why would we apply cuts to PNB CGP not on the first stage. Might happen if ApplyCut is called not from the Solve() routine");
+            assert(getNumThetasByStage(tree_nodes_by_stage_[current_stage_][0]) == 1);
 			bool cut_with_theta = cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH;
 			assert(cut_stuff->type_ != PNB_CUT_TYPE_EPIGRAPH && "To CGP PNB we pass epigraph cuts as opt cuts.");
 			assert(cut_stuff->type_ != PNB_CUT_TYPE_DOMAIN && "To CGP PNB we pass domain cuts as feas cuts.");
 			int column_set = cut_stuff->column_set_;
-			CoinPackedVector& row = cut->mutableRow(); // TODO: we do not need copying
-			int* indices = row.getIndices();
-			int* old_indices = new int[row.getNumElements()];
-			std::copy(indices, indices + row.getNumElements(), old_indices);
-
+			
+            std::vector<OsiRowCut> cuts;
+            cuts.reserve(2);
 			if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_PRIME) {
-				if (cut_with_theta) {
-					indices[row.getNumElements() - 1] += stage_data_[current_stage_]->num_columns_; // shift theta to the end
+                cuts.emplace_back(*original_cut);
+                if (cut_with_theta) {
+                    CoinPackedVector* row = &(cuts.back().mutableRow());
+                    row->getIndices()[row->getNumElements() - 1] += stage_data_[current_stage_]->num_columns_; // shift theta to the end
 				}
-				osi_solver->applyRowCuts(1, cut);
-				num_rows++;
 			}
 			if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
 				//apply to the right side => shift by num_cols - used for L&P CGP master problem
-				int i = 0;
+                cuts.emplace_back(*original_cut);
+                CoinPackedVector* row = &(cuts.back().mutableRow());
+                int i = 0;
 				if (cut_with_theta) {
-					for (; i < row.getNumElements() - 1; ++i) {
-						indices[i] += stage_data_[current_stage_]->num_columns_;
+					for (; i < row->getNumElements() - 1; ++i) {
+						row->getIndices()[i] += stage_data_[current_stage_]->num_columns_;
 					}
-					indices[i] = old_indices[i] + stage_data_[current_stage_]->num_columns_ + 1; // shift theta to the end
+                    row->getIndices()[i] += stage_data_[current_stage_]->num_columns_ + 1; // shift theta to the end
 				}
 				else {
-					for (; i < row.getNumElements(); ++i) {
-						indices[i] += stage_data_[current_stage_]->num_columns_;
+					for (; i < row->getNumElements(); ++i) {
+                        row->getIndices()[i] += stage_data_[current_stage_]->num_columns_;
 					}
 				}
-				osi_solver->applyRowCuts(1, cut);
-				num_rows++;
 			}
-			// set the indices back
-			std::copy(old_indices, old_indices + row.getNumElements(), indices);
+            osi_solver->applyRowCuts(cuts.size(), cuts.data());
 
-			return num_rows;
+			return cuts.size();
 		}
 	}
 
@@ -3987,51 +3985,50 @@ namespace parallel_benders {
         int tau_start = num_cols * 2 + 2;
         int v_start = num_cols * 2 + 2 + num_theta;
         
-        int vector_size = cut_stuff->cut_->row().getNumElements();
-        assert(vector_size <= num_cols + 1); // element with value 0 are not included
-        OsiRowCut* cut = cut_stuff->cut_.get();
-        const CoinPackedVector old_row(cut->row());
-        double old_lb = cut->lb();
-        cut->setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
-        CoinPackedVector* row = &cut->mutableRow();
-        row->reserve(vector_size + 2); // incl. z_0 and y_0 columns
+        const OsiRowCut* original_cut = cut_stuff->cut_.get();
+        assert(original_cut->row().getNumElements() <= num_cols + 1); // element with value 0 are not included and we have at most one theta
+        if (cut_with_theta) {
+            assert(original_cut->row().findIndex(num_cols) == original_cut->row().getNumElements() - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
+        }
         
-        int theta_position(-1);
+        std::vector<OsiRowCut> cuts;
+        cuts.reserve(2);
+        
         // apply to the prime side
         if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_PRIME) {
+            cuts.emplace_back(*original_cut);
+            cuts.back().setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
+            CoinPackedVector* row = &(cuts.back().mutableRow());
+            row->reserve(row->getNumElements() + 2); // incl. z_0 and y_0 columns
             if (cut_with_theta) {
-                theta_position = row->findIndex(num_cols); // theta position in vector, -1 if theta is 0 and is not present in the row
-                assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
-                row->getIndices()[theta_position] = tau_start; // shift theta to the tau column
+                row->getIndices()[row->getNumElements() - 1] = tau_start; // shift theta to the tau column
             }
-            row->insert(z0_col_index, -old_lb); // add RHS as coef for z_0, it has vector_size position in vector
-            osi_solver->applyRowCuts(1, cut);
+            row->insert(z0_col_index, -original_cut->lb()); // add RHS as coef for z_0, it has vector_size position in vector
         }
 
         // apply to the double-prime side
         if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
+            cuts.emplace_back(*original_cut);
+            cuts.back().setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
+            CoinPackedVector* row = &(cuts.back().mutableRow());
+            row->reserve(row->getNumElements() + 2); // incl. z_0 and y_0 columns
             int i = 0;
             if (cut_with_theta) {
-                theta_position = (theta_position == -1) ? row->findIndex(num_cols) : theta_position; // theta position in vector, -1 if theta is 0 and is not present in the row
-                assert(theta_position == vector_size - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
-                for (int i = 0; i < vector_size - 1; ++i) {
+                for (int i = 0; i < row->getNumElements() - 1; ++i) {
                     row->getIndices()[i] += num_cols;
                 }
-                row->getIndices()[theta_position] = v_start; // shift theta to the v column
+                row->getIndices()[row->getNumElements() - 1] = v_start; // shift theta to the v column
             }
             else {
-                for (int i = 0; i < vector_size; ++i) { // shift coefs to the right for y   // !!!! for (int i = 0; i < vector_size - 1; ++i)
+                for (int i = 0; i < row->getNumElements(); ++i) { // shift coefs to the right for y
                     row->getIndices()[i] += num_cols;
                 }
             }
-            row->setElement(vector_size, 0); // set coef for z_0 to 0, it has vector_size position in vector
-            row->insert(y0_col_index, -old_lb); // add RHS as coef for y_0
-            osi_solver->applyRowCuts(1, cut);
+            row->setElement(row->getNumElements(), 0); // set coef for z_0 to 0, it has row->getNumElements() position in vector
+            row->insert(y0_col_index, -original_cut->lb()); // add RHS as coef for y_0
         }
-        
-        // set the indices and lb back
-        cut->setRow(old_row);
-        cut->setLb(old_lb);
+
+        osi_solver->applyRowCuts(cuts.size(), cuts.data());
     }
 
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
@@ -4177,12 +4174,13 @@ namespace parallel_benders {
             assert( new_index <= num_columns+num_theta_indices);
 
             // Add cut
-            std::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
+            OsiRowCut* cut = new OsiRowCut();
             if ( CompareWithZero(cut_lower_bound))
                 cut_lower_bound = 0.0;
-            cut_pointer->setLb(cut_lower_bound);
-            cut_pointer->setUb(infinity_);
-            cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
+            cut->setLb(cut_lower_bound);
+            cut->setUb(infinity_);
+            cut->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
+            std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY));
             cut_stuff->aggregate_number_ = i;
 			cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
@@ -4569,10 +4567,11 @@ namespace parallel_benders {
             cut_rhs = 0.0;
 
         // Add cut to set of feasibility cuts of parent problem
-        std::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
-        cut_pointer->setLb(cut_rhs);
-        cut_pointer->setUb(infinity_);
-        cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0],debug_test_duplicate_indices_);
+        OsiRowCut* cut = new OsiRowCut();
+        cut->setLb(cut_rhs);
+        cut->setUb(infinity_);
+        cut->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0],debug_test_duplicate_indices_);
+        std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
         // Increase feasCutCounter, together with locking/unlocking a std::mutex, and adding the cut the the parent problem
         std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_FEASIBILITY));
 		cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
@@ -5016,10 +5015,11 @@ namespace parallel_benders {
 				}
 				assert(new_index <= num_cols + num_theta);
 
-				std::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
-				cut_pointer->setLb(cut_lower_bound);
-				cut_pointer->setUb(infinity_);
-				cut_pointer->setRow(new_index, &cut_indices[0], &cut_elements[0], debug_test_duplicate_indices_);
+				OsiRowCut* cut = new OsiRowCut();
+				cut->setLb(cut_lower_bound);
+				cut->setUb(infinity_);
+				cut->setRow(new_index, &cut_indices[0], &cut_elements[0], debug_test_duplicate_indices_);
+                std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
 				std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_EPIGRAPH));
 				cut_stuff->aggregate_number_ = 1;
 				if (change_aggregation_level || sum > benders_node_pointer->next_stage_approximation_[0]) {
@@ -5063,10 +5063,11 @@ namespace parallel_benders {
 			}
 			assert(new_index <= num_cols);
 
-			std::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
-			cut_pointer->setLb(cut_lower_bound);
-			cut_pointer->setUb(infinity_);
-			cut_pointer->setRow(new_index, cut_indices.data(), cut_elements.data(), debug_test_duplicate_indices_);
+			OsiRowCut* cut = new OsiRowCut();
+			cut->setLb(cut_lower_bound);
+			cut->setUb(infinity_);
+			cut->setRow(new_index, cut_indices.data(), cut_elements.data(), debug_test_duplicate_indices_);
+            std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
 			std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_DOMAIN));
 
 			//TODO: for feasibility cuts we check CheckForSameCut()
@@ -6525,9 +6526,12 @@ namespace parallel_benders {
                         // Set the values to our old cut
                         CoinPackedVector new_row(col_size,col_size,new_indices_vector[j],new_elements_vector[j],debug_test_duplicate_indices_); // CoinPackedVector takes ownership of new_indices and new_elements
                         // Generate the new single cut!
-                        OsiRowCut * new_single_cut = cut_stuffs[j]->cut_.get();
+                        OsiRowCut* new_single_cut = new OsiRowCut();
+                        new_single_cut->setUb(cut_stuffs[j]->cut_->ub());
                         new_single_cut->setRow(new_row);
                         new_single_cut->setLb(rhs_vector[j]);
+                        
+                        cut_stuffs[j]->cut_.reset(std::as_const(new_single_cut));
                         if ( consolidatable_cuts_in_iteration[i] == cuts_in_iteration[i] && number_of_cuts_per_hierarchy_level[i] == 1)
                             cut_stuffs[j]->aggregate_number_ = CutStuff::AGGREGATE_OVER_ALL;  // Indicate that this cut spans over all aggregates we have (until now, but this can be redone)
                         else {
@@ -6909,12 +6913,11 @@ namespace parallel_benders {
                 }
 
                 if ( (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL ){
+                    const OsiRowCut* old_cut = (*it)->cut_.get();
                     // We want to change the row that has the form of cut_coefficients*x + unit_vector*\theta-vector so that it is correct with the new theta vector
-                    OsiRowCut * new_single_cut = (*it)->cut_.get();
-                    // We need to create a new vector
                     int col_size = stage_data_[current_stage_]->num_columns_+ benders_node_pointer->num_thetas_; // This many variables are needed
-                    double * new_elements = new double[col_size]; // Ownership is taken later by CoinPackedVector new_row
-                    int * new_indices = new int[col_size];// Ownership is taken later by CoinPackedVector new_row
+                    double * new_elements = new double[col_size];
+                    int * new_indices = new int[col_size];
                     // Initialize part of the vector that stores cut_coefficients
                     for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
                         new_elements[i] = 0;
@@ -6923,19 +6926,17 @@ namespace parallel_benders {
 
                     // Add the elements of the current (sparse) vector without the theta part
                     int number_aggregates_for_cut = GetNumberOfAggregatesFromCut(*it);
-                    for ( int i = 0; i < new_single_cut->row().getNumElements()-number_aggregates_for_cut; i++)
-                        new_elements[ new_single_cut->row().getIndices()[i]] = new_single_cut->row().getElements()[i];
+                    for (int i = 0; i < old_cut->row().getNumElements() - number_aggregates_for_cut; i++)
+                        new_elements[old_cut->row().getIndices()[i]] = old_cut->row().getElements()[i];
 
                     // Create part of the vector that stores the theta variables
                     for (int i = stage_data_[current_stage_]->num_columns_; i < col_size; i++){
                         new_elements[i] = 1;
                         new_indices[i] = i;
                     }
-
-                    CoinPackedVector cpv(col_size,col_size,new_indices,new_elements,debug_test_duplicate_indices_); // Assigns elements to vector, arrays get nullptred
-                    assert( new_elements == nullptr);
-                    assert( new_indices == nullptr);
-                    new_single_cut->setRow(cpv);
+                    OsiRowCut* new_cut = new OsiRowCut(old_cut->lb(), old_cut->ub(), col_size, col_size, new_indices, new_elements);
+                    (*it)->cut_.reset(std::as_const(new_cut));
+                    
                     aggregates_for_creation_iteration += benders_node_pointer->num_thetas_;
                     ++it;
                     continue; // We go to the next cut (and other iteration
@@ -6951,7 +6952,15 @@ namespace parallel_benders {
                     pointer_to_cuts[new_number] = *it;
                     if ( new_number != (*it)->aggregate_number_ ) {
                         // We need to change the index of the aggregate in the cut!
-                        (*it)->cut_->mutableRow().getIndices()[(*it)->cut_->row().getNumElements()-1] = stage_data_[current_stage_]->num_columns_+new_number;
+                        const CoinPackedVector* old_row = &(*it)->cut_->row();
+
+                        int* colIndices = new int[old_row->getNumElements()];
+                        std::copy_n(old_row->getIndices(), old_row->getNumElements(), colIndices);
+                        colIndices[old_row->getNumElements() - 1] = stage_data_[current_stage_]->num_columns_ + new_number;
+                        double* elements = new double[old_row->getNumElements()];
+                        std::copy_n(old_row->getElements(), old_row->getNumElements(), elements);
+                        OsiRowCut* new_cut = new OsiRowCut((*it)->cut_->lb(), (*it)->cut_->ub(), old_row->getNumElements(), old_row->getNumElements(), colIndices, elements);
+                        (*it)->cut_.reset(std::as_const(new_cut));
                         (*it)->aggregate_number_ = new_number;
                     }
                     if ( !store_cut_information_ )
@@ -7086,13 +7095,14 @@ namespace parallel_benders {
             }
         }
         // Add cut to Optimality Cut Set!
-        std::shared_ptr<OsiRowCut> osi_row_cut(new OsiRowCut());
+        OsiRowCut* osi_row_cut = new OsiRowCut();
         if ( CompareWithZero(cut_lower_bound))
             cut_lower_bound = 0.0;
         osi_row_cut->setLb(cut_lower_bound);
         osi_row_cut->setUb(infinity_);
         osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
-        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,osi_row_cut,PNB_CUT_TYPE_OPTIMALITY));
+        std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(osi_row_cut));
+        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY));
 
         stage_data_[current_stage_]->added_optimality_cuts_ += 1;
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
@@ -7105,18 +7115,18 @@ namespace parallel_benders {
             assert(false);
         if ( cut_to_add == nullptr)
             return;
-        OsiRowCut* first = first_cut->cut_.get();
-        OsiRowCut* second = cut_to_add->cut_.get();
+        const OsiRowCut* first = first_cut->cut_.get();
+        const OsiRowCut* second = cut_to_add->cut_.get();
         if ( first == second )
             return;
         if ( first_cut->aggregate_number_ < 0)
             assert(false); // We do not know what do do
 
         // It may be necessary that we have a full blown vector here instead of a sparse one!
-        CoinPackedVector& first_vector(first->mutableRow());
+        const CoinPackedVector& first_vector(first->row());
         const CoinPackedVector& second_vector(second->row());
-        double* elements = first_vector.getElements(); // Elements
-        int* indices = first_vector.getIndices(); // and indices
+        const double* elements = first_vector.getElements(); // Elements
+        const int* indices = first_vector.getIndices(); // and indices
         int first_length = first_vector.getNumElements();
 
         const double* elements2 = second_vector.getElements();
@@ -7140,44 +7150,46 @@ namespace parallel_benders {
             LOG(INFO) << "Why?";
             num_columns += first_length;
         }
+
+        double* new_elements = new double[num_columns];
+        int* new_indices = new int[num_columns];
         if ( first_length == num_columns ) {
             for (int i = 0; i < length-1; i++){ // We do not add the theta indices! TODO: What if we already have other cuts?!
                 assert( indices2[i]<first_length);
-                elements[indices2[i]] += elements2[i];
+                new_elements[indices2[i]] += elements2[i];
             }
+            new_elements[length-1] = elements[length-1]; // last element is theta
+            std::copy_n(indices, num_columns, new_indices);
         }
         else {
             // We need a new NON-sparse vector, so we can not just use memcpy
-            elements = new double[num_columns];
-            indices = new int[num_columns];
             // Initialize with 0
-            CoinFillN(elements,num_columns,0.0);
+            CoinFillN(new_elements,num_columns,0.0);
             for (int i = 0; i < num_columns;i++)
-                indices[i] = i;
+                new_indices[i] = i;
 
             // Copy old elements (except the aggregate number)
             for (int i = 0; i < first_length-1; i++){
                 if ( first_vector.getIndices()[i] >= num_columns ) 
                     assert(false);
                 assert( first_vector.getIndices()[i] < num_columns);
-                elements[first_vector.getIndices()[i]] = first_vector.getElements()[i];
+                new_elements[first_vector.getIndices()[i]] = first_vector.getElements()[i];
             }
             // Copy old aggregate number
-            elements[num_columns-1] = 1;
-            indices[num_columns-1] = first_vector.getIndices()[first_length-1];
+            new_elements[num_columns-1] = 1;
+            new_indices[num_columns-1] = first_vector.getIndices()[first_length-1];
             // Add second vector ( except the aggregate number )
             for (int i = 0; i < length-1;i++){
                 if ( second_vector.getIndices()[i] >= num_columns)
                     assert(false);
                 assert( second_vector.getIndices()[i] < num_columns);
-                elements[second_vector.getIndices()[i]] += elements2[i];
+                new_elements[second_vector.getIndices()[i]] += elements2[i];
             }
-            // Create NEW CoinPackedVector that takes ownership of supplied arrays
-            CoinPackedVector cpv(num_columns, num_columns,indices, elements,debug_test_duplicate_indices_);
-            first_cut->cut_->setRow(cpv);
         }
+        // Create NEW OsiRowCut that takes ownership of supplied arrays
+        OsiRowCut* new_cut = new OsiRowCut(first->lb()+second->lb(), first->ub(), num_columns, num_columns, new_indices, new_elements);
 
-        first->setLb(first->lb()+second->lb());
+        first_cut->cut_.reset(std::as_const(new_cut));
     }
 
 
@@ -7699,10 +7711,10 @@ namespace parallel_benders {
         }//End Regularization
     }
 
-    void ParallelNestedBenders::ExpandThetaVariablesInOptimalityCut( OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas /*= 0*/ )
+    void ParallelNestedBenders::ExpandThetaVariablesInOptimalityCut(std::shared_ptr<const OsiRowCut>& cut,int number_of_columns, int number_of_variables, int old_number_of_thetas /*= 0*/ )
     {
-        const CoinPackedVector& row = cut->row();
-        int cols_in_row = row.getNumElements();
+        const CoinPackedVector& old_row = cut->row();
+        int cols_in_row = old_row.getNumElements();
         int first_index_of_theta = cols_in_row-old_number_of_thetas;
 
         if ( old_number_of_thetas == 0 ){
@@ -7713,18 +7725,18 @@ namespace parallel_benders {
         }
         int new_cols_in_row = first_index_of_theta+number_of_variables;
 
-        double * new_elements = new double[new_cols_in_row]; // Ownership is taken later by CoinPackedVector new_row
-        int * new_indices = new int[new_cols_in_row];// Owernship is taken later by CoinPackedVector new_row
+        double * new_elements = new double[new_cols_in_row];
+        int * new_indices = new int[new_cols_in_row];
         // Memcpy old elements and indices
-        memcpy(new_elements,row.getElements(),sizeof(double)*first_index_of_theta);
-        memcpy(new_indices,row.getIndices(),sizeof(int)*first_index_of_theta);
+        memcpy(new_elements,old_row.getElements(),sizeof(double)*first_index_of_theta);
+        memcpy(new_indices,old_row.getIndices(),sizeof(int)*first_index_of_theta);
         for (int j = 0; j < number_of_variables; j++){
             new_elements[j+first_index_of_theta] = 1;
             new_indices[j+first_index_of_theta] = number_of_columns+j;
         }
-        CoinPackedVector new_row(new_cols_in_row,new_cols_in_row,new_indices,new_elements,debug_test_duplicate_indices_);
-        cut->setRow(new_row);
+        OsiRowCut* new_cut = new OsiRowCut(cut->lb(), cut->ub(), new_cols_in_row, new_cols_in_row, new_indices, new_elements);
 
+        cut.reset(std::as_const(new_cut));
     }
 
     void ParallelNestedBenders::BuildAndSolveLevelProblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -8802,7 +8814,7 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[i][j]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_); // Gets initialized with 0
                 }
                 for( BendersNodeData::cut_container::iterator it = cuts_to_add.begin(); it != cuts_to_add.end();++it){
-                    ExpandThetaVariablesInOptimalityCut((*it)->cut_.get(),stage_data_[i]->num_columns_,num_thetas,1);
+                    ExpandThetaVariablesInOptimalityCut((*it)->cut_,stage_data_[i]->num_columns_,num_thetas,1);
                     (*it)->aggregate_number_ = -1;
                     (*it)->not_active_iterations_ = 0;
                     (*it)->cut_creation_iteration_ = 0;
@@ -9203,12 +9215,13 @@ namespace parallel_benders {
                 cvar_cut_coefficient[i] = 0;
 
         // Construct cut out of data
-        std::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
+        OsiRowCut* cut = new OsiRowCut();
         if ( CompareWithZero(cvar_cut_rhs))
             cvar_cut_rhs = 0.0;
-        cut_pointer->setLb(cvar_cut_rhs);
-        cut_pointer->setUb(infinity_);
-        cut_pointer->setRow(num_columns,&cvar_cut_indices[0],&cvar_cut_coefficient[0],debug_test_duplicate_indices_);
+        cut->setLb(cvar_cut_rhs);
+        cut->setUb(infinity_);
+        cut->setRow(num_columns,&cvar_cut_indices[0],&cvar_cut_coefficient[0],debug_test_duplicate_indices_);
+        std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
         std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_CVAR));
         cut_stuff->aggregate_number_ = -1;
         tree_nodes_by_stage_[0][0]->getDataPtr()->cvar_cuts_.emplace_back(cut_stuff);
@@ -9624,7 +9637,7 @@ namespace parallel_benders {
 
     }
 
-    double EvaluateCutWithOneAggregate( OsiRowCut* osi_cut, const double* col_solution )
+    double EvaluateCutWithOneAggregate(const OsiRowCut* osi_cut, const double* col_solution )
     {
         assert(col_solution != nullptr);
         // Caller has to ensure that dimensions are correct!

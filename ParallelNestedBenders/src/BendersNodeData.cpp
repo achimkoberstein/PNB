@@ -668,7 +668,7 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
 
 double CutStuff::active_threshold_ = 1.0;
 int CutStuff::strike_threshold_ = -1;
-CutStuff::CutStuff( int iteration, std::shared_ptr<OsiRowCut>& cut_pointer, int type): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),type_(type),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
+CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer, int type): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),type_(type),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
 {
 }
 

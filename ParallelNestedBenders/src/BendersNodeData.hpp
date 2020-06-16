@@ -203,14 +203,14 @@ namespace parallel_benders{
         static double active_threshold_; // If active_value is less than
         static int strike_threshold_; // If non_active_iterations_ is more than
 
-        CutStuff(int iteration,std::shared_ptr<OsiRowCut>& cut_pointer, int type);
+        CutStuff(int iteration,std::shared_ptr<const OsiRowCut>& cut_pointer, int type);
 
         int cut_creation_iteration_;
         int not_active_iterations_;
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
 		int type_;
 		int column_set_; // used for L&P cuts CGP master problem
-        std::shared_ptr<OsiRowCut> cut_;
+        std::shared_ptr<const OsiRowCut> cut_; // const because might be shared among PNB instances
         double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
         int current_index_in_solver_; // Needs to be updated at each run to be meaningful
         bool to_use_;
