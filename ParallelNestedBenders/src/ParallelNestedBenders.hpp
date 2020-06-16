@@ -80,7 +80,8 @@ private:
  * \return
  TODO: finish
  */
-    void SetLnPCGPRoundSpecifics(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void SetLnPCGPRoundSpecifics(ParallelNestedBenders& cgp_pnb, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    ParallelNestedBenders* GetLnP_PNB_CGP_ByThread();
 
 
     /*!
@@ -115,7 +116,7 @@ private:
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	int ApplyCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff);
     void ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff, BendersNodeData* benders_node_data);
-	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable, bool multiprocessing);
+	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void SetDualCGPRoundSpecifics(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
@@ -313,7 +314,8 @@ private:
     std::mutex upper_bound_mutex_; // std::mutex for access to upper bound
     std::mutex infeasible_problem_mutex_; // std::mutex for access to infeasible problem setter 
     std::mutex osi_solver_mutex_; // std::mutex that is used if we want to clone an OsiSolverInterface
-    std::mutex osi_pnb_cgp_mutex_; // std::mutex that is used if we want to clone/modify L&P Cuts PNB CGP
+    std::mutex cgp_pnb_map_mutex_; // std::mutex that is used if we want to read/add CGP PNBs for threads
+    std::mutex smi_mutex_; // std::mutex that is used if we want to initialize new PNB (in particular, CGP PNB for thread)
     std::mutex add_cut_counter_mutex_; // std::mutex that is used if we increase the cut counter
 	std::mutex stage_lower_upper_bounds_mutex_;  
     std::mutex lp_cuts_coefficients_mutex_; // std::mutex that is used if we store the L&P cut coefficients for a specific fract var
@@ -473,8 +475,7 @@ private:
 	int lp_column_set_;
 	OsiSolverInterface* global_dual_cgp_solver_; // for Dual of Zeta-Normalized
     std::atomic<bool> dual_cgp_solver_round_specifics_applied_; // wheather we have already applied to the L&P dual CGP: solution of MP as RHS and cuts
-    std::atomic<bool> pnb_cgp_round_specifics_applied_; // wheather we have already applied to the L&P CGP PNB changes necessary in current round
-    ParallelNestedBenders* global_cgp_pnb_; // strengthened epigraph cuts
+    std::map<boost::thread::id, ParallelNestedBenders*> cgp_pnb_map_;
 	std::bitset<10> allowed_test_cases_;
 
     // TODO: REMOVE AGAIN
