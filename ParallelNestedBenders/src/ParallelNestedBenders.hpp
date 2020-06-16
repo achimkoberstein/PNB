@@ -171,7 +171,7 @@ private:
 	void SaveInstanceSpecs();
     inline int getNumRowsProblem();
     inline int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
-    void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
+    void ExpandThetaVariablesInOptimalityCut(std::shared_ptr<const OsiRowCut>& cut, int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
 
     void AppendDSquareCutsToSubproblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void BuildAndSolveCTripleProblem();
@@ -514,7 +514,7 @@ void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
 void ComputeDualSolutionForMipProblem(OsiSolverInterface* osi_solver,double* dual, double* reduced,double* col_solution);
 std::vector<double> computeTTransposeX(BendersNodeData* benders_node_pointer, SmiCoreData* core_pointer,int current_stage,const std::vector<double> x);
 
-inline double EvaluateCutWithOneAggregate(OsiRowCut* osi_cut, const double* col_solution);
+inline double EvaluateCutWithOneAggregate(const OsiRowCut* osi_cut, const double* col_solution);
 inline double EvaluateCut(OsiRowCut* osi_cut, const double* col_solution);
 
 } // end namespace parallel_benders
