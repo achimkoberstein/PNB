@@ -1336,7 +1336,7 @@ protected:
 
 		//DZN w 2nd stage info - strengthened Epigraph cuts
 		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011100, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_PRINT_SUBPROBLEMS\" : false }"); // DZN w 2nd stage info
-		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011100, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_NUM_CPU\" : 0 }"); // DZN w 2nd stage info, multithreads
+		parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011101, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_NUM_CPU\" : 0 }"); // DZN w 2nd stage info, multithreads
 		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011110, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // DZN w 2nd stage info, warm-start scenario-wise
 		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011110, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_STAGE_WISE\" }"); // DZN w 2nd stage info, warm-start stage-wise
 	}
@@ -1438,15 +1438,20 @@ TEST(UnitTest, pnb) {
 
 	pnb->Reset(-1, true);
 
-	boost::threadpool::pool thread_pool_(1);
-
-	std::vector<parallel_benders::ParallelNestedBenders*> thread_pnbs(thread_pool_.size());
-	for (auto thread_pnb:  thread_pnbs) {
-		thread_pnb = pnb->clone();
+	boost::threadpool::pool thread_pool_(10);
+	std::vector<parallel_benders::ParallelNestedBenders*> thread_pnbs;
+	thread_pnbs.reserve(thread_pool_.size());
+	for (int i = 0; i < thread_pool_.size(); i++) {
+		parallel_benders::ParallelNestedBenders* thread_pnb = pnb->clone();
+		thread_pnbs.push_back(thread_pnb);
 		thread_pool_.schedule(boost::bind(&parallel_benders::ParallelNestedBenders::Solve, thread_pnb));
 	}
 	thread_pool_.wait(0);
 	
+	for (auto thread_pnb : thread_pnbs) {
+		delete thread_pnb;
+	}
+	thread_pnbs.clear();
 	delete osi_solver;
 }
 
@@ -1709,7 +1714,7 @@ TEST_F(NestedBendersTest, fast) {
 
 TEST_F(NestedBendersTestInteger, fast) {
 	// 1st stage only is integer or MIP
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.2);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.3);
 
 	//sndp_mini_tests
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250, 0.1);
@@ -1740,7 +1745,7 @@ TEST_F(NestedBendersTestInteger, fast) {
 
 TEST_F(NestedBendersTestFeasibility, fast) {
 	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3"), 722.58, 0.1); // Dependent // crashes for ODA
-	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-aggr"), 15963.9, 0.3); // Challenging CO2 limits // 20478.7
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-first"), 14794.6, 0.1); // INDEP
 	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76, crashes with CC
 }
