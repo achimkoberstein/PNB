@@ -568,7 +568,7 @@ void Parameter::update_from_json_string( std::string json_string ) {
 				}
 				catch (std::invalid_argument & e)
 				{
-					assert(false && "Values in parameter_ should be int, float or bool. Check Parameter::consts_");
+					LOG(FATAL) << "Values in parameter_ should be int, float or bool. Check Parameter::consts_";
 				}
 			}
 		}
