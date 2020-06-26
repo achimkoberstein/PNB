@@ -5805,7 +5805,6 @@ namespace parallel_benders {
             }
         }
 
-        bool add_feas_cut_with_opt_cuts_present = false;
         if ( !benders_node_pointer->feasibility_cuts_.empty()){
 			// Add the cuts
             if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
@@ -5815,10 +5814,6 @@ namespace parallel_benders {
 			if ( feas_it != benders_node_pointer->feasibility_cuts_.end()){
 				// TODO: This can be changed to addRows
 				for (; feas_it != benders_node_pointer->feasibility_cuts_.end();++feas_it) {
-					if ( seperate_first_stage_solver_ && current_stage_ == 0 && !(benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty())){
-						add_feas_cut_with_opt_cuts_present = true;
-						break;
-					}
 					assert( (*feas_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
 
 					if ( !benders_node_pointer->warm_start_added_ && ( (*feas_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*feas_it)->cut_creation_iteration_ == current_iteration_-1 && current_stage_ == 0)){
@@ -5852,10 +5847,6 @@ namespace parallel_benders {
 			if (domain_it != benders_node_pointer->domain_cuts_.end()) {
 				// TODO: This can be changed to addRows
 				for (; domain_it != benders_node_pointer->domain_cuts_.end(); ++domain_it) {
-					if (seperate_first_stage_solver_ && current_stage_ == 0 && !(benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty())) {
-						add_feas_cut_with_opt_cuts_present = true;
-						break;
-					}
 					assert((*domain_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
 
 					if (!benders_node_pointer->warm_start_added_ && ((*domain_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*domain_it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
@@ -5954,146 +5945,7 @@ namespace parallel_benders {
 			}
 			benders_node_pointer->last_round_start_epigraph_ = benders_node_pointer->epigraph_cuts_.end();
         }
-
-        if ( add_feas_cut_with_opt_cuts_present ){ // or domain cuts
-			// Where are we now? We added a feas cut in last iteration (so no opt cut), but it is not yet added to the problem
-            // What we want: add feas cut after other feas cuts and solve problem!
-            // TODO: This can be changed to addRows
-			int feas_rows(0);
-			int new_feas_rows(0);
-			bool new_cuts(false);
-			BendersNodeData::cut_container::iterator it;
-            for (it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end();++it) {
-				if (it == feas_it) {
-					new_cuts = true; // this cut was generated in the current iteration and not present in the problem
-				}
-				// apply feas cuts
-				if (new_cuts) {
-					assert((*feas_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
-					if (!benders_node_pointer->warm_start_added_ && ((*feas_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*feas_it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
-						// Add warm start
-						SetWarmStart(osi_solver, benders_tree_node_pointer);
-						benders_node_pointer->warm_start_added_ = true;
-					}
-					//osi_solver->applyRowCuts(1,(*feas_it)->cut_.get()); // TODO: it should be changed
-					int new_rows = ApplyCut(osi_solver, *feas_it);
-					new_feas_rows += new_rows;
-					feas_rows += new_rows;
-				}
-				// just calculate the feas cuts
-				else if (lp_main_loop_iteration_round_ && (*it)->column_set_ == PNB_COL_SET_NONE){
-					feas_rows += 2;
-				}
-				else {
-					feas_rows++;
-				}
-            }
-			for (; domain_it != benders_node_pointer->domain_cuts_.end(); ++domain_it) {
-				assert(!lp_main_loop_iteration_round_ && "No domain cuts in L&P PNB CGP. We pass them as feas cuts.");
-				assert((*domain_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
-				if (!benders_node_pointer->warm_start_added_ && ((*domain_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*domain_it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
-					assert(false && "Never tested");
-					// Add warm start
-					SetWarmStart(osi_solver, benders_tree_node_pointer);
-					benders_node_pointer->warm_start_added_ = true;
-				}
-				//osi_solver->applyRowCuts(1,(*domain_it)->cut_.get()); // TODO: it should be changed
-				new_feas_rows += ApplyCut(osi_solver, *domain_it);
-			}
-			assert(!(lp_main_loop_iteration_round_ && !benders_node_pointer->domain_cuts_.empty())); // in L&P PNB CGP num domain cuts == 0
-			feas_rows += benders_node_pointer->domain_cuts_.size();
-
-			if (warm_start_ || level_decomp_) {
-				// Now we have the problem with all cuts, that we can solve right now! (with applied warm start)
-				SolveSolverInterface(osi_solver, false);
-				// Store the warm start
-
-				seperate_first_stage_solver_ = false;
-				StoreWarmStart(osi_solver, benders_tree_node_pointer);
-				seperate_first_stage_solver_ = true;
-			}
-			assert(seperate_first_stage_solver_ == true && "It would always be like that when the condition for the lines above did not exist.");
-
-            // Delete the optimality cuts from the problem and add them again, so all feas cuts are clumped together!
-            int opt_rows = 0; // we have added all optimality cuts before
-           
-			int optimality_cut_start = getNumRowsProblem()+feas_rows-new_feas_rows;
-			for (it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-                //if ( (*it)->to_use_ && ((*it)->cut_creation_iteration_ < current_iteration_-1 || (*it)->cut_creation_iteration_ == 0) ){ // Pavlo: the line below works better
-				if ((*it)->to_use_) {
-                    // Only delete cuts from problem that are acutally in the problem, i.e. all cuts generated before the last iteration or are provided from the main loop to the CGP PNB of L&P cuts!
-					if (lp_main_loop_iteration_round_ && (*it)->column_set_ == PNB_COL_SET_NONE) {
-						opt_rows += 2;
-					}
-					else {
-						opt_rows++;
-					}
-                }
-            }
-			for (it = benders_node_pointer->epigraph_cuts_.begin(); it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
-				//if ((*it)->to_use_ && ((*it)->cut_creation_iteration_ < current_iteration_ - 1 || (*it)->cut_creation_iteration_ == 0)) {
-				if ((*it)->to_use_) {
-					// Only delete cuts from problem that are acutally in the problem, i.e. all cuts generated before the last iteration or are provided from the main loop to the CGP PNB of L&P cuts!
-					opt_rows++;
-				}
-			}
-			assert(!(lp_main_loop_iteration_round_ && !benders_node_pointer->epigraph_cuts_.empty())); // in L&P PNB CGP num epigraph cuts == 0
-            //if ( cvar_constr_decomp_ ){
-            //    for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->cvar_cuts_.begin(); it != benders_node_pointer->cvar_cuts_.end(); ++it){
-            //        if ( (*it)->to_use_ ){
-            //            optimality_cuts_to_delete.push_back(optimality_cut_start+num_cuts);
-            //            num_cuts++;
-            //        }
-            //    }
-            //}
-            int number_of_rows_in_problem = osi_solver->getNumRows();
-            assert( optimality_cut_start+opt_rows == number_of_rows_in_problem-new_feas_rows);
-			std::vector<int> rows_to_delete(opt_rows);
-			std::iota(rows_to_delete.begin(), rows_to_delete.end(), optimality_cut_start);
-            osi_solver->deleteRows(opt_rows,rows_to_delete.data());
-            int number_of_rows_without_opt_cuts = osi_solver->getNumRows();
-            // This should be equal to number of feasibility cuts, otherwise something is wrong! (When not using level decomp and stuff..)
-            if (!( level_decomp_ || regularization_ )){
-                LOG_IF(ERROR,number_of_rows_without_opt_cuts != getNumRowsProblem()+feas_rows) << "Problem with adding opt and feas cuts to problem!";
-            }
-            // Add all optimality cuts to solver!
-            for (it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-                if ( (*it)->to_use_ ){
-                    assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
-					ApplyCut(osi_solver, *it);
-                }
-            }
-			for (it = benders_node_pointer->epigraph_cuts_.begin(); it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
-				if ((*it)->to_use_) {
-					assert((*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
-					ApplyCut(osi_solver, *it);
-				}
-			}
-            //for (BendersNodeData::cut_container::iterator it = benders_node_pointer->cvar_cuts_.begin(); it != benders_node_pointer->cvar_cuts_.end(); ++it){
-            //    if ( (*it)->to_use_ ){
-            //        assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
-            //        osi_solver->applyRowCuts(1,(*it)->cut_.get());
-            //    }
-            //}
-            CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_node_pointer->warm_start_.get());
-            if ( warm_start_basis != nullptr ){
-                std::vector<CoinWarmStartBasis::Status> status_array;
-				// Problem with pushing into the array ( which I do not think is the case)
-				// So the problem is probably that the warm_start_basis->getArtifStatus method can not be called!
-                for (int i = 0; i < opt_rows;i++){
-                    status_array.push_back(warm_start_basis->getArtifStatus(i+optimality_cut_start));
-                }
-                warm_start_basis->deleteRows(opt_rows,rows_to_delete.data());
-                warm_start_basis->resize(number_of_rows_without_opt_cuts+opt_rows,osi_solver->getNumCols());
-                for (int i = 0; i < opt_rows;i++){
-                    warm_start_basis->setArtifStatus(i+number_of_rows_without_opt_cuts,status_array[i]);
-                }                
-                osi_solver->setWarmStart(warm_start_basis);
-                // Resolve the problem is done in the typical way, outside the scope of this method!
-            }
-        }
-
-
+        
 // Add risk constraints to problem ( they get deleted at the start of this method!)
 		if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty() ){
 
