@@ -254,6 +254,10 @@ public:
 */
     void Clear(int delete_cuts_start_it = 0, bool keep_warm_start = false);
 
+    //L&P cuts dual cgp data
+    void BendersNodeData::getDualCGP_Data(std::shared_ptr<const CoinPackedMatrix>& matrix, const std::vector<double>*& column_lower, const std::vector<double>*& column_upper, const std::vector<double>*& objective, const std::vector<double>*& row_lower, const std::vector<double>*& row_upper) const;
+    void BendersNodeData::getMutableDualCGP_Data(std::shared_ptr<CoinPackedMatrix>& matrix, std::vector<double>*& column_lower, std::vector<double>*& column_upper, std::vector<double>*& objective, std::vector<double>*& row_lower, std::vector<double>*& row_upper);
+
     // Information about the solution
     std::vector<double> col_solution_;
     std::vector<double> dual_solution_;
@@ -350,6 +354,8 @@ public:
     double* row_lower_;
     double* row_upper_;
 
+    bool lp_dual_cgp_elements_defined_; // initially false, get value true if Dual L&P CGP elements memmbers filled in
+
     // In the non-staircase case
     std::vector< std::vector<std::pair<int,double> > > no_staircase_constraints_;
 
@@ -379,6 +385,15 @@ public:
     double build_time_; // For sub problem
     double solution_time_; // For sub problem
     double cut_generation_time_;
+
+private:
+    // Dual L&P CGP elements
+    std::shared_ptr<CoinPackedMatrix> lp_dual_cgp_matrix_;
+    std::vector<double> lp_dual_cgp_column_lower_;
+    std::vector<double> lp_dual_cgp_column_upper_;
+    std::vector<double> lp_dual_cgp_objective_;
+    std::vector<double> lp_dual_cgp_row_lower_;
+    std::vector<double> lp_dual_cgp_row_upper_;
 };
 
 // Methods that work on a BendersNodeData
