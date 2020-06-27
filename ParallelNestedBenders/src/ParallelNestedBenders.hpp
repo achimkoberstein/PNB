@@ -119,8 +119,8 @@ private:
 	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
-    void SetDualCGPRoundSpecifics(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
-    void SetDualCGPFractVarSpecifics(OsiSolverInterface* cgp_pnb, const std::pair<int, double>& fractional_variable);
+    void SetDualCGPRoundSpecifics(OsiSolverInterface& dual_cgp_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void SetDualCGPFractVarSpecifics(OsiSolverInterface* dual_cgp_solver, const std::pair<int, double>& fractional_variable);
 	void SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set);
 	
     /** Checks if problem itself and parameters are suitable for L&P cuts method
@@ -319,6 +319,7 @@ private:
     std::mutex add_cut_counter_mutex_; // std::mutex that is used if we increase the cut counter
 	std::mutex stage_lower_upper_bounds_mutex_;  
     std::mutex lp_cuts_coefficients_mutex_; // std::mutex that is used if we store the L&P cut coefficients for a specific fract var
+    std::mutex lp_dual_cgp_node_data_mutex_; //dual L&P CGP elements, its objective, ub, lb...
     std::mutex misc_mutex_; // std::mutex for miscellanious stuff
     std::mutex debug_mutex_;
     // Further thread management stuff
@@ -473,8 +474,6 @@ private:
 	double lp_main_loop_fract_var_value_; // this is the value of the fractional variable from the main loop
 	std::unique_ptr<std::pair<int, int>> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
 	int lp_column_set_;
-	OsiSolverInterface* global_dual_cgp_solver_; // for Dual of Zeta-Normalized
-    std::atomic<bool> dual_cgp_solver_round_specifics_applied_; // wheather we have already applied to the L&P dual CGP: solution of MP as RHS and cuts
     std::map<boost::thread::id, ParallelNestedBenders*> cgp_pnb_map_;
 	std::bitset<10> allowed_test_cases_;
 
