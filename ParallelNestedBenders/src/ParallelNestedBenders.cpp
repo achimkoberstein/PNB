@@ -297,7 +297,7 @@ namespace parallel_benders {
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_cuts_coefficients_mutex_(), lp_dual_cgp_node_data_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
-		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
+		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
@@ -685,12 +685,11 @@ namespace parallel_benders {
 		lp_rounds_limit_ = param.get(PNB_LP_ROUNDS_LIMIT, 0);
 		lp_switches_limit_ = param.get(PNB_LP_SWITCHES_LIMIT, 1);
 		lp_major_it_limit_ = param.get(PNB_LP_MAJOR_IT_LIMIT, 1);
+        lp_parallel_mode_ = param.get(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
 		cuts_for_fract_vars_ = param.get(PNB_LP_CUTS_FOR_FRACT, 100);
 		cgp_relative_epsilon_ = param.get(PNB_CGP_EPSILON_RELATIVE, relative_epsilon_);
 		std::string allowed_str = std::to_string(parameter_.GetIntParamValue(PNB_LP_ALLOW_TEST_CASES));
         allowed_test_cases_ = std::bitset<10>(std::string(allowed_str.rbegin(), allowed_str.rend())); // due to technical momemnts - bits are initialized in revers order from string
-        //reuse_cgp_ = parameter_.GetBoolParamValue(PNB_LP_REUSE_CGP); // TODO: delete PNB_LP_REUSE_CGP parameter
-        assert(parameter_.GetBoolParamValue(PNB_LP_REUSE_CGP) && "We always reuse pnb_cgp and dual_cgp_solver");
 
         AdjustProblem();
         // Initialize cvar_current_cut_coefficients
@@ -895,8 +894,11 @@ namespace parallel_benders {
         // Initialize new CGP PNB
         parallel_benders::Parameter cgp_parameter = Parameter();
         //int threads_per_CGP = thread_pool_.size() / ceil(fractional_variables_.size() * (100.0 / 100.0)); // hardware_concurrency()/num_cuts
-        int threads_per_CGP = 1; // TODO: threads are expensive, let us first try the simplest case. Easier for debugging
-        cgp_parameter.SetParameterValue(parallel_benders::PNB_CPU_USED, threads_per_CGP);
+        int threads_per_CGP = 1;
+        if (lp_parallel_mode_ == PNB_PARAL_CGP_SUBPROBLEMS || lp_parallel_mode_ == PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS) {
+            threads_per_CGP = num_cpu_;
+        }
+        cgp_parameter.SetParameterValue(parallel_benders::PNB_NUM_CPU, threads_per_CGP);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, cgp_relative_epsilon_);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
@@ -2325,6 +2327,7 @@ namespace parallel_benders {
         other->osi_solver_ = osi_solver_->clone(true);
         // clone thread solvers
         for (auto id_solver_pair : osi_solver_map_) {
+            assert(false && "It might be not guaranteed that the same solver is not copied to multiple threads and the other thread has no solver");
             other->thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread, other, id_solver_pair.second));
         }
         other->thread_pool_.wait(0); // We wait until all threads are done
@@ -2464,6 +2467,7 @@ namespace parallel_benders {
         other->lp_rounds_limit_ = lp_rounds_limit_;
         other->lp_switches_limit_ = lp_switches_limit_;
         other->lp_major_it_limit_ = lp_major_it_limit_;
+        other->lp_parallel_mode_ = lp_parallel_mode_;
         other->cuts_for_fract_vars_ = cuts_for_fract_vars_;
         other->cgp_relative_epsilon_ = cgp_relative_epsilon_;
         other->cgp_do_when_infeasible_ = cgp_do_when_infeasible_;
@@ -2573,10 +2577,14 @@ namespace parallel_benders {
 
         assert(num_stages_ >= 2);
         assert(num_scenarios_ >= 1);
+        // we do not change 1st stage osi solver, keep the threads and reset their solvers
         assert(osi_solver_ != nullptr && "Did you call Solve()?");
-        assert(num_cpu_ == 1 && "What to do with threads and solvers per thread?");
-        assert(thread_pool_.size() == 1);
-        assert(osi_solver_map_.size() == 1);
+        for (auto id_solver_pair : osi_solver_map_) {
+            //id_solver_pair.second->reset(); // This method throws exception with Cplex
+            id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+            // Workaround: Load empty problem. 
+            assert(id_solver_pair.second->getNumCols() == 0);
+        }
         assert(tree_.getNumScenarios() > 0);
         assert(tree_nodes_by_stage_.size() == num_stages_);
         assert(stage_data_.size() == num_stages_);
@@ -2819,12 +2827,11 @@ namespace parallel_benders {
 				domain_current_cuts_rhs_.reserve(num_cuts);
 
                 assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
-                int free_threads = thread_pool_.size() - thread_pool_.active();
                 // Set round specifics to all dual cgp
                 for (auto id_solver_pair : osi_solver_map_) {
                     assert(!(lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
                     if (id_solver_pair.second->getNumCols() > 0) { // if solver is not empty
-                        if (free_threads > 1){
+                        if (num_cpu_ > 1){
                             thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetDualCGPRoundSpecifics, this, boost::ref(*id_solver_pair.second), tree_nodes_by_stage_[0][0]));
                         }
                         else {
@@ -2837,7 +2844,7 @@ namespace parallel_benders {
                 // Set round specifics to all existing cgp pnb
                 for (auto id_pnb_pair : cgp_pnb_map_) {
                     assert(id_pnb_pair.second->solved_counter_ > 0);
-                    if (free_threads > 1) {
+                    if (num_cpu_ > 1) {
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetLnPCGPRoundSpecifics, this, boost::ref(*id_pnb_pair.second), benders_tree_node_pointer));
                     }
                     else {
@@ -2847,7 +2854,7 @@ namespace parallel_benders {
                 thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
 
                 for (int i = 0; i < num_cuts; i++) {
-                    if (free_threads > 1) {
+                    if (num_cpu_ > 1 && num_cuts > 1 && lp_parallel_mode_ >= parallel_benders::PNB_PARAL_FRACTS) {
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateLiftAndProjectCut, this, i, rit->second));
                     }
                     else { // use the current thread
