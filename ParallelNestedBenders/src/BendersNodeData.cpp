@@ -19,7 +19,7 @@ namespace parallel_benders{
 BendersNodeData::BendersNodeData():col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),unbounded_row_(-1),lower_bound_(-1e20),upper_bound_(1e20),
 mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
 smi_node_data_(nullptr),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),lp_round_optimality_cuts_(),lp_round_feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_extraction_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),last_lp_switch_start_feasibility_(feasibility_cuts_.end()),alpha_normalized_(false),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_lp_switch_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_extraction_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),last_lp_switch_start_feasibility_(feasibility_cuts_.end()),alpha_normalized_(false),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),oda_iterations_(),
 lp_dual_cgp_matrix_(nullptr), lp_dual_cgp_column_lower_(), lp_dual_cgp_column_upper_(), lp_dual_cgp_objective_(), lp_dual_cgp_row_lower_(), lp_dual_cgp_row_upper_(), lp_dual_cgp_elements_defined_(false),
 cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
@@ -35,7 +35,7 @@ OsiRowCut is present deep down in all cut containers and  wrapped in shared_ptr,
 BendersNodeData::BendersNodeData(const BendersNodeData& nodeData) :col_solution_(nodeData.col_solution_), dual_solution_(nodeData.dual_solution_), incumbent_col_solution_(nodeData.incumbent_col_solution_), reduced_cost_(nodeData.reduced_cost_), next_stage_approximation_(nodeData.next_stage_approximation_), discrepancy_(nullptr), was_under_threshold_(nodeData.was_under_threshold_), dual_value_variable_bounds_(nodeData.dual_value_variable_bounds_), feasible_(nodeData.feasible_), unbounded_(nodeData.unbounded_), unbounded_row_(nodeData.unbounded_row_), lower_bound_(nodeData.lower_bound_), upper_bound_(nodeData.upper_bound_),
 mip_solution_(nodeData.mip_solution_ ? std::make_unique<double[]>(nodeData.cols_) : nullptr), unbounded_problem_(nodeData.unbounded_problem_), unbounded_extreme_ray_(nullptr), unbounded_right_hand_side_(nullptr), solve_ray_right_hand_side_(nodeData.solve_ray_right_hand_side_), cols_(nodeData.cols_), rows_(nodeData.rows_), num_thetas_(nodeData.num_thetas_), active_aggregates_(nodeData.active_aggregates_), warm_start_(nodeData.warm_start_ == nullptr ? nullptr : nodeData.warm_start_->clone()), warm_start_added_(nodeData.warm_start_added_), level_warm_start_(nodeData.level_warm_start_ == nullptr ? nullptr : nodeData.level_warm_start_->clone()), level_warm_start_cstat_(nullptr), level_warm_start_rstat_(nullptr), level_warm_start_dnorm_(nullptr), level_warm_start_length_(nodeData.level_warm_start_length_), level_regularized_solution_(nodeData.level_regularized_solution_), level_regularized_start_row_(nodeData.level_regularized_start_row_),
 smi_node_data_(nodeData.smi_node_data_), scenario_index_(nodeData.scenario_index_), branch_scenario_(nodeData.branch_scenario_), num_node_in_stage_(nodeData.num_node_in_stage_), child_node_start_(nodeData.child_node_start_),
-probability_(nodeData.probability_), conditional_probability_(nodeData.conditional_probability_), optimality_cuts_(), feasibility_cuts_(), epigraph_cuts_(), domain_cuts_(),lp_round_optimality_cuts_(),lp_round_feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()), last_lp_switch_start_optimality_(optimality_cuts_.end()), last_round_start_epigraph_(epigraph_cuts_.end()), last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()), last_round_start_domain_(domain_cuts_.end()), last_in_extraction_problem_start_domain_(domain_cuts_.end()), last_iteration_start_feasibility_(feasibility_cuts_.end()), last_lp_switch_start_feasibility_(feasibility_cuts_.end()), alpha_normalized_(nodeData.alpha_normalized_), level_opt_iterator_(optimality_cuts_.end()), num_scen_pro_cut_(nodeData.num_scen_pro_cut_), nodes_in_cut_(nodeData.nodes_in_cut_), changed_aggregation_level_(nodeData.changed_aggregation_level_), alternating_intra_cut_adaptive_(nodeData.alternating_intra_cut_adaptive_),
+probability_(nodeData.probability_), conditional_probability_(nodeData.conditional_probability_), optimality_cuts_(), feasibility_cuts_(), epigraph_cuts_(), domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()), last_lp_switch_start_optimality_(optimality_cuts_.end()), last_round_start_epigraph_(epigraph_cuts_.end()), last_in_extraction_problem_start_epigraph_(epigraph_cuts_.end()), last_round_start_domain_(domain_cuts_.end()), last_in_extraction_problem_start_domain_(domain_cuts_.end()), last_iteration_start_feasibility_(feasibility_cuts_.end()), last_lp_switch_start_feasibility_(feasibility_cuts_.end()), alpha_normalized_(nodeData.alpha_normalized_), level_opt_iterator_(optimality_cuts_.end()), num_scen_pro_cut_(nodeData.num_scen_pro_cut_), nodes_in_cut_(nodeData.nodes_in_cut_), changed_aggregation_level_(nodeData.changed_aggregation_level_), alternating_intra_cut_adaptive_(nodeData.alternating_intra_cut_adaptive_),
 matrix_(nodeData.matrix_ ? new CoinPackedMatrix(*nodeData.matrix_) : nullptr), column_lower_(nullptr), column_upper_(nullptr), objective_(nullptr), row_lower_(nullptr), row_upper_(nullptr), no_staircase_constraints_(nodeData.no_staircase_constraints_), d_square_cut_t_matrix_(nodeData.d_square_cut_t_matrix_ ? new CoinPackedMatrix(*nodeData.d_square_cut_t_matrix_) : nullptr), d_square_cut_rhs_(nodeData.d_square_cut_rhs_), solver_rhs_(nullptr), can_safely_reuse_(nodeData.can_safely_reuse_), oda_optimality_cuts_(nodeData.oda_optimality_cuts_), oda_cut_evaluation_(nodeData.oda_cut_evaluation_), oda_lambdas_(nodeData.oda_lambdas_), oda_iterations_(nodeData.oda_iterations_),
 lp_dual_cgp_matrix_(nullptr), lp_dual_cgp_column_lower_(nodeData.lp_dual_cgp_column_lower_), lp_dual_cgp_column_upper_(nodeData.lp_dual_cgp_column_upper_), lp_dual_cgp_objective_(nodeData.lp_dual_cgp_objective_), lp_dual_cgp_row_lower_(nodeData.lp_dual_cgp_row_lower_), lp_dual_cgp_row_upper_(nodeData.lp_dual_cgp_row_upper_), lp_dual_cgp_elements_defined_(nodeData.lp_dual_cgp_elements_defined_),
 cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficients_), cvar_current_cut_rhs_(nodeData.cvar_current_cut_rhs_), cvar_cut_index_(nodeData.cvar_cut_index_), build_time_(nodeData.build_time_), solution_time_(nodeData.solution_time_), cut_generation_time_(nodeData.cut_generation_time_)
@@ -123,13 +123,6 @@ cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficie
             last_in_extraction_problem_start_domain_ = --domain_cuts_.end();
         }
     }
-    
-    it = nodeData.lp_round_optimality_cuts_.begin();
-    for (; it != nodeData.lp_round_optimality_cuts_.end(); ++it) {
-        lp_round_optimality_cuts_.push_back(std::make_shared<CutStuff>(*it->get()));
-        assert(false && "Usee algorithm")
-    }
-    lp_round_feasibility_cuts_
 
     it = nodeData.cvar_cuts_.begin();
     for (; it != nodeData.cvar_cuts_.end(); ++it) {
@@ -537,7 +530,7 @@ void Parameter::init()
 	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
 	parameter_.put(PNB_CGP_EPSILON_RELATIVE, 1e-06);
 	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 10000000);
-    parameter_.put(PNB_LP_REUSE_CGP, true);
+    parameter_.put(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
 
 	// Fill in constants
 	// PNB_BENDERS
@@ -568,7 +561,13 @@ void Parameter::init()
 	consts_["PNB_INT_BARRIER"] = PNB_INT_BARRIER;
 	consts_["PNB_INT_BARRIER_WITH_CROSSOVER"] = PNB_INT_BARRIER_WITH_CROSSOVER;
 	consts_["PNB_INT_CONCURRENT_MASTER_STANDARD"] = PNB_INT_CONCURRENT_MASTER_STANDARD;
-	
+
+    //PNB_LP_PARALLEL_MODE
+    consts_["PNB_PARAL_MODE_ALL_SEQUENTIAL"] = 0;
+    consts_["PNB_PARAL_CGP_SUBPROBLEMS"] = 1;
+    consts_["PNB_PARAL_FRACTS"] = 2;
+    consts_["PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS"] = 3;
+    
 	//PNB_USE_START_SOLUTION
 	consts_["PNB_INT_NO_START_SOLUTION"] = PNB_INT_NO_START_SOLUTION;
 	consts_["PNB_INT_EV_SOLUTION_FROM_PNB"] = PNB_INT_EV_SOLUTION_FROM_PNB;

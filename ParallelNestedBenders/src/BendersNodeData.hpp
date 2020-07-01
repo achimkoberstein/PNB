@@ -66,7 +66,7 @@ namespace parallel_benders{
 	const std::string PNB_LP_MAJOR_IT_LIMIT = "PNB_LP_MAJOR_IT_LIMIT";
 	const std::string PNB_LP_CUTS_FOR_FRACT = "PNB_LP_CUTS_FOR_FRACT";
 	const std::string PNB_LP_ALLOW_TEST_CASES = "PNB_LP_ALLOW_TEST_CASES";
-    const std::string PNB_LP_REUSE_CGP = "PNB_LP_REUSE_CGP";
+    const std::string PNB_LP_PARALLEL_MODE = "PNB_LP_PARALLEL_MODE"; // what do we want to do parallel: schedule the generation of each L&P cut and/or make PNB CGP parallel
 
 
     // Here come the double parameters
@@ -179,6 +179,12 @@ namespace parallel_benders{
 	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED = 2; //solve DZN with 2nd stage info (cuts from L&P CGP)
 	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED_EFFICIENT = 3; //solve 23 with 2nd stage info (cuts from L&P CGP)
 	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED_ACHIM = 4; //calculate the solution for 23 with 2nd stage info (cuts from L&P CGP) - Achims approach
+
+    // LP parallel modes
+    const int PNB_PARAL_MODE_ALL_SEQUENTIAL = 0;
+    const int PNB_PARAL_CGP_SUBPROBLEMS = 1; // PNB CGP for L&P cut is parallel, i.e., its subproblems are solved in parallel
+    const int PNB_PARAL_FRACTS = 2; // creation of the L&P cut for every fract var is schduled and all are executed in parallel
+    const int PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS = 3;
 
 	// Cut types
 	// Benders Cuts

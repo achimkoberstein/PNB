@@ -459,6 +459,7 @@ private:
 	int lp_rounds_limit_;
 	int lp_switches_limit_;
 	int lp_major_it_limit_;
+    int lp_parallel_mode_;
 	int cuts_for_fract_vars_;
 	double cgp_relative_epsilon_;
 	int cgp_do_when_infeasible_; // whether we quit OR apply Alpha-Normalization and solve OR apply Alpha-Normalization and continue when L&P CGP PNB is infeasible
