@@ -205,6 +205,9 @@ namespace parallel_benders{
 
         CutStuff(int iteration,std::shared_ptr<const OsiRowCut>& cut_pointer, int type);
 
+		void DumpCutStuff(const std::string& fname) const;
+		void LoadCutStuff(const std::string& fname);
+
         int cut_creation_iteration_;
         int not_active_iterations_;
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
