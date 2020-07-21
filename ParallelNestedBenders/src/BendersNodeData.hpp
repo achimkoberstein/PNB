@@ -327,6 +327,8 @@ public:
 	cut_container epigraph_cuts_;
 	cut_container domain_cuts_;
     cut_container feasibility_cuts_;
+    cut_container lp_round_optimality_cuts_;
+    cut_container lp_round_feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
 	cut_container::iterator last_lp_switch_start_optimality_;
 	cut_container::iterator last_round_start_epigraph_;
