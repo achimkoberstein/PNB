@@ -127,9 +127,11 @@ cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficie
     it = nodeData.lp_round_optimality_cuts_.begin();
     for (; it != nodeData.lp_round_optimality_cuts_.end(); ++it) {
         lp_round_optimality_cuts_.push_back(std::make_shared<CutStuff>(*it->get()));
-        assert(false && "Usee algorithm")
     }
-    lp_round_feasibility_cuts_
+    it = nodeData.lp_round_feasibility_cuts_.begin();
+    for (; it != nodeData.lp_round_feasibility_cuts_.end(); ++it) {
+        lp_round_feasibility_cuts_.push_back(std::make_shared<CutStuff>(*it->get()));
+    }
 
     it = nodeData.cvar_cuts_.begin();
     for (; it != nodeData.cvar_cuts_.end(); ++it) {
