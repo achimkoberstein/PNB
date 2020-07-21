@@ -717,6 +717,76 @@ CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer
 {
 }
 
+void CutStuff::DumpCutStuff(const std::string& fname) const
+{
+    // we export sparse vector (row) as a full storage vector
+    // since we cannot know number of elements in full storage vector from sparse vector, we end up export on the last non-zero element
+    const CoinPackedVector* row = &cut_->row();
+	int num_elements = row->getMaxIndex() + 1; // last non-zero element
+
+	std::ofstream file_out;
+	file_out.open(fname.c_str(), ios::trunc);
+	// index, element incl. 0 values
+	for (int index = 0; index < num_elements; index++) {
+		file_out << index  << "," << std::setprecision(20) << (*row)[index] << '\n';
+	}
+	
+	// ub and lb
+	file_out << std::setprecision(20) << cut_->ub() << '\n';
+	file_out << std::setprecision(20) << cut_->lb() << '\n';
+	file_out.close();
+}
+
+void CutStuff::LoadCutStuff(const std::string& fname)
+{
+	std::fstream file;
+	file.open(fname.c_str()); // should be the list of relative paths to .sto (.stoch) files
+	LOG_IF(FATAL, !file.is_open()) << "Could not open " << fname;
+
+	std::string line;
+	int line_number = 0;
+	std::vector<int> cut_indices{};
+	std::vector<double> cut_elements{};
+	double ub(0);
+	double lb(0);
+	while (getline(file, line, '\n')) {
+		assert(line_number < 4); // indices, coefs, ub, lb
+		int from = 0;
+		int to = 0;
+		int len = 0;
+		if (line_number == 0) { // indices
+			std::stringstream ss(line);
+			for (int i; ss >> i;) {
+				cut_indices.push_back(i);
+				if (ss.peek() == ',')
+					ss.ignore();
+			}
+		}
+		else if (line_number == 1) { // coefs
+			std::stringstream ss(line);
+			for (double i; ss >> i;) {
+				cut_elements.push_back(i);
+				if (ss.peek() == ',')
+					ss.ignore();
+			}
+		}
+		else if (line_number == 2) { // ub
+			ub = std::stod(line);
+		}
+		else if (line_number == 3) { // lb
+			lb = std::stod(line);
+		}
+		++line_number;
+	}
+	file.close();
+
+	OsiRowCut* cut = new OsiRowCut();
+	cut->setLb(lb);
+	cut->setUb(ub);
+	cut->setRow(cut_indices.size(), cut_indices.data(), cut_elements.data(), false);
+	cut_.reset(std::as_const(cut));
+}
+
 bool is_active( const std::shared_ptr<CutStuff>& value )
 {
     return value->active_value < 0;

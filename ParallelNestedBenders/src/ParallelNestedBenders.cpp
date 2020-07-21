@@ -5047,6 +5047,13 @@ namespace parallel_benders {
                 std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
 				std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_EPIGRAPH));
 				cut_stuff->aggregate_number_ = 1;
+				
+				//For testing we might want to dump and/or load the cuts
+				//std::stringstream f_name;
+				//f_name << current_iteration_ << "_" << lp_round_ << "_" << fract_index << ".txt";
+				//cut_stuff->DumpCutStuff(f_name.str());
+				//cut_stuff->LoadCutStuff(f_name.str());
+
 				if (change_aggregation_level || sum > benders_node_pointer->next_stage_approximation_[0]) {
 					stage_data_[current_stage_]->added_epigraph_cuts_++;
 					benders_node_pointer->active_aggregates_[cut_index] = true;  // Set aggregate to active: We have a cut for this aggregate
