@@ -1323,10 +1323,7 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011101, \"PNB_LIFT_AND_P_METHOD\" : 0, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_NUM_CPU\" : 0 }"); // DAN (domain cut), multithreads
 		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011110, \"PNB_LIFT_AND_P_METHOD\" : 0, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // DAN (domain cut), warm-start scenario-wise
 		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011110, \"PNB_LIFT_AND_P_METHOD\" : 0, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_STAGE_WISE\" }"); // DAN (domain cut), warm-start stage-wise
-		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011110, \"PNB_LIFT_AND_P_METHOD\" : 0, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\", \"PNB_LP_REUSE_CGP\": false }"); // DAN w/o 2nd stage info, warm-start scenario-wise
-		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011111, \"PNB_LIFT_AND_P_METHOD\" : 0, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\", \"PNB_LP_REUSE_CGP\": false, \"PNB_NUM_CPU\" : 0 }"); // DAN w/o 2nd stage info, warm-start scenario-wise, multithreads
-		//, \"PNB_LP_REUSE_CGP\": false
-
+		
 		//DZN - weak Epigraph cuts
 		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011100, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_PRINT_SUBPROBLEMS\" : false }"); // DZN w/o 2nd stage info
 		//parameter_strings_.push_back("{ \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_MAJOR_IT_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 2, \"PNB_LP_ALLOW_TEST_CASES\" : 1110011101, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_PRINT_SUBPROBLEMS\" : false, \"PNB_NUM_CPU\" : 0 }"); // DZN w/o 2nd stage info, multithreads
@@ -1494,7 +1491,7 @@ TEST_F(LiftAndProjectCutsTest, fast) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_15"), -10750, 0.1); // similar characteristics to ssch/c...
 }
 
-TEST_F(LiftAndProjectCutsTest, bounds_convergence_fast) {
+TEST_F(LiftAndProjectCutsTest, DISABLED_bounds_convergence_fast) {
 	// LiftAndProjectCutsTest.parameter_strings_ are not considered in this test case
 
 	// Populate bounds_list_lp_{PNB_LP_ROUNDS_LIMIT}_major_{PNB_LP_MAJOR_IT_LIMIT}_switch_{PNB_LP_SWITCHES_LIMIT}_method_{PNB_LIFT_AND_P_METHOD}
@@ -2257,7 +2254,7 @@ TEST_F(LiftAndProjectCutsTest, slow) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.5);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_25"), -479326, 0.5);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 2.9); // often PNB_SOLUTION_SIMILARITY_LIMIT when PNB_WARM_START == 0 (no warm start)
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 2.9); // often PNB_SOLUTION_SIMILARITY_LIMIT when PNB_WARM_START == 0 (no warm start) or slightly wrong solution for warm start
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 5.5); // often PNB_SOLUTION_SIMILARITY_LIMIT when PNB_WARM_START == 0 (no warm start)
 
 	// Integer on 2 stages
@@ -2273,7 +2270,7 @@ TEST_F(LiftAndProjectCutsTest, slow) {
 	EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -154654, 1.0);
 }
 
-TEST_F(LiftAndProjectCutsTest, bounds_convergence_s_low) {
+TEST_F(LiftAndProjectCutsTest, DISABLED_bounds_convergence_slow) {
 	// LiftAndProjectCutsTest.parameter_strings_ are not considered in this test case
 
 	// Populate bounds_list_lp_{PNB_LP_ROUNDS_LIMIT}_major_{PNB_LP_MAJOR_IT_LIMIT}_switch_{PNB_LP_SWITCHES_LIMIT}_method_{PNB_LIFT_AND_P_METHOD}
@@ -2350,7 +2347,7 @@ TEST_F(NestedBendersTest, slow) {
 
 TEST_F(NestedBendersTestInteger, slow) {
 	// 1st stage only is integer or MIP
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5); // sometimes similarity limit with PNB_USE_START_SOLUTION = 2
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_25"), -479326, 0.5);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 2.9);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 5.5);
