@@ -893,7 +893,6 @@ namespace parallel_benders {
         
         // Initialize new CGP PNB
         parallel_benders::Parameter cgp_parameter = Parameter();
-        //int threads_per_CGP = thread_pool_.size() / ceil(fractional_variables_.size() * (100.0 / 100.0)); // hardware_concurrency()/num_cuts
         int threads_per_CGP = 1;
         if (lp_parallel_mode_ == PNB_PARAL_CGP_SUBPROBLEMS || lp_parallel_mode_ == PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS) {
             threads_per_CGP = num_cpu_;
@@ -2870,6 +2869,18 @@ namespace parallel_benders {
                 benders_tree_node_pointer->getDataPtr()->last_in_extraction_problem_start_epigraph_ = benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.end();
                 int num_lp_cuts_before_aggregation = stage_data_[current_stage_]->added_epigraph_cuts_ + stage_data_[current_stage_]->added_domain_cuts_;
 
+                //Move CGP cuts to the main loop
+                stage_data_[current_stage_]->added_optimality_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
+                stage_data_[current_stage_]->added_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
+                for (auto cut_stuff: benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_) {
+                    AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+                }
+                for (auto cut_stuff: benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_) {
+                    AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+                }
+                benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.clear();
+                benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.clear();
+                
 				AggregateLiftAndProjectCuts(benders_tree_node_pointer); // TODO: or maybe do it later in Solve() main routine
 
                 // If no L&P cuts build - we can switch
@@ -2883,7 +2894,7 @@ namespace parallel_benders {
                     // if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
                 }
 
-				epigraph_current_cuts_coefficients_.clear();
+                epigraph_current_cuts_coefficients_.clear();
 				epigraph_current_cuts_rhs_.clear();
 				domain_current_cuts_coefficients_.clear();
 				domain_current_cuts_rhs_.clear();
@@ -4795,6 +4806,15 @@ namespace parallel_benders {
                     if ((*it)->to_use_) {
                         assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
                         ApplyCutToLnPCGP(dual_cgp_solver, (*it), benders_node_pointer);
+                        //Do stuff with cuts here - we probably do not need to delete cuts but can simply move them
+                        if (true) {
+                            // TODO: avoid duplicates
+                            // TODO: think when do we want to set the iteration to 0
+                            // TODO: we need to lock it
+                            (*it)->cut_creation_iteration_ = current_iteration_;
+                            (*it)->column_set_ = parallel_benders::PNB_COL_SET_NONE;
+                            benders_node_pointer->lp_round_optimality_cuts_.push_back(*it);
+                        }
                     }
                 }
 				
@@ -4810,6 +4830,15 @@ namespace parallel_benders {
                     if ((*it)->to_use_) {
                         assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
                         ApplyCutToLnPCGP(dual_cgp_solver, (*it), benders_node_pointer);
+                        //Do stuff with cuts here - we probably do not need to delete cuts but can simply move them
+                        if (true) {
+                            // TODO: avoid duplicates
+                            // TODO: think when do we want to set the iteration to 0
+                            // TODO: we need to lock it
+                            (*it)->cut_creation_iteration_ = current_iteration_;
+                            (*it)->column_set_ = parallel_benders::PNB_COL_SET_NONE;
+                            benders_node_pointer->lp_round_feasibility_cuts_.push_back(*it);
+                        }
                     }
                 }
                 assert(dual_cgp_solver->getNumRows() == start_cgp_rows + new_cgp_pnb_opt_cuts + cgp_pnb->stage_data_[0]->added_feasibility_cuts_);
@@ -4830,8 +4859,6 @@ namespace parallel_benders {
 				SetAlphaNormalization(dual_cgp_solver, false);
 			}
 			
-			// TODO: should we also append the L&P cut to the CGP of the next fract var
-
 			SolveSolverInterface(dual_cgp_solver);
             
             {
@@ -4920,12 +4947,6 @@ namespace parallel_benders {
             if (cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->alpha_normalized_) {
                 assert(false && "Do we really want it");
                 SetAlphaNormalization(cgp_pnb->osi_solver_, false);
-            }
-            //!!!! do stuff with cuts here - we probably do not need to delete cuts but can simply move them
-            parallel_benders::cut_container lp_round_opt_cuts;
-            if (true) {
-                cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_;
-                cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_;
             }
             cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
             cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
