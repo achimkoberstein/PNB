@@ -4769,7 +4769,6 @@ namespace parallel_benders {
                 SetDualCGPRoundSpecifics(*dual_cgp_solver, tree_nodes_by_stage_[0][0]);
             }
             
-            // TODO: we might append the cuts for every fract var if we use PNB CGP cuts intra round                      
             //-- For every fract var (and every thread)
             start_cgp_rows = dual_cgp_solver->getNumRows();
             int new_cgp_pnb_opt_cuts(0);
@@ -4918,24 +4917,22 @@ namespace parallel_benders {
 
         // Clear internal structures of CGP PNB (or we could simply delete it)
         if (cgp_pnb != nullptr) {
-            bool keep_cgp_cuts = false;
             if (cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->alpha_normalized_) {
                 assert(false && "Do we really want it");
                 SetAlphaNormalization(cgp_pnb->osi_solver_, false);
             }
-            assert(!keep_cgp_cuts && "Not implemented. Probably just do not delete the cuts");
-            if (keep_cgp_cuts) {
-                cgp_pnb->Reset(-1, true); // keep all cuts, keep warm start
+            //!!!! do stuff with cuts here - we probably do not need to delete cuts but can simply move them
+            parallel_benders::cut_container lp_round_opt_cuts;
+            if (true) {
+                cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_;
+                cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_;
             }
-            else {
-                cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
-            }
+            cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
             cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
         }
 
         if (dual_cgp_solver != nullptr) {
-            // Delete L&P CGP cuts //TODO: probably we do not need to do it if opt cuts from CGP to be used in next fract vars
-            // TODO: will not this be done in preparation of the pnb cgp for the fract var???
+            // Delete new L&P CGP cuts
             int num_cgp_cuts_to_delete = dual_cgp_solver->getNumRows() - start_cgp_rows;
             std::vector<int> row_indices(num_cgp_cuts_to_delete);
             std::iota(row_indices.begin(), row_indices.end(), start_cgp_rows);
