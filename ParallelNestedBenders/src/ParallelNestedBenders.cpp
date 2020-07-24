@@ -295,7 +295,7 @@ namespace parallel_benders {
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),solved_counter_(0),
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
-        num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_cuts_coefficients_mutex_(), lp_dual_cgp_node_data_mutex_(),misc_mutex_(),thread_pool_(0),
+        num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_cuts_coefficients_mutex_(),lp_dual_cgp_node_data_mutex_(),lp_round_cuts_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
 		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
@@ -899,7 +899,7 @@ namespace parallel_benders {
         }
         cgp_parameter.SetParameterValue(parallel_benders::PNB_NUM_CPU, threads_per_CGP);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, cgp_relative_epsilon_);
-        cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
+        cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, print_subproblems_);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
 
@@ -937,6 +937,7 @@ namespace parallel_benders {
             assert(num_stages_ == 2 && "Never tested for multistage");
             for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
                 CoinWarmStart* ws;
+                std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
                 if (stage_data_[stage]->warm_start_) { // no mutex because we read data
                     ws = (stage_data_[stage]->warm_start_.get())->clone();
                     cgp_pnb->stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
@@ -2868,20 +2869,8 @@ namespace parallel_benders {
                 benders_tree_node_pointer->getDataPtr()->last_lp_switch_start_optimality_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
                 benders_tree_node_pointer->getDataPtr()->last_in_extraction_problem_start_epigraph_ = benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.end();
                 int num_lp_cuts_before_aggregation = stage_data_[current_stage_]->added_epigraph_cuts_ + stage_data_[current_stage_]->added_domain_cuts_;
-
-                //Move CGP cuts to the main loop
-                stage_data_[current_stage_]->added_optimality_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
-                stage_data_[current_stage_]->added_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
-                for (auto cut_stuff: benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_) {
-                    AddCutToContainer(benders_tree_node_pointer, cut_stuff);
-                }
-                for (auto cut_stuff: benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_) {
-                    AddCutToContainer(benders_tree_node_pointer, cut_stuff);
-                }
-                benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.clear();
-                benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.clear();
-                
-				AggregateLiftAndProjectCuts(benders_tree_node_pointer); // TODO: or maybe do it later in Solve() main routine
+                               
+				AggregateLiftAndProjectCuts(benders_tree_node_pointer);
 
                 // If no L&P cuts build - we can switch
                 if (num_lp_cuts_before_aggregation == stage_data_[current_stage_]->added_epigraph_cuts_ + stage_data_[current_stage_]->added_domain_cuts_){
@@ -2933,6 +2922,26 @@ namespace parallel_benders {
 		}
 		PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), suffix);
         DeleteSubproblem(osi_solver,benders_tree_node_pointer);
+
+        //Move CGP cuts to the main loop
+        if (generate_lp_cuts_ && (!benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.empty() || !benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.empty())) {
+            assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ == benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
+            assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_feasibility_ == benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.end());
+            stage_data_[current_stage_]->added_optimality_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
+            stage_data_[current_stage_]->added_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size();
+            for (auto& cut_stuff : benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_) {
+                assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_) && "It cannot be a duplicate since we checked before.");
+                cut_stuff->cut_creation_iteration_ = current_iteration_;
+                AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+            }
+            for (auto& cut_stuff : benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_) {
+                assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->feasibility_cuts_) && "It cannot be a duplicate since we checked before.");
+                cut_stuff->cut_creation_iteration_ = current_iteration_;
+                AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+            }
+            benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.clear();
+            benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.clear();
+        }
 
         if (old_generate_lp_cuts != generate_lp_cuts_) { // we tried to build an L&P cut but had no fractional vars - feasible relaxation
             // osi what set to LP in initialSolve(). Set it back to MIP
@@ -4711,6 +4720,25 @@ namespace parallel_benders {
             //-- For every fract var (and every thread)
             SetLnPCGPFractVarSpecifics(cgp_pnb, fractional_variable);
 
+            // Add lp_round_opt and feas cuts (only for sequential fract)
+            if (lp_parallel_mode_ < PNB_PARAL_FRACTS) {
+                // no need to use mutex since only in sequential
+                for (auto& cut_stuff: benders_node_pointer->lp_round_optimality_cuts_) {
+                    assert(!CheckForSameCut(*cut_stuff, cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_) && "How can duplicates be here if we checked it before?");
+                    CutStuff cut = *cut_stuff; // we want copy because it might change in CGP PNB
+                    cut.cut_creation_iteration_ = 1; // it should be 1. We will then identify these cut by it and delete
+                    assert(cut.column_set_ == parallel_benders::PNB_COL_SET_NONE);
+                    AddCutToContainer(cgp_pnb->tree_nodes_by_stage_[0][0], std::make_shared<CutStuff>(cut));
+                }
+                for (auto& cut_stuff: benders_node_pointer->lp_round_feasibility_cuts_) {
+                    assert(!CheckForSameCut(*cut_stuff, cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_) && "How can duplicates be here if we checked it before?");
+                    CutStuff cut = *cut_stuff; // we want copy because it might change in CGP PNB
+                    cut.cut_creation_iteration_ = 1; // it should be 1. We will then identify these cut by it and delete
+                    assert(cut.column_set_ == parallel_benders::PNB_COL_SET_NONE);
+                    AddCutToContainer(cgp_pnb->tree_nodes_by_stage_[0][0], std::make_shared<CutStuff>(cut));
+                }
+            }
+
             BendersNodeData::cut_container* cgp_optimality_cuts = &cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_;
             old_cgp_pnb_opt_cuts_back = cgp_optimality_cuts->end();
             if (!cgp_optimality_cuts->empty()) {
@@ -4755,18 +4783,21 @@ namespace parallel_benders {
 
             LogSpecialCase(benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty() && solution_code_ != PNB_SOLUTION_INFEASIBLE, "PNB CGP w/o optimality-like cuts is not infeasible");
             LogSpecialCase(CompareWithZero(cgp_pnb->upper_bound_), "PNB CGP optimal solution is 0");
-
-			// TODO: add the cuts to container if we use them in the main loop
 		}
 
 		// Solve the Dual of CGP (Zeta- or Alpha-Normalized) w or w/o the 2nd stage info
-        int start_cgp_rows(0);
+        int start_lp_round_cuts_rows(0);
         OsiSolverInterface* dual_cgp_solver(nullptr);
         if (solve_dual_of_cgp) {
 			
             assert(current_stage_ == 0);
             // similar to GetSolverByThread()
-            std::map<boost::thread::id, OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
+            std::map<boost::thread::id, OsiSolverInterface*>::iterator it;
+            {
+                std::lock_guard<std::mutex> lock_guardener(solver_map_mutex_);
+                it = osi_solver_map_.find(boost::this_thread::get_id());
+            }
+            
             if (it != osi_solver_map_.end()) {
                 dual_cgp_solver = (*it).second;
             }
@@ -4781,19 +4812,40 @@ namespace parallel_benders {
             }
             
             //-- For every fract var (and every thread)
-            start_cgp_rows = dual_cgp_solver->getNumRows();
+            start_lp_round_cuts_rows = dual_cgp_solver->getNumRows();
             int new_cgp_pnb_opt_cuts(0);
+            int lp_round_cuts_applied(0);
             SetDualCGPFractVarSpecifics(dual_cgp_solver, fractional_variable);
             if (use_2nd_stage_info) {
                 new_cgp_pnb_opt_cuts = cgp_pnb->stage_data_[0]->added_optimality_cuts_;
+                int lp_round_cuts_applied(0);
                 BendersNodeData::cut_container::iterator it;
                 int num_theta = benders_node_pointer->num_thetas_;
                 if (num_theta == 0) {
                     num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
                 }
-                // add PNB CGP cuts
-                // TODO: if CGP cuts to be added to the MP - also add cuts here (what if we do not use 2nd stage info becuase there were issues with PNB CGP but have generated the cuts. Do we need that cuts?)
-                // TODO: we could also set here iteration to 0 for CGP cuts if we use them intra iteration
+
+                // Add lp_round_opt and feas cuts (only for sequential fract)
+                if (lp_parallel_mode_ < PNB_PARAL_FRACTS) {
+                    // no need to use mutex since only in sequential
+                    lp_round_cuts_applied = benders_node_pointer->lp_round_optimality_cuts_.size() + benders_node_pointer->lp_round_feasibility_cuts_.size();
+                    for (auto& cut_stuff : benders_node_pointer->lp_round_optimality_cuts_) {
+                        assert(CheckForSameCut(*cut_stuff, cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_) && "Should be duplicate because we applied them to cgp pnb before.");
+                        CutStuff cut = *cut_stuff; // we want copy because it might change in CGP PNB
+                        cut.cut_creation_iteration_ = 1; // it should be 1. We will then identify these cut by it and delete
+                        assert(cut.column_set_ == parallel_benders::PNB_COL_SET_NONE); // TODO: do it upon adding the cut
+                        ApplyCutToLnPCGP(dual_cgp_solver, cut_stuff, benders_node_pointer);
+                    }
+                    for (auto& cut_stuff : benders_node_pointer->lp_round_feasibility_cuts_) {
+                        assert(CheckForSameCut(*cut_stuff, cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_) && "Should be duplicate because we applied them to cgp pnb before.");
+                        CutStuff cut = *cut_stuff; // we want copy because it might change in CGP PNB
+                        cut.cut_creation_iteration_ = 1; // it should be 1. We will then identify these cut by it and delete
+                        assert(cut.column_set_ == parallel_benders::PNB_COL_SET_NONE);
+                        ApplyCutToLnPCGP(dual_cgp_solver, cut_stuff, benders_node_pointer);
+                    }
+                }
+
+                // Add PNB CGP cuts
                 BendersNodeData::cut_container* cgp_optimality_cuts = &cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_;                
                 if (old_cgp_pnb_opt_cuts_back == cgp_optimality_cuts->end()) { // there were no opt cuts in PNB CGP before we solved it
                     it = cgp_optimality_cuts->begin(); // therefore, all cuts are new and we add all of them
@@ -4801,17 +4853,15 @@ namespace parallel_benders {
                 else {
                     it = std::next(old_cgp_pnb_opt_cuts_back);
                 }
+
                 for ( ; it != cgp_optimality_cuts->end(); ++it) {
                     assert(num_theta == 1 && "Should be changed for multicut");
                     if ((*it)->to_use_) {
                         assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
                         ApplyCutToLnPCGP(dual_cgp_solver, (*it), benders_node_pointer);
-                        //Do stuff with cuts here - we probably do not need to delete cuts but can simply move them
-                        if (true) {
-                            // TODO: avoid duplicates
-                            // TODO: think when do we want to set the iteration to 0
-                            // TODO: we need to lock it
-                            (*it)->cut_creation_iteration_ = current_iteration_;
+                        std::lock_guard<std::mutex>unique_lock(lp_round_cuts_mutex_);
+                        if (true && !CheckForSameCut((*it->get()), benders_node_pointer->lp_round_optimality_cuts_) && !CheckForSameCut((*it->get()), benders_node_pointer->optimality_cuts_)) {
+                            // we set cut_creation_iteration_ to the current_iteration_ after the round: now it might make order of the cuts in CGP PNB not according to the iteration
                             (*it)->column_set_ = parallel_benders::PNB_COL_SET_NONE;
                             benders_node_pointer->lp_round_optimality_cuts_.push_back(*it);
                         }
@@ -4830,23 +4880,21 @@ namespace parallel_benders {
                     if ((*it)->to_use_) {
                         assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
                         ApplyCutToLnPCGP(dual_cgp_solver, (*it), benders_node_pointer);
-                        //Do stuff with cuts here - we probably do not need to delete cuts but can simply move them
-                        if (true) {
-                            // TODO: avoid duplicates
-                            // TODO: think when do we want to set the iteration to 0
-                            // TODO: we need to lock it
-                            (*it)->cut_creation_iteration_ = current_iteration_;
+                        std::lock_guard<std::mutex>unique_lock(lp_round_cuts_mutex_);
+                        if (true && !CheckForSameCut((*it->get()), benders_node_pointer->lp_round_feasibility_cuts_) && !CheckForSameCut((*it->get()), benders_node_pointer->feasibility_cuts_)) {
+                            // we set cut_creation_iteration_ to the current_iteration_ after the round: now it might make order of the cuts in CGP PNB not according to the iteration
                             (*it)->column_set_ = parallel_benders::PNB_COL_SET_NONE;
                             benders_node_pointer->lp_round_feasibility_cuts_.push_back(*it);
                         }
                     }
                 }
-                assert(dual_cgp_solver->getNumRows() == start_cgp_rows + new_cgp_pnb_opt_cuts + cgp_pnb->stage_data_[0]->added_feasibility_cuts_);
+                assert(dual_cgp_solver->getNumRows() == start_lp_round_cuts_rows + new_cgp_pnb_opt_cuts + cgp_pnb->stage_data_[0]->added_feasibility_cuts_ + lp_round_cuts_applied*2); // round cuts applied to prime/double prime sides
 			}
             
 			// no optimality-like cuts -> unbounded theta -> unbounded Dual of Zeta-Normalized (dual of epigraph cut generation problem)
 			// -> solve Dual of Alpha-Normalized (dual of domain cut generation problem)
-			if (new_cgp_pnb_opt_cuts == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty()) {
+            int total_num_cuts_with_theta = new_cgp_pnb_opt_cuts + benders_node_pointer->optimality_cuts_.size() + benders_node_pointer->epigraph_cuts_.size() + lp_round_cuts_applied;
+            if (total_num_cuts_with_theta == 0) {
                 lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
                 LogSpecialCase(true, "Solve DAN w/o optimality-like cuts");
                 std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
@@ -4902,7 +4950,7 @@ namespace parallel_benders {
                 LogSpecialCase(CompareWithZero(dual_cgp_solver->getObjValue()), "Solution of DAN is zero");
                 SetAlphaNormalization(temp_osi, false); // DZN
                 SolveSolverInterface(temp_osi);
-                LogSpecialCase(new_cgp_pnb_opt_cuts == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty() && !temp_osi->isProvenPrimalInfeasible(), "DZN is not infeasible when solved w/o optimality cuts");
+                LogSpecialCase(total_num_cuts_with_theta == 0 && !temp_osi->isProvenPrimalInfeasible(), "DZN is not infeasible when solved w/o optimality cuts");
                 LogSpecialCase(cgp_pnb != nullptr && cgp_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_INFEASIBLE && !temp_osi->isProvenPrimalInfeasible(), "DZN was solved even though PNB CGP infeasible");
                 LogSpecialCase(CompareWithZero(dual_cgp_solver->getObjValue()) && !temp_osi->isProvenOptimal(), "DZN solvable <=> solution DAN = 0. It is not");
                 LogSpecialCase(temp_osi->isProvenPrimalInfeasible() && CompareWithZero(dual_cgp_solver->getObjValue()), "DZN infeasible <=> DAN > 0. It is not");
@@ -4948,15 +4996,15 @@ namespace parallel_benders {
                 assert(false && "Do we really want it");
                 SetAlphaNormalization(cgp_pnb->osi_solver_, false);
             }
-            cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
+            cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
             cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
         }
 
         if (dual_cgp_solver != nullptr) {
             // Delete new L&P CGP cuts
-            int num_cgp_cuts_to_delete = dual_cgp_solver->getNumRows() - start_cgp_rows;
+            int num_cgp_cuts_to_delete = dual_cgp_solver->getNumRows() - start_lp_round_cuts_rows;
             std::vector<int> row_indices(num_cgp_cuts_to_delete);
-            std::iota(row_indices.begin(), row_indices.end(), start_cgp_rows);
+            std::iota(row_indices.begin(), row_indices.end(), start_lp_round_cuts_rows);
             dual_cgp_solver->deleteRows(num_cgp_cuts_to_delete, row_indices.data());
 
             // set back values of z_i and y_i in Line 3: -z_i >= 0 and Line 6 : y_i - y_0 >= 0
@@ -5708,7 +5756,11 @@ namespace parallel_benders {
         if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
             return osi_solver_; // We do not clear this solver. We ALWAYS reuse it.
         }
-        std::map<boost::thread::id,OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
+        std::map<boost::thread::id, OsiSolverInterface*>::iterator it;
+        {
+            std::lock_guard<std::mutex> lock_guardener(solver_map_mutex_);
+            it = osi_solver_map_.find(boost::this_thread::get_id());
+        }
         if ( it != osi_solver_map_.end() )
             return (*it).second;
         else {

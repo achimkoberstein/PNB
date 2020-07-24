@@ -320,6 +320,7 @@ private:
 	std::mutex stage_lower_upper_bounds_mutex_;  
     std::mutex lp_cuts_coefficients_mutex_; // std::mutex that is used if we store the L&P cut coefficients for a specific fract var
     std::mutex lp_dual_cgp_node_data_mutex_; //dual L&P CGP elements, its objective, ub, lb...
+    std::mutex lp_round_cuts_mutex_;
     std::mutex misc_mutex_; // std::mutex for miscellanious stuff
     std::mutex debug_mutex_;
     // Further thread management stuff
