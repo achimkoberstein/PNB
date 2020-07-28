@@ -828,7 +828,7 @@ namespace parallel_benders {
         assert(num_stages_ == 2 && "We copy cuts only from the first stage");
         BendersNodeData::cut_container::iterator it;
         if (cgp_pnb.solved_counter_) {
-            it = benders_node_pointer->last_lp_switch_start_feasibility_;
+            it = benders_node_pointer->last_in_lp_cgp_problem_start_feasibility_;
         }
         else {
             it = benders_node_pointer->feasibility_cuts_.begin();
@@ -841,7 +841,7 @@ namespace parallel_benders {
         }
 
         if (cgp_pnb.solved_counter_) {
-            it = benders_node_pointer->last_in_extraction_problem_start_domain_;
+            it = benders_node_pointer->last_in_lp_cgp_problem_start_domain_;
         }
         else {
             it = benders_node_pointer->domain_cuts_.begin();
@@ -856,7 +856,7 @@ namespace parallel_benders {
 
         //Add optimality and L&P cuts from the main loop
         if (cgp_pnb.solved_counter_) {
-            it = benders_node_pointer->last_lp_switch_start_optimality_;
+            it = benders_node_pointer->last_in_lp_cgp_start_optimality_;
         }
         else {
             it = benders_node_pointer->optimality_cuts_.begin();
@@ -869,7 +869,7 @@ namespace parallel_benders {
         }
 
         if (cgp_pnb.solved_counter_) {
-            it = benders_node_pointer->last_in_extraction_problem_start_epigraph_;
+            it = benders_node_pointer->last_in_lp_cgp_start_epigraph_;
         }
         else {
             it = benders_node_pointer->epigraph_cuts_.begin();
@@ -2627,14 +2627,14 @@ namespace parallel_benders {
 
             // move last iteration iterations to start so that all cuts reapplied on AppendCutsToSubproblem()
             first_stage_node->last_iteration_start_optimality_ = first_stage_node->optimality_cuts_.begin();
-            first_stage_node->last_lp_switch_start_optimality_ = first_stage_node->optimality_cuts_.begin();
+            first_stage_node->last_in_lp_cgp_start_optimality_ = first_stage_node->optimality_cuts_.begin();
             first_stage_node->level_opt_iterator_ = first_stage_node->optimality_cuts_.begin();
             first_stage_node->last_round_start_epigraph_ = first_stage_node->epigraph_cuts_.begin();
-            first_stage_node->last_in_extraction_problem_start_epigraph_ = first_stage_node->epigraph_cuts_.begin();
+            first_stage_node->last_in_lp_cgp_start_epigraph_ = first_stage_node->epigraph_cuts_.begin();
             first_stage_node->last_round_start_domain_ = first_stage_node->domain_cuts_.begin();
-            first_stage_node->last_in_extraction_problem_start_domain_ = first_stage_node->domain_cuts_.begin();
+            first_stage_node->last_in_lp_cgp_problem_start_domain_ = first_stage_node->domain_cuts_.begin();
             first_stage_node->last_iteration_start_feasibility_ = first_stage_node->feasibility_cuts_.begin();
-            first_stage_node->last_lp_switch_start_feasibility_ = first_stage_node->feasibility_cuts_.begin();
+            first_stage_node->last_in_lp_cgp_problem_start_feasibility_ = first_stage_node->feasibility_cuts_.begin();
 
             // reapply the necessary cuts
             assert(current_stage_ == 0 && "We might have issues in AppendCutsToSubproblem.");
@@ -2642,14 +2642,14 @@ namespace parallel_benders {
 
             // move last iteration iterations to the end
             first_stage_node->last_iteration_start_optimality_ = first_stage_node->optimality_cuts_.end();
-            first_stage_node->last_lp_switch_start_optimality_ = first_stage_node->optimality_cuts_.end();
+            first_stage_node->last_in_lp_cgp_start_optimality_ = first_stage_node->optimality_cuts_.end();
             first_stage_node->level_opt_iterator_ = first_stage_node->optimality_cuts_.end();
             first_stage_node->last_round_start_epigraph_ = first_stage_node->epigraph_cuts_.end();
-            first_stage_node->last_in_extraction_problem_start_epigraph_ = first_stage_node->epigraph_cuts_.end();
+            first_stage_node->last_in_lp_cgp_start_epigraph_ = first_stage_node->epigraph_cuts_.end();
             first_stage_node->last_round_start_domain_ = first_stage_node->domain_cuts_.end();
-            first_stage_node->last_in_extraction_problem_start_domain_ = first_stage_node->domain_cuts_.end();
+            first_stage_node->last_in_lp_cgp_problem_start_domain_ = first_stage_node->domain_cuts_.end();
             first_stage_node->last_iteration_start_feasibility_ = first_stage_node->feasibility_cuts_.end();
-            first_stage_node->last_lp_switch_start_feasibility_ = first_stage_node->feasibility_cuts_.end();
+            first_stage_node->last_in_lp_cgp_problem_start_feasibility_ = first_stage_node->feasibility_cuts_.end();
         }
 
         if (lp_pnb_cgp) {
@@ -2864,10 +2864,10 @@ namespace parallel_benders {
 				}
                 thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
 				
-                benders_tree_node_pointer->getDataPtr()->last_lp_switch_start_feasibility_ = benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.end();
-                benders_tree_node_pointer->getDataPtr()->last_in_extraction_problem_start_domain_ = benders_tree_node_pointer->getDataPtr()->domain_cuts_.end();
-                benders_tree_node_pointer->getDataPtr()->last_lp_switch_start_optimality_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
-                benders_tree_node_pointer->getDataPtr()->last_in_extraction_problem_start_epigraph_ = benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.end();
+                benders_tree_node_pointer->getDataPtr()->last_in_lp_cgp_problem_start_feasibility_ = benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.end();
+                benders_tree_node_pointer->getDataPtr()->last_in_lp_cgp_problem_start_domain_ = benders_tree_node_pointer->getDataPtr()->domain_cuts_.end();
+                benders_tree_node_pointer->getDataPtr()->last_in_lp_cgp_start_optimality_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
+                benders_tree_node_pointer->getDataPtr()->last_in_lp_cgp_start_epigraph_ = benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.end();
                 int num_lp_cuts_before_aggregation = stage_data_[current_stage_]->added_epigraph_cuts_ + stage_data_[current_stage_]->added_domain_cuts_;
                                
 				AggregateLiftAndProjectCuts(benders_tree_node_pointer);
@@ -4263,27 +4263,27 @@ namespace parallel_benders {
 			BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
 			BendersNodeData::cut_container* cut_container = nullptr;
             BendersNodeData::cut_container::iterator* last_iteration_start_benders_or_last_round_start_lp_ = nullptr;
-            BendersNodeData::cut_container::iterator* last_lp_switch_start_benders_or_last_in_extraction_problem_lp_ = nullptr;
+            BendersNodeData::cut_container::iterator* last_in_lp_cgp_cut_ = nullptr;
 
             if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {
                 cut_container = &(benders_node_pointer->optimality_cuts_);
                 last_iteration_start_benders_or_last_round_start_lp_ = &benders_node_pointer->last_iteration_start_optimality_;
-                last_lp_switch_start_benders_or_last_in_extraction_problem_lp_ = &benders_node_pointer->last_lp_switch_start_optimality_;
+                last_in_lp_cgp_cut_ = &benders_node_pointer->last_in_lp_cgp_start_optimality_;
             }
             else if (cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH) {
                 cut_container = &(benders_node_pointer->epigraph_cuts_);
                 last_iteration_start_benders_or_last_round_start_lp_ = &benders_node_pointer->last_round_start_epigraph_;
-                last_lp_switch_start_benders_or_last_in_extraction_problem_lp_ = &benders_node_pointer->last_in_extraction_problem_start_epigraph_;
+                last_in_lp_cgp_cut_ = &benders_node_pointer->last_in_lp_cgp_start_epigraph_;
             }
             else if (cut_stuff->type_ == PNB_CUT_TYPE_FEASIBILITY) {
                 cut_container = &(benders_node_pointer->feasibility_cuts_);
                 last_iteration_start_benders_or_last_round_start_lp_ = &benders_node_pointer->last_iteration_start_feasibility_;
-                last_lp_switch_start_benders_or_last_in_extraction_problem_lp_ = &benders_node_pointer->last_lp_switch_start_feasibility_;
+                last_in_lp_cgp_cut_ = &benders_node_pointer->last_in_lp_cgp_problem_start_feasibility_;
             }
             else if (cut_stuff->type_ == PNB_CUT_TYPE_DOMAIN) {
                 cut_container = &(benders_node_pointer->domain_cuts_);
                 last_iteration_start_benders_or_last_round_start_lp_ = &benders_node_pointer->last_round_start_domain_;
-                last_lp_switch_start_benders_or_last_in_extraction_problem_lp_ = &benders_node_pointer->last_in_extraction_problem_start_domain_;
+                last_in_lp_cgp_cut_ = &benders_node_pointer->last_in_lp_cgp_problem_start_domain_;
             }
             else {
                 assert(false && "Unknown cut type.");
@@ -4296,8 +4296,8 @@ namespace parallel_benders {
             BendersNodeData::cut_container::iterator last_element_it = --cut_container->end();
 			if (*last_iteration_start_benders_or_last_round_start_lp_ == cut_container->end())
                 *last_iteration_start_benders_or_last_round_start_lp_ = last_element_it;
-			if (*last_lp_switch_start_benders_or_last_in_extraction_problem_lp_ == cut_container->end())
-                *last_lp_switch_start_benders_or_last_in_extraction_problem_lp_ = last_element_it;
+			if (*last_in_lp_cgp_cut_ == cut_container->end())
+                *last_in_lp_cgp_cut_ = last_element_it;
         }
     }
 
@@ -5408,7 +5408,7 @@ namespace parallel_benders {
             it = benders_node_pointer->feasibility_cuts_.begin();
         }
         else {
-            it = benders_node_pointer->last_lp_switch_start_feasibility_;
+            it = benders_node_pointer->last_in_lp_cgp_problem_start_feasibility_;
         }
         for (; it != benders_node_pointer->feasibility_cuts_.end(); ++it) {
             assert(num_theta == 1 && "Should be changed for multicut");
@@ -5422,7 +5422,7 @@ namespace parallel_benders {
             it = benders_node_pointer->domain_cuts_.begin();
         }
         else {
-            it = benders_node_pointer->last_in_extraction_problem_start_domain_;
+            it = benders_node_pointer->last_in_lp_cgp_problem_start_domain_;
         }
         for (; it != benders_node_pointer->domain_cuts_.end(); ++it) {
             assert(num_theta == 1 && "Should be changed for multicut");
@@ -5436,7 +5436,7 @@ namespace parallel_benders {
             it = benders_node_pointer->optimality_cuts_.begin();
         }
         else {
-            it = benders_node_pointer->last_lp_switch_start_optimality_;
+            it = benders_node_pointer->last_in_lp_cgp_start_optimality_;
         }
         for (; it != benders_node_pointer->optimality_cuts_.end(); ++it) {
             assert(num_theta == 1 && "Should be changed for multicut");
@@ -5450,7 +5450,7 @@ namespace parallel_benders {
             it = benders_node_pointer->epigraph_cuts_.begin();
         }
         else {
-            it = benders_node_pointer->last_in_extraction_problem_start_epigraph_;
+            it = benders_node_pointer->last_in_lp_cgp_start_epigraph_;
         }
         for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
             assert(num_theta == 1 && "Should be changed for multicut");
