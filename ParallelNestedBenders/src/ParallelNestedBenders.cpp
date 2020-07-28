@@ -686,6 +686,9 @@ namespace parallel_benders {
 		lp_switches_limit_ = param.get(PNB_LP_SWITCHES_LIMIT, 1);
 		lp_major_it_limit_ = param.get(PNB_LP_MAJOR_IT_LIMIT, 1);
         lp_parallel_mode_ = param.get(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
+        if (num_cpu_ == 1) {
+            lp_parallel_mode_ = PNB_PARAL_MODE_ALL_SEQUENTIAL; // one cpu => no parallelization
+        }
 		cuts_for_fract_vars_ = param.get(PNB_LP_CUTS_FOR_FRACT, 100);
 		cgp_relative_epsilon_ = param.get(PNB_CGP_EPSILON_RELATIVE, relative_epsilon_);
 		std::string allowed_str = std::to_string(parameter_.GetIntParamValue(PNB_LP_ALLOW_TEST_CASES));
@@ -2931,11 +2934,13 @@ namespace parallel_benders {
             stage_data_[current_stage_]->added_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size();
             for (auto& cut_stuff : benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_) {
                 assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_) && "It cannot be a duplicate since we checked before.");
+                assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->epigraph_cuts_) && "Probably we need to avoid adding this cut. Never happened before.");
                 cut_stuff->cut_creation_iteration_ = current_iteration_;
                 AddCutToContainer(benders_tree_node_pointer, cut_stuff);
             }
             for (auto& cut_stuff : benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_) {
                 assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->feasibility_cuts_) && "It cannot be a duplicate since we checked before.");
+                assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->domain_cuts_) && "Probably we need to avoid adding this cut. Never happened before.");
                 cut_stuff->cut_creation_iteration_ = current_iteration_;
                 AddCutToContainer(benders_tree_node_pointer, cut_stuff);
             }
@@ -4245,6 +4250,10 @@ namespace parallel_benders {
 				cut_stuff->to_use_ = false;
 			}
 
+#ifndef NDEBUG
+            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for L&P PNB CGP.");
+            LogSpecialCase(lp_main_loop_iteration_round_ == nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for main loop.");
+#endif
             AddCutToContainer(benders_tree_node_pointer,cut_stuff);
             /************************************************************************/
             /* End If-Condition here                                                */
@@ -4631,8 +4640,10 @@ namespace parallel_benders {
 			std::lock_guard<std::mutex> temp_lock(infeasible_problem_mutex_);
 			// Check if added cut is identical to another cut!
 			// Check if this is the first cut we added
-			if ( only_one_feasibility_cut_ )
+            if (only_one_feasibility_cut_) {
 				duplicate_cut = CheckForSameCut(*cut_stuff.get(),benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_);
+                LogSpecialCase(duplicate_cut, "Feasibility cut is already present in the problem. It will be omitted, not a critical error.");
+            }
 			if ( !duplicate_cut ){
 				num_added_feasibility_cuts_++;
 				AddCutToContainer(benders_tree_node_pointer->getParent(), cut_stuff);
@@ -5135,6 +5146,13 @@ namespace parallel_benders {
                     LogSpecialCase(true, "Epigraph Cut is not tight and not added to master");
 					cut_stuff->to_use_ = false;
 				}
+#ifndef NDEBUG
+                // Check if we already have such cut
+                assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->optimality_cuts_) && "The same cut to just build epigraph cut is present in optimality cuts. Never happened before.");
+                assert(!(CheckForSameCut(*cut_stuff, benders_node_pointer->epigraph_cuts_) && num_fracts_with_epigraph_cuts == 1) && "The same cut to just build epigraph cut is present in epigraph cuts: for round with one fract vars. Never happened before.");
+                LogSpecialCase(CheckForSameCut(*cut_stuff, benders_node_pointer->epigraph_cuts_) && num_fracts_with_epigraph_cuts > 1, "The same cut to just build epigraph cut is present in epigraph cuts: for round >1 fract vars");
+                assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_optimality_cuts_) && "The same cut to just build epigraph cut is present in L&P round optimality cuts. Never happened before.");
+#endif
 				AddCutToContainer(benders_tree_node_pointer, cut_stuff);
 			}
 		}
@@ -5177,6 +5195,12 @@ namespace parallel_benders {
 
 			//TODO: for feasibility cuts we check CheckForSameCut()
 			stage_data_[current_stage_]->added_domain_cuts_++;
+#ifndef NDEBUG
+            // Check if we already have such cut
+            assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->feasibility_cuts_) && "The same cut to just build domain cut is present in feasibility cuts.");
+            assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_) && "The same cut to just build domain cut is present in domain cuts.");
+            assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_feasibility_cuts_) && "The same cut to just build domain cut is present in L&P round feasibility cuts.");
+#endif
 			AddCutToContainer(benders_tree_node_pointer, cut_stuff);
 		}	
 	}
