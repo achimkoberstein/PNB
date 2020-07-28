@@ -6345,6 +6345,7 @@ namespace parallel_benders {
             if ( CompareWithZero(intra_aggregate_threshold))
                 intra_aggregate_threshold = zero_tolerance_*2;
 
+            assert(false && "It will not work after we decided to add optimality and feasibility cuts in the order of their creation.");
             int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
 
             // TODO: If we have any more cuts expect of these, we need to be careful here! (i.e. level decomp or regularization )
@@ -6614,6 +6615,7 @@ namespace parallel_benders {
             LOG(WARNING) << "You tried to analyse optimality cuts without dual information.";
         }
         // Optimality cuts start after normal rows and feasibility cuts
+        assert(false && "It will not work after we decided to add optimality and feasibility cuts in the order of their creation.");
         int optimality_cut_start = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Performance issues may arise here
 
         int number_of_aggregates = benders_node_pointer->num_thetas_;
