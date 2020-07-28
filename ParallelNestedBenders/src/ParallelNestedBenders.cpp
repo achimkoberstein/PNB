@@ -1022,7 +1022,7 @@ namespace parallel_benders {
         google::SetStderrLogging(logging_level);
     }
 
-    void ParallelNestedBenders::LogSpecialCase(bool condition, std::string log_message)
+    void ParallelNestedBenders::LogSpecialCase(bool condition, const std::string& log_message)
     {
 #ifdef SPEC_CASES
         std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
