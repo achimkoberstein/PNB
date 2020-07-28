@@ -67,6 +67,7 @@ namespace parallel_benders{
 	const std::string PNB_LP_CUTS_FOR_FRACT = "PNB_LP_CUTS_FOR_FRACT";
 	const std::string PNB_LP_ALLOW_TEST_CASES = "PNB_LP_ALLOW_TEST_CASES";
     const std::string PNB_LP_PARALLEL_MODE = "PNB_LP_PARALLEL_MODE"; // what do we want to do parallel: schedule the generation of each L&P cut and/or make PNB CGP parallel
+    const std::string PNB_LP_USE_CGP_PNB_CUTS = "PNB_LP_USE_CGP_PNB_CUTS"; // use optimality and feasibility cuts generated in L&P cuts CGP Benders
 
 
     // Here come the double parameters
