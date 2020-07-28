@@ -330,13 +330,13 @@ public:
     cut_container lp_round_optimality_cuts_;
     cut_container lp_round_feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
-	cut_container::iterator last_lp_switch_start_optimality_;
+	cut_container::iterator last_in_lp_cgp_start_optimality_;
 	cut_container::iterator last_round_start_epigraph_;
-	cut_container::iterator last_in_extraction_problem_start_epigraph_;
+	cut_container::iterator last_in_lp_cgp_start_epigraph_;
 	cut_container::iterator last_round_start_domain_;
-	cut_container::iterator last_in_extraction_problem_start_domain_;
+	cut_container::iterator last_in_lp_cgp_problem_start_domain_;
     cut_container::iterator last_iteration_start_feasibility_;
-	cut_container::iterator last_lp_switch_start_feasibility_;
+	cut_container::iterator last_in_lp_cgp_problem_start_feasibility_;
     cut_container::iterator level_opt_iterator_;
 
     
