@@ -2265,9 +2265,9 @@ TEST_F(LiftAndProjectCutsTest, slow) {
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // takes much time on Laptop
 	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.5);
 	//!!!EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -135.69, 0.1); // crashes, see BUG#10
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 1583.66, 0.1); // w/o relaxation 2559.297
+	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 1583.66, 0.1); // w/o relaxation 2559.297
 	//!!! EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 223753.66, 0.1); // w/o relaxation  224486.00, MP CGP is always infeasible (even when DZN is), see BUG#4
-	//EXPECT_NEAR(solveSMPS("felt/phone/phone-int", "felt/phone/phone", "felt/phone/phone"), 36.9, 0.1); // Stochastic problem with 2^15 scenarios and integer
+	EXPECT_NEAR(solveSMPS("felt/phone/phone-int", "felt/phone/phone", "felt/phone/phone"), 36.9, 0.1); // Stochastic problem with 2^15 scenarios and integer
 		// generate feasibility  cuts:
 	//!!!EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0); // same characteristics as SNDP_TestCase_15 // crashes, see BUG#10
 	EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -154654, 1.0);
