@@ -692,8 +692,8 @@ namespace parallel_benders {
         lp_use_cgp_pnb_cuts_ = param.get(PNB_LP_USE_CGP_PNB_CUTS, false);
 		cuts_for_fract_vars_ = param.get(PNB_LP_CUTS_FOR_FRACT, 100);
 		cgp_relative_epsilon_ = param.get(PNB_CGP_EPSILON_RELATIVE, relative_epsilon_);
-		std::string allowed_str = std::to_string(parameter_.GetIntParamValue(PNB_LP_ALLOW_TEST_CASES));
-        allowed_test_cases_ = std::bitset<10>(std::string(allowed_str.rbegin(), allowed_str.rend())); // due to technical momemnts - bits are initialized in revers order from string
+		std::string allowed_str = parameter_.GetStrParamValue(PNB_LP_ALLOW_TEST_CASES);
+        allowed_test_cases_ = std::bitset<11>(std::string(allowed_str.rbegin(), allowed_str.rend())); // due to technical momemnts - bits are initialized in revers order from string
 
         AdjustProblem();
         // Initialize cvar_current_cut_coefficients
@@ -3660,17 +3660,37 @@ namespace parallel_benders {
 
 		//	Modifications for L&P CGP MP
 		if (lp_main_loop_iteration_round_ && current_stage_ == 0) {
-			// NB: be carefull with delete stuff here: objects from main loop smi might be deleted. Dynamic objects will be delete[] in DeleteSubproblem()
+            /* Zeta Normalized PNB CGP problem for L&P cuts
+            min                             (1-lambda)*theta'  + lambda*theta"
+                 (1-lambda)*x'  + lambda*x"                                       = x_overline (5)
+                 Alpha-Normalization empty rows
+                          A*x'                                                   >= b          (2)
+                                       A*x"                                      >= b          (4)
+                         -V*x'                       +theta'*1                   >= w          (1)
+                                      -V*x"                            +theta"*1 >= w          (3)
+                                                        
+                            
+            where,
+                - lambda is x_fract
+                - V is the matrix of coefficients for cuts with theta (optimality, optimality from CGP PNB, epigraph)
+                - A is the matrix of problem coefficients and cuts w/o theta (feasibility, feasibility from CGP PNB, domain)
+                - x_overline is the MP solution in the current iteration
+            */
+            // Use SetAlphaNormalization() to transform to to Alpha-Normalized
+
+            // NB: be carefull with delete stuff here: objects from main loop smi might be deleted. Dynamic objects will be delete[] in DeleteSubproblem()
 			int num_cols = stage_pointer->num_columns_;
 			int num_rows = stage_pointer->num_rows_;
 			
 			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix();
+            // Line 5
             //*** (1-lambda) * x' + lambda * x" rows are fract var specific. Exact values are set in GenerateLiftAndProjectCut() of the main loop
                 // dimensions(num_cols, num_cols*2)
             //*** Alpha-Normalization rows (activated when Alph-Normalization applied)
                 // + dimensions(num_cols, num_cols*2) below
             problem_matrix->setDimensions(num_cols*2, num_cols*2);
 
+            // Lines 2 and 4
 			//*** A matrix rows
 			// A matrix -> A' and A"
 			CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
@@ -4036,18 +4056,20 @@ namespace parallel_benders {
         if (num_theta == 0) {
             num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
         }
-        assert(num_theta == 1);
         int num_cols = stage_data_[current_stage_]->num_columns_;
         int z0_col_index = num_cols * 2;
         int y0_col_index = num_cols * 2 + 1;
-        int tau_start = num_cols * 2 + 2;
-        int v_start = num_cols * 2 + 2 + num_theta;
+        int theta_tau_shift = num_cols + 2;
+        int theta_v_shift = theta_tau_shift + num_theta;
         
         const OsiRowCut* original_cut = cut_stuff->cut_.get();
         assert(original_cut->row().getNumElements() <= num_cols + 1); // element with value 0 are not included and we have at most one theta
+#ifndef NDEBUG
         if (cut_with_theta) {
-            assert(original_cut->row().findIndex(num_cols) == original_cut->row().getNumElements() - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
+            int theta_index = original_cut->row().getMaxIndex();
+            assert(original_cut->row().findIndex(theta_index) == original_cut->row().getNumElements() - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
         }
+#endif // !NDEBUG       
         
         std::vector<OsiRowCut> cuts;
         cuts.reserve(2);
@@ -4059,7 +4081,7 @@ namespace parallel_benders {
             CoinPackedVector* row = &(cuts.back().mutableRow());
             row->reserve(row->getNumElements() + 2); // incl. z_0 and y_0 columns
             if (cut_with_theta) {
-                row->getIndices()[row->getNumElements() - 1] = tau_start; // shift theta to the tau column
+                row->getIndices()[row->getNumElements() - 1] += theta_tau_shift; // shift theta to the tau column
             }
             row->insert(z0_col_index, -original_cut->lb()); // add RHS as coef for z_0, it has vector_size position in vector
         }
@@ -4075,9 +4097,10 @@ namespace parallel_benders {
                 for (int i = 0; i < row->getNumElements() - 1; ++i) {
                     row->getIndices()[i] += num_cols;
                 }
-                row->getIndices()[row->getNumElements() - 1] = v_start; // shift theta to the v column
+                row->getIndices()[row->getNumElements() - 1] += theta_v_shift; // shift theta to the v column
             }
             else {
+                assert(row->getMaxIndex() < num_cols);
                 for (int i = 0; i < row->getNumElements(); ++i) { // shift coefs to the right for y
                     row->getIndices()[i] += num_cols;
                 }
@@ -4833,10 +4856,6 @@ namespace parallel_benders {
                 new_cgp_pnb_opt_cuts = cgp_pnb->stage_data_[0]->added_optimality_cuts_;
                 int lp_round_cuts_applied(0);
                 BendersNodeData::cut_container::iterator it;
-                int num_theta = benders_node_pointer->num_thetas_;
-                if (num_theta == 0) {
-                    num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
-                }
 
                 // Add lp_round_opt and feas cuts (only for sequential fract)
                 if (lp_parallel_mode_ < PNB_PARAL_FRACTS) {
@@ -4868,7 +4887,6 @@ namespace parallel_benders {
                 }
 
                 for ( ; it != cgp_optimality_cuts->end(); ++it) {
-                    assert(num_theta == 1 && "Should be changed for multicut");
                     if ((*it)->to_use_) {
                         assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
                         ApplyCutToLnPCGP(dual_cgp_solver, (*it), benders_node_pointer);
@@ -4889,7 +4907,6 @@ namespace parallel_benders {
                     it = std::next(old_cgp_pnb_feas_cuts_back);
                 }
                 for ( ; it != cgp_feasibility_cuts->end(); ++it) {
-                    assert(num_theta == 1 && "Should be changed for multicut");
                     if ((*it)->to_use_) {
                         assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
                         ApplyCutToLnPCGP(dual_cgp_solver, (*it), benders_node_pointer);
@@ -5200,7 +5217,8 @@ namespace parallel_benders {
 #ifndef NDEBUG
             // Check if we already have such cut
             assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->feasibility_cuts_) && "The same cut to just build domain cut is present in feasibility cuts.");
-            assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_) && "The same cut to just build domain cut is present in domain cuts.");
+            assert(!(CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_) && num_fracts_with_domain_cuts == 1) && "The same cut to just build domain cut is present in domain cuts: for round with one fract vars. Never happened before.");
+            LogSpecialCase(CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_) && num_fracts_with_domain_cuts > 1, "The same cut to just build domain cut is present in domain cuts: for round >1 fract vars");
             assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_feasibility_cuts_) && "The same cut to just build domain cut is present in L&P round feasibility cuts.");
 #endif
 			AddCutToContainer(benders_tree_node_pointer, cut_stuff);
@@ -5239,14 +5257,37 @@ namespace parallel_benders {
                     assert(row_lower->size() == 0);
                     assert(row_upper->size() == 0);
 
-                    // TODO: write here the problem formulation with lines
+                    // Dual Zeta Normalized (DZN) CGP problem for L&P cuts
+                    // Used to construct plain Epigraph L&P cuts
+                    // or strengthened Epigraph L&P cuts if Benders optimality and feasibility cuts from CGP PNB are applied
+                    /*
+                    min                                    tau  + v
+
+                           z     + y                                     = x_overline   (7)
+                                           z0   +  y0                    = 1            (8)
+                          -z_i                                          >= 0            (3)
+                                   y_i          -  y0                   >= 0            (6)
+                          Alpha-Normalization empty rows
+                         A*z            -b*z0                           >= 0            (2)
+                                 A*y            -b*y0                   >= 0            (5)
+                        -V*z            -w*z0           +1*tau          >= 0            (1)
+                                -V*y            -w*y0          +1*v     >= 0            (4)
+                    
+                    where,
+                        - V is the matrix of coefficients for cuts with theta (optimality, optimality from CGP PNB, epigraph)
+                        - A is the matrix of problem coefficients and cuts w/o theta (feasibility, feasibility from CGP PNB, domain)
+                        - x_overline is the MP solution in the current iteration
+                    */
+
+                    // Can be used to construct Domain L&P cuts (w/o theta) if SetAlphaNormalization() applied                 
+
                     // TODO: think about row_ordered / column_ordered vs efficiency
                     int num_rows = stage_data->num_rows_;
                     int num_bin = core_->getBinaryCols(0).size();
                     int z0_col_index = num_cols * 2;
-                    int y0_col_index = num_cols * 2 + 1;
-                    int tau_start = num_cols * 2 + 2;
-                    int v_start = num_cols * 2 + 2 + num_theta;
+                    int y0_col_index = z0_col_index + 1;
+                    int tau_start = y0_col_index + 1;
+                    int v_start = tau_start + num_theta;
 
                     int rows_to_allocate = num_cols + 1 + 2 + num_cols + num_bin * 2 + num_rows * 2;
                     row_upper->reserve(rows_to_allocate);
@@ -5254,7 +5295,7 @@ namespace parallel_benders {
                     row_upper->assign(num_cols + 1, 0); // rows for lines 7, 8
                     row_lower->assign(num_cols + 1 + 2 + num_cols, 0); // TODO: check all the vectors and reserve enough space from the very start
 
-                    // Line 7: -z + -y = -x_dash
+                    // Line 7: -z + -y = -x_overline
                     // we copy solution (x_dash) to row UB and row LB later before solving DZN for every fractional
                     matrix->setDimensions(num_cols + 2, 0); // rows for lines 7, 8, 3, Alpha-Normalization empty rows
 
@@ -5285,7 +5326,7 @@ namespace parallel_benders {
                     assert(matrix->isColOrdered());
                     matrix->setMinorDim(matrix->getNumRows() + num_cols); // add num_cols empty rows
 
-                    // Lines 2 and 6 (bounds): -1*z + 1*z_0 >= 0 and -1*y + 1*y_0 >= 0 for binary vars
+                    // Lines 3 and 6 (bounds): -1*z + 1*z_0 >= 0 and -1*y + 1*y_0 >= 0 for binary vars
                     row_upper->insert(row_upper->end(), num_bin * 2, infinity_);
                     row_lower->insert(row_lower->end(), num_bin * 2, 0);
                     elems = { -1, 1 };
@@ -5303,7 +5344,7 @@ namespace parallel_benders {
                         matrix->appendRow(2, indices.data(), elems.data());
                     }
 
-                    // Lines 2 and 6: A*z - b*z_0 >= 0 and A*y - b*y_0 >= 0
+                    // Lines 2 and 5: A*z - b*z_0 >= 0 and A*y - b*y_0 >= 0
                     if (num_rows) {
                         // TODO: do we need bounds in matrix A?		
                         // A matrix -> A' and A"
@@ -5370,12 +5411,11 @@ namespace parallel_benders {
 
                     //Objective: min tau + v
                     objective->assign(num_cols * 2 + num_theta * 2 + 2, 0); //incl. tau and v
-                    assert(num_theta == 1);
-                    (*objective)[tau_start] = 1; //tau
-                    (*objective)[v_start] = 1; //v
+                    assert(!adaptive_ && "Dynamic cut aggregation is not implemented.");
+                    std::fill(objective->begin()+tau_start, objective->end(), 1);
 
                     //Column bounds
-                    //x and z have bounds from the original problem
+                    //z and y have bounds from the original problem
                     //TODO: what is with UB for binaries
                     const double* c_upper = core_->getDenseColUpper(0);
                     const double* c_lower = core_->getDenseColLower(0);
@@ -5394,10 +5434,8 @@ namespace parallel_benders {
                     column_upper->insert(column_upper->end(), 2, infinity_);
                     column_lower->insert(column_lower->end(), 2, 0);
                     // tau and v are free
-                    for (int i = 0; i < num_theta; i++) {
-                        column_upper->insert(column_upper->end(), 2, infinity_);
-                        column_lower->insert(column_lower->end(), 2, -infinity_);
-                    }
+                    column_upper->insert(column_upper->end(), num_theta*2, infinity_); // prime and double-prime
+                    column_lower->insert(column_lower->end(), num_theta*2, -infinity_); // prime and double-prime
 
                     assert(matrix->getNumRows() == rows_to_allocate);
                     assert(matrix->getNumCols() == num_cols * 2 + 2 + num_theta * 2);
@@ -5437,7 +5475,6 @@ namespace parallel_benders {
             it = benders_node_pointer->last_in_lp_cgp_problem_start_feasibility_;
         }
         for (; it != benders_node_pointer->feasibility_cuts_.end(); ++it) {
-            assert(num_theta == 1 && "Should be changed for multicut");
             if ((*it)->to_use_) {
                 ApplyCutToLnPCGP(&dual_cgp_solver, (*it), benders_node_pointer);
             }
@@ -5451,7 +5488,6 @@ namespace parallel_benders {
             it = benders_node_pointer->last_in_lp_cgp_problem_start_domain_;
         }
         for (; it != benders_node_pointer->domain_cuts_.end(); ++it) {
-            assert(num_theta == 1 && "Should be changed for multicut");
             if ((*it)->to_use_) {
                 ApplyCutToLnPCGP(&dual_cgp_solver, (*it), benders_node_pointer);
             }
@@ -5465,7 +5501,6 @@ namespace parallel_benders {
             it = benders_node_pointer->last_in_lp_cgp_start_optimality_;
         }
         for (; it != benders_node_pointer->optimality_cuts_.end(); ++it) {
-            assert(num_theta == 1 && "Should be changed for multicut");
             if ((*it)->to_use_) {
                 ApplyCutToLnPCGP(&dual_cgp_solver, (*it), benders_node_pointer);
             }
@@ -5488,20 +5523,13 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SetDualCGPFractVarSpecifics(OsiSolverInterface* dual_cgp_solver, const std::pair<int, double>& fractional_variable)
     {
-        BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
-        BendersStageData* stage_pointer = stage_data_[0];
-        int num_theta = benders_node_pointer->num_thetas_;
-        if (num_theta == 0) {
-            num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
-        }
-        int num_cols = stage_pointer->num_columns_;
-
         // Modify coefs of Lines 3 and 6 (there is no method in OSI to modify the single element in the matrix)
         // Line 3: -z_i >= 0 and Line 6 : y_i - y_0 >= 0
         OsiCpxSolverInterface* dual_cpx_cgp_solver = dynamic_cast<OsiCpxSolverInterface*>(dual_cgp_solver);
         assert(dual_cpx_cgp_solver != nullptr); // works only with Cpx
         CPXENVptr env_ptr = dual_cpx_cgp_solver->getEnvironmentPtr();
         CPXLPptr lp_ptr = dual_cpx_cgp_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+        int num_cols = stage_data_[0]->num_columns_;
         std::array<int, 2> rowlist = { num_cols + 1, num_cols + 2 };
         std::array<int, 2> collist = { fractional_variable.first, num_cols + fractional_variable.first };
         std::array<double, 2> vallist = { -1.0, 1.0 };
@@ -5512,7 +5540,6 @@ namespace parallel_benders {
 
 	void ParallelNestedBenders::SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set)
 	{
-		// TODO: write down here the problem modifications in math notation (Dual CGP and PNB CGP)
 		assert(current_stage_ == 0 && "We build L&P cuts for the MP or apply Alpha-Normalization to PNB CGP MP.");
 		BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		BendersStageData* stage_pointer = stage_data_[0];
@@ -5522,6 +5549,7 @@ namespace parallel_benders {
 		}
 		int num_cols = stage_pointer->num_columns_;
 		int extra_columns = (!lp_main_loop_iteration_round_ ? 2 : 0); // in PNB CGP MP we do not have z_0 and y_0 columns
+        assert(!(lp_main_loop_iteration_round_ && num_theta > 1) && "Not implemented for multicut and PNB CGP MP");
 		int tau_start = num_cols * 2 + extra_columns; // tau col index in DZN or theta prime in PNB CGP MP
 		int v_start = tau_start + num_theta;  // v start index in DZN or theta double-prime in PNB CGP MP
 		int alpha_normalization_start = v_start + num_theta;
@@ -5535,9 +5563,60 @@ namespace parallel_benders {
 			return;
 		}
 		
-		std::vector<int> indices(num_theta * 2 + 1); // last coefs are theta coefs. indices should have one dummy element at the end for setObjCoeffSet()
+		std::vector<int> indices(num_theta * 2 + 1); // last coefs are theta coefs. Indices should have one dummy element at the end for setObjCoeffSet()
 		std::iota(indices.begin(), indices.end(), tau_start);
 		std::vector<double> values(num_theta * 2, 0.0);
+
+        /*
+        ******* Zeta-Normalized Dual CGP
+        min                                    tau  + v
+
+               z     + y                                     = x_overline   (7)
+                               z0   +  y0                    = 1            (8)
+              -z_i                                          >= 0            (3)
+                       y_i          -  y0                   >= 0            (6)
+              Alpha-Normalization empty rows
+             A*z            -b*z0                           >= 0            (2)
+                     A*y            -b*y0                   >= 0            (5)
+            -V*z            -w*z0           +1*tau          >= 0            (1)
+                    -V*y            -w*y0          +1*v     >= 0            (4)
+
+        where,
+            - V is the matrix of coefficients for cuts with theta (optimality, optimality from CGP PNB, epigraph)
+            - A is the matrix of problem coefficients and cuts w/o theta (feasibility, feasibility from CGP PNB, domain)
+            - x_overline is the MP solution in the current iteration
+        
+        ******* Alpha-Normalized Dual CGP
+        min                                   0*tau +0*v                        +x_alpha_last
+
+               z     + y                                  +x_alpha' -x_alpha"                  = x_overline   (7)
+                               z0   +  y0                                                      = 1            (8)
+              -z_i                                                                            >= 0            (3)
+                       y_i          -  y0                                                     >= 0            (6)
+                                                          -x_alpha' -x_alpha"   +x_alpha_last >= 0            Alpha-Normalization empty rows
+             A*z            -b*z0                                                             >= 0            (2)
+                     A*y            -b*y0                                                     >= 0            (5)
+            -V*z            -w*z0           +1*tau                                            >= 0            (1)
+                    -V*y            -w*y0          +1*v                                       >= 0            (4)
+        
+        ******* Zeta-Normalized PNB CGP MP
+        min                             (1-lambda)*theta'  + lambda*theta"
+                (1-lambda)*x'  + lambda*x"                                      = x_overline (5)
+                Alpha-Normalization empty rows
+                        A*x'                                                   >= b          (2)
+                                    A*x"                                       >= b          (4)
+                        -V*x'                       +theta'*1                  >= w          (1)
+                                    -V*x"                            +theta"*1 >= w          (3)
+
+        where,
+            - lambda is x_fract
+            - V is the matrix of coefficients for cuts with theta (optimality, optimality from CGP PNB, epigraph)
+            - A is the matrix of problem coefficients and cuts w/o theta (feasibility, feasibility from CGP PNB, domain)
+            - x_overline is the MP solution in the current iteration
+
+        ******* Alpha-Normalized PNB CGP MP
+        TODO: ???
+        */
 		
 		if (set) {  // set Alpha-Normalization
 			int extra_rows(3);
@@ -5596,6 +5675,7 @@ namespace parallel_benders {
         //bool allow_domain_cuts = allowed_test_cases_.test(7); // checked not here
         bool allow_warm_start = allowed_test_cases_.test(8); // warm start
         bool allow_multiprocessing = allowed_test_cases_.test(9); // multiprocessing
+        bool allow_cut_aggregation = allowed_test_cases_.test(10); // cut aggregation
 
 		bool lp_check_passed = true;
 		//Parameter validity
@@ -5623,7 +5703,7 @@ namespace parallel_benders {
 		}
 		if (lp_rounds_limit_ > 0 || lp_main_loop_iteration_round_) {
 			//Check parameters
-			if (stage_data_[0]->num_thetas_ != 1) {
+			if (!allow_cut_aggregation && stage_data_[0]->num_thetas_ > 1) {
 				std::cout << "Cut aggreagation is not implemented for L&P cuts! Change solver parameter." << std::endl;
 				lp_check_passed = false;
 			}
