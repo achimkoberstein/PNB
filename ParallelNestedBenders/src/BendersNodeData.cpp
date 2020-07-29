@@ -538,7 +538,7 @@ void Parameter::init()
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
 	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
 	parameter_.put(PNB_CGP_EPSILON_RELATIVE, 1e-06);
-	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 10000000);
+	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 10000000000);
     parameter_.put(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
     parameter_.put(PNB_LP_USE_CGP_PNB_CUTS, false);
 
@@ -620,6 +620,10 @@ void Parameter::update_from_json_string( std::string json_string ) {
 				{
 					leaf.second.put_value(stoi(value)); // convert to int
 				}
+                catch (std::out_of_range& e)
+                {
+                    leaf.second.put_value(value); // save as a string (large integer);
+                }
 				catch (std::invalid_argument & e)
 				{
 					LOG(FATAL) << "Values in parameter_ should be int, float or bool. Check Parameter::consts_";

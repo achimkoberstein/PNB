@@ -552,15 +552,18 @@ struct Parameter {
 	void SetParameterValue(const std::string parameter, bool value) {
 		parameter_.put(parameter, value);
 	}
-    int GetIntParamValue(std::string parameter) const {
+    int GetIntParamValue(const std::string parameter) const {
         return parameter_.get<int>(parameter);
     }
-	double GetDblParamValue(std::string parameter) const {
+	double GetDblParamValue(const std::string parameter) const {
 		return parameter_.get<double>(parameter);
 	}
-	bool GetBoolParamValue(std::string parameter) const {
+	bool GetBoolParamValue(const std::string parameter) const {
 		return parameter_.get<bool>(parameter);
 	}
+    std::string GetStrParamValue(const std::string parameter) const {
+        return parameter_.get<std::string>(parameter);
+    }
 
 	// Constant names and their value for dynamic access
 	std::unordered_map<std::string, int> consts_;
