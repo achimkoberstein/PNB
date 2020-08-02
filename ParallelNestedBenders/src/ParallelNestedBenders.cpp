@@ -2821,7 +2821,7 @@ namespace parallel_benders {
 				int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
 				assert(num_cuts > 0);		
 				
-				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0); // normally we have only one theta
+				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0);
 				std::cout << "Solution of MP relaxation: " << benders_tree_node_pointer->getDataPtr()->solution_value_ + theta_sum << std::endl;
                 std::cout << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate." << std::endl;
 
@@ -4050,12 +4050,19 @@ namespace parallel_benders {
     void ParallelNestedBenders::ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff, BendersNodeData* benders_node_data) {
         
         assert(current_stage_ == 0);
-        bool cut_with_theta = cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH;
         int column_set = cut_stuff->column_set_;
         int num_theta = benders_node_data->num_thetas_;
         if (num_theta == 0) {
             num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
         }
+        int num_theta_indices = 0;
+        if (cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH) {
+            num_theta_indices = num_theta;
+        }
+        else if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {
+            num_theta_indices = 1;
+        }
+
         int num_cols = stage_data_[current_stage_]->num_columns_;
         int z0_col_index = num_cols * 2;
         int y0_col_index = num_cols * 2 + 1;
@@ -4063,11 +4070,11 @@ namespace parallel_benders {
         int theta_v_shift = theta_tau_shift + num_theta;
         
         const OsiRowCut* original_cut = cut_stuff->cut_.get();
-        assert(original_cut->row().getNumElements() <= num_cols + 1); // element with value 0 are not included and we have at most one theta
+        assert(original_cut->row().getNumElements() <= num_cols + num_theta_indices); // <= because elements with value 0 are not included
+        assert(original_cut->row().getMaxIndex() < num_cols + num_theta);
 #ifndef NDEBUG
-        if (cut_with_theta) {
-            int theta_index = original_cut->row().getMaxIndex();
-            assert(original_cut->row().findIndex(theta_index) == original_cut->row().getNumElements() - 1 && "Assumption: elements in vector are ordered by index and theta is the last one");
+        for (int i = 1; i < original_cut->row().getNumElements(); i++) {
+            assert(original_cut->row().getIndices()[i-1] < original_cut->row().getIndices()[i] && "Indices in the cut are not ordered.");
         }
 #endif // !NDEBUG       
         
@@ -4080,10 +4087,12 @@ namespace parallel_benders {
             cuts.back().setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
             CoinPackedVector* row = &(cuts.back().mutableRow());
             row->reserve(row->getNumElements() + 2); // incl. z_0 and y_0 columns
-            if (cut_with_theta) {
-                row->getIndices()[row->getNumElements() - 1] += theta_tau_shift; // shift theta to the tau column
+            // loop will run only for cuts with theta
+            for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
+                row->getIndices()[row->getNumElements() - 1 - aggregate_index] += theta_tau_shift; // shift theta to the tau column
             }
             row->insert(z0_col_index, -original_cut->lb()); // add RHS as coef for z_0, it has vector_size position in vector
+            
         }
 
         // apply to the double-prime side
@@ -4092,18 +4101,11 @@ namespace parallel_benders {
             cuts.back().setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
             CoinPackedVector* row = &(cuts.back().mutableRow());
             row->reserve(row->getNumElements() + 2); // incl. z_0 and y_0 columns
-            int i = 0;
-            if (cut_with_theta) {
-                for (int i = 0; i < row->getNumElements() - 1; ++i) {
-                    row->getIndices()[i] += num_cols;
-                }
-                row->getIndices()[row->getNumElements() - 1] += theta_v_shift; // shift theta to the v column
+            for (int i = 0; i < row->getNumElements() - num_theta_indices; ++i) {
+                row->getIndices()[i] += num_cols;
             }
-            else {
-                assert(row->getMaxIndex() < num_cols);
-                for (int i = 0; i < row->getNumElements(); ++i) { // shift coefs to the right for y
-                    row->getIndices()[i] += num_cols;
-                }
+            for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
+                row->getIndices()[row->getNumElements() - 1 - aggregate_index] += theta_v_shift; // shift theta to the v column
             }
             row->setElement(row->getNumElements(), 0); // set coef for z_0 to 0, it has row->getNumElements() position in vector
             row->insert(y0_col_index, -original_cut->lb()); // add RHS as coef for y_0
@@ -5013,8 +5015,16 @@ namespace parallel_benders {
                     current_cuts_rhs = &domain_current_cuts_rhs_;
                 }
                 int num_cols = stage_data_[0]->num_columns_;
+                assert(current_stage_ == 0);
+                int num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
+                int node_num_cuts = benders_node_pointer->num_thetas_;
+                if (num_theta != node_num_cuts) {
+                    if (node_num_cuts > 0) // Initialized with 0, so in first iteration not reasonable
+                        num_theta = node_num_cuts;
+                }
                 std::lock_guard<std::mutex> unique_lock(lp_cuts_coefficients_mutex_);
-                current_cuts_coefficients->push_back(std::vector<double>(num_cols));
+                current_cuts_coefficients->push_back(std::vector<double>());
+                current_cuts_coefficients->back().reserve(num_cols + num_theta); // reserve for cols and theta (will be used in AggregateLiftAndProjectCuts())
 				StoreValuesFromSolverInVector(current_cuts_coefficients->back(), dual_cgp_solver->getRowPrice(), num_cols);
                 current_cuts_rhs->push_back(dual_cgp_solver->getRowPrice()[num_cols]);
 			}
@@ -5056,11 +5066,6 @@ namespace parallel_benders {
 
 	void ParallelNestedBenders::AggregateLiftAndProjectCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ) {
 
-		// Functionally similar to AggregateOptimalityCuts(). Later might be reasonable to update that method instead of creating the new one
-		// AggregateOptimalityCuts() iterates over thetas (aggregates of subproblesm)
-		// In this method we should iterate over cuts for integer vars and for every call AggregateOptimalityCuts()
-		// Currently we do not use any kind of aggregation technique for L&P cuts
-
 		int num_fracts_with_epigraph_cuts = epigraph_current_cuts_rhs_.size();
 		int num_fracts_with_domain_cuts = domain_current_cuts_rhs_.size();
 		if (!num_fracts_with_epigraph_cuts && !num_fracts_with_domain_cuts) {
@@ -5084,7 +5089,6 @@ namespace parallel_benders {
 			bool change_aggregation_level = benders_node_pointer->changed_aggregation_level_;
             LogSpecialCase(current_iteration_ == 1, "Build L&P cuts in first iteration");
 			assert(!change_aggregation_level && "Not tested when aggreg level changes before L&P round. Probably it is the first iteration.");
-			assert(num_theta == 1 && "Check whether L&P cuts are build correct for aggregation schemes.");
             assert(num_theta > 0);
 			if (num_theta != benders_node_pointer->num_thetas_) {
 				assert(false && "Not tested when aggreg level changed during L&P round.");
@@ -5097,16 +5101,14 @@ namespace parallel_benders {
 			}
 
 			for (int fract_index = 0; fract_index < num_fracts_with_epigraph_cuts; fract_index++) {
-				// TODO: here we will call AggregateOptimalityCuts() method
-                // for cut_index in num aggregates (see the aggrregation of Opt Cuts)
-                int cut_index = 0;
 				double cut_lower_bound = epigraph_current_cuts_rhs_[fract_index];
+                int num_theta_indices = num_theta; // for multicut every theta has coef 1
 			
-				std::vector<double> cut_elements = epigraph_current_cuts_coefficients_[fract_index];
+                std::vector<double>& cut_elements = epigraph_current_cuts_coefficients_[fract_index];
 				assert(epigraph_current_cuts_coefficients_[fract_index].size() == num_cols);
-				cut_elements.resize(num_cols + num_theta, 1.0);
+                cut_elements.resize(num_cols + num_theta_indices, 1.0); // theta coef
 
-				std::vector<int> cut_indices(num_cols + num_theta);
+                std::vector<int> cut_indices(num_cols + num_theta_indices);
 				std::iota(cut_indices.begin(), cut_indices.end(), 0); // 0, 1, 2...
 
 				// Check if cut is not redundant: Conditional Expected Value of Subproblems (theta) is greater than before. For implementation reasons, we only do this if we do not change aggregation level..
@@ -5128,9 +5130,11 @@ namespace parallel_benders {
 				if (CompareWithZero(cut_lower_bound))
 					cut_lower_bound = 0.0;
 
-				int new_index = 0;
+                // element: 1.5, 0, 3.1, 1, 0 -> 1.5, 3.1, 1, 0, 0
+                // indices:   0, 1,   2, 3, 4 ->   0,   2, 3, 4, 4
 				// Clear zero elements and create sparse vector for future reference
-				for (int i = 0; i < num_cols + num_theta; i++) {
+                int new_index = 0;
+                for (int i = 0; i < num_cols+num_theta_indices; i++) { // all incl. theta
 					if (CompareWithZero(cut_elements[i])) {
 						// Set cut element to zero, if near enough to zero, otherwise numerical difficulties arise
 						cut_elements[i] = 0.0;
@@ -5141,15 +5145,15 @@ namespace parallel_benders {
 						new_index++;
 					}
 				}
-				assert(new_index <= num_cols + num_theta);
+				assert(new_index <= num_cols + num_theta_indices);
 
 				OsiRowCut* cut = new OsiRowCut();
 				cut->setLb(cut_lower_bound);
 				cut->setUb(infinity_);
-				cut->setRow(new_index, &cut_indices[0], &cut_elements[0], debug_test_duplicate_indices_);
+                cut->setRow(new_index, &cut_indices[0], &cut_elements[0], debug_test_duplicate_indices_); // copy
                 std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
 				std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_EPIGRAPH));
-				cut_stuff->aggregate_number_ = 1;
+                cut_stuff->aggregate_number_ = -1; // epigraph cut is defined for all aggregates, i.e., all thetas have coef 1 in the row
 				
 				//For testing we might want to dump and/or load the cuts
 				//std::stringstream f_name;
@@ -5157,9 +5161,9 @@ namespace parallel_benders {
 				//cut_stuff->DumpCutStuff(f_name.str());
 				//cut_stuff->LoadCutStuff(f_name.str());
 
-				if (change_aggregation_level || sum > benders_node_pointer->next_stage_approximation_[0]) {
-					stage_data_[current_stage_]->added_epigraph_cuts_++;
-					benders_node_pointer->active_aggregates_[cut_index] = true;  // Set aggregate to active: We have a cut for this aggregate
+                if (change_aggregation_level || sum > std::accumulate(benders_node_pointer->next_stage_approximation_.begin(), benders_node_pointer->next_stage_approximation_.end(), 0)) {
+                    stage_data_[current_stage_]->added_epigraph_cuts_++;
+                    benders_tree_node_pointer->getDataPtr()->active_aggregates_.set(); // L&P cut is defined for all aggregates
 				}
 				else {
                     LogSpecialCase(true, "Epigraph Cut is not tight and not added to master");
@@ -5514,7 +5518,6 @@ namespace parallel_benders {
             it = benders_node_pointer->last_in_lp_cgp_start_epigraph_;
         }
         for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
-            assert(num_theta == 1 && "Should be changed for multicut");
             if ((*it)->to_use_) {
                 ApplyCutToLnPCGP(&dual_cgp_solver, (*it), benders_node_pointer);
             }
