@@ -854,7 +854,6 @@ namespace parallel_benders {
             CutStuff cut = *it->get();
             cut.cut_creation_iteration_ = 0;
             cut.column_set_ = parallel_benders::PNB_COL_SET_NONE; // it will be added to both - prime and double-prime - sides of MP CGP
-            cut.type_ = parallel_benders::PNB_CUT_TYPE_FEASIBILITY;
             AddCutToContainer(cgp_first_stage, std::make_shared<CutStuff>(cut));
         }
 
@@ -881,7 +880,6 @@ namespace parallel_benders {
         for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
             CutStuff cut = *it->get();
             cut.cut_creation_iteration_ = 0;
-            cut.type_ = parallel_benders::PNB_CUT_TYPE_OPTIMALITY;
             AddCutToContainer(cgp_first_stage, std::make_shared<CutStuff>(cut));
         }
     }
@@ -906,6 +904,7 @@ namespace parallel_benders {
         cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, print_subproblems_);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
+        cgp_parameter.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, parameter_.GetIntParamValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS));
 
         //we do not compute solutions and objectives since they should somehow be stored from prime and double prime subproblems
         cgp_parameter.SetParameterValue(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, PNB_INT_SOLUTION_PRIMAL_NO);
@@ -973,7 +972,6 @@ namespace parallel_benders {
         if (num_theta == 0) {
             num_theta = cgp_pnb->getNumThetasByStage(cgp_first_stage);
         }
-        assert(num_theta <= 1 && "Is it multicut or something else?");
 
         assert(first_stage_osi->getNumCols() == num_cols * 2 + num_theta * 2 && "Might fail if theta normalized or for (multicut && old_solution_code==infeasible)");
 
@@ -981,7 +979,7 @@ namespace parallel_benders {
         std::vector<int> indices(num_theta * 2 + 1); // last coefs are theta coefs. indices should have one dummy element at the end for setObjCoeffSet()
         std::iota(indices.begin(), indices.end(), num_cols * 2); // prime and double-prime
         std::vector<double> values;
-        values.reserve(num_theta * 2);
+        values.reserve(max(num_theta*2, num_cols*2));
         values.resize(num_theta, 1 - fractional_variable.second);
         values.resize(num_theta * 2, fractional_variable.second);
         first_stage_osi->setObjCoeffSet(indices.data(), &indices.back(), values.data());
@@ -993,6 +991,7 @@ namespace parallel_benders {
         std::vector<int>cols(num_cols * 2); // prime / double-prime
         std::iota(cols.begin(), cols.begin() + num_cols, 0);
         std::iota(cols.begin() + num_cols, cols.end(), num_cols);
+        values.clear();
         values.resize(num_cols * 2, fractional_variable.second); // double-prime side is ready
         std::fill_n(values.begin(), num_cols, 1 - fractional_variable.second); // prepare the prime side
 
@@ -1762,18 +1761,29 @@ namespace parallel_benders {
 				prime_multiplier = lp_main_loop_fract_var_value_; // lambda
 			}
 
-			double exptected_stage_solution_value(0);
+			double expected_stage_solution_value(0);
             for ( auto node : tree_nodes_by_stage_[current_stage_]){
-                temporary_stage_lower_bound += node->getDataPtr()->lower_bound_*node->getDataPtr()->probability_*prime_multiplier; // TODO: what is here for 2nd stage
-				exptected_stage_solution_value += node->getDataPtr()->solution_value_* node->getDataPtr()->probability_; // q(x)
+                temporary_stage_lower_bound += node->getDataPtr()->lower_bound_*node->getDataPtr()->probability_*prime_multiplier; // solution with thetas (if any) * prob
+                expected_stage_solution_value += node->getDataPtr()->solution_value_* node->getDataPtr()->probability_; // q(x): solution w/o thetas (if any) * prob
             }
 			if (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME || lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) { // for 2nd stage of L&P CGP
-				double theta_value = tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_[lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME ? 0 : 1];
-				double ub_base = std::max(exptected_stage_solution_value, theta_value); // max(q(x), theta)
-				temporary_stage_upper_bound += ub_base*prime_multiplier;
+                assert(lp_main_loop_iteration_round_ != nullptr);
+                assert(current_stage_ == 1);
+                int num_theta = tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->num_thetas_;
+                if (num_theta == 0) {
+                    num_theta = getNumThetasByStage(tree_nodes_by_stage_[current_stage_ - 1][0]);
+                }
+                std::vector<double>::iterator theta_start = tree_nodes_by_stage_[current_stage_ - 1][0]->getDataPtr()->next_stage_approximation_.begin();
+                if (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
+                    theta_start += num_theta;
+                }
+                double theta_value = std::accumulate(theta_start, theta_start+num_theta, 0.0);
+                LogSpecialCase(expected_stage_solution_value < theta_value, "q(x) < theta in UB calculation for L&P CGP PNB");
+				double ub_base = std::max(expected_stage_solution_value, theta_value); // max(q(x), theta)
+				temporary_stage_upper_bound += ub_base*prime_multiplier; // for CGP PNB it is 0 += smth
 			}
 			else {
-				temporary_stage_upper_bound += exptected_stage_solution_value;
+				temporary_stage_upper_bound += expected_stage_solution_value;
 			}
 
             bool can_update_upper_bound = !warm_up_;
@@ -2929,7 +2939,7 @@ namespace parallel_benders {
         DeleteSubproblem(osi_solver,benders_tree_node_pointer);
 
         //Move CGP cuts to the main loop
-        if (generate_lp_cuts_ && (!benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.empty() || !benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.empty())) {
+        if (generate_lp_cuts_ && (!benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.empty() || !benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.empty())) {
             assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ == benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
             assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_feasibility_ == benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.end());
             stage_data_[current_stage_]->added_optimality_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
@@ -3030,12 +3040,12 @@ namespace parallel_benders {
 					// if L&P CGP has no optimality cuts - it is unbounded
 					if (lp_main_loop_iteration_round_) {
 						assert(current_stage_ == 0);
-						assert(benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() && "Why else whould we have it?");
+						assert(benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() && benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.empty() && "Why else whould we have it?");
                         assert(current_stage_ == 0 && current_iteration_ == 1 && "Why would PNB CGP MP be unbounded in > 1 iterations");
 						num_thetas = getNumThetasByStage(benders_tree_node_pointer);
 						num_thetas *= 2; // prime and double prime
 					}
-					assert(!(lp_main_loop_iteration_round_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()) && "Why would PNB CGP unbounded if opt cuts are present?");
+					assert(!(lp_main_loop_iteration_round_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() && !benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.empty()) && "Why would PNB CGP unbounded if opt cuts are present?");
                     if ( num_thetas && unbounded_theta){
                         // TODO Inspect the unbounded extreme ray to see if we need this extra row!
                         // 
@@ -3246,16 +3256,20 @@ namespace parallel_benders {
 
 		// Copy theta variables
 		int num_normaliz_cols = benders_node_pointer->alpha_normalized_ ? benders_node_pointer->cols_ + 1 : 0; // applicable for L&P PNB CGP with Alpha-Normalization
-		assert(!(lp_main_loop_iteration_round_ && current_stage_ == 0 && osi_solver->getNumCols() - benders_node_pointer->cols_ - num_normaliz_cols != 2) && "Why would num_theta be not 2 if we do not use multicut / cut aggreagtion in CGP?");
 		assert(!(!lp_main_loop_iteration_round_ && lp_rounds_limit_ == 0 && benders_node_pointer->cols_ != stage_data_[current_stage_]->num_columns_) && "Why would it be different unless we use L&P cuts");
 		int num_theta = osi_solver->getNumCols()-benders_node_pointer->cols_-num_normaliz_cols;
-		if (lp_main_loop_iteration_round_ && current_stage_ == 0) { // TODO: delete after tested
-			assert(num_theta == 2 && "Not tested with multicut.");
-			// prime, d-prime cols; prime, d-prime theta, norm_cols, last_norm_col
-			assert(num_theta = osi_solver->getNumCols() - benders_node_pointer->cols_ - num_normaliz_cols);
-			assert(num_normaliz_cols == benders_node_pointer->cols_ + 1 || num_normaliz_cols == 0);
-		}
         assert(num_theta >= 0);
+#ifndef NDEBUG
+        if (lp_main_loop_iteration_round_ && current_stage_ == 0) { // TODO: delete after tested, !!!
+			// prime, d-prime cols; prime, d-prime theta, norm_cols, last_norm_col
+            assert(num_theta == osi_solver->getNumCols() - benders_node_pointer->cols_ - num_normaliz_cols);
+            int num_theta_calculated = benders_tree_node_pointer->getDataPtr()->num_thetas_*2;
+            if (num_theta_calculated == 0) {
+                num_theta_calculated = getNumThetasByStage(benders_tree_node_pointer)*2;
+            }
+            assert(num_theta == num_theta_calculated);
+        }
+#endif // NDEBUG
 
         // Store values for next stage approximation and column solution 
         // Store old_lower_bound solution too
@@ -3283,8 +3297,10 @@ namespace parallel_benders {
             //    for (int i = 0; i < num_theta;i++)
             //        benders_node_pointer->next_stage_approximation_[i] = -infinity_;
             //}
-            if ( benders_node_pointer->optimality_cuts_.empty() && !generate_lp_cuts_)
+            if (benders_node_pointer->optimality_cuts_.empty() && !generate_lp_cuts_) {
+                assert(!lp_main_loop_iteration_round_ && "Never tested. Do we need to check of epigraph cuts as well");
                 num_theta = 0;
+            }
         }
 
         //// If we have integer variables, we might want to set these variables to pure integer values! (because of tolerances)
@@ -3676,7 +3692,7 @@ namespace parallel_benders {
                 - A is the matrix of problem coefficients and cuts w/o theta (feasibility, feasibility from CGP PNB, domain)
                 - x_overline is the MP solution in the current iteration
             */
-            // Use SetAlphaNormalization() to transform to to Alpha-Normalized
+            // Use SetAlphaNormalization() to transform to Alpha-Normalized
 
             // NB: be carefull with delete stuff here: objects from main loop smi might be deleted. Dynamic objects will be delete[] in DeleteSubproblem()
 			int num_cols = stage_pointer->num_columns_;
@@ -4009,36 +4025,38 @@ namespace parallel_benders {
 		}
 		else {
             assert(current_stage_ == 0 && "Why would we apply cuts to PNB CGP not on the first stage. Might happen if ApplyCut is called not from the Solve() routine");
-            assert(getNumThetasByStage(tree_nodes_by_stage_[current_stage_][0]) == 1);
-			bool cut_with_theta = cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH;
-			assert(cut_stuff->type_ != PNB_CUT_TYPE_EPIGRAPH && "To CGP PNB we pass epigraph cuts as opt cuts.");
-			assert(cut_stuff->type_ != PNB_CUT_TYPE_DOMAIN && "To CGP PNB we pass domain cuts as feas cuts.");
 			int column_set = cut_stuff->column_set_;
+            int num_theta = tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_;
+            if (num_theta == 0) {
+                num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
+            }
+            int num_theta_indices = 0;
+            if (cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH) {
+                num_theta_indices = num_theta;
+            }
+            else if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {
+                num_theta_indices = 1;
+            }
 			
             std::vector<OsiRowCut> cuts;
             cuts.reserve(2);
 			if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_PRIME) {
                 cuts.emplace_back(*original_cut);
-                if (cut_with_theta) {
-                    CoinPackedVector* row = &(cuts.back().mutableRow());
-                    row->getIndices()[row->getNumElements() - 1] += stage_data_[current_stage_]->num_columns_; // shift theta to the end
-				}
+                CoinPackedVector* row = &(cuts.back().mutableRow());
+                // loop will run only for cuts with theta
+                for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
+                    row->getIndices()[row->getNumElements() - 1 - aggregate_index] += stage_data_[current_stage_]->num_columns_; // shift theta
+                }
 			}
 			if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
 				//apply to the right side => shift by num_cols - used for L&P CGP master problem
                 cuts.emplace_back(*original_cut);
                 CoinPackedVector* row = &(cuts.back().mutableRow());
-                int i = 0;
-				if (cut_with_theta) {
-					for (; i < row->getNumElements() - 1; ++i) {
-						row->getIndices()[i] += stage_data_[current_stage_]->num_columns_;
-					}
-                    row->getIndices()[i] += stage_data_[current_stage_]->num_columns_ + 1; // shift theta to the end
+                for (int i = 0; i < row->getNumElements() - num_theta_indices; ++i) {
+					row->getIndices()[i] += stage_data_[current_stage_]->num_columns_;
 				}
-				else {
-					for (; i < row->getNumElements(); ++i) {
-                        row->getIndices()[i] += stage_data_[current_stage_]->num_columns_;
-					}
+                for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
+                    row->getIndices()[row->getNumElements() - 1 - aggregate_index] += stage_data_[current_stage_]->num_columns_ + num_theta; // shift theta
 				}
 			}
             osi_solver->applyRowCuts(cuts.size(), cuts.data());
@@ -4186,6 +4204,7 @@ namespace parallel_benders {
             // Transform all old optimality cuts to new ones.
             // Set new values
             benders_tree_node_pointer->getDataPtr()->num_thetas_ = num_cuts;
+            assert(!(lp_main_loop_iteration_round_ && adaptive_) && "Never tested. Activate_aggregates should probably have size num_theta*2 etc.");
             benders_tree_node_pointer->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
             benders_tree_node_pointer->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
         }
@@ -4267,8 +4286,7 @@ namespace parallel_benders {
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY));
             cut_stuff->aggregate_number_ = i;
 			cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
-			int theta_index = i + (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME ? 1 : 0); // in L&P CGP 2 stage approximation has 
-			assert(!(lp_main_loop_iteration_round_ && i > 0) && "be carefull with next_stage_approximation_: for single cut it is: [theta_prime, theta_double_prime]; for multi cut it should be [theta_prime_agr_1, theta_double_prime_agr_1, theta_prime_agr_2...]");
+			int theta_index = i + (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME ? benders_tree_node_pointer->getDataPtr()->num_thetas_ : 0);
             if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index]-d_square_translation_term_ : 0) ){
                 added_cuts++;
                 benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate
@@ -4787,7 +4805,7 @@ namespace parallel_benders {
             if (!cgp_feasibility_cuts->empty()) {
                 old_cgp_pnb_feas_cuts_back--;
             }
-            LogSpecialCase(cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty(), "Solve CGP PNB w/o optimality-like cuts");
+            LogSpecialCase(cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() && cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.empty(), "Solve CGP PNB w/o optimality-like cuts");
             
 #ifdef NDEBUG
             SetLogging(google::ERROR); // no output for cgp_pnb_ in release
@@ -5096,6 +5114,7 @@ namespace parallel_benders {
 				benders_node_pointer->changed_aggregation_level_ = true;
 				// Set new values
 				benders_node_pointer->num_thetas_ = num_theta;
+                assert(!(lp_main_loop_iteration_round_ && adaptive_) && "Never tested. Activate_aggregates should probably have size num_theta*2 etc.");
 				benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
 				benders_node_pointer->was_under_threshold_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
 			}
@@ -5162,21 +5181,24 @@ namespace parallel_benders {
 				//cut_stuff->LoadCutStuff(f_name.str());
 
                 if (change_aggregation_level || sum > std::accumulate(benders_node_pointer->next_stage_approximation_.begin(), benders_node_pointer->next_stage_approximation_.end(), 0)) {
-                    stage_data_[current_stage_]->added_epigraph_cuts_++;
-                    benders_tree_node_pointer->getDataPtr()->active_aggregates_.set(); // L&P cut is defined for all aggregates
+#ifndef NDEBUG
+                    // Check if we already have such cut
+                    assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->optimality_cuts_) && "The same cut to just build epigraph cut is present in optimality cuts. Never happened before.");
+                    assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_optimality_cuts_) && "The same cut to just build epigraph cut is present in L&P round optimality cuts. Never happened before.");
+#endif
+                    bool duplicate_cut = CheckForSameCut(*cut_stuff, benders_node_pointer->epigraph_cuts_);
+                    LogSpecialCase(duplicate_cut && num_fracts_with_epigraph_cuts > 1, "The same cut to just build epigraph cut is present in epigraph cuts: for round >1 fract vars");
+                    assert(!(duplicate_cut && num_fracts_with_epigraph_cuts == 1) && "The same cut to just build epigraph cut is present in epigraph cuts: for round with one fract vars. Never happened before.");
+                    if (!duplicate_cut) {
+                        stage_data_[current_stage_]->added_epigraph_cuts_++;
+                        benders_tree_node_pointer->getDataPtr()->active_aggregates_.set(); // L&P cut is defined for all aggregates
+                        AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+                    }
 				}
 				else {
                     LogSpecialCase(true, "Epigraph Cut is not tight and not added to master");
 					cut_stuff->to_use_ = false;
 				}
-#ifndef NDEBUG
-                // Check if we already have such cut
-                assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->optimality_cuts_) && "The same cut to just build epigraph cut is present in optimality cuts. Never happened before.");
-                assert(!(CheckForSameCut(*cut_stuff, benders_node_pointer->epigraph_cuts_) && num_fracts_with_epigraph_cuts == 1) && "The same cut to just build epigraph cut is present in epigraph cuts: for round with one fract vars. Never happened before.");
-                LogSpecialCase(CheckForSameCut(*cut_stuff, benders_node_pointer->epigraph_cuts_) && num_fracts_with_epigraph_cuts > 1, "The same cut to just build epigraph cut is present in epigraph cuts: for round >1 fract vars");
-                assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_optimality_cuts_) && "The same cut to just build epigraph cut is present in L&P round optimality cuts. Never happened before.");
-#endif
-				AddCutToContainer(benders_tree_node_pointer, cut_stuff);
 			}
 		}
 
@@ -5216,16 +5238,18 @@ namespace parallel_benders {
             std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
 			std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_DOMAIN));
 
-			//TODO: for feasibility cuts we check CheckForSameCut()
-			stage_data_[current_stage_]->added_domain_cuts_++;
 #ifndef NDEBUG
             // Check if we already have such cut
             assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->feasibility_cuts_) && "The same cut to just build domain cut is present in feasibility cuts.");
             assert(!(CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_) && num_fracts_with_domain_cuts == 1) && "The same cut to just build domain cut is present in domain cuts: for round with one fract vars. Never happened before.");
-            LogSpecialCase(CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_) && num_fracts_with_domain_cuts > 1, "The same cut to just build domain cut is present in domain cuts: for round >1 fract vars");
-            assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_feasibility_cuts_) && "The same cut to just build domain cut is present in L&P round feasibility cuts.");
 #endif
-			AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+            bool duplicate_cut = CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_);
+            LogSpecialCase(duplicate_cut && num_fracts_with_domain_cuts > 1, "The same cut to just build domain cut is present in domain cuts: for round >1 fract vars");
+            assert(!(duplicate_cut&& num_fracts_with_domain_cuts == 1) && "The same cut to just build domain cut is present in domain cuts: for round with one fract vars. Never happened before.");
+            if (!duplicate_cut) {
+                stage_data_[current_stage_]->added_domain_cuts_++;
+                AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+            }
 		}	
 	}
 
@@ -5552,7 +5576,6 @@ namespace parallel_benders {
 		}
 		int num_cols = stage_pointer->num_columns_;
 		int extra_columns = (!lp_main_loop_iteration_round_ ? 2 : 0); // in PNB CGP MP we do not have z_0 and y_0 columns
-        assert(!(lp_main_loop_iteration_round_ && num_theta > 1) && "Not implemented for multicut and PNB CGP MP");
 		int tau_start = num_cols * 2 + extra_columns; // tau col index in DZN or theta prime in PNB CGP MP
 		int v_start = tau_start + num_theta;  // v start index in DZN or theta double-prime in PNB CGP MP
 		int alpha_normalization_start = v_start + num_theta;
@@ -5566,6 +5589,7 @@ namespace parallel_benders {
 			return;
 		}
 		
+        assert(!(lp_main_loop_iteration_round_ && num_theta > 1) && "Not implemented for multicut and PNB CGP MP");
 		std::vector<int> indices(num_theta * 2 + 1); // last coefs are theta coefs. Indices should have one dummy element at the end for setObjCoeffSet()
 		std::iota(indices.begin(), indices.end(), tau_start);
 		std::vector<double> values(num_theta * 2, 0.0);
@@ -6074,13 +6098,13 @@ namespace parallel_benders {
 							}
 						}
 					}
+                    assert( (*feas_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
 					ApplyCut(osi_solver, *feas_it);
 				}
 			}
         }
 
 		if (!benders_node_pointer->domain_cuts_.empty()) {
-			assert(!lp_main_loop_iteration_round_ && "Cannot have L&P cuts in CGP");
 			// Add the cuts
 			if (seperate_first_stage_solver_ && current_stage_ == 0) {
 				domain_it = benders_node_pointer->last_round_start_domain_;
@@ -6092,7 +6116,6 @@ namespace parallel_benders {
 					assert((*domain_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
 
 					if (!benders_node_pointer->warm_start_added_ && ((*domain_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*domain_it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
-						assert(false && "Never tested.");
 						// Add warm start
 						SetWarmStart(osi_solver, benders_tree_node_pointer);
 						benders_node_pointer->warm_start_added_ = true;
@@ -6108,12 +6131,12 @@ namespace parallel_benders {
 							}
 						}
 					}
-					osi_solver->applyRowCuts(1, (*domain_it)->cut_.get());
+					ApplyCut(osi_solver, *domain_it);
 				}
 			}
 		}
 		
-        LogSpecialCase(lp_main_loop_iteration_round_ && current_stage_ == 0 && benders_node_pointer->optimality_cuts_.empty(), "Solve PNB CGP w/o optimality-like cuts");
+        LogSpecialCase(lp_main_loop_iteration_round_ && current_stage_ == 0 && benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty(), "Solve PNB CGP w/o optimality-like cuts");
 		if ( !benders_node_pointer->optimality_cuts_.empty()){
             // Add the cuts
             BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin();
@@ -6157,7 +6180,6 @@ namespace parallel_benders {
         }
 
 		if (!benders_node_pointer->epigraph_cuts_.empty()) {
-			assert(!lp_main_loop_iteration_round_ && "Cannot have L&P cuts in CGP");
 			// Add the cuts
 			BendersNodeData::cut_container::iterator it = benders_node_pointer->epigraph_cuts_.begin();
 			if (seperate_first_stage_solver_ && current_stage_ == 0) {
@@ -6170,8 +6192,7 @@ namespace parallel_benders {
 				else
 					it = benders_node_pointer->epigraph_cuts_.end();
 			}
-			assert(!benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ && "Is it a problem? Test!");
-			LOG_IF(FATAL, current_iteration_ == 1 && (generate_lp_cuts_ || lp_main_loop_iteration_round_)) << "Is it a problem?";  //changed_aggregation_level_ should be changed if we build lp cut in 1st iteration. Right?
+			LOG_IF(FATAL, current_iteration_ == 1 && generate_lp_cuts_) << "Is it a problem?";  //changed_aggregation_level_ should be changed if we build lp cut in 1st iteration. Right?
 			benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
 
 			for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
@@ -6182,7 +6203,8 @@ namespace parallel_benders {
                 }
 
 				if ((*it)->to_use_) {
-					osi_solver->applyRowCuts(1, (*it)->cut_.get());
+					assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
+                    ApplyCut(osi_solver, *it);
 				}
 			}
 			benders_node_pointer->last_round_start_epigraph_ = benders_node_pointer->epigraph_cuts_.end();
@@ -6190,7 +6212,7 @@ namespace parallel_benders {
         
 // Add risk constraints to problem ( they get deleted at the start of this method!)
 		if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty() ){
-
+            assert(lp_main_loop_iteration_round_ == nullptr && "Modify ApplyCut() for cvar_cuts and use it here");
             // Simple addition without consideration of warm start behavior
             // Store current row index for future consideration
             benders_node_pointer->cvar_cut_index_ = osi_solver->getNumRows();
@@ -7782,6 +7804,7 @@ namespace parallel_benders {
 			osi_solver->deleteCols(cols_to_remove,&remove_indices[0]);
 		}
 
+        assert(!(lp_main_loop_iteration_round_ && adaptive_) && "For adaptive aggregation we would need to run the code below for L&P CGP PNB. Mind that theta coef is not 1 than.");
    		if ( benders_node_pointer->changed_aggregation_level_ && !benders_node_pointer->optimality_cuts_.empty() && !lp_main_loop_iteration_round_) {//we do not do it in L&P CGP
 			// We need to activate the theta variables!
 			for (int i = 0; i < benders_node_pointer->num_thetas_; i++){
