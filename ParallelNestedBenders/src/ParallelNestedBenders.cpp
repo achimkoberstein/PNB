@@ -5575,7 +5575,7 @@ namespace parallel_benders {
 			num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
 		}
 		int num_cols = stage_pointer->num_columns_;
-		int extra_columns = (!lp_main_loop_iteration_round_ ? 2 : 0); // in PNB CGP MP we do not have z_0 and y_0 columns
+		int extra_columns = (lp_main_loop_iteration_round_ ? 0 : 2); // in PNB CGP MP we do not have z_0 and y_0 columns
 		int tau_start = num_cols * 2 + extra_columns; // tau col index in DZN or theta prime in PNB CGP MP
 		int v_start = tau_start + num_theta;  // v start index in DZN or theta double-prime in PNB CGP MP
 		int alpha_normalization_start = v_start + num_theta;
@@ -5589,7 +5589,6 @@ namespace parallel_benders {
 			return;
 		}
 		
-        assert(!(lp_main_loop_iteration_round_ && num_theta > 1) && "Not implemented for multicut and PNB CGP MP");
 		std::vector<int> indices(num_theta * 2 + 1); // last coefs are theta coefs. Indices should have one dummy element at the end for setObjCoeffSet()
 		std::iota(indices.begin(), indices.end(), tau_start);
 		std::vector<double> values(num_theta * 2, 0.0);
@@ -5642,13 +5641,19 @@ namespace parallel_benders {
             - x_overline is the MP solution in the current iteration
 
         ******* Alpha-Normalized PNB CGP MP
-        TODO: ???
+        min                                         0*theta'      + 0*theta"    +theta_last
+                (1-lambda)*x'  + lambda*x"           +theta'         -theta"                     = x_overline (5)
+                                                   -x_theta'       -x_theta"    +x_alpha_last   >= 0          Alpha-Normalization empty rows
+                        A*x'                                                                    >= b          (2)
+                                    A*x"                                                        >= b          (4)
+                        -V*x'                       +theta'*1                                   >= w          (1)
+                                    -V*x"                            +theta"*1                  >= w          (3)
         */
 		
 		if (set) {  // set Alpha-Normalization
 			int extra_rows(3);
 			if (lp_main_loop_iteration_round_) {
-				int extra_rows = 0; // in PNB CGP MP we do not have rows 3, 6, 8
+				extra_rows = 0; // in PNB CGP MP we do not have rows 3, 6, 8
 				benders_node_pointer->alpha_normalized_ = false; // i.e., MP is Alpha-Normalized
 			}		
 			// obj coefs of tau and v (prime and double-prime thetas in PNB CGP MP) are 0
@@ -7770,7 +7775,8 @@ namespace parallel_benders {
 				term = 1.0;
 			std::vector<double> objective(num_cols,term); 
 			if (lp_main_loop_iteration_round_ && term == 1.0) { // L&P cuts CGP MP
-				assert(num_theta == 2 && "Something might be wrong for multiple thetas: now it is prime dprim but can be prime dprime prime dprime...");
+                assert(false && "Never happened: we always called AppendColsToSubproblem() for CGP PNB from GetLnP_PNB_CGP_ByThread() and never came here. At that moment num_theta = 0 => term = 0, lp_main_loop_fract_var_value_ is also 0.");
+                assert(!CompareWithZero(lp_main_loop_fract_var_value_));
 				term = (1 - lp_main_loop_fract_var_value_);
 				std::fill_n(objective.begin(), num_theta / 2, term);
 				
