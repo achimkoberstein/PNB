@@ -1843,11 +1843,6 @@ siplib/sslp/sslp_5_25_100
 siplib/sslp/sslp_5_25_50
 glushko/sndp_mini_tests/sndp_stochastic_mip
 glushko/sndp_mini_tests/sndp_testcase_0
-glushko/sndp_mini_tests/sndp_testcase_10
-glushko/sndp_mini_tests/sndp_testcase_12
-glushko/sndp_mini_tests/sndp_testcase_13
-glushko/sndp_mini_tests/sndp_testcase_14
-glushko/sndp_mini_tests/sndp_testcase_15
 glushko/sndp_mini_tests/sndp_testcase_2
 glushko/sndp_mini_tests/sndp_testcase_3
 glushko/sndp_mini_tests/sndp_testcase_4_1
@@ -1858,6 +1853,13 @@ glushko/sndp_mini_tests/sndp_testcase_6_1
 glushko/sndp_mini_tests/sndp_testcase_6_2
 glushko/sndp_mini_tests/sndp_testcase_7
 glushko/sndp_mini_tests/sndp_testcase_9
+glushko/sndp_mini_tests/sndp_testcase_10
+glushko/sndp_mini_tests/sndp_testcase_12
+glushko/sndp_mini_tests/sndp_testcase_13
+glushko/sndp_mini_tests/sndp_testcase_14
+glushko/sndp_mini_tests/sndp_testcase_15
+glushko/sndp_mini_tests/sndp_testcase_16
+glushko/sndp_mini_tests/sndp_testcase_17
 glushko/sndp/SNDP_160_3_3_25
 glushko/sndp/SNDP_320_4_2_25
 glushko/sndp/SNDP_640_3_1_125
