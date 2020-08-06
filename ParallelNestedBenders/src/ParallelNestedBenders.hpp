@@ -57,8 +57,6 @@ public:
      Optionally new parameter can be supplied.
      The aim of Reset() is to clear the pnb and prepare it for one more Solve() but avoid reinitialization of all the internal structures.
      We keep solvers
-
-     TODO: finish
     */
 	void Reset(int delete_cuts_start_it = -1, bool keep_warm_start = false, Parameter* parameter = nullptr);
     // Access solution methods
@@ -73,20 +71,10 @@ public:
 
 private:
     
-    /*!
- *
- *
- * \param b
- * \return
- TODO: finish
- */
     void SetLnPCGPRoundSpecifics(ParallelNestedBenders& cgp_pnb, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     ParallelNestedBenders* GetLnP_PNB_CGP_ByThread();
 
 
-    /*!
- TODO: finish
- */
     void SetLnPCGPFractVarSpecifics(ParallelNestedBenders* cgp_pnb, const std::pair<int, double>& fractional_variable);
 
     // Adjust google logging to the logging_level: 0 - console and INFO, 1 - WARNING, 2 - ERROR, 3 - FATAL
@@ -455,7 +443,6 @@ private:
     // Handle numerical issues!
     std::vector<double> old_discrepancies_;
     
-	//LiftAndProject cuts TODO: is not it too much variables
 	int lift_and_p_method_;
 	int lp_rounds_limit_;
 	int lp_switches_limit_;
@@ -465,7 +452,7 @@ private:
 	int cuts_for_fract_vars_;
 	double cgp_relative_epsilon_;
 	int cgp_do_when_infeasible_; // whether we quit OR apply Alpha-Normalization and solve OR apply Alpha-Normalization and continue when L&P CGP PNB is infeasible
-	int lp_round_; // TODO: get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
+	int lp_round_; // get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
 	int lp_switch_counter_;
 	bool generate_lp_cuts_;
 	int next_lp_rounds_iteration_;

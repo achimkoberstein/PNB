@@ -258,9 +258,6 @@ public:
 
 /*! Clean the solution related data (reset to the state after ParallelNestedBenders::Init())
 * We use it to prepare L&P PNB CGP for the other fract var.
-*
-* \param
-* \return void TODO: finish
 */
     void Clear(int delete_cuts_start_it = 0, bool keep_warm_start = false);
 
