@@ -1,4 +1,5 @@
 Testset;Problem;Instance;Stages;Scenarios;1st Int;1st Bin;1st Cont;1st Constraints;2nd Int;2nd Bin;2nd Cont;2nd Constraints;1st <= constr;1st >= constr;1st == constr;1st non standard ub;1st non standard lb;Stochastic Obj;Stochastic RHS;Stochastic T;Stochastic W;Stochastic Bounds
+glushko;lsfrp;lsfrp_instance10_stochastic;2;1000;0;450;0;146;0;0;5471;1596;true;false;true;false;false;false;false;true;false;false
 bodur;cap;cap101_1000;2;1000;0;25;0;1;0;0;1250;75;false;true;false;false;false;false;true;false;false;false
 bodur;cap;cap101_2000;2;2000;0;25;0;1;0;0;1250;75;false;true;false;false;false;false;true;false;false;false
 bodur;cap;cap101_250;2;250;0;25;0;1;0;0;1250;75;false;true;false;false;false;false;true;false;false;false
@@ -1838,9 +1839,6 @@ siplib;sslp;sslp_5_25_100;2;100;0;5;0;1;0;125;5;30;false;true;false;false;false;
 siplib;sslp;sslp_5_25_50;2;50;0;5;0;1;0;125;5;30;false;true;false;false;false;false;true;false;false;false
 glushko;sndp_mini_tests;sndp_stochastic_mip;2;3;0;2;0;0;0;0;8;11;false;false;false;false;false;false;true;false;false;false
 glushko;sndp_mini_tests;sndp_testcase_0;2;3;0;2;0;0;0;0;8;11;false;false;false;false;false;false;true;false;false;false
-glushko;sndp_mini_tests;sndp_testcase_10;2;3;0;2;2;0;0;0;8;13;false;false;false;true;true;false;true;false;false;false
-glushko;sndp_mini_tests;sndp_testcase_12;2;3;0;2;0;0;0;0;8;12;false;false;false;false;false;false;true;false;false;false
-glushko;sndp_mini_tests;sndp_testcase_13;2;3;1;1;0;0;0;0;8;11;false;false;false;true;false;false;true;false;false;false
 glushko;sndp_mini_tests;sndp_testcase_2;2;3;0;3;0;0;0;0;11;16;false;false;false;false;false;false;true;false;false;false
 glushko;sndp_mini_tests;sndp_testcase_3;2;3;0;2;2;0;0;0;8;13;false;false;false;true;false;false;true;false;false;false
 glushko;sndp_mini_tests;sndp_testcase_4_1;2;3;0;2;0;1;0;0;8;11;false;true;false;false;false;false;true;false;false;false
@@ -1851,6 +1849,13 @@ glushko;sndp_mini_tests;sndp_testcase_6_1;2;3;0;2;0;2;0;0;8;11;false;true;true;f
 glushko;sndp_mini_tests;sndp_testcase_6_2;2;3;0;2;2;2;0;0;8;13;false;true;true;true;false;false;true;false;false;false
 glushko;sndp_mini_tests;sndp_testcase_7;2;3;0;2;2;2;0;0;8;13;false;true;false;true;false;false;true;false;false;false
 glushko;sndp_mini_tests;sndp_testcase_9;2;4;0;2;0;0;0;0;8;11;false;false;false;false;false;false;true;false;false;false
+glushko;sndp_mini_tests;sndp_testcase_10;2;3;0;2;2;0;0;0;8;13;false;false;false;true;true;false;true;false;false;false
+glushko;sndp_mini_tests;sndp_testcase_12;2;3;0;2;0;0;0;0;8;12;false;false;false;false;false;false;true;false;false;false
+glushko;sndp_mini_tests;sndp_testcase_13;2;3;1;1;0;0;0;0;8;11;false;false;false;true;false;false;true;false;false;false
+glushko;sndp_mini_tests;sndp_testcase_14;2;3;0;2;0;0;3;0;5;12;false;false;false;false;false;false;true;false;false;false
+glushko;sndp_mini_tests;sndp_testcase_15;2;3;0;2;0;1;0;1;8;13;true;false;false;false;false;true;true;false;false;false
+glushko;sndp_mini_tests;sndp_testcase_16;2;3;0;2;0;2;0;1;8;12;false;true;false;false;false;false;true;false;false;false
+glushko;sndp_mini_tests;sndp_testcase_17;2;3;0;2;2;2;0;1;8;14;true;false;false;true;false;false;true;false;false;false
 glushko;sndp;sndp_160_3_3_25;2;25;0;129;0;0;0;0;11180;388;false;false;false;false;false;false;true;false;false;false
 glushko;sndp;sndp_320_4_2_25;2;25;0;273;0;0;0;0;42121;1093;false;false;false;false;false;false;true;false;false;false
 glushko;sndp;sndp_640_3_1_125;2;125;0;569;0;0;0;0;177092;1708;false;false;false;false;false;false;true;false;false;false
@@ -2308,6 +2313,3 @@ wright;data-scenarios;storm-2000;2;2000;0;0;121;185;0;0;1259;528;true;true;false
 wright;data-scenarios;storm-3000;2;3000;0;0;121;185;0;0;1259;528;true;true;false;true;false;false;true;false;false;false
 wright;data-scenarios;storm-5000;2;5000;0;0;121;185;0;0;1259;528;true;true;false;true;false;false;true;false;false;false
 posts;pltexp;pltexpa7_6;7;46656;0;0;188;62;0;0;272;104;false;false;true;true;false;false;true;false;false;false
-glushko;sndp_mini_tests;sndp_testcase_14;2;3;0;2;0;0;3;0;5;12;false;false;false;false;false;false;true;false;false;false
-glushko;lsfrp;lsfrp_instance10_stochastic;2;1000;0;450;0;146;0;0;5471;1596;true;false;true;false;false;false;false;true;false;false
-glushko;sndp_mini_tests;sndp_testcase_15;2;3;0;2;0;1;0;1;8;13;true;false;false;false;false;true;true;false;false;false
