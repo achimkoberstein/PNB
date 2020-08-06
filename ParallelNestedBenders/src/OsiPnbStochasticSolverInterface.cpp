@@ -145,7 +145,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         }
 
 		if (nested_benders_->parameter_.GetBoolParamValue(parallel_benders::PNB_BOUNDS_IN_MATRIX)) {
-			nested_benders_->smi_->moveBoundsIntoMatrix(); // TODO: what does it do?
+			nested_benders_->smi_->moveBoundsIntoMatrix();
 		}
 
 		LOG_IF(WARNING, nested_benders_->parameter_.GetIntParamValue(parallel_benders::PNB_USE_START_SOLUTION)) << "Start solution is not implemented for deteq.";
