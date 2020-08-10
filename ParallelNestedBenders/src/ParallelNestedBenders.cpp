@@ -5068,7 +5068,7 @@ namespace parallel_benders {
             
             {
                 std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-                DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of " << (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? "Alpha" : "Zeta") << "-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
+                DLOG_IF(INFO, dual_cgp_solver->isProvenOptimal()) << "Fract var with index " << fractional_variable.first << ": Solution of " << (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? "Alpha" : "Zeta") << "-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
             }
 
 			std::stringstream suffix;
@@ -5104,7 +5104,6 @@ namespace parallel_benders {
 #ifdef SPEC_CASES
             OsiSolverInterface* temp_osi = dual_cgp_solver->clone(true); // for experimentation
             if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
-                LogSpecialCase(CompareWithZero(dual_cgp_solver->getObjValue()), "Solution of DAN is zero");
                 SetAlphaNormalization(temp_osi, false); // DZN
                 SolveSolverInterface(temp_osi);
                 LogSpecialCase(total_num_cuts_with_theta == 0 && !temp_osi->isProvenPrimalInfeasible(), "DZN would be not infeasible when solved w/o optimality cuts");
@@ -5122,21 +5121,20 @@ namespace parallel_benders {
             }
             delete temp_osi;
 #endif
-            {
-                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-                DLOG_IF(WARNING, CompareWithZero(dual_cgp_solver->getObjValue())) << "Fract var with index " << fractional_variable.first << ": L&P cut will not be added to the container. Reason: solution of Dual L&P Cut Generation Problem is 0." << std::endl;
-            }
-			if (!CompareWithZero(dual_cgp_solver->getObjValue())) {
+			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && CompareWithZero(dual_cgp_solver->getObjValue()))  {
+                LogSpecialCase(true, "L&P cut will not be added to the container. Reason: solution of Dual L&P Cut Generation Problem is 0: solution of DAN is zero");
+			}
+			else {
                 std::vector<std::vector<double>>* current_cuts_coefficients;
                 std::vector<double>* current_cuts_rhs;
                 double dual_cgp_solution = dual_cgp_solver->getObjValue();
                 if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
-                    LogSpecialCase(dual_cgp_solution > 0 - zero_tolerance_, "DZN solution is positive");
+                    LogSpecialCase(dual_cgp_solution > 0 + zero_tolerance_, "DZN solution is positive");
                     current_cuts_coefficients = &epigraph_current_cuts_coefficients_;
                     current_cuts_rhs = &epigraph_current_cuts_rhs_;
                 }
                 else if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
-                    LogSpecialCase(dual_cgp_solution < 0 + zero_tolerance_, "DAN solution is negative");
+                    LogSpecialCase(dual_cgp_solution < 0 - zero_tolerance_, "DAN solution is negative");
                     assert(dual_cgp_solution > 0 - zero_tolerance_ && "Cannot be negative."); // does it?
                     current_cuts_coefficients = &domain_current_cuts_coefficients_;
                     current_cuts_rhs = &domain_current_cuts_rhs_;
