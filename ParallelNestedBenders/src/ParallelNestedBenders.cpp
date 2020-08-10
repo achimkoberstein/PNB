@@ -3789,7 +3789,7 @@ namespace parallel_benders {
 			int num_cols = stage_pointer->num_columns_;
 			int num_rows = stage_pointer->num_rows_;
 			
-			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix();
+			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(false, num_cols*2 + num_rows*2, num_cols * 2); // rowOrdered, num_rows, num_cols
             // Line 5
             //*** (1-lambda) * x' + lambda * x" rows are fract var specific. Exact values are set in GenerateLiftAndProjectCut() of the main loop
                 // dimensions(num_cols, num_cols*2)
@@ -3800,20 +3800,20 @@ namespace parallel_benders {
             // Lines 2 and 4
 			//*** A matrix rows
 			// A matrix -> A' and A"
-			CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
-			assert(A_matrix->getNumRows() == num_rows);
-			assert(A_matrix->getNumCols() == num_cols);
-			CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix);
-			temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
-			// double prime side
-			CoinPackedMatrix double_prime_cols;
-			double_prime_cols.reverseOrdering(); // RowOrdered now
-			double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
-			double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
-			// combine two matrices
-			temp_matrix.rightAppendPackedMatrix(double_prime_cols);
-			problem_matrix->bottomAppendPackedMatrix(temp_matrix);
-
+            if (num_rows) {
+                CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
+                assert(A_matrix->getNumRows() == num_rows);
+                assert(A_matrix->getNumCols() == num_cols);
+                CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix, num_rows * 2, num_cols * 2);
+                temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
+                // double prime side
+                CoinPackedMatrix double_prime_cols = CoinPackedMatrix(false, num_rows * 2, num_cols);
+                double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
+                double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
+                // combine two matrices
+                temp_matrix.rightAppendPackedMatrix(double_prime_cols);
+                problem_matrix->bottomAppendPackedMatrix(temp_matrix);
+            }
             assert(problem_matrix->getNumRows() == num_cols + num_cols + num_rows*2); // (1-lambda) * x' + lambda * x" rows, Alpha-Normaliz lines, prime/double-prime A matrix rows
             assert(problem_matrix->getNumCols() == num_cols * 2); // prime/double-prime sides
 
@@ -5418,7 +5418,6 @@ namespace parallel_benders {
 
                     // Can be used to construct Domain L&P cuts (w/o theta) if SetAlphaNormalization() applied                 
 
-                    // TODO: think about row_ordered / column_ordered vs efficiency
                     int num_rows = stage_data->num_rows_;
                     int num_bin = core_->getBinaryCols(0).size();
                     int z0_col_index = num_cols * 2;
@@ -5427,11 +5426,14 @@ namespace parallel_benders {
                     int v_start = tau_start + num_theta;
 
                     int rows_to_allocate = num_cols + 1 + 2 + num_cols + num_bin * 2 + num_rows * 2;
+                    int cols_to_allocate = num_cols * 2 + 2 + num_theta * 2;
                     row_upper->reserve(rows_to_allocate);
                     row_lower->reserve(rows_to_allocate);
                     row_upper->assign(num_cols + 1, 0); // rows for lines 7, 8
-                    row_lower->assign(num_cols + 1 + 2 + num_cols, 0); // TODO: check all the vectors and reserve enough space from the very start
+                    row_lower->assign(num_cols + 1 + 2 + num_cols, 0);
 
+                    assert(matrix->isColOrdered());
+                    matrix->reserve(cols_to_allocate, rows_to_allocate); // number of vectors in major dim (cols for col ordered), size of each major dim vector (col)
                     // Line 7: -z + -y = -x_overline
                     // we copy solution (x_dash) to row UB and row LB later before solving DZN for every fractional
                     matrix->setDimensions(num_cols + 2, 0); // rows for lines 7, 8, 3, Alpha-Normalization empty rows
@@ -5482,20 +5484,21 @@ namespace parallel_benders {
                     }
 
                     // Lines 2 and 5: A*z - b*z_0 >= 0 and A*y - b*y_0 >= 0
+                    // TODO: do we need bounds in matrix A?		
+                    // A matrix -> A' and A"
                     if (num_rows) {
-                        // TODO: do we need bounds in matrix A?		
-                        // A matrix -> A' and A"
+                        
                         if (benders_node_pointer->matrix_ == nullptr) {
                             benders_node_pointer->matrix_ = core_->getNode(0)->generateCoinPackedWMatrix();
                         }
                         CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
                         assert(A_matrix->getNumRows() == num_rows);
                         assert(A_matrix->getNumCols() == num_cols);
-                        CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix);
+                        CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix, num_rows, num_cols+2); // final dimensions will be (rows x cols): num_rows*2 x num_cols*2+2. Therefore, add extra num_rows of rows and num_cols+2 of cols
+                        assert(!temp_matrix.isColOrdered());
                         temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
                         // double prime side
-                        CoinPackedMatrix double_prime_cols;
-                        double_prime_cols.reverseOrdering(); // RowOrdered now
+                        CoinPackedMatrix double_prime_cols = CoinPackedMatrix(false, num_rows*2, num_cols); // row ordered, number of vectors in major dim (rows for row ordered), size of each major dim vector (row)
                         double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
                         double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
                         // combine two matrices
@@ -5566,10 +5569,10 @@ namespace parallel_benders {
                         assert(CompareForEquality(c_upper[binary_index], 1, zero_tolerance_));
                     }
 
-                    column_upper->reserve(num_cols * 2 + num_theta * 2 + 2);
+                    column_upper->reserve(cols_to_allocate);
                     column_upper->insert(column_upper->end(), c_upper, c_upper + num_cols); // for z
                     column_upper->insert(column_upper->end(), c_upper, c_upper + num_cols); // for y
-                    column_lower->reserve(num_cols * 2 + num_theta * 2 + 2);
+                    column_lower->reserve(cols_to_allocate);
                     column_lower->insert(column_lower->end(), c_lower, c_lower + num_cols); // for z
                     column_lower->insert(column_lower->end(), c_lower, c_lower + num_cols); // for y
                     // z0 and y0 are nn
@@ -5580,10 +5583,10 @@ namespace parallel_benders {
                     column_lower->insert(column_lower->end(), num_theta*2, -infinity_); // prime and double-prime
 
                     assert(matrix->getNumRows() == rows_to_allocate);
-                    assert(matrix->getNumCols() == num_cols * 2 + 2 + num_theta * 2);
-                    assert(column_lower->size() == num_cols * 2 + 2 + num_theta * 2);
-                    assert(column_upper->size() == num_cols * 2 + 2 + num_theta * 2);
-                    assert(objective->size() == num_cols * 2 + 2 + num_theta * 2);
+                    assert(matrix->getNumCols() == cols_to_allocate);
+                    assert(column_lower->size() == cols_to_allocate);
+                    assert(column_upper->size() == cols_to_allocate);
+                    assert(objective->size() == cols_to_allocate);
                     assert(row_lower->size() == rows_to_allocate);
                     assert(row_upper->size() == rows_to_allocate);
 
