@@ -4843,6 +4843,17 @@ namespace parallel_benders {
 			assert(false && "Not implemented");
 		}
 
+        BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
+        // no optimality-like cuts -> unbounded theta -> unbounded Dual of Zeta-Normalized (dual of epigraph cut generation problem)
+        // -> solve Dual of Alpha-Normalized (dual of domain cut generation problem)
+        int total_num_cuts_with_theta = benders_node_pointer->optimality_cuts_.size() + benders_node_pointer->epigraph_cuts_.size() + (lp_parallel_mode_ < PNB_PARAL_FRACTS ? benders_node_pointer->lp_round_optimality_cuts_.size() : 0);
+        if (total_num_cuts_with_theta == 0) {
+            LogSpecialCase(lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH, "Will generate L&P Domain cut. Reason: no optimality-like cuts (with theta) are present: optimality cuts, strengthened information from PNB CGP, epigraph cuts.");
+            LogSpecialCase(true, "Solve DAN w/o optimality-like cuts");
+            use_2nd_stage_info = false;
+            lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+        }
+
         {
             int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
             std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
@@ -4853,7 +4864,6 @@ namespace parallel_benders {
 		
         assert(current_stage_ == 0 && "We build L&P cuts for the MP.");
 
-		BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		// Get the 2nd stage info (cuts from PNB CGP)
         BendersNodeData::cut_container::iterator old_cgp_pnb_opt_cuts_back;
         BendersNodeData::cut_container::iterator old_cgp_pnb_feas_cuts_back;
@@ -4945,7 +4955,7 @@ namespace parallel_benders {
                 return;
             }
 
-            LogSpecialCase(benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty() && cgp_pnb->solution_code_ != PNB_SOLUTION_INFEASIBLE, "PNB CGP w/o optimality-like cuts is not infeasible");
+            assert(!(benders_node_pointer->optimality_cuts_.empty() && benders_node_pointer->epigraph_cuts_.empty() && cgp_pnb->solution_code_ != PNB_SOLUTION_INFEASIBLE) && "PNB CGP w/o optimality-like cuts is not infeasible. Never happend");
 		}
 
 		// Solve the Dual of CGP (Zeta- or Alpha-Normalized) w or w/o the 2nd stage info
@@ -4981,7 +4991,6 @@ namespace parallel_benders {
             SetDualCGPFractVarSpecifics(dual_cgp_solver, fractional_variable);
             if (use_2nd_stage_info) {
                 new_cgp_pnb_opt_cuts = cgp_pnb->stage_data_[0]->added_optimality_cuts_;
-                int lp_round_cuts_applied(0);
                 BendersNodeData::cut_container::iterator it;
 
                 // Add lp_round_opt and feas cuts (only for sequential fract)
@@ -5049,14 +5058,6 @@ namespace parallel_benders {
                 LogSpecialCase(new_cgp_pnb_opt_cuts + cgp_pnb->stage_data_[0]->added_feasibility_cuts_ == 0, "No cuts generated in PNB CGP - plain and strengthened L&P CGP are the same");
 			}
             
-			// no optimality-like cuts -> unbounded theta -> unbounded Dual of Zeta-Normalized (dual of epigraph cut generation problem)
-			// -> solve Dual of Alpha-Normalized (dual of domain cut generation problem)
-            int total_num_cuts_with_theta = new_cgp_pnb_opt_cuts + benders_node_pointer->optimality_cuts_.size() + benders_node_pointer->epigraph_cuts_.size() + lp_round_cuts_applied;
-            if (total_num_cuts_with_theta == 0) {
-                LogSpecialCase(lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH, "Will generate L&P Domain cut. Reason: no optimality-like cuts (with theta) are present: optimality cuts, strengthened information from PNB CGP, epigraph cuts.");
-                LogSpecialCase(true, "Solve DAN w/o optimality-like cuts");
-                lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
-            }
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
 				SetAlphaNormalization(dual_cgp_solver, true);
 			}
@@ -5106,12 +5107,23 @@ namespace parallel_benders {
             if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
                 SetAlphaNormalization(temp_osi, false); // DZN
                 SolveSolverInterface(temp_osi);
-                LogSpecialCase(total_num_cuts_with_theta == 0 && !temp_osi->isProvenPrimalInfeasible(), "DZN would be not infeasible when solved w/o optimality cuts");
+                assert(!(total_num_cuts_with_theta == 0 && !temp_osi->isProvenDualInfeasible()) && "DZN would be not unbounded when solved w/o optimality cuts");
                 LogSpecialCase(temp_osi->isProvenDualInfeasible(), "DZN would be unbounded");
                 LogSpecialCase(temp_osi->isProvenPrimalInfeasible(), "DZN would be infeasible");
                 LogSpecialCase(cgp_pnb != nullptr && cgp_pnb->solution_code_ != parallel_benders::PNB_SOLUTION_OPTIMAL && temp_osi->isProvenOptimal(), "DZN would be solved even though PNB CGP is infeasible");
                 LogSpecialCase(!temp_osi->isProvenOptimal() && CompareWithZero(dual_cgp_solver->getObjValue()), "DZN solvable <=> solution DAN = 0. It is not");
                 LogSpecialCase(temp_osi->isProvenPrimalInfeasible() && CompareWithZero(dual_cgp_solver->getObjValue()), "DZN infeasible <=> DAN > 0. It is not");
+                if (total_num_cuts_with_theta == 0) { // lets adjust the problem and resolve it: before it was always infeasible, i.e., epigraph cut cannot be build. If it can be build maybe we need to solve CGP PNB as well
+                    int num_thetas = getNumThetasByStage(tree_nodes_by_stage_[0][0])*2;
+                    std::vector<int> extra_indices(num_thetas);
+                    std::iota(extra_indices.begin(), extra_indices.end(), stage_data_[0]->num_columns_*2 + 2);
+                    double large_lower_bound = -infinity_ / 100;
+                    for (int i = 0; i < num_thetas; i++) {
+                        temp_osi->setColBounds(extra_indices[i], large_lower_bound, infinity_);
+                    }
+                    SolveSolverInterface(temp_osi);
+                    assert(temp_osi->isProvenPrimalInfeasible() && "Never happened"); // so we must build DAN and do it anyways when solve w/o optimality-like cuts. If assert fails, think about building epigraph cut
+                }
             }
             else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
                 LogSpecialCase(CompareWithZero(dual_cgp_solver->getObjValue()), "Solution of DZN is zero");
