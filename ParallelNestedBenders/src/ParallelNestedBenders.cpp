@@ -5511,28 +5511,34 @@ namespace parallel_benders {
                                 if (!CompareWithZero(r_upper[row])) {
                                     vector_b.insert(row, r_upper[row]);
                                 }
-                                row_upper->insert(row_upper->end(), 2, 0.0);
-                                row_lower->insert(row_lower->end(), 2, 0.0);
+                                row_upper->push_back(0.0);
+                                row_lower->push_back(0.0);
                             }
                             else if (r_lower[row] > -infinity_ + zero_tolerance_) { //G (>=) sense
                                 if (!CompareWithZero(r_lower[row])) {
                                     vector_b.insert(row, r_lower[row]);
                                 }
-                                row_upper->insert(row_upper->end(), 2, infinity_);
-                                row_lower->insert(row_lower->end(), 2, 0.0);
+                                row_upper->push_back(infinity_);
+                                row_lower->push_back(0.0);
                             }
                             else { //L (<=) sense
                                 assert(r_upper[row] < infinity_ - zero_tolerance_);
                                 if (!CompareWithZero(r_upper[row])) {
                                     vector_b.insert(row, r_upper[row]);
                                 }
-                                row_upper->insert(row_upper->end(), 2, 0.0);
-                                row_lower->insert(row_lower->end(), 2, -infinity_);
+                                row_upper->push_back(0.0);
+                                row_lower->push_back(-infinity_);
                             }
+                        }
+                        //shift row_upper and row_lower down
+                        int current_size = row_upper->size();
+                        for (int i = current_size-num_rows; i < current_size; i++) {
+                            row_upper->push_back(row_upper->operator[](i)); //copy itself to the end
+                            row_lower->push_back(row_lower->operator[](i));
                         }
                         vector_b *= -1; // move to the LHS
                         temp_matrix.appendCol(vector_b);
-                        //shift vector b down
+                        //shift vector b
                         int* vector_indices = vector_b.getIndices();
                         for (int i = 0; i < vector_b.getNumElements(); i++) {
                             vector_indices[i] += num_rows;
