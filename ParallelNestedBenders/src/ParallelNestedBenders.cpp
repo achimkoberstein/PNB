@@ -5004,7 +5004,7 @@ namespace parallel_benders {
                     }
                 }
 
-                // Add PNB CGP cuts
+                // Add PNB CGP cuts to Dual CGP and lp_round_cuts
                 BendersNodeData::cut_container* cgp_optimality_cuts = &cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_;                
                 if (old_cgp_pnb_opt_cuts_back == cgp_optimality_cuts->end()) { // there were no opt cuts in PNB CGP before we solved it
                     it = cgp_optimality_cuts->begin(); // therefore, all cuts are new and we add all of them
@@ -9680,6 +9680,9 @@ namespace parallel_benders {
 
 		if ( first.aggregate_number_ != second.aggregate_number_ )
 			return false;
+        if (first.column_set_ != second.column_set_) {
+            return false;
+        }
 		if ( !CompareForEquality(first.cut_->lb(),second.cut_->lb(),tolerance))
 			return false;
 		// Check equality of vectors by first checking the number of elements, than the elements themselves
