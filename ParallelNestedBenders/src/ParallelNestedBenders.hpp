@@ -106,7 +106,6 @@ private:
     void ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff, BendersNodeData* benders_node_data);
 	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
-	void AggregateLiftAndProjectCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void SetDualCGPRoundSpecifics(OsiSolverInterface& dual_cgp_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void SetDualCGPFractVarSpecifics(OsiSolverInterface* dual_cgp_solver, const std::pair<int, double>& fractional_variable);
 	void SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set);
@@ -306,7 +305,6 @@ private:
     std::mutex smi_mutex_; // std::mutex that is used if we want to initialize new PNB (in particular, CGP PNB for thread)
     std::mutex add_cut_counter_mutex_; // std::mutex that is used if we increase the cut counter
 	std::mutex stage_lower_upper_bounds_mutex_;  
-    std::mutex lp_cuts_coefficients_mutex_; // std::mutex that is used if we store the L&P cut coefficients for a specific fract var
     std::mutex lp_dual_cgp_node_data_mutex_; //dual L&P CGP elements, its objective, ub, lb...
     std::mutex lp_round_cuts_mutex_;
     std::mutex misc_mutex_; // std::mutex for miscellanious stuff
@@ -457,10 +455,6 @@ private:
 	bool generate_lp_cuts_;
 	int next_lp_rounds_iteration_;
 	std::map<double, std::pair<int, double>> fractional_variables_; //<fractional part, <var index, var value> > ordered ascending by int violation
-	std::vector<std::vector<double>> epigraph_current_cuts_coefficients_;
-	std::vector<double> epigraph_current_cuts_rhs_;
-	std::vector<std::vector<double>> domain_current_cuts_coefficients_;
-	std::vector<double> domain_current_cuts_rhs_;
 	double lp_main_loop_fract_var_value_; // this is the value of the fractional variable from the main loop
 	std::unique_ptr<std::pair<int, int>> lp_main_loop_iteration_round_; // first is iteration, 2nd is L&P round
 	int lp_column_set_;
