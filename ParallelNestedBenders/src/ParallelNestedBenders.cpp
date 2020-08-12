@@ -900,7 +900,7 @@ namespace parallel_benders {
             threads_per_CGP = num_cpu_;
         }
         cgp_parameter.SetParameterValue(parallel_benders::PNB_NUM_CPU, threads_per_CGP);
-        cgp_parameter.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, cgp_relative_epsilon_);
+        cgp_parameter.SetParameterValue(parallel_benders::PNB_EPSILON_RELATIVE, cgp_relative_epsilon_);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, print_subproblems_);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
@@ -2919,13 +2919,11 @@ namespace parallel_benders {
 
 			if (generate_lp_cuts_) {
 				int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
-				assert(num_cuts > 0);		
+				assert(num_cuts > 0 && num_cuts <= fractional_variables_.size());
 				
 				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0);
 				std::cout << "Solution of MP relaxation: " << benders_tree_node_pointer->getDataPtr()->solution_value_ + theta_sum << std::endl;
-                std::cout << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate." << std::endl;
-
-				std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values
+                std::cout << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate (according to PNB_LP_CUTS_FOR_FRACT parameter)." << std::endl;
 
                 assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
                 // Set round specifics to all dual cgp
@@ -2954,6 +2952,7 @@ namespace parallel_benders {
                 }
                 thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
 
+                std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values
                 for (int i = 0; i < num_cuts; i++) {
                     if (num_cpu_ > 1 && num_cuts > 1 && lp_parallel_mode_ >= parallel_benders::PNB_PARAL_FRACTS) {
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateLiftAndProjectCut, this, i, rit->second));
