@@ -547,7 +547,7 @@ void Parameter::init()
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
 	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
 	parameter_.put(PNB_CGP_EPSILON_RELATIVE, 1e-06);
-	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 10000000000);
+	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 11111111111);
     parameter_.put(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
     parameter_.put(PNB_LP_USE_CGP_PNB_CUTS, false);
 
