@@ -1733,6 +1733,7 @@ TEST_F(LiftAndProjectCutsTest, DISABLED_bounds_convergence_fast) {
 }
 
 TEST_F(NestedBendersTest, fast) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
 	EXPECT_NEAR(solveSMPS("other/Fina4"), -68401.8, 0.1);
 	EXPECT_NEAR(solveSMPS("other/GAS3"), 1558.17, 0.1);
@@ -1744,6 +1745,7 @@ TEST_F(NestedBendersTest, fast) {
 }
 
 TEST_F(NestedBendersTestInteger, fast) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	// 1st stage only is integer or MIP
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.3);
 
@@ -1775,6 +1777,7 @@ TEST_F(NestedBendersTestInteger, fast) {
 
 
 TEST_F(NestedBendersTestFeasibility, fast) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS3"), 722.58, 0.1); // Dependent // crashes for ODA
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-aggr"), 15963.9, 0.3); // Challenging CO2 limits // 20478.7
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-first"), 14794.6, 0.1); // INDEP
@@ -1782,6 +1785,7 @@ TEST_F(NestedBendersTestFeasibility, fast) {
 }
 
 TEST_F(NestedBendersTestMultiStage, fast) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3", "felt/stocfor/stocfor2_7"), -39024.4, 0.1); // seven-stage, stochasticity from stocfor2
 	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10", "watson/timeWAT_C_10", "watson/stochWAT_C_10_32"), -2172.9, 0.2); // -2167.62
 	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10", "watson/timeWAT_I_10", "watson/stochWAT_I_10_32"), -1866.42, 0.5);
@@ -1792,6 +1796,7 @@ TEST_F(NestedBendersTestMultiStage, fast) {
 }
 
 TEST_F(CVaRTest, fast) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
 	EXPECT_NEAR(solveSMPS("other/Fina4"), -68401.8, 0.1);
 	EXPECT_NEAR(solveSMPS("other/Dakota/dakota"), -24000, 1);
@@ -1804,6 +1809,7 @@ TEST_F(CVaRTest, fast) {
 }
 
 TEST_F(DetEqTest, fast) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	// Continuous problems
 	EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
 	EXPECT_NEAR(solveSMPS("other/Fina4"), -68401.8, 0.1);
@@ -1829,6 +1835,7 @@ TEST_F(DetEqTest, fast) {
 }
 
 TEST_F(RelaxationTest, fast) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -160.063, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 877.652, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 221867.85, 0.1);
@@ -2300,7 +2307,6 @@ TEST_F(LiftAndProjectCutsTest, slow) {
 	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -135.69, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 1583.66, 0.1); // w/o relaxation 2559.297
 	EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 223753.66, 0.1); // w/o relaxation  224486.00, MP CGP is always infeasible (even when DZN is)
-	EXPECT_NEAR(solveSMPS("felt/phone/phone-int", "felt/phone/phone", "felt/phone/phone"), 36.9, 0.1); // Stochastic problem with 2^15 scenarios and integer
 		// generate feasibility  cuts:
 	EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0); // same characteristics as SNDP_TestCase_15
 	EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -154654, 1.0);
@@ -2365,6 +2371,7 @@ TEST_F(LiftAndProjectCutsTest, DISABLED_bounds_convergence_slow) {
 }
 
 TEST_F(NestedBendersTest, slow) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("posts/storm/stormG2_125"), 15512100.03, 5.0);
 	EXPECT_NEAR(solveSMPS("felt/airlift/AIRL"), 249101.672072, 0.1); //BLOCK (dependent)
 	EXPECT_NEAR(solveSMPS("felt/airlift/AIRL2"), 269665.498390, 0.1);//INDEP (independent)
@@ -2382,6 +2389,7 @@ TEST_F(NestedBendersTest, slow) {
 }
 
 TEST_F(NestedBendersTestInteger, slow) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	// 1st stage only is integer or MIP
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5); // sometimes similarity limit with PNB_USE_START_SOLUTION = 2
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_25"), -479326, 0.5);
@@ -2404,6 +2412,7 @@ TEST_F(NestedBendersTestInteger, slow) {
 }
 
 TEST_F(NestedBendersTestFeasibility, slow) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-5292"), 20788.6, 0.1); // 22438.4
 	// 1st  stage is integer or MIP, 2nd has int vars
 		// 1st stage is pure binary so we could use D^2 algorithm
@@ -2412,6 +2421,7 @@ TEST_F(NestedBendersTestFeasibility, slow) {
 }
 
 TEST_F(DetEqTest, slow) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	// set of instances similar to LiftAndProjectCutsTest.slow
 	// Continuous problems (L&P Cuts are not applicable)
 	EXPECT_NEAR(solveSMPS("posts/storm/stormG2_125"), 15512100.03, 10.0);
@@ -2435,6 +2445,7 @@ TEST_F(DetEqTest, slow) {
 }
 
 TEST_F(RelaxationTest, slow) {
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -169.66, 0.1);  // 2nd stage MIP // -127.37
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_200"), 252.16, 0.1); // 1060.676
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_300"), 289.40, 0.1); // 1253.040

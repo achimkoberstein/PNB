@@ -772,7 +772,6 @@ namespace parallel_benders {
             num_stages_ = core_->getNumStages();
             num_scenarios_ = smi_->getNumScenarios();
             InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
-            LOG_IF(FATAL, lp_rounds_limit_ > 0 || lp_main_loop_iteration_round_) << "Never tested for L&P cuts. Adjust problem will update benders_node->num_cols_ and num_rows_";
             AdjustProblem(); // We need to set the important properties again!
             // Best way would be to just recreate the benders_node_data tree from scratch!
         }
@@ -781,6 +780,7 @@ namespace parallel_benders {
             SaveInstanceSpecs();
         }
 
+#ifndef NDEBUG
         if (lp_rounds_limit_ && !ProblemSuitableForLPCuts()) {
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
             solved_counter_++;
@@ -788,6 +788,7 @@ namespace parallel_benders {
             timer_.Stop(num_stages_);
             return;
         }
+#endif
 
         // Some tests for sequencing protocols.
         if (num_stages_ == 2) { // No need for sequencing protocols in the two-stage case
@@ -2320,7 +2321,7 @@ namespace parallel_benders {
         // Check cut containers for duplicates
 #ifdef SPEC_CASES
         if (!lp_main_loop_iteration_round_) {
-            for (int stage = 0; stage < num_stages_ - 1; stage++) {
+            for (int stage = 0; stage < 1; stage++) { // do it for the first stage as for now
                 for (int node_index = 0; node_index < tree_nodes_by_stage_[stage].size(); node_index++) {
                     BendersNodeData::cut_container distinct_optimality_cuts(0);
                     BendersNodeData::cut_container distinct_epigraph_cuts(0);
@@ -5272,11 +5273,9 @@ namespace parallel_benders {
                     // Check if we already have such cut
                     std::lock_guard<std::mutex>unique_lock(lp_round_cuts_mutex_);
                     assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->feasibility_cuts_) && "The same cut to just build domain cut is present in feasibility cuts.");
-                    assert(!(CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_) && benders_node_pointer->lp_round_domain_cuts_.size() == 0) && "The same cut to just build domain cut is present in domain cuts: for round with one fract vars. Never happened before.");
-                    assert(!(CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_domain_cuts_) && benders_node_pointer->lp_round_domain_cuts_.size() == 0) && "The same cut to just build domain cut is present in domain cuts: for round with one fract vars. Never happened before.");
                         
                     bool duplicate_cut = CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_domain_cuts_) || CheckForSameCut(*cut_stuff, benders_node_pointer->domain_cuts_);
-                    LogSpecialCase(duplicate_cut && benders_node_pointer->lp_round_domain_cuts_.size() >= 1, "The same cut to just build domain cut is present in domain cuts: for round >1 fract vars");
+                    LogSpecialCase(duplicate_cut, "The same cut to just build domain cut is present in domain cuts");
                     if (!duplicate_cut) {
                         // we set cut_creation_iteration_ to the current_iteration_ after the round: now it might make order of the cuts in CGP PNB not according to the iteration
                         benders_node_pointer->lp_round_domain_cuts_.push_back(cut_stuff);
@@ -5842,8 +5841,8 @@ namespace parallel_benders {
 				lp_check_passed = false;
 			}
 			if (stage_aggregation_ != false) {
-				std::cout << "Stage aggregation is not implemented for L&P cuts! Change solver parameter." << std::endl;
-				lp_check_passed = false;
+				//std::cout << "Stage aggregation is not implemented for L&P cuts! Change solver parameter." << std::endl;
+				//lp_check_passed = false;
 			}
 			if (store_cut_information_ != false) {
 				std::cout << "Cut consolidation is not implemented for L&P cuts! Change solver parameter." << std::endl;
