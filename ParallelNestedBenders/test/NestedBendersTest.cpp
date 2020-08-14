@@ -818,6 +818,8 @@ protected:
 		}
 		// Detailled Time for several tasks
 		s << "Time Master;Time Projection;Time ODA;Time Sub;Build Master;Build Projection;Build ODA;Build Sub;Generate Cut;";
+		// L&P Cuts related timers
+		s << "Solve MP Relaxation;Build and Solve PNB CGP;Build and Solve Dual CGP;Generate L&P Cut;";
 		// Date/Timestamp
 		s << "Date;Time;";
 		s << "Min_CPU;Min_Solver;Max_CPU;Max_Solver;";
@@ -910,6 +912,10 @@ protected:
 		std::string building_time_2_string("building2");
 		std::string building_time_3_string("building3");
 		std::string building_time_4_string("building4");
+		std::string solve_master_relaxation_string("lp_timer0");
+		std::string build_and_solve_pnb_cgp_string("lp_timer1");
+		std::string build_and_solve_dual_cgp_string("lp_timer2");
+		std::string lp_generation_wall_clock_string("lp_timer3");
 
 
 		std::stringstream aggregated_s;
@@ -1052,8 +1058,14 @@ protected:
 			}
 			for (int i = 0; i < build_timer.GetTimeStages(); i++) {
 				s << build_timer.GetTime(i) << ";";
-
 				values_map["building" + boost::lexical_cast<std::string>(i)] += build_timer.GetTime(i);
+			}
+
+			// L&P Cuts Times
+			const parallel_benders::Timer& lp_cuts_timer(nested_benders.getLiftAndProjectCutsTimer());
+			for (int i = 0; i < lp_cuts_timer.GetTimeStages(); i++) {
+				s << lp_cuts_timer.GetTime(i) << ";";
+				values_map["lp_timer" + boost::lexical_cast<std::string>(i)] += lp_cuts_timer.GetTime(i);
 			}
 
 			time_t timeStamp = time(NULL);
@@ -1111,6 +1123,10 @@ protected:
 		aggregated_s << values_map[building_time_2_string] << ";";
 		aggregated_s << values_map[building_time_3_string] << ";";
 		aggregated_s << values_map[building_time_4_string] << ";";
+		aggregated_s << values_map[solve_master_relaxation_string] << ";";
+		aggregated_s << values_map[build_and_solve_pnb_cgp_string] << ";";
+		aggregated_s << values_map[build_and_solve_dual_cgp_string] << ";";
+		aggregated_s << values_map[lp_generation_wall_clock_string] << ";";
 
 
 		time_t timeStamp = time(NULL);

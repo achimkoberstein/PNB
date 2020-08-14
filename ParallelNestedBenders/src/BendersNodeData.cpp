@@ -461,6 +461,7 @@ int Timer::GetTimeStages() const
 
 void Timer::AddTime( int stg, double time )
 {
+    std::lock_guard<std::mutex>unique_lock(overall_time_mutex_);
     if ( start_time_[stg] == 0.0 )
         overall_time_[stg] += time;
     else

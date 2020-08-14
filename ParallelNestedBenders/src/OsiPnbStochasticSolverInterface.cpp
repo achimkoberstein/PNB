@@ -542,6 +542,12 @@ const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface
     return nested_benders_->solution_times_;
 }
 
+const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface::getLiftAndProjectCutsTimer() const
+{
+    assert(nested_benders_);
+    return nested_benders_->lp_cuts_timer_;
+}
+
 int OsiStochasticParallelNestedBendersSolverInterface::getNumCriticalIteration() const
 {
     assert(nested_benders_);

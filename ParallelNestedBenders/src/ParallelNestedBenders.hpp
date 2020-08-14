@@ -280,10 +280,11 @@ private:
     std::vector<int> d_square_w_iteration_;
 
 
-    Timer timer_;
-    Timer wall_clock_solution_time_;
-    Timer detailed_timer_; // Stores build times for master, projection, oda, sub, and cut generation
-    Timer solution_times_;
+    Timer timer_; // timer for stage 1, stage 2, ..., Init() + time until main loop in Solve() + Reset()
+    Timer wall_clock_solution_time_; // timer of the main loop in Solve()
+    Timer detailed_timer_; // 0 - build master (incl. as part of L&P cuts since will be used for major iteration), 1 - build projections, 2 - build oda [never used], 3 - build subs: sum of 2nd stage: node->build_time_, 4 - cut generation: sum of 2nd stage node->cut_generation_time_
+    Timer solution_times_; // 0 - solve master (excl. solving the relaxation for L&P cuts), 1 - solve projections, 2 - solve oda, 3 - solve sub: sum of 2nd stage: node->solution_time_
+    Timer lp_cuts_timer_; // 0 - solve MP relaxation, 1 - build and solve PNB CGP, 2 - build and solve Dual CGP, 3 - L&P generation wall clock time
 
     int maximal_solution_time_;
 
