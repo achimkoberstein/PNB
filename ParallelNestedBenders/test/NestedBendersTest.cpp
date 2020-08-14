@@ -465,8 +465,6 @@ public:
 
 		}
 
-		// Specify the number of repetitions_ 
-		repetitions_ = 1;
 		std::vector<int> aggregates;
 		aggregates.push_back(1);
 		//aggregates.push_back(2);
@@ -767,7 +765,7 @@ protected:
 	NestedBendersTest() { // this is the fixture that is called for every test, e.g., TEST(NestedBendersTest, test)
 		benders_parameter_.init();
 		write_xml("../../../../Data/Benders/default_param.xml", benders_parameter_.parameter_);
-		repetitions_ = 1;
+		repetitions_ = 3;
 		use_multi_cut_ = true;
 		generate_initial_solution_ = false;
 		compute_statistics_ = false;
@@ -822,7 +820,7 @@ protected:
 		s << "Solve MP Relaxation;Build and Solve PNB CGP;Build and Solve Dual CGP;Generate L&P Cut;";
 		// Date/Timestamp
 		s << "Date;Time;";
-		s << "Min_CPU;Min_Solver;Max_CPU;Max_Solver;";
+		s << "Min_CPU;Min_Solver;Max_CPU;Max_Solver";
 		parameter_name_string_ = s.str();
 
 		if (!FileExists(testbed_log_file_string_.c_str())) {
@@ -925,6 +923,9 @@ protected:
 		double max_solver = 0.0;
 		double max_cpu = 0.0;
 
+		stringstream testset_problem_instance;
+		testset_problem_instance.str("");
+
 		const int orig_repetitions = repetitions_;
 		for (int loop_counter = 0; loop_counter < repetitions_; loop_counter++) {
 			// This can be done in a loop.
@@ -992,11 +993,12 @@ protected:
 			// File name Should have the following form based on Parameters: Single/Multi/Aggregate-NumberCuts/Aggregate-Percent-Number/Aggregate-Fixed-Number
 			std::stringstream s;
 			s.str("");
+			testset_problem_instance.str("");
 
 			// Write solution line
 			//Testset;Problem;Instance
-			s << nested_benders.getTestsetProblemInstanceNames()[0] << ";" << nested_benders.getTestsetProblemInstanceNames()[1] << ";" << nested_benders.getTestsetProblemInstanceNames()[2] << ";";
-			s << cpuTime << ";" << nested_benders.getNumIterations() << ";" << nested_benders.getObjValue() << ";" << nested_benders.getUB() << ";" << nested_benders.getLB() << ";";
+			testset_problem_instance << nested_benders.getTestsetProblemInstanceNames()[0] << ";" << nested_benders.getTestsetProblemInstanceNames()[1] << ";" << nested_benders.getTestsetProblemInstanceNames()[2];
+			s << testset_problem_instance.str() << ";" << cpuTime << ";" << nested_benders.getNumIterations() << ";" << nested_benders.getObjValue() << ";" << nested_benders.getUB() << ";" << nested_benders.getLB() << ";";
 			s << nested_benders.getRelativeGap() << ";" << nested_benders.getSolutionCode() << ";" << nested_benders.getNumInfeasibilityIterations() << ";";
 			s << nested_benders.getNumIterations() - nested_benders.getNumInsubstantialIterations() << ";" << nested_benders.getNumInsubstantialIterations() << ";";
 			s << solver_time << ";" << nested_benders.getNumCriticalIteration() << ";" << nested_benders.getMaximalLengthOfCriticalIterationSequence() << ";";
@@ -1082,9 +1084,14 @@ protected:
 				testbed_log_file << s.str();
 				testbed_log_file.close();
 			}
-			if (nested_benders.getSolutionCode() == parallel_benders::PNB_SOLUTION_TIME_LIMIT && loop_counter == 0) {
+			
+			// No need to solve several times in case of fail
+			if (loop_counter == 0 && nested_benders.getSolutionCode() == parallel_benders::PNB_SOLUTION_TIME_LIMIT) {
 				repetitions_ = 1;
 				values_map[solver_time_string] = nested_benders.getParameters().parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 3600);
+			}
+			else if (nested_benders.getSolutionCode() != parallel_benders::PNB_SOLUTION_OPTIMAL && nested_benders.getSolutionCode() != parallel_benders::PNB_SOLUTION_UPPER_LESS_LOWER_BOUND) {
+				repetitions_ = 1;
 			}
 		}
 
@@ -1093,7 +1100,7 @@ protected:
 			value /= repetitions_;
 		}
 		// Prepare outputstring, according to ordering from above (bad coding..)
-		aggregated_s << stoch_name << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";" << values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";" << values_map[relative_gap_string] << ";" << values_map[return_code_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << ";" << values_map[solver_time_string] << ";" << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
+		aggregated_s << testset_problem_instance.str() << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";" << values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";" << values_map[relative_gap_string] << ";" << values_map[return_code_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << ";" << values_map[solver_time_string] << ";" << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
 		// Write num cuts
 		aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";" << values_map[epigraph_cuts_string] << ";" << values_map[domain_cuts_string] << ";";
 
