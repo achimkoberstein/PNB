@@ -50,6 +50,7 @@ public:
     const parallel_benders::Timer& getTimer() const;
     const parallel_benders::Timer& getBuildTimer() const;
     const parallel_benders::Timer& getComputingTimer() const;
+    const parallel_benders::Timer& getLiftAndProjectCutsTimer() const;
 
     SmiScnModel* getSmiModel();
 	parallel_benders::ParallelNestedBenders* getPNB();

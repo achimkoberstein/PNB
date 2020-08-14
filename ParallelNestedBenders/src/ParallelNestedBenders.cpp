@@ -294,7 +294,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),solved_counter_(0),
-        current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
+        current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),lp_cuts_timer_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_dual_cgp_node_data_mutex_(),lp_round_cuts_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
 		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(false),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
@@ -1231,9 +1231,11 @@ namespace parallel_benders {
 				if (lp_rounds_limit_) { // we use L&P cuts
 					fractional_variables_.clear();
 					if (lp_switch_counter_ < lp_switches_limit_ && current_iteration_ == next_lp_rounds_iteration_) {
+                        lp_cuts_timer_.Stop(3);
 						if (lp_round_ < lp_rounds_limit_) {
 							generate_lp_cuts_ = true;
 							lp_round_++;
+                            lp_cuts_timer_.Start(3);
 						}
 						else {
                             StoreWarmStart(osi_solver_, tree_nodes_by_stage_[0][0]); // we will solve MP as MIP and want to store the LP warm start
@@ -2515,11 +2517,13 @@ namespace parallel_benders {
         other->regularized_initialized_rows_ = regularized_initialized_rows_;
         other->regularized_start_row_ = regularized_start_row_;*/
 
-        //Timers
-        other->timer_ = timer_;
-        other->wall_clock_solution_time_ = wall_clock_solution_time_;
-        other->detailed_timer_ = detailed_timer_;
-        other->solution_times_ = solution_times_;
+        //Timers // cannot copy because of the overall_time_mutex. Does it make sense to clone the timers at all?
+        //other->timer_ = timer_;
+        //other->wall_clock_solution_time_ = wall_clock_solution_time_;
+        //other->detailed_timer_ = detailed_timer_;
+        //other->solution_times_ = solution_times_;
+        //other->lp_cuts_timer_ = lp_cuts_timer_;
+        
         other->maximal_solution_time_ = maximal_solution_time_;
         other->solution_code_ = solution_code_;
 
@@ -2670,6 +2674,7 @@ namespace parallel_benders {
         wall_clock_solution_time_.Reset();
         detailed_timer_.Reset();
         solution_times_.Reset();
+        lp_cuts_timer_.Reset();
         intra_cut_aggregation_time_ = 0;
         adaptive_cut_time_ = 0;
         d_square_c_triple_timer_ = 0.0;
@@ -2858,7 +2863,12 @@ namespace parallel_benders {
 
         if ( current_stage_ == 0){
             detailed_timer_.Stop(0);
-            solution_times_.Start(0);
+            if (generate_lp_cuts_) { 
+                lp_cuts_timer_.Start(0);
+            }
+            else {
+                solution_times_.Start(0);
+            }
         }
 #ifdef COMPUTING_TIMER
         if ( current_stage_ == 1){
@@ -2887,6 +2897,7 @@ namespace parallel_benders {
 
         if ( current_stage_ == 0){
             solution_times_.Stop(0);
+            lp_cuts_timer_.Stop(0);
         }
 #ifdef COMPUTING_TIMER
         if ( current_stage_ == 1){
@@ -2927,6 +2938,7 @@ namespace parallel_benders {
 
                 assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
                 // Set round specifics to all dual cgp
+                lp_cuts_timer_.Start(2);
                 for (auto id_solver_pair : osi_solver_map_) {
                     assert(!(lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
                     if (id_solver_pair.second->getNumCols() > 0) { // if solver is not empty
@@ -2939,8 +2951,10 @@ namespace parallel_benders {
                     }
                 }
                 thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
+                lp_cuts_timer_.Stop(2);
 
                 // Set round specifics to all existing cgp pnb
+                lp_cuts_timer_.Start(1);
                 for (auto id_pnb_pair : cgp_pnb_map_) {
                     assert(id_pnb_pair.second->solved_counter_ > 0);
                     if (num_cpu_ > 1) {
@@ -2951,6 +2965,7 @@ namespace parallel_benders {
                     }
                 }
                 thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
+                lp_cuts_timer_.Stop(1);
 
                 std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values
                 for (int i = 0; i < num_cuts; i++) {
@@ -3360,6 +3375,7 @@ namespace parallel_benders {
                 lp_round_ = 0;
                 // we will switch osi to MIP in HandleSubproblem() after problem is printed
                 // if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
+                lp_cuts_timer_.Stop(3);
 			}
             LogSpecialCase(generate_lp_cuts_ && current_iteration_ == 1, "Wanted to build L&P cuts in first iteration");
         }
@@ -4833,6 +4849,7 @@ namespace parallel_benders {
         bool use_2nd_stage_info(false);
 		bool solve_dual_of_cgp(false);
 		int lift_and_project_cut_type(PNB_CUT_TYPE_EPIGRAPH);
+        double start_time(0); // used for timers
 
 		if (lift_and_p_method_ == parallel_benders::PNB_LIFT_AND_P_METHOD_DOMAIN) {
 			use_2nd_stage_info = false;
@@ -4890,6 +4907,7 @@ namespace parallel_benders {
 		if (use_2nd_stage_info) {
 			assert(lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && "How to add the 2nd stage information (for theta var) to domain cut?");
 			
+            start_time = CoinGetTimeOfDay();
             cgp_pnb = GetLnP_PNB_CGP_ByThread();      
 
             //-- For every fract var (and every thread)
@@ -4929,6 +4947,7 @@ namespace parallel_benders {
             SetLogging(google::ERROR); // no output for cgp_pnb_ in release
 #endif           
 			cgp_pnb->Solve();
+            lp_cuts_timer_.AddTime(1, CoinGetTimeOfDay() - start_time);
             SetLogging(google::INFO);
 
             bool terminate_cut_generation = false;
@@ -4981,6 +5000,7 @@ namespace parallel_benders {
         OsiSolverInterface* dual_cgp_solver(nullptr);
         if (solve_dual_of_cgp) {
 			
+            start_time = CoinGetTimeOfDay();
             assert(current_stage_ == 0);
             // similar to GetSolverByThread()
             std::map<boost::thread::id, OsiSolverInterface*>::iterator it;
@@ -5082,7 +5102,7 @@ namespace parallel_benders {
 			}
 			
 			SolveSolverInterface(dual_cgp_solver);
-            
+            lp_cuts_timer_.AddTime(2, CoinGetTimeOfDay() - start_time);
             {
                 std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                 DLOG_IF(INFO, dual_cgp_solver->isProvenOptimal()) << "Fract var with index " << fractional_variable.first << ": Solution of " << (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? "Alpha" : "Zeta") << "-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
@@ -5267,15 +5287,18 @@ namespace parallel_benders {
 
         // Clear internal structures of CGP PNB (or we could simply delete it)
         if (cgp_pnb != nullptr) {
+            start_time = CoinGetTimeOfDay();
             if (cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->alpha_normalized_) {
                 assert(false && "Do we really want it");
                 SetAlphaNormalization(cgp_pnb->osi_solver_, false);
             }
             cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
             cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
+            lp_cuts_timer_.AddTime(1, CoinGetTimeOfDay() - start_time);
         }
 
         if (dual_cgp_solver != nullptr) {
+            start_time = CoinGetTimeOfDay();
             // Delete new L&P CGP cuts
             int num_cgp_cuts_to_delete = dual_cgp_solver->getNumRows() - start_lp_round_cuts_rows;
             std::vector<int> row_indices(num_cgp_cuts_to_delete);
@@ -5296,6 +5319,7 @@ namespace parallel_benders {
             vallist = { 0, 0 };
             CPXchgcoeflist(env_ptr, lp_ptr, 2, rowlist.data(), collist.data(), vallist.data());
             // TODO: get rid of direct Cplex interface call
+            lp_cuts_timer_.AddTime(2, CoinGetTimeOfDay() - start_time);
         }
 	}
 

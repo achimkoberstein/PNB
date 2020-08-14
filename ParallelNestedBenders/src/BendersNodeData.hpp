@@ -395,7 +395,7 @@ public:
     // Time spent!
     double build_time_; // For sub problem
     double solution_time_; // For sub problem
-    double cut_generation_time_;
+    double cut_generation_time_; // also partially includes L&P cut generation - but not included in the cut generation timer since only 2nd stage cuts time is included
 
 private:
     // Dual L&P CGP elements
@@ -506,12 +506,14 @@ struct RowOrderedSparseMatrixPointer{
 
 class Timer {
 public:
-    explicit Timer(int stgs) : stages_(stgs),start_time_(stages_,0.0),overall_time_(stages_,0.0) {}
+    explicit Timer(int stgs) : stages_(stgs),start_time_(stages_,0.0),overall_time_(stages_,0.0), overall_time_mutex_() {}
     ~Timer() { }
 
     void Start(int stg);
     void Stop(int stg);
 
+    /*Threadsafe. Use it instead of Start / Stop on multiple threads
+    */
     void AddTime(int stg, double time);
 
 	void Reset();
@@ -528,6 +530,7 @@ private:
     int stages_;
     std::vector<double> start_time_;
     std::vector<double> overall_time_;
+    std::mutex overall_time_mutex_; // used to lock overall_time_ double, i.e., AddTime()
 };
 
 
