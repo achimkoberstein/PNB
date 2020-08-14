@@ -901,6 +901,7 @@ namespace parallel_benders {
             threads_per_CGP = num_cpu_;
         }
         cgp_parameter.SetParameterValue(parallel_benders::PNB_NUM_CPU, threads_per_CGP);
+        cgp_parameter.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, maximal_solution_time_); // we will modify it every time before solving the PNB CGP in SetLnPCGPFractVarSpecifics()
         cgp_parameter.SetParameterValue(parallel_benders::PNB_EPSILON_RELATIVE, cgp_relative_epsilon_);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, print_subproblems_);
         cgp_parameter.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
@@ -1015,6 +1016,20 @@ namespace parallel_benders {
         assert(CompareForEquality(first_stage_osi->getColUpper()[fractional_variable.first + num_cols], 1.0, integer_tolerance_));
         first_stage_osi->setColBounds(fractional_variable.first, 0, 0);
         first_stage_osi->setColBounds(fractional_variable.first + num_cols, 1, 1);
+		
+		// set time limits
+		int time_left = std::min(maximal_solution_time_, maximal_solution_time_ - (int)std::floor(timer_.GetAggregatedTime()));
+        if (time_left <= 0) {
+            time_left = 1;
+        }    
+        cgp_pnb->maximal_solution_time_ = time_left;
+        CPXsetdblparam(env_ptr, CPX_PARAM_TILIM, time_left); // master problem solver
+        for (auto id_solver_pair : cgp_pnb->osi_solver_map_) { // subproblems
+            osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (id_solver_pair.second);
+            assert(osi_cpx != nullptr && "Works only if CPLEX solver is used as osi_solver");
+            CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+            CPXsetdblparam(env_ptr, CPX_PARAM_TILIM, time_left);
+        }
     }
 
     void ParallelNestedBenders::SetLogging(int logging_level) {
