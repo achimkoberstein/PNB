@@ -1168,8 +1168,10 @@ namespace parallel_benders {
                     solution_code_ = PNB_SOLUTION_SIMILARITY_LIMIT;
                 if ( current_iteration_-insubstantial_iteration_ >= max_iteration_ )
                     solution_code_ = PNB_SOLUTION_ITERATION_LIMIT;
-                if ( !cvar_constr_decomp_ && upper_bound_ < lower_bound_-zero_tolerance_ )
+                if (!cvar_constr_decomp_ && upper_bound_ < lower_bound_ - zero_tolerance_ && std::abs(upper_bound_ - lower_bound_) > absolute_epsilon_ &&
+                    RelativeGapLargerEpsilon(upper_bound_, lower_bound_, infinity_, relative_epsilon_)) {
                     solution_code_ = PNB_SOLUTION_UPPER_LESS_LOWER_BOUND;
+                }
                 solved_counter_++;
                 break;// We stop solving the problem
             }
@@ -4967,22 +4969,15 @@ namespace parallel_benders {
             SetLogging(google::INFO);
 
             bool terminate_cut_generation = false;
-			if (cgp_pnb->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND) {
-                if (ComputeRelativeGap(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_) > cgp_relative_epsilon_) {
-                    LogSpecialCase(true, "PNB CGP finished due to LB > UB, do not build L&P cut, gap is too large");
+			if (cgp_pnb->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND ||
+                cgp_pnb->solution_code_ == PNB_SOLUTION_SIMILARITY_LIMIT ||
+                cgp_pnb->solution_code_ == PNB_SOLUTION_TIME_LIMIT) {
+                if (RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_, infinity_, std::max(cgp_relative_epsilon_, 0.01))) {
+                    LogSpecialCase(true, "PNB CGP finished due to UB < LB, similarity limit, or solution time limit, do not build L&P cut, gap is too large");
                     terminate_cut_generation = true;
                 }
                 else {
-                    LogSpecialCase(true, "PNB CGP finished due to LB > UB, gap is ok");
-                }
-            }
-			else if (cgp_pnb->solution_code_ == PNB_SOLUTION_SIMILARITY_LIMIT) {
-                if (ComputeRelativeGap(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_) > std::max(cgp_relative_epsilon_, 0.01)) {
-                    LogSpecialCase(true, "PNB CGP finished due to the similarity limit, do not build L&P cut, gap is too large");
-                    terminate_cut_generation = true;
-                }
-                else {
-                    LogSpecialCase(true, "PNB CGP finished due to the similarity limit, gap is ok");
+                    LogSpecialCase(true, "PNB CGP finished due to UB < LB, similarity limit, or solution time limit, gap is ok");
                 }
 			}
 			else if (cgp_pnb->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
@@ -5151,8 +5146,8 @@ namespace parallel_benders {
 
 			assert(dual_cgp_solver->isProvenOptimal());
             
-            if (use_2nd_stage_info && cgp_pnb->solution_code_ != PNB_SOLUTION_SIMILARITY_LIMIT && (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH || (cgp_pnb->cgp_do_when_infeasible_ > parallel_benders::PNB_CGP_STOP_WHEN_INFEASIBLE))) {
-                LogSpecialCase(ComputeRelativeGap(cgp_pnb->upper_bound_, dual_cgp_solver->getObjValue(), zero_tolerance_) > cgp_relative_epsilon_ + zero_tolerance_, "Gap between PNB CGP and Dual CGP solutions is too large.");
+            if (use_2nd_stage_info && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
+                LogSpecialCase(RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, dual_cgp_solver->getObjValue(), infinity_, std::max(cgp_relative_epsilon_, 0.01)), "Gap between PNB CGP and Dual CGP solutions is too large.");
 			}
 #ifdef SPEC_CASES
             OsiSolverInterface* temp_osi = dual_cgp_solver->clone(true); // for experimentation
