@@ -1014,13 +1014,13 @@ namespace parallel_benders {
         assert(CompareForEquality(first_stage_osi->getColLower()[fractional_variable.first + num_cols], 0.0, integer_tolerance_));
         assert(CompareForEquality(first_stage_osi->getColUpper()[fractional_variable.first], 1.0, integer_tolerance_));
         assert(CompareForEquality(first_stage_osi->getColUpper()[fractional_variable.first + num_cols], 1.0, integer_tolerance_));
-        first_stage_osi->setColBounds(fractional_variable.first, 0, 0);
-        first_stage_osi->setColBounds(fractional_variable.first + num_cols, 1, 1);
+        first_stage_osi->setColBounds(fractional_variable.first, 0.0, 0.0);
+        first_stage_osi->setColBounds(fractional_variable.first + num_cols, 1.0, 1.0);
 		
 		// set time limits
 		int time_left = std::min(maximal_solution_time_, maximal_solution_time_ - (int)std::floor(timer_.GetAggregatedTime()));
-        if (time_left <= 0) {
-            time_left = 1;
+        if (time_left <= 0.0) {
+            time_left = 1.0;
         }    
         cgp_pnb->maximal_solution_time_ = time_left;
         CPXsetdblparam(env_ptr, CPX_PARAM_TILIM, time_left); // master problem solver
@@ -1336,8 +1336,8 @@ namespace parallel_benders {
 
             // Initialize lower/upper bounds for this stage.
 			if (lp_column_set_ != parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
-				temporary_stage_lower_bound = 0;
-				temporary_stage_upper_bound = 0;
+				temporary_stage_lower_bound = 0.0;
+				temporary_stage_upper_bound = 0.0;
 			}
 
             // Stochastic Cutting Plane Method
@@ -1784,7 +1784,7 @@ namespace parallel_benders {
 				prime_multiplier = lp_main_loop_fract_var_value_; // lambda
 			}
 
-			double expected_stage_solution_value(0);
+			double expected_stage_solution_value(0.0);
             for ( auto node : tree_nodes_by_stage_[current_stage_]){
                 temporary_stage_lower_bound += node->getDataPtr()->lower_bound_*node->getDataPtr()->probability_*prime_multiplier; // solution with thetas (if any) * prob
                 expected_stage_solution_value += node->getDataPtr()->solution_value_* node->getDataPtr()->probability_; // q(x): solution w/o thetas (if any) * prob
@@ -2694,7 +2694,7 @@ namespace parallel_benders {
         solution_times_.Reset();
         lp_cuts_timer_.Reset();
         intra_cut_aggregation_time_ = 0;
-        adaptive_cut_time_ = 0;
+        adaptive_cut_time_ = 0.0;
         d_square_c_triple_timer_ = 0.0;
         d_square_c_rhs_timer_ = 0.0;
         
@@ -3888,7 +3888,7 @@ namespace parallel_benders {
 
 			double* problem_column_upper = new double[num_cols*2]; // prime, double prime
 			memcpy(problem_column_upper, benders_node_pointer->column_upper_, num_cols * sizeof(double)); // prime
-			//problem_column_upper[lambda_index] = 0; // fract var specific. Is set in GenerateLiftAndProjectCut() of the main loop
+			//problem_column_upper[lambda_index] = 0.0; // fract var specific. Is set in GenerateLiftAndProjectCut() of the main loop
 			memcpy(&problem_column_upper[num_cols], benders_node_pointer->column_upper_, num_cols * sizeof(double)); // double prime
 			if (node_pointer->getColUpperLength())
 				delete[] benders_node_pointer->column_upper_;
@@ -3901,7 +3901,7 @@ namespace parallel_benders {
 			int row_bounds_len = num_rows * 2 + num_cols * 2; // last line, Alpha-Normalization rows, prime, double prime RHS
 			std::vector<double> problem_row_lower;
 			problem_row_lower.reserve(row_bounds_len);
-            problem_row_lower.resize(num_cols, 0); // (1-lambda) * x' + lambda * x" = FRACT_SOLUTION is fract var specific. Exact values are set in GenerateLiftAndProjectCut() of the main loop
+            problem_row_lower.resize(num_cols, 0.0); // (1-lambda) * x' + lambda * x" = FRACT_SOLUTION is fract var specific. Exact values are set in GenerateLiftAndProjectCut() of the main loop
 			problem_row_lower.insert(problem_row_lower.begin()+num_cols, num_cols, 0.0); // Alpha-Normalization rows
 			problem_row_lower.insert(problem_row_lower.begin()+num_cols*2, benders_node_pointer->row_lower_, benders_node_pointer->row_lower_+num_rows); // prime RHS
 			problem_row_lower.insert(problem_row_lower.begin()+num_cols*2+num_rows, benders_node_pointer->row_lower_, benders_node_pointer->row_lower_+num_rows); // double prime RHS
@@ -3911,7 +3911,7 @@ namespace parallel_benders {
 
 			std::vector<double> problem_row_upper;
 			problem_row_upper.reserve(row_bounds_len);
-            problem_row_upper.resize(num_cols, 0);  // (1-lambda) * x' + lambda * x" = FRACT_SOLUTION is fract var specific. Exact values are set in GenerateLiftAndProjectCut() of the main loop
+            problem_row_upper.resize(num_cols, 0.0);  // (1-lambda) * x' + lambda * x" = FRACT_SOLUTION is fract var specific. Exact values are set in GenerateLiftAndProjectCut() of the main loop
 			problem_row_upper.insert(problem_row_upper.begin()+num_cols, num_cols, infinity_); // Alpha-Normalization rows
 			problem_row_upper.insert(problem_row_upper.begin()+num_cols*2, benders_node_pointer->row_upper_, benders_node_pointer->row_upper_ + num_rows); // prime RHS
 			problem_row_upper.insert(problem_row_upper.begin()+num_cols*2+num_rows, benders_node_pointer->row_upper_, benders_node_pointer->row_upper_ + num_rows); // double prime RHS
@@ -4260,7 +4260,7 @@ namespace parallel_benders {
         // apply to the double-prime side
         if (column_set == parallel_benders::PNB_COL_SET_NONE || column_set == parallel_benders::PNB_COL_SET_DOUBLE_PRIME) {
             cuts.emplace_back(*original_cut);
-            cuts.back().setLb(0); // lb is moved to the problem matrix in cols z_0 and y_0
+            cuts.back().setLb(0.0); // lb is moved to the problem matrix in cols z_0 and y_0
             CoinPackedVector* row = &(cuts.back().mutableRow());
             row->reserve(row->getNumElements() + 2); // incl. z_0 and y_0 columns
             for (int i = 0; i < row->getNumElements() - num_theta_indices; ++i) {
@@ -4269,7 +4269,7 @@ namespace parallel_benders {
             for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
                 row->getIndices()[row->getNumElements() - 1 - aggregate_index] += theta_v_shift; // shift theta to the v column
             }
-            row->setElement(row->getNumElements(), 0); // set coef for z_0 to 0, it has row->getNumElements() position in vector
+            row->setElement(row->getNumElements(), 0.0); // set coef for z_0 to 0, it has row->getNumElements() position in vector
             row->insert(y0_col_index, -original_cut->lb()); // add RHS as coef for y_0
         }
 
@@ -5181,7 +5181,7 @@ namespace parallel_benders {
             delete temp_osi;
 #endif
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && CompareWithZero(dual_cgp_solver->getObjValue()))  {
-                LogSpecialCase(true, "L&P cut will not be added to the container. Reason: solution of Dual L&P Cut Generation Problem is 0: solution of DAN is zero");
+                LogSpecialCase(true, "L&P cut will not be added to the container. Reason: solution of DAN is zero");
 			}
 			else {
                 double dual_cgp_solution = dual_cgp_solver->getObjValue();
@@ -5261,7 +5261,7 @@ namespace parallel_benders {
 
                 if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
                     // also here was if (change_aggregation_level || sum > ...
-                    if (sum > std::accumulate(benders_node_pointer->next_stage_approximation_.begin(), benders_node_pointer->next_stage_approximation_.end(), 0)) {
+                    if (sum > std::accumulate(benders_node_pointer->next_stage_approximation_.begin(), benders_node_pointer->next_stage_approximation_.end(), 0.0)) {
                         // Check if we already have such cut
                         std::lock_guard<std::mutex>unique_lock(lp_round_cuts_mutex_);
                         assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->optimality_cuts_) && "The same cut to just build epigraph cut is present in optimality cuts. Never happened before.");
@@ -5325,7 +5325,7 @@ namespace parallel_benders {
             std::array<int, 2> collist = { fractional_variable.first, num_cols + fractional_variable.first };
             std::array<double, 2> vallist = { -1.0, 1.0 };
 
-            vallist = { 0, 0 };
+            vallist = { 0.0, 0.0 };
             CPXchgcoeflist(env_ptr, lp_ptr, 2, rowlist.data(), collist.data(), vallist.data());
             // TODO: get rid of direct Cplex interface call
             lp_cuts_timer_.AddTime(2, CoinGetTimeOfDay() - start_time);
@@ -5399,8 +5399,8 @@ namespace parallel_benders {
                     int cols_to_allocate = num_cols * 2 + 2 + num_theta * 2;
                     row_upper->reserve(rows_to_allocate);
                     row_lower->reserve(rows_to_allocate);
-                    row_upper->assign(num_cols + 1, 0); // rows for lines 7, 8
-                    row_lower->assign(num_cols + 1 + 2 + num_cols, 0);
+                    row_upper->assign(num_cols + 1, 0.0); // rows for lines 7, 8
+                    row_lower->assign(num_cols + 1 + 2 + num_cols, 0.0);
 
                     assert(matrix->isColOrdered());
                     matrix->reserve(cols_to_allocate, rows_to_allocate); // number of vectors in major dim (cols for col ordered), size of each major dim vector (col)
@@ -5419,7 +5419,7 @@ namespace parallel_benders {
                     (*row_lower)[num_cols] = 1;
                     col_starts = { 0, 1, 2 };
                     std::vector<int> row(2, num_cols);
-                    elems = { 1, 1 };
+                    elems = { 1.0, 1.0 };
                     matrix->appendCols(2, col_starts.data(), row.data(), elems.data());
 
                     // Line 3: -z_i >= 0 and Line 6: y_i - y_0 >= 0
@@ -5438,7 +5438,7 @@ namespace parallel_benders {
                     // Lines 3 and 6 (bounds): -1*z + 1*z_0 >= 0 and -1*y + 1*y_0 >= 0 for binary vars
                     row_upper->insert(row_upper->end(), num_bin * 2, infinity_);
                     row_lower->insert(row_lower->end(), num_bin * 2, 0);
-                    elems = { -1, 1 };
+                    elems = { -1.0, 1.0 };
                     indices.resize(2);
                     // prime side
                     indices[1] = z0_col_index;
@@ -5522,11 +5522,11 @@ namespace parallel_benders {
                     }
 
                     //Add tau and v columns
-                    col_starts.assign(num_theta * 2 + 1, 0);
+                    col_starts.assign(num_theta * 2 + 1, 0.0);
                     matrix->appendCols(num_theta * 2, col_starts.data(), nullptr, nullptr);
 
                     //Objective: min tau + v
-                    objective->assign(num_cols * 2 + num_theta * 2 + 2, 0); //incl. tau and v
+                    objective->assign(num_cols * 2 + num_theta * 2 + 2, 0.0); //incl. tau and v
                     assert(!adaptive_ && "Dynamic cut aggregation is not implemented.");
                     std::fill(objective->begin()+tau_start, objective->end(), 1);
 
@@ -5535,8 +5535,8 @@ namespace parallel_benders {
                     const double* c_upper = core_->getDenseColUpper(0);
                     const double* c_lower = core_->getDenseColLower(0);
                     for (auto binary_index : core_->getBinaryCols(0)) { // for bin x ub should be 1 and lb should be 0
-                        assert(CompareForEquality(c_lower[binary_index], 0, zero_tolerance_));
-                        assert(CompareForEquality(c_upper[binary_index], 1, zero_tolerance_));
+                        assert(CompareForEquality(c_lower[binary_index], 0.0, zero_tolerance_));
+                        assert(CompareForEquality(c_upper[binary_index], 1.0, zero_tolerance_));
                     }
 
                     column_upper->reserve(cols_to_allocate);
@@ -5547,7 +5547,7 @@ namespace parallel_benders {
                     column_lower->insert(column_lower->end(), c_lower, c_lower + num_cols); // for y
                     // z0 and y0 are nn
                     column_upper->insert(column_upper->end(), 2, infinity_);
-                    column_lower->insert(column_lower->end(), 2, 0);
+                    column_lower->insert(column_lower->end(), 2, 0.0);
                     // tau and v are free
                     column_upper->insert(column_upper->end(), num_theta*2, infinity_); // prime and double-prime
                     column_lower->insert(column_lower->end(), num_theta*2, -infinity_); // prime and double-prime
@@ -5749,7 +5749,7 @@ namespace parallel_benders {
 			std::array<int, 3> columnStarts = {0,2,4};
 			std::vector<int> rows;
 			rows.reserve(max(4, num_cols)); // in the for loop we need the size 4 but later num_cols
-			std::vector<double> elements = { 1, -1, -1, -1 };
+			std::vector<double> elements = { 1.0, -1.0, -1.0, -1.0 };
 			std::array<double, 2> collb{};
 			std::array<double, 2> colub = {infinity_, infinity_};
 			std::array<double, 2> obj{};
@@ -5760,7 +5760,7 @@ namespace parallel_benders {
 			// add the last column
 			rows.resize(num_cols);
 			std::iota(rows.begin(), rows.begin() + num_cols, num_cols + extra_rows);
-			elements.assign(num_cols, 1);
+			elements.assign(num_cols, 1.0);
             osi_solver->addCol(num_cols, rows.data(), elements.data(), 0, infinity_, 1.0);
 			assert(osi_solver->getNumCols() == cols_in_alpha_normalized);
 		}
@@ -5962,7 +5962,7 @@ namespace parallel_benders {
 				lp_check_passed = false;
 			}
 			if (second_stage_pointer->stochastic_objective_) {
-				std::cout << "Your problems has stochastic objective" << std::endl;
+				std::cout << "Your problem has stochastic objective" << std::endl;
 				//lp_check_passed = false;
 			}
 		}
