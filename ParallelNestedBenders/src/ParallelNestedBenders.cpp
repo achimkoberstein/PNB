@@ -3149,8 +3149,7 @@ namespace parallel_benders {
                 }
             }
             else if ( osi_solver->isProvenDualInfeasible() ){
-                LogSpecialCase(lp_main_loop_iteration_round_ && current_stage_ == 0, "PNB CGP is unbounded");
-				// Primal problem is unbounded. => dual infeasible
+                // Primal problem is unbounded. => dual infeasible
                 // If we are in a problem with theta variables, we might have success in restricting the theta variables
                 if ( current_stage_ < num_stages_-1){
                     // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
@@ -3182,23 +3181,20 @@ namespace parallel_benders {
 					// if L&P CGP has no optimality cuts - it is unbounded
 					if (lp_main_loop_iteration_round_) {
 						assert(current_stage_ == 0);
-						assert(benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() && benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.empty() && "Why else whould we have it?");
-                        assert(current_stage_ == 0 && current_iteration_ == 1 && "Why would PNB CGP MP be unbounded in > 1 iterations");
+						assert(current_stage_ == 0 && current_iteration_ == 1 && "Why would PNB CGP MP be unbounded in > 1 iterations");
+						LogSpecialCase(!benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() || !benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.empty(), "PNB CGP is unbounded, while cuts with theta are present");
 						num_thetas = getNumThetasByStage(benders_tree_node_pointer);
 						num_thetas *= 2; // prime and double prime
 					}
-					assert(!(lp_main_loop_iteration_round_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() && !benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.empty()) && "Why would PNB CGP unbounded if opt cuts are present?");
                     if ( num_thetas && unbounded_theta){
                         // TODO Inspect the unbounded extreme ray to see if we need this extra row!
-                        // 
                         std::vector<double> extra_elements(num_thetas,1.0);
                         std::vector<int> extra_indices(num_thetas);
-                        std::iota(extra_indices.begin(),extra_indices.end(),benders_tree_node_pointer->getDataPtr()->cols_);
-                        double large_lower_bound = -infinity_/100;
+                        std::iota(extra_indices.begin(), extra_indices.end(), benders_tree_node_pointer->getDataPtr()->cols_); // correct for CGp PNB
+                        double large_lower_bound = -10000000000; // magic number but it works alright
                         for (int i = 0; i < num_thetas; i++){
                             osi_solver->setColBounds(extra_indices[i],large_lower_bound,infinity_);
                         }
-                        
                         // we bound all thetas with one extra row?
                         // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
                         //osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-10000000000000, infinity_); // We assume that will work. I mean: Half infinity? 
@@ -3217,12 +3213,11 @@ namespace parallel_benders {
                             SolveSolverInterface(osi_solver);
                         // Depending on the solution to this
                         if (osi_solver->isProvenOptimal()) {
-                            assert(lp_rounds_limit_ == 0 && "Never tested with L&P cuts");
-                            assert(!lp_main_loop_iteration_round_ && "Never tested with L&P PNB CGP");
+							LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being unbounded. We have adjusted it.");
                             StoreWarmStart(osi_solver, benders_tree_node_pointer);
                         }
                         else if (osi_solver->isProvenPrimalInfeasible()) {
-                            assert(lp_main_loop_iteration_round_ && "Never tested with not L&P PNB CGP");
+                            LOG_IF(FATAL, !lp_main_loop_iteration_round_) << "Never happened in not L&P PNB CGP";
                             if (lp_main_loop_iteration_round_ && cgp_do_when_infeasible_ == PNB_CGP_STOP_WHEN_INFEASIBLE) {
                                 // see below for what we would do if problem was infeasible right away
                                 PrintSubproblem(osi_solver, 0, "master_infeasible");
@@ -3231,14 +3226,18 @@ namespace parallel_benders {
                                 LogSpecialCase(true, "PNB CGP is infeasible after being unbounded. We have tried to adjust it.");
                             }
                             else {
-                                assert(false && "See below for what we would do if PNB CGP MP was infeasible right away: maybe define some method, e.g., HandleInfeasibleLnPCGP");
+                                LOG_IF(FATAL, lp_main_loop_iteration_round_) << "See below for what we would do if PNB CGP MP was infeasible right away : maybe define some method, e.g., HandleInfeasibleLnPCGP";
+                                LOG_IF(FATAL, !lp_main_loop_iteration_round_) << "Never happened in not L&P PNB CGP. Probably large_lower_bound is too small. Make it larger. If too large, the problem will still be unbounded";
                             }
                         }
+                        else if (osi_solver->isProvenDualInfeasible()) {
+                            LOG(FATAL) << "Never happened. Probably large_lower_bound is largre and does not bound the problem. Make it smaller. If too small, the problem might be infeasible";
+                        }
                         else {
-                            assert(false && "Never tested with not L&P PNB CGP");
+                            LOG(FATAL) << "What do we have here if it is not Optimal, Infeasible, or Ubounded?";
                         }
                     }
-                    else {
+                    else { // else if !(num_thetas && unbounded_theta)
                         // We can not handle this correctly for now
                         if ( theta_approximations_everywhere_){
                             PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"unbounded");
@@ -3278,8 +3277,6 @@ namespace parallel_benders {
             }
             else if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
-				LOG_IF(FATAL, current_stage_ == 0 && (lp_rounds_limit_ > 0)) << "Check what is going on here!";
-                
                 if ( only_one_feasibility_cut_ && infeasible_problems_.any() ){ 
 					return;
                 }
@@ -4981,12 +4978,22 @@ namespace parallel_benders {
                 }
 			}
 			else if (cgp_pnb->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
-				// TODO: we could get domain cut from MP of CGP PNB w/o solving the DAN
-				assert(!(cgp_pnb->cgp_do_when_infeasible_ == parallel_benders::PNB_CGP_ALPHA_AND_CONTINUE_WHEN_INFEASIBLE && cgp_pnb->current_iteration_ > 2) && "We still should get infeasible MP in PNB CGP and it should not converge");
-                lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
-                LogSpecialCase(cgp_pnb->current_iteration_ == 1, "Will generate L&P Domain cut. Reason: PNB CGP is infeasible in its first iteration");
-                LogSpecialCase(cgp_pnb->current_iteration_ > 1, "Will generate L&P Domain cut. Reason: PNB CGP is infeasible in 2nd or later iteration");
+                assert(!(cgp_pnb->cgp_do_when_infeasible_ == parallel_benders::PNB_CGP_ALPHA_AND_CONTINUE_WHEN_INFEASIBLE && cgp_pnb->current_iteration_ > 2) && "We still should get infeasible MP in PNB CGP and it should not converge");
+                cgp_pnb->upper_bound_ = cgp_pnb->iteration_u_and_l_bounds_.back().first; // if problem is infeasible, ub is set to infinity. Let us revert it
+                if (RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_, infinity_, std::max(cgp_relative_epsilon_, 0.01))) {
+                    // TODO: we could get domain cut from MP of CGP PNB w/o solving the DAN
+                    lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+                    LogSpecialCase(cgp_pnb->current_iteration_ == 1, "Will generate L&P Domain cut. Reason: PNB CGP is infeasible in its first iteration, gap is too large");
+                    LogSpecialCase(cgp_pnb->current_iteration_ > 1, "Will generate L&P Domain cut. Reason: PNB CGP is infeasible in 2nd or later iteration, gap is too large");
+                }
+                else {
+                    LogSpecialCase(true, "PNB CGP finished due to infeasible first stage problem, gap is ok");
+                }                
 			}
+            else if (cgp_pnb->solution_code_ == PNB_SOLUTION_UNBOUNDED) {
+                LogSpecialCase(true, "PNB CGP ís unbounded, do not build L&P cut.");
+                terminate_cut_generation = true;
+            }
 			else if (cgp_pnb->solution_code_ != PNB_SOLUTION_OPTIMAL) {
                 std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
 				LOG(FATAL) << "Fract var with index " << fractional_variable.first << ": L&P CGP is not solved to optimality. Is it an ERROR?";
@@ -5123,28 +5130,44 @@ namespace parallel_benders {
 			suffix << "l&p_cut_index_" << lp_cut_index;
 			PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
 
-			assert(dual_cgp_solver->isProvenOptimal() || dual_cgp_solver->isProvenPrimalInfeasible());
 			// if infeasible -> DZN unbounded (DAN should be always solvable) -> AddAlphaNormalization and resolve
-			if (dual_cgp_solver->isProvenPrimalInfeasible()) {
-				assert(lift_and_project_cut_type != PNB_CUT_TYPE_DOMAIN && "DAN should be always feasible"); 
+			if (!dual_cgp_solver->isProvenOptimal()) {
+                if (dual_cgp_solver->isProvenPrimalInfeasible() && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) { // lets build Domain cut
+                    LogSpecialCase(true, "DZN is infeasible");
+                    LogSpecialCase(cgp_pnb != nullptr && cgp_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL, "DZN is infeasible even though PNB CGP was solved");
 
-                LogSpecialCase(true, "DZN is infeasible");
-                LogSpecialCase(cgp_pnb != nullptr && cgp_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL, "DZN is infeasible even though PNB CGP was solved");
+                    lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+                    SetAlphaNormalization(dual_cgp_solver, true);
+                    SolveSolverInterface(dual_cgp_solver);
 
-                lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
-				SetAlphaNormalization(dual_cgp_solver, true);
-				SolveSolverInterface(dual_cgp_solver);
-				
-                suffix << "_with_Alpha_Normalization";
-                LogSpecialCase(CompareWithZero(dual_cgp_solver->getObjValue()), "DZN infeasible <=> DAN > 0. It is not"); // whether it is not smaller 0 we check below
-				PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
+                    suffix << "_with_Alpha_Normalization";
+                    LogSpecialCase(CompareWithZero(dual_cgp_solver->getObjValue()), "DZN infeasible <=> DAN > 0. It is not"); // whether it is not smaller 0 we check below
+                    PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
 
-                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-                DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is infeasible." << std::endl;
-                DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
+                    std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
+                    DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is infeasible." << std::endl;
+                    DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
+                }
+                else {
+                    // see the identical code at the end of the function
+                    LogSpecialCase(dual_cgp_solver->isProvenPrimalInfeasible() && lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN, "DAN is infeasible"); // the only reason that comes to my mind is the numerical issues
+                    assert(!(dual_cgp_solver->isProvenDualInfeasible() && lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) && "DAN is unbounded");
+                    LogSpecialCase(dual_cgp_solver->isProvenDualInfeasible() && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH, "DZN is unbounded");
+                    if (cgp_pnb != nullptr) {
+                        if (cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->alpha_normalized_) {
+                            assert(false && "Do we really want it");
+                            SetAlphaNormalization(cgp_pnb->osi_solver_, false);
+                        }
+                        cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
+                        cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
+                    }
+                    std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
+                    DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": L&P cut will not be generated. Reason: Dual L&P Cut Generation Problem is infeasible or unbounded." << std::endl;
+                    return;
+                }
 			}
 
-			assert(dual_cgp_solver->isProvenOptimal());
+            assert(dual_cgp_solver->isProvenOptimal());
             
             if (use_2nd_stage_info && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
                 LogSpecialCase(RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, dual_cgp_solver->getObjValue(), infinity_, std::max(cgp_relative_epsilon_, 0.01)), "Gap between PNB CGP and Dual CGP solutions is too large.");
