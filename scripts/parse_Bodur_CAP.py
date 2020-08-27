@@ -155,7 +155,7 @@ def main():
             assert(all(value == 0 for value in h_for_first_sc[-I:])) # last I elements should be 0
 
             first_stage_ub_index = matrix_h_start + MAX_NUM_SCENARIOS # jump over the whole matrix_h_all
-            if problem_name == TEST_NAME: first_stage_ub_index = matrix_h_start  + 5 # in test we do not have redundant rows
+            if problem_name == TEST_NAME: first_stage_ub_index = matrix_h_start  + 15 # in test we can have max 15 scen
             first_stage_ub = parse_vector_line(lines[first_stage_ub_index])
             assert(len(first_stage_ub) == n_first_stage_cols)
 
