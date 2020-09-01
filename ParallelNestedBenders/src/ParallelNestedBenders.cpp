@@ -2110,19 +2110,20 @@ namespace parallel_benders {
             }
 
             // If we had unbounded problems, we have to stop the algorithm.
-            //if ( unbounded_problem_ ){
-            //    if ( infeasible_problems_.any() ){
-            //        unbounded_problem_ = false;
-            //    }
-            //    //else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() ){// Lets see if we already have optimality cuts added to the problem?!
-            //    //    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
-            //    //    solution_code_ = PNB_SOLUTION_UNBOUNDED;
-            //    //    solved_counter_++;
-            //    //    break;
-            //    //}
-            //    //else
-            //    //    unbounded_problem_ = false;
-            //}
+            if ( unbounded_problem_ ){
+                if ( infeasible_problems_.any() ){
+                    unbounded_problem_ = false;
+                }
+                else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() && !tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.empty()){// Lets see if we already have optimality cuts added to the problem?!
+                    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
+                    solution_code_ = PNB_SOLUTION_UNBOUNDED;
+                    solved_counter_++;
+					// we could also set here upper_bound_ = infinity_;
+                    break;
+                }
+                else
+                    unbounded_problem_ = false;
+            }
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
             if ( infeasible_problems_.any() ){               
@@ -3191,7 +3192,7 @@ namespace parallel_benders {
                         std::vector<double> extra_elements(num_thetas,1.0);
                         std::vector<int> extra_indices(num_thetas);
                         std::iota(extra_indices.begin(), extra_indices.end(), benders_tree_node_pointer->getDataPtr()->cols_); // correct for CGp PNB
-                        double large_lower_bound = -10000000000; // magic number but it works alright
+                        double large_lower_bound = -infinity_/100;
                         for (int i = 0; i < num_thetas; i++){
                             osi_solver->setColBounds(extra_indices[i],large_lower_bound,infinity_);
                         }
@@ -3217,21 +3218,20 @@ namespace parallel_benders {
                             StoreWarmStart(osi_solver, benders_tree_node_pointer);
                         }
                         else if (osi_solver->isProvenPrimalInfeasible()) {
-                            LOG_IF(FATAL, !lp_main_loop_iteration_round_) << "Never happened in not L&P PNB CGP";
-                            if (lp_main_loop_iteration_round_ && cgp_do_when_infeasible_ == PNB_CGP_STOP_WHEN_INFEASIBLE) {
-                                // see below for what we would do if problem was infeasible right away
-                                PrintSubproblem(osi_solver, 0, "master_infeasible");
-                                infeasible_problem_ = true;
-                                infeasible_problems_[0] = true;
-                                LogSpecialCase(true, "PNB CGP is infeasible after being unbounded. We have tried to adjust it.");
-                            }
-                            else {
+                            if (lp_main_loop_iteration_round_ && cgp_do_when_infeasible_ != PNB_CGP_STOP_WHEN_INFEASIBLE) {
                                 LOG_IF(FATAL, lp_main_loop_iteration_round_) << "See below for what we would do if PNB CGP MP was infeasible right away : maybe define some method, e.g., HandleInfeasibleLnPCGP";
-                                LOG_IF(FATAL, !lp_main_loop_iteration_round_) << "Never happened in not L&P PNB CGP. Probably large_lower_bound is too small. Make it larger. If too large, the problem will still be unbounded";
                             }
+                            PrintSubproblem(osi_solver, 0, "master_infeasible");
+                            infeasible_problem_ = true;
+                            infeasible_problems_[0] = true;
+                            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is infeasible after being unbounded. We have tried to adjust it.");
+                            //Probably large_lower_bound is too small. Make it larger. If too large, the problem will still be unbounded
                         }
                         else if (osi_solver->isProvenDualInfeasible()) {
-                            LOG(FATAL) << "Never happened. Probably large_lower_bound is largre and does not bound the problem. Make it smaller. If too small, the problem might be infeasible";
+							LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is unbounded after being unbounded. We have adjusted it."); // Probably large_lower_bound is largre and does not bound the problem. Make it smaller. If too small, the problem might be infeasible
+							PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "unbounded");
+							unbounded_problem_ = true;
+							return;
                         }
                         else {
                             LOG(FATAL) << "What do we have here if it is not Optimal, Infeasible, or Ubounded?";
@@ -3254,26 +3254,16 @@ namespace parallel_benders {
                     //    }
                     //}
                 }
-                // TODO: This section should not be necessary anyway..
-                //else if ( !osi_solver->isProvenOptimal()){
-                //    if ( osi_solver->isProvenDualInfeasible() ){
-                //        if ( seperate_first_stage_solver_ && current_stage_ == 0) // Strange behaviour may results if we use the seperate_first_stage_solver!
-                //            seperate_first_stage_solver_ = false;
-                //        console_mutex_.lock();
-                //        LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
-                //        LOG(ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem. Switching off seperate first stage solver.";
-                //        SolveSolverInterface(osi_solver);
-                //        if ( osi_solver->isProvenDualInfeasible() ){
-                //            // We can not work with that in a reasonable manner..
-                //            upper_bound_ = infinity_;
-                //            unbounded_problem_ = true; 
-                //            osi_solver->writeLp("unboundedProblem");
-                //            osi_solver->writeMps("unboundedProblem");
-                //        }
-                //        console_mutex_.unlock();
-
-                //    }
-                //}
+                else if ( osi_solver->isProvenDualInfeasible() ){ // for last stage
+                    //if ( seperate_first_stage_solver_ && current_stage_ == 0) // Strange behaviour may results if we use the seperate_first_stage_solver!
+                    //    seperate_first_stage_solver_ = false;
+					unbounded_problem_ = true;
+					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
+                    LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+                    LOG(ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem. Switching off seperate first stage solver.";
+                    LOG(FATAL) << "Never tested before. Do we handle it correct in Solve() loop?";
+					return;
+				}
             }
             else if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
