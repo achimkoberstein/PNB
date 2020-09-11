@@ -355,7 +355,7 @@ BendersStageData::BendersStageData()
 : num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),
 stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),stochastic_objective_(false),stochastic_bounds_(false),non_zero_bounds_(false),
 column_indices_(0),row_indices_(0),warm_start_(nullptr),problem_was_solved_in_this_iteration_(false),no_staircase_constraints_(),changed_aggregation_level_(false),num_d_square_cuts_(0),d_square_matrix_(nullptr),non_integer_scenarios(),violated_index_(-1),d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr),d_square_lambda_0_2_(0),d_square_lambda_1_2_(0),d_square_pi_(nullptr),d_square_disjunctive_indices_(),solve_binary_subproblems_(false),use_level_(false),
-added_optimality_cuts_(0), added_epigraph_cuts_(0), added_domain_cuts_(0), added_feasibility_cuts_(0)
+added_optimality_cuts_(0), added_epigraph_cuts_(0), lp_cgp_counter_(0), added_domain_cuts_(0), added_feasibility_cuts_(0)
 {
 	
 }
@@ -363,7 +363,7 @@ BendersStageData::BendersStageData(const BendersStageData& stageData)
     : num_columns_(stageData.num_columns_), num_rows_(stageData.num_rows_), stage_(stageData.stage_), num_thetas_(stageData.num_thetas_),
     stochastic_matrix_w_(stageData.stochastic_matrix_w_), stochastic_matrix_t_(stageData.stochastic_matrix_t_), stochastic_rhs_(stageData.stochastic_rhs_), stochastic_objective_(stageData.stochastic_objective_), stochastic_bounds_(stageData.stochastic_bounds_), non_zero_bounds_(stageData.non_zero_bounds_),
     column_indices_(stageData.column_indices_), row_indices_(stageData.row_indices_), warm_start_(stageData.warm_start_ == nullptr ? nullptr : stageData.warm_start_->clone()), problem_was_solved_in_this_iteration_(stageData.problem_was_solved_in_this_iteration_), no_staircase_constraints_(stageData.no_staircase_constraints_), changed_aggregation_level_(stageData.changed_aggregation_level_), num_d_square_cuts_(stageData.num_d_square_cuts_), d_square_matrix_(stageData.d_square_matrix_ ? new CoinPackedMatrix(*stageData.d_square_matrix_) : nullptr), non_integer_scenarios(stageData.non_integer_scenarios), violated_index_(stageData.violated_index_), d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr), d_square_lambda_0_2_(stageData.d_square_lambda_0_2_), d_square_lambda_1_2_(stageData.d_square_lambda_1_2_), d_square_pi_(nullptr), d_square_disjunctive_indices_(stageData.d_square_disjunctive_indices_), solve_binary_subproblems_(stageData.solve_binary_subproblems_), use_level_(stageData.use_level_),
-    added_optimality_cuts_(stageData.added_optimality_cuts_.load()), added_epigraph_cuts_(stageData.added_epigraph_cuts_.load()), added_domain_cuts_(stageData.added_domain_cuts_.load()), added_feasibility_cuts_(stageData.added_feasibility_cuts_.load())
+    added_optimality_cuts_(stageData.added_optimality_cuts_.load()), added_epigraph_cuts_(stageData.added_epigraph_cuts_.load()), lp_cgp_counter_(stageData.lp_cgp_counter_.load()), added_domain_cuts_(stageData.added_domain_cuts_.load()), added_feasibility_cuts_(stageData.added_feasibility_cuts_.load())
 {
     if (stageData.d_square_pi_) {
         assert(false && "Never tested");
@@ -404,6 +404,7 @@ void BendersStageData::Clear(bool keep_warm_start) {
 
     added_optimality_cuts_ = 0;
     added_epigraph_cuts_ = 0;
+    lp_cgp_counter_ = 0;
     added_domain_cuts_ = 0;
     added_feasibility_cuts_ = 0;
 }

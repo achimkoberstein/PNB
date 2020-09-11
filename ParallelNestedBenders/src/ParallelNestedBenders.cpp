@@ -2950,6 +2950,7 @@ namespace parallel_benders {
 			if (generate_lp_cuts_) {
 				int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
 				assert(num_cuts > 0 && num_cuts <= fractional_variables_.size());
+                stage_data_[current_stage_]->lp_cgp_counter_ += num_cuts; // every cut requires CGP to solve
 				
 				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0);
 				std::cout << "Solution of MP relaxation: " << benders_tree_node_pointer->getDataPtr()->solution_value_ + theta_sum << std::endl;
