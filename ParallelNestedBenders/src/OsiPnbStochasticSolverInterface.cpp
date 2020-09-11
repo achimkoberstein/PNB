@@ -391,6 +391,17 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumDomainCuts() const
     return cut_counter;
 }
 
+int OsiStochasticParallelNestedBendersSolverInterface::getLpCgpCounter() const
+{
+    assert(nested_benders_);
+    int cgp_counter = 0;
+    if (!nested_benders_->stage_data_.empty())
+        for (int i = 0; i < nested_benders_->num_stages_; i++) {
+            cgp_counter += nested_benders_->stage_data_[i]->lp_cgp_counter_;
+        }
+    return cgp_counter;
+}
+
 void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacteristics() const
 {
     assert(nested_benders_);

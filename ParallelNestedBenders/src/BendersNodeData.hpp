@@ -457,6 +457,7 @@ struct BendersStageData {
 
 	std::atomic_int added_optimality_cuts_;
 	std::atomic_int added_epigraph_cuts_;
+    std::atomic_int lp_cgp_counter_; // number of Lift & Project CGp we tried to solve. Sometimes problems are infeasible etc. and no cut is built
 	std::atomic_int added_domain_cuts_;
 	std::atomic_int added_feasibility_cuts_;
 
