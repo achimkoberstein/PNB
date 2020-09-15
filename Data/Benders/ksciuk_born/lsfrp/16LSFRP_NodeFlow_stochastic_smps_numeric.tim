@@ -1,0 +1,6 @@
+TIME          LSFRP_Instance_16_stochastic (MAX)
+PERIODS       IMPLICIT
+    x1        c2                       Stage1    
+                                       Stage2    
+*
+ENDATA
