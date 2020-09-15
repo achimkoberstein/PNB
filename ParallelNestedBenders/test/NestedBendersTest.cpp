@@ -1660,6 +1660,11 @@ TEST_F(CollectInstanceSpecs, all) {
 	EXPECT_TRUE(true);
 }
 
+TEST_F(CollectInstanceSpecs, lsfrp) {
+	solveSMPSFromList("../../../../Data/Benders/InstanceListLSFRP.txt");
+	EXPECT_TRUE(true);
+}
+
 TEST_F(CollectInstanceSpecs, cap) {
 	solveSMPSFromList("../../../../Data/Benders/InstanceListBodurCAP.txt");
 	EXPECT_TRUE(true);

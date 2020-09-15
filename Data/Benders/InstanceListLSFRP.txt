@@ -1,0 +1,6 @@
+// cor;tim;sto or cor_tim;sto or cor_tim_sto
+ksciuk_born/lsfrp/16LSFRP_NodeFlow_stochastic_smps_100
+ksciuk_born/lsfrp/16LSFRP_NodeFlow_stochastic_smps_kurz
+ksciuk_born/lsfrp/16LSFRP_NodeFlow_stochastic_smps_numeric
+ksciuk_born/lsfrp/16LSFRP_NodeFlow_stochastic_smps_prefixed
+//ksciuk_born/lsfrp/LSFRP_instance10_stochastic
