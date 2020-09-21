@@ -2045,27 +2045,27 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 
 	//sndp_mini_tests
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_2"), -54250, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_3"), -5000, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_1"), -15000, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_4"), -15000, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_7"), -1000, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_9"), -19300, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_10"), 1, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_14"), -17600.4, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_15"), -10750.0, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_16"), -15207.5, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_17"), -985.0, 0.1); // similar characteristics to siplib/sizes/sizes...
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_2"), -54250, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_3"), -5000, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_1"), -15000, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_4"), -15000, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_7"), -1000, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_9"), -19300, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_10"), 1, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_14"), -17600.4, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_15"), -10750.0, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_16"), -15207.5, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_17"), -985.0, 0.1); // similar characteristics to siplib/sizes/sizes...
 
 	//sndp
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_125"), -147442, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_500"), -149375, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_125"), -147442, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_500"), -149375, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_125"), -137785, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_500"), -137664, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
@@ -2076,8 +2076,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_125"), -2174732.8799, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_500"), -2.1727e+06, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 5.5);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_125"), -3.80379e+06, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_500"), -3.82522e+06, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_125"), -3.80379e+06, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_500"), -3.82522e+06, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_1"), -6.83685e+06, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_125"), -6612036.59199, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_500"), -6678160, 0.1);
@@ -2101,10 +2101,10 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION_END, 0);
 
 	//sslp_SIPLIB
-	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
+	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
+	//[test_round_1]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_15"), -253.602, 0.1);
@@ -2207,9 +2207,9 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
 
 	//sizes_SIPLIB //
 	// all are solved very fast for DETEQ
@@ -2226,7 +2226,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -154654, 1.0);
 
 	//sslp_NTAIMO
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // Solvable
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // Solvable
 
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100a"), -127.37, 0.1); // Solvable 
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100b"), -127.37, 0.1); // Solvable
