@@ -2068,8 +2068,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//[test_round_1]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_500"), -149375, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_125"), -137785, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_500"), -137664, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_125"), -487153, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_500"), -484816, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 0.1);
@@ -2101,8 +2101,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION_END, 0);
 
 	//sslp_SIPLIB
-	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
-	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
+	//[test_round_2]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
+	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
 	//[test_round_1]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
 	//[test_round_1]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
@@ -2111,7 +2111,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_20"), -260.500, 0.1); // TODO: crashes
 
 	//sslprf
-	EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_2"), -85164.4, 0.1); // what is the correct solution?
+	//[test_round_2]EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_2"), -85164.4, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_3"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_1"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_10_1"), 0.0, 0.1); // what is the correct solution?
@@ -2203,21 +2203,21 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_5_3"), 0.0, 0.1); // what is the correct solution?
 
 	//dcap_SIPLIB
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
+	//[test_round_2]EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
+	//[test_round_2]EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
+	//[test_round_2]EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
+	//[test_round_2]EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
+	//[test_round_2]EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
 
 	//sizes_SIPLIB //
 	// all are solved very fast for DETEQ
 
 	//ssch_OTHER //
 	EXPECT_NEAR(solveSMPS("ssch/ssch/c1"), -184439, 1.0);
-	EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0);
-	//EXPECT_NEAR(solveSMPS("ssch/ssch/c3"), -230268, 1.0);
+	//[test_round_2]EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0);
+	EXPECT_NEAR(solveSMPS("ssch/ssch/c3"), -230268, 1.0);
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c4"), -201454, 1.0);
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c5"), 0, 1.0);
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c6"), -231369, 1.0);
@@ -2226,7 +2226,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -154654, 1.0);
 
 	//sslp_NTAIMO
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // Solvable
+	//[test_round_2]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // Solvable
 
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100a"), -127.37, 0.1); // Solvable 
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100b"), -127.37, 0.1); // Solvable
@@ -2246,7 +2246,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50d"), -364.640, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50e"), -364.640, 0.1);
 
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100b"), -354.190, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100c"), -354.190, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100d"), -354.190, 0.1);
