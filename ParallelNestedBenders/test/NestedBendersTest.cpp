@@ -2082,46 +2082,19 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
 
 	//other
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_125"), -147442, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_500"), -149375, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_125"), -137785, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_500"), -137664, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_125"), -487153, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_500"), -484816, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_125"), -2174732.8799, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_500"), -2.1727e+06, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 5.5);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_125"), -3.80379e+06, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_500"), -3.82522e+06, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_1"), -6.83685e+06, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_125"), -6612036.59199, 0.1);
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_500"), -6678160, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_4_2_1"), -5.718e+06, 0.1);
-	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_4_2_25"), -5.6121e+06, 0.1);
-
 	//rahmaniani
-	//from paper (were with complete recourse)
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-2_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-2_32"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-4_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-4_32"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-4_64"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-6_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-6_32"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-6_64"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-8_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-8_32"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0-8_64"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_1_0_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_3_0-2_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_3_0-4_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_3_0-6_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_3_0_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_5_0-6_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r01_5_0_16"), 0.0, 0.1); // never solved, what is the obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r04_1_0-8_16"), 0.0, 0.1); // never solved, what is the obj value?
-
-	//other
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_1_0-2_64"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_1_0-2_32"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_2_64"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_2_32"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r08_1_0-2_64"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r08_1_0-2_32"), 0.0, 0.1); // obj value?
 
 	//rahmaniani - complete recourse
 	//from paper
@@ -2146,6 +2119,12 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r04_1_0-8_16_cr"), 25765.8, 0.1);
 
 	//other
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_1_0-2_64_cr"), 0.0, 0.1); // obj value?
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_1_0-2_32_cr"), 0.0, 0.1); // obj value?
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_2_64_cr"), 0.0, 0.1); // obj value?
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_2_32_cr"), 0.0, 0.1); // obj value?
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r08_1_0-2_64_cr"), 0.0, 0.1); // obj value?
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r08_1_0-2_32_cr"), 0.0, 0.1); // obj value?
 
 	//sslp_SIPLIB
 	// from paper
@@ -2157,7 +2136,6 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_5"), -265.569, 0.1);
 
 	//other
-	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_15"), -253.602, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_20"), -260.500, 0.1); // TODO: crashes
 
@@ -2165,107 +2143,23 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_2"), -85164.4, 0.1);
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_3"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_10_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_10_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_10_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_25_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_25_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_25_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_50_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_50_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_50_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_5_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_5_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_5_3"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_1"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_2"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_10_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_10_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_10_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_25_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_25_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_25_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_50_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_50_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_50_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_5_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_5_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_5_3"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_1"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_2"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_3"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_10_1"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_10_2"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_10_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_25_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_25_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_25_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_50_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_50_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_50_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_5_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_5_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_5_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_100_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_100_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_100_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_10_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_10_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_10_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_25_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_25_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_25_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_50_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_50_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_50_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_5_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_5_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_5_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_100_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_100_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_100_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_10_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_10_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_10_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_25_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_25_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_25_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_50_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_50_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_50_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_5_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_5_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_25_5_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_100_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_100_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_100_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_10_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_10_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_10_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_25_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_25_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_25_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_50_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_50_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_50_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_5_1"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_5_2"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf5/sslprf5_50_5_3"), 0.0, 0.1); // what is the correct solution?
 
 	//dcap_SIPLIB
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
+	// all need too few iterations
 
 	//sizes_SIPLIB //
 	// all are solved very fast for DETEQ
 
-	//ssch_OTHER //
+	//ssch_OTHER [fix bug with infeasibility]
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c1"), -184439, 1.0);
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0);
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c3"), -230268, 1.0);
@@ -2277,37 +2171,17 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -154654, 1.0);
 
 	//sslp_NTAIMO
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_50a"), -80.0, 0.1); // Solvable
-
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100a"), -127.37, 0.1); // Solvable 
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100b"), -127.37, 0.1); // Solvable
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100c"), -127.37, 0.1); // Solvable
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100d"), -127.37, 0.1); // Solvable
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_100e"), -127.37, 0.1); // Solvable
-
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100a"), -127.37, 0.1); // Solvable
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -127.37, 0.1); // Solvable
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100c"), -127.37, 0.1); // Solvable
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100d"), -127.37, 0.1); // Solvable
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100e"), -127.37, 0.1); // Solvable
 
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50a"), -364.640, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50b"), -364.640, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50c"), -364.640, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50d"), -364.640, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_50e"), -364.640, 0.1);
-
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100b"), -354.190, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100c"), -354.190, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100d"), -354.190, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100e"), -354.190, 0.1);
-
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500a"), -349.136, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500b"), -349.136, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500c"), -349.136, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500d"), -349.136, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_500e"), -349.136, 0.1);
 
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000a"), -351.171, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
@@ -2321,30 +2195,16 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000d"), -347.262, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000e"), -347.262, 0.1);
 
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10a"), -260.500, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10b"), -260.500, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10c"), -260.500, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10d"), -260.500, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_10e"), -260.500, 0.1);
-
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15a"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15b"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15c"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15d"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_15e"), -253.602, 0.1);
-
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20a"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20b"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20c"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20d"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_20e"), -253.602, 0.1);
-
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25a"), -253.602, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25b"), -253.602, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25c"), -253.602, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25d"), -253.602, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25e"), -253.602, 0.1);
 
+	//postponement
+	//EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_100"), 0.0, 0.1);
+	//EXPECT_NEAR(solveSMPS("postponement/postponement/ptest_75"), 0.0, 0.1);
+	
 	//scdp 
 	//they are multistage and take much time
 }
