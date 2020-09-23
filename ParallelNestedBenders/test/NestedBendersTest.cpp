@@ -238,7 +238,7 @@ public:
 		parallel_benders::Parameter param(benders_parameter_); // Copy parameter!
 		updateParameterSets();
 
-		int read_in_smps_file = 1;
+		int read_in_smps_file = 0;
 		int num_aggregates_by_magic = 0;
 		double* min_scenario_pointer = NULL;
 		double* max_scenario_pointer = NULL;
@@ -1690,6 +1690,14 @@ TEST_F(LiftAndProjectCutsTest, fast) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1); // domain cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1); // domain cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1); // feasibility cuts
+
+	//new big ones (price adjusted)  cor_tim;sto
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1"), -19949245.0, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_125"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_500"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_1000"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_5000"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_10000"), 0.0, 0.1); // obj value?
 	
 	// Integer 2 stages
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relaxation for the 2nd stage, ERROR otherwise
