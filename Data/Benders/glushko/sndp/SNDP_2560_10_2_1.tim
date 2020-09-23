@@ -1,0 +1,6 @@
+TIME          SNDP_stochastic_general (MIN)
+PERIODS       IMPLICIT
+    OpenProducti0001  BOMConstr000101                 Stage1    
+    Ship0100030003  BOMConstr000101                 Stage2    
+*
+ENDATA
