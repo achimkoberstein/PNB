@@ -1436,7 +1436,7 @@ protected:
 		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
-		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1000, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 200, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 
 		// single core (1CORE), PNB_WARM_START = PNB_INT_WARM_START_SCENARIO_WISE
 			// single cut
@@ -2086,8 +2086,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//from paper
 	//[solved]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 0.1);
 	//[solved]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
+	//[solved]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
+	//[solved]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
 
 	//other
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_125"), -2174732.8799, 0.1);
@@ -2110,8 +2110,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
 	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_32_cr"), 58242.3, 0.1);
 	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_16_cr"), 55844.8, 0.1);
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_32_cr"), 56158.6, 0.1);
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_64_cr"), 56803.7, 0.1);
+	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_32_cr"), 56158.6, 0.1);
+	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_64_cr"), 56803.7, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_16_cr"), 53891.6, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_32_cr"), 56940, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_64_cr"), 57480.8, 0.1);
@@ -2181,20 +2181,20 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 
 	//sslp_NTAIMO
 	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100a"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100c"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100d"), -127.37, 0.1); // Solvable
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100e"), -127.37, 0.1); // Solvable
+	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -127.37, 0.1); // Solvable
+	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100c"), -127.37, 0.1); // Solvable
+	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100d"), -127.37, 0.1); // Solvable
+	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100e"), -127.37, 0.1); // Solvable
 
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100b"), -354.190, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100c"), -354.190, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100d"), -354.190, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100e"), -354.190, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100b"), -354.190, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100c"), -354.190, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100d"), -354.190, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100e"), -354.190, 0.1);
 
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000a"), -351.171, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000c"), -351.171, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000a"), -351.171, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000c"), -351.171, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000d"), -351.171, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000e"), -351.171, 0.1);
 
