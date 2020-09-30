@@ -3152,6 +3152,8 @@ namespace parallel_benders {
             }
             else if ( osi_solver->isProvenDualInfeasible() ){
                 // Primal problem is unbounded. => dual infeasible
+                // CPLEX often wrongly considers the problem unbounded (probably because of the large numbers)
+                // Modification of the CPX_PARAM_PREIND (presolve) and CPX_PARAM_SCAIND (scale) parameters did not help
                 // If we are in a problem with theta variables, we might have success in restricting the theta variables
                 if ( current_stage_ < num_stages_-1){
                     // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
@@ -3183,7 +3185,6 @@ namespace parallel_benders {
 					// if L&P CGP has no optimality cuts - it is unbounded
 					if (lp_main_loop_iteration_round_) {
 						assert(current_stage_ == 0);
-						assert(current_stage_ == 0 && current_iteration_ == 1 && "Why would PNB CGP MP be unbounded in > 1 iterations");
 						LogSpecialCase(!benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() || !benders_tree_node_pointer->getDataPtr()->epigraph_cuts_.empty(), "PNB CGP is unbounded, while cuts with theta are present");
 						num_thetas = getNumThetasByStage(benders_tree_node_pointer);
 						num_thetas *= 2; // prime and double prime
@@ -3193,29 +3194,49 @@ namespace parallel_benders {
                         std::vector<double> extra_elements(num_thetas,1.0);
                         std::vector<int> extra_indices(num_thetas);
                         std::iota(extra_indices.begin(), extra_indices.end(), benders_tree_node_pointer->getDataPtr()->cols_); // correct for CGp PNB
-                        double large_lower_bound = -infinity_/100;
-                        for (int i = 0; i < num_thetas; i++){
-                            osi_solver->setColBounds(extra_indices[i],large_lower_bound,infinity_);
-                        }
-                        // we bound all thetas with one extra row?
-                        // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
-                        //osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-10000000000000, infinity_); // We assume that will work. I mean: Half infinity? 
-                        PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"adjusted");
-                        // We need to remove this row again, when we finished everything with this problem!
-                        //benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
-                        // Switch preprocessing and advanced start off
-                        OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-                        if ( osi_cpx != nullptr ){
-                            CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-                            CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
+                        double large_lower_bound = -10000000000; // -10000000000 value is the lowest one that works for CPLEX. Larger values  values will lead to the problem infeasibility (at least for sslprf10_100_100_2) // TODO: higher values?
+                        while (!osi_solver->isProvenOptimal() && large_lower_bound > -infinity_ && large_lower_bound < 0) {
+                            for (int i = 0; i < num_thetas; i++) {
+                                osi_solver->setColBounds(extra_indices[i], large_lower_bound, infinity_);
+                            }
+                            benders_tree_node_pointer->getDataPtr()->bounded_theta_ = true;
+                            // we bound all thetas with one extra row?
+                            // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
+                            //osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-10000000000000, infinity_); // We assume that will work. I mean: Half infinity? 
+                            PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "adjusted");
+                            // We need to remove this row again, when we finished everything with this problem!
+                            //benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
+
+                            // Switch preprocessing and advanced start off (at least for CPLEX)
+                            bool takeHint, gotHint, old_presolve;
+                            OsiHintStrength strength;
+                            gotHint = (osi_solver->getHintParam(OsiDoPresolveInInitial, takeHint, strength));
+                            assert(gotHint);
+                            if (strength != OsiHintIgnore)
+                                old_presolve = takeHint ? true : false;
+                            osi_solver->setHintParam(OsiDoPresolveInInitial, false);
                             SolveSolverInterface(osi_solver);
-                            CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
+
+                            // Depending on the solution to this
+                            if (osi_solver->isProvenPrimalInfeasible()) {
+                                LOG(FATAL) << "Initial value worked alright? Never happend.";
+                                // --> increease the large_lower_bound, e.g., -1000 => -100. It happened in sslprf10_100_100_2 for values smaller than -10000000000
+                                large_lower_bound /= 10;
+                            }
+                            else if (osi_solver->isProvenDualInfeasible()) {
+                                // TODO: does it work?
+                                // --> decrease the large_lower_bound, e.g., -1000 => -10000
+                                large_lower_bound *= 10;
+                            }
+                            else if (!osi_solver->isProvenOptimal()) {
+                                LOG(FATAL) << "What do we have here if it is not Optimal, Infeasible, or Ubounded?";
+                            }
                         }
-                        else 
-                            SolveSolverInterface(osi_solver);
+                        
                         // Depending on the solution to this
                         if (osi_solver->isProvenOptimal()) {
 							LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being unbounded. We have adjusted it.");
+                            LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is solvable after being unbounded. We have adjusted it.");
                             StoreWarmStart(osi_solver, benders_tree_node_pointer);
                         }
                         else if (osi_solver->isProvenPrimalInfeasible()) {
@@ -3226,10 +3247,9 @@ namespace parallel_benders {
                             infeasible_problem_ = true;
                             infeasible_problems_[0] = true;
                             LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is infeasible after being unbounded. We have tried to adjust it.");
-                            //Probably large_lower_bound is too small. Make it larger. If too large, the problem will still be unbounded
                         }
                         else if (osi_solver->isProvenDualInfeasible()) {
-							LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is unbounded after being unbounded. We have adjusted it."); // Probably large_lower_bound is largre and does not bound the problem. Make it smaller. If too small, the problem might be infeasible
+                            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is unbounded after being unbounded. We have adjusted it.");
 							PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "unbounded");
 							unbounded_problem_ = true;
 							return;
@@ -3304,12 +3324,64 @@ namespace parallel_benders {
 					//}
 				}
                 else{
-                    PrintSubproblem(osi_solver,0,"master_infeasible");
-                    infeasible_problem_ = true;
-                    infeasible_problems_[0] = true;
-                    LOG(ERROR) << "Your master problem is infeasible.";
-                }
+					// almost copy from unbounded case above
+                    int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
+                    if (lp_main_loop_iteration_round_) {
+                        assert(current_stage_ == 0);
+                        num_thetas = getNumThetasByStage(benders_tree_node_pointer);
+                        num_thetas *= 2; // prime and double prime
+                    }
+                    std::vector<double> extra_elements(num_thetas, 1.0);
+                    std::vector<int> extra_indices(num_thetas);
+                    std::iota(extra_indices.begin(), extra_indices.end(), benders_tree_node_pointer->getDataPtr()->cols_); // correct for CGp PNB
+                    bool continue_adjusting = true;
+                    double large_lower_bound = -100000000; // -10000000000 value is one that works for CPLEX, but we need to start value/10 and than it works. Lower values will lead to the problem infeasibility (at least for sslprf10_100_100_2)
+                    while (!osi_solver->isProvenOptimal() && large_lower_bound > -infinity_) {
+                        for (int i = 0; i < num_thetas; i++) {
+                            osi_solver->setColBounds(extra_indices[i], large_lower_bound, infinity_);
+                        }
+                        benders_tree_node_pointer->getDataPtr()->bounded_theta_ = true;
 
+                        PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "adjusted");
+                        // We need to remove this row again, when we finished everything with this problem!
+                        //benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
+
+                        // Switch preprocessing and advanced start off (at least for CPLEX)
+                        bool takeHint, gotHint, old_presolve;
+                        OsiHintStrength strength;
+                        gotHint = (osi_solver->getHintParam(OsiDoPresolveInInitial, takeHint, strength));
+                        assert(gotHint);
+                        if (strength != OsiHintIgnore)
+                            old_presolve = takeHint ? true : false;
+                        osi_solver->setHintParam(OsiDoPresolveInInitial, false);
+                        SolveSolverInterface(osi_solver);
+                        osi_solver->setHintParam(OsiDoPresolveInInitial, old_presolve);
+                        
+                        large_lower_bound *= 10;
+                    }
+                    // Depending on the solution to this
+                    if (osi_solver->isProvenOptimal()) {
+                        LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being infeasible. We have adjusted it.");
+                        LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is solvable after being infeasible. We have adjusted it.");
+                        StoreWarmStart(osi_solver, benders_tree_node_pointer);
+                    }
+                    else if (osi_solver->isProvenPrimalInfeasible()) {
+                        PrintSubproblem(osi_solver, 0, "master_infeasible");
+                        infeasible_problem_ = true;
+                        infeasible_problems_[0] = true;
+                        LOG(ERROR) << "Your master problem is infeasible.";
+                    }
+                    else if (osi_solver->isProvenDualInfeasible()) {
+                        LOG(FATAL) << "Initial value worked alright? Never happend.";
+                        LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is unbounded after being infeasbile. We have adjusted it."); // Probably large_lower_bound is largre and does not bound the problem. Make it smaller. If too small, the problem might be infeasible
+                        PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "unbounded");
+                        unbounded_problem_ = true;
+                        return;
+                    }
+                    else {
+                        LOG(FATAL) << "What do we have here if it is not Optimal, Infeasible, or Ubounded?";
+                    }
+                }
             }
             else if ( !osi_solver->isProvenOptimal() ){
                 // Get cplex status
@@ -6477,6 +6549,22 @@ namespace parallel_benders {
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_;
 
+        if (benders_node_pointer->bounded_theta_) {
+            int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
+            if (lp_main_loop_iteration_round_) {
+                assert(current_stage_ == 0);
+                num_thetas = getNumThetasByStage(benders_tree_node_pointer);
+                num_thetas *= 2; // prime and double prime
+            }
+            // reset theta bounds
+            std::vector<double> extra_elements(num_thetas, 1.0);
+            std::vector<int> extra_indices(num_thetas);
+            std::iota(extra_indices.begin(), extra_indices.end(), benders_tree_node_pointer->getDataPtr()->cols_);
+            for (int i = 0; i < num_thetas; i++) {
+                osi_solver->setColBounds(extra_indices[i], -infinity_, infinity_);
+            }
+            benders_node_pointer->bounded_theta_ = false;
+        }
         if ( benders_node_pointer->unbounded_ && benders_node_pointer->unbounded_row_ > 0 ){
             osi_solver->deleteRows(1,&benders_node_pointer->unbounded_row_);
             //SolveSolverInterface(osi_solver);
@@ -9234,7 +9322,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 2 && print_subproblems_){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0 && print_subproblems_){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
 			if (lp_main_loop_iteration_round_) { // prefix for L&P CGP (main loop iteration info)
 				stream << "stage_" << 0 << "_F_" << lp_main_loop_iteration_round_->first << "_0_round_" << lp_main_loop_iteration_round_->second << "_fract_" << lp_main_loop_fract_var_value_ << "-";

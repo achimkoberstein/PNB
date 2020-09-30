@@ -278,6 +278,7 @@ public:
     bool feasible_;
     bool unbounded_;
     int unbounded_row_;
+    bool bounded_theta_;
 
     // Information about node-wise upper and lower bounds
     double lower_bound_;
