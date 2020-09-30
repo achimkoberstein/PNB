@@ -5215,6 +5215,19 @@ namespace parallel_benders {
                     LogSpecialCase(true, "DZN is infeasible", fractional_variable.second);
                     LogSpecialCase(cgp_pnb != nullptr && cgp_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL, "DZN is infeasible even though PNB CGP was solved", fractional_variable.second);
 
+                    if (cgp_pnb != nullptr && cgp_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) {
+                        // at least in r01_1_0-2_16_cr it leads to UB<LB
+						// I assume that this would anyway lead to dual_cgp_solver->getObjValue() <= fractional_variable.second + zero_tolerance_ later
+						// see the identical code at the end of the function
+                        if (cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->alpha_normalized_) {
+                            assert(false && "Do we really want it");
+                            SetAlphaNormalization(cgp_pnb->osi_solver_, false);
+                        }
+                        cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
+                        cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
+                        return;
+                    }
+
                     lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
                     SetAlphaNormalization(dual_cgp_solver, true);
                     SolveSolverInterface(dual_cgp_solver);
@@ -5284,6 +5297,10 @@ namespace parallel_benders {
 #endif
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && CompareWithZero(dual_cgp_solver->getObjValue()))  {
                 LogSpecialCase(true, "L&P cut will not be added to the container. Reason: solution of DAN is zero", fractional_variable.second);
+			}
+            else if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && dual_cgp_solver->getObjValue() <= fractional_variable.second + zero_tolerance_) {
+                // at least in r01_1_0-2_16_cr it leads to unboundness
+				LogSpecialCase(true, "L&P cut will not be added to the container. Reason: solution of DAN is not greater than fractional variable value", fractional_variable.second);
             }
 			else {
                 double dual_cgp_solution = dual_cgp_solver->getObjValue();
