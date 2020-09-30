@@ -79,7 +79,7 @@ private:
 
     // Adjust google logging to the logging_level: 0 - console and INFO, 1 - WARNING, 2 - ERROR, 3 - FATAL
     void SetLogging(int logging_level);
-    void LogSpecialCase(bool condition, const std::string& log_message);
+    void LogSpecialCase(bool condition, const std::string& log_message, double fract_var_value_ = 0);
 
     // High-level methods we need during the algorithm
     void AdjustProblem(); // Adjust the problem and store characteristics about it
