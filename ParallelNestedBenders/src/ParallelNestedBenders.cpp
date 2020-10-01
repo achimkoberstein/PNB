@@ -3212,62 +3212,48 @@ namespace parallel_benders {
                         std::vector<int> extra_indices(num_thetas);
                         std::iota(extra_indices.begin(), extra_indices.end(), benders_tree_node_pointer->getDataPtr()->cols_); // correct for CGp PNB
                         double large_lower_bound = -10000000000; // -10000000000 value is the lowest one that works for CPLEX. Larger values  values will lead to the problem infeasibility (at least for sslprf10_100_100_2) // TODO: higher values?
-                        while (!osi_solver->isProvenOptimal() && large_lower_bound > -infinity_ && large_lower_bound < 0) {
-                            for (int i = 0; i < num_thetas; i++) {
-                                osi_solver->setColBounds(extra_indices[i], large_lower_bound, infinity_);
-                            }
-                            benders_tree_node_pointer->getDataPtr()->bounded_theta_ = true;
-                            // we bound all thetas with one extra row?
-                            // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
-                            //osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-10000000000000, infinity_); // We assume that will work. I mean: Half infinity? 
-                            PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "adjusted");
-                            // We need to remove this row again, when we finished everything with this problem!
-                            //benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
-
-                            // Switch preprocessing and advanced start off (at least for CPLEX)
-                            bool takeHint, gotHint, old_presolve;
-                            OsiHintStrength strength;
-                            gotHint = (osi_solver->getHintParam(OsiDoPresolveInInitial, takeHint, strength));
-                            assert(gotHint);
-                            if (strength != OsiHintIgnore)
-                                old_presolve = takeHint ? true : false;
-                            osi_solver->setHintParam(OsiDoPresolveInInitial, false);
-                            SolveSolverInterface(osi_solver);
-
-                            // Depending on the solution to this
-                            if (osi_solver->isProvenPrimalInfeasible()) {
-                                LOG(FATAL) << "Initial value worked alright? Never happend.";
-                                // --> increease the large_lower_bound, e.g., -1000 => -100. It happened in sslprf10_100_100_2 for values smaller than -10000000000
-                                large_lower_bound /= 10;
-                            }
-                            else if (osi_solver->isProvenDualInfeasible()) {
-                                // TODO: does it work?
-                                // --> decrease the large_lower_bound, e.g., -1000 => -10000
-                                large_lower_bound *= 10;
-                            }
-                            else if (!osi_solver->isProvenOptimal()) {
-                                LOG(FATAL) << "What do we have here if it is not Optimal, Infeasible, or Ubounded?";
-                            }
+                        //while (!osi_solver->isProvenOptimal() && large_lower_bound > -infinity_ && large_lower_bound < 0) { // TODO: we could use some kind of tuning for large_lower_bound
+                        for (int i = 0; i < num_thetas; i++) {
+                            osi_solver->setColBounds(extra_indices[i], large_lower_bound, infinity_);
                         }
-                        
+                        benders_tree_node_pointer->getDataPtr()->bounded_theta_ = true;
+                        // we bound all thetas with one extra row?
+                        // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
+                        //osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-10000000000000, infinity_); // We assume that will work. I mean: Half infinity? 
+                        PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "adjusted");
+                        // We need to remove this row again, when we finished everything with this problem!
+                        //benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
+
+                        // Switch preprocessing and advanced start off (at least for CPLEX)
+                        bool takeHint, gotHint, old_presolve;
+                        OsiHintStrength strength;
+                        gotHint = (osi_solver->getHintParam(OsiDoPresolveInInitial, takeHint, strength));
+                        assert(gotHint);
+                        if (strength != OsiHintIgnore)
+                            old_presolve = takeHint ? true : false;
+                        osi_solver->setHintParam(OsiDoPresolveInInitial, false);
+                        SolveSolverInterface(osi_solver);
+						                       
                         // Depending on the solution to this
                         if (osi_solver->isProvenOptimal()) {
-							LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being unbounded. We have adjusted it.");
-                            LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is solvable after being unbounded. We have adjusted it.");
+							LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being unbounded. We have adjusted (bound) it.");
+                            LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is solvable after being unbounded. We have adjusted (bound) it.");
                             StoreWarmStart(osi_solver, benders_tree_node_pointer);
                         }
                         else if (osi_solver->isProvenPrimalInfeasible()) {
                             if (lp_main_loop_iteration_round_ && cgp_do_when_infeasible_ != PNB_CGP_STOP_WHEN_INFEASIBLE) {
                                 LOG_IF(FATAL, lp_main_loop_iteration_round_) << "See below for what we would do if PNB CGP MP was infeasible right away : maybe define some method, e.g., HandleInfeasibleLnPCGP";
                             }
-                            PrintSubproblem(osi_solver, 0, "master_infeasible");
+                            PrintSubproblem(osi_solver, 0, "adjusted_master_infeasible");
                             infeasible_problem_ = true;
                             infeasible_problems_[0] = true;
-                            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is infeasible after being unbounded. We have tried to adjust it.");
+                            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is infeasible after being unbounded. We have tried to adjust (bound) it.");
+							LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is infeasible after being unbounded. We have tried to adjust (bound) it.");
                         }
                         else if (osi_solver->isProvenDualInfeasible()) {
-                            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is unbounded after being unbounded. We have adjusted it.");
-							PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "unbounded");
+                            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is unbounded after being unbounded. We have adjusted (bound) it.");
+							LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is unbounded after being unbounded. We have adjusted (bound) it.");
+							PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "adjusted_unbounded");
 							unbounded_problem_ = true;
 							return;
                         }
@@ -3378,21 +3364,23 @@ namespace parallel_benders {
                     }
                     // Depending on the solution to this
                     if (osi_solver->isProvenOptimal()) {
-                        LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being infeasible. We have adjusted it.");
-                        LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is solvable after being infeasible. We have adjusted it.");
+                        LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being infeasible. We have adjusted (bounded) it.");
+                        LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is solvable after being infeasible. We have adjusted (bounded) it.");
                         StoreWarmStart(osi_solver, benders_tree_node_pointer);
                     }
                     else if (osi_solver->isProvenPrimalInfeasible()) {
-                        PrintSubproblem(osi_solver, 0, "master_infeasible");
+                        PrintSubproblem(osi_solver, 0, "adjusted_master_infeasible");
                         infeasible_problem_ = true;
                         infeasible_problems_[0] = true;
                         LOG(ERROR) << "Your master problem is infeasible.";
+						LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is infeasible after being infeasible. We have adjusted (bounded) it.");
+						LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is infeasible after being infeasible. We have adjusted (bounded) it.");
                     }
                     else if (osi_solver->isProvenDualInfeasible()) {
-                        LOG(FATAL) << "Initial value worked alright? Never happend.";
-                        LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is unbounded after being infeasbile. We have adjusted it."); // Probably large_lower_bound is largre and does not bound the problem. Make it smaller. If too small, the problem might be infeasible
-                        PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "unbounded");
+                        PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "adjusted_unbounded");
                         unbounded_problem_ = true;
+						LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is unbounded after being infeasible. We have adjusted (bounded) it.");
+						LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is unbounded after being infeasible. We have adjusted (bounded) it.");
                         return;
                     }
                     else {
