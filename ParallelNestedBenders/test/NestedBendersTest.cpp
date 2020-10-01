@@ -770,7 +770,7 @@ protected:
 	NestedBendersTest() { // this is the fixture that is called for every test, e.g., TEST(NestedBendersTest, test)
 		benders_parameter_.init();
 		write_xml("../../../../Data/Benders/default_param.xml", benders_parameter_.parameter_);
-		repetitions_ = 2;
+		repetitions_ = 1;
 		use_multi_cut_ = true;
 		generate_initial_solution_ = false;
 		compute_statistics_ = false;
@@ -1354,7 +1354,7 @@ protected:
 		//parameter_strings_.push_back("{}"); // default parameters
 		
 		// DETEQ
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
 		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
 
 		// BENDERS
@@ -1395,6 +1395,13 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 0, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 3, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // 3 switches
 
 		// DZN problem - plain Epigraph cut (w/o 2nd stage info)
+		// single core (1CORE)
+			// single cut
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+
 		// single core (1CORE), PNB_WARM_START = PNB_INT_WARM_START_SCENARIO_WISE
 			// single cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
@@ -1432,11 +1439,11 @@ protected:
 		// DZN problem - strengthened Epigraph cut (with 2nd stage info)
 		// single core (1CORE)
 			// single cut
-		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
-		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 200, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 200, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 
 		// single core (1CORE), PNB_WARM_START = PNB_INT_WARM_START_SCENARIO_WISE
 			// single cut
@@ -2084,10 +2091,10 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 
 	//sndp
 	//from paper
-	//[solved]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.1);
+	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_125"), -398906, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_500"), -400387, 0.1);
 
 	//other
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_125"), -2174732.8799, 0.1);
@@ -2098,8 +2105,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_640_3_1_500"), -6678160, 0.1);
 	
 	//rahmaniani
-	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_1_0-2_64"), 0.0, 0.1); // obj value?
-	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_1_0-2_32"), 0.0, 0.1); // obj value?
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_1_0-2_64"), 0.0, 0.1); // obj value?
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_1_0-2_32"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_2_64"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r10_2_32"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_feas_cuts/r08_1_0-2_64"), 0.0, 0.1); // obj value?
@@ -2107,11 +2114,11 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 
 	//rahmaniani - complete recourse
 	//from paper
-	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_32_cr"), 58242.3, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_16_cr"), 55844.8, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_32_cr"), 56158.6, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_64_cr"), 56803.7, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_32_cr"), 58242.3, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_16_cr"), 55844.8, 0.1);
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_32_cr"), 56158.6, 0.1);
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_64_cr"), 56803.7, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_16_cr"), 53891.6, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_32_cr"), 56940, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_64_cr"), 57480.8, 0.1);
@@ -2130,26 +2137,26 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//other
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_1_0-2_64_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_1_0-2_32_cr"), 0.0, 0.1); // obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_2_64_cr"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_2_64_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_2_32_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r08_1_0-2_64_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r08_1_0-2_32_cr"), 0.0, 0.1); // obj value?
 
 	//sslp_SIPLIB
 	// from paper
-	//[solved]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
-	//[solved]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
-	//[solved]EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_5"), -265.569, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
+	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_5"), -265.569, 0.1);
 
 	//other
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_15"), -253.602, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_20"), -260.500, 0.1); // TODO: crashes
 
 	//sslprf
-	//[solved]EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_2"), -85164.4, 0.1);
+	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_2"), -85164.4, 0.1);
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_3"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_100_100_1"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_1"), 0.0, 0.1); // what is the correct solution?
@@ -2169,7 +2176,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	// all are solved very fast for DETEQ
 
 	//ssch_OTHER [fix bug with infeasibility]
-	//[solved]EXPECT_NEAR(solveSMPS("ssch/ssch/c1"), -184439, 1.0);
+	//EXPECT_NEAR(solveSMPS("ssch/ssch/c1"), -184439, 1.0);
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c2"), 0, 1.0);
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c3"), -230268, 1.0);
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c4"), -201454, 1.0);
@@ -2180,21 +2187,21 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("ssch/ssch/c10"), -154654, 1.0);
 
 	//sslp_NTAIMO
-	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100a"), -127.37, 0.1); // Solvable
-	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -127.37, 0.1); // Solvable
-	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100c"), -127.37, 0.1); // Solvable
-	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100d"), -127.37, 0.1); // Solvable
-	//[solved]EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100e"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100a"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100b"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100c"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100d"), -127.37, 0.1); // Solvable
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_50_100e"), -127.37, 0.1); // Solvable
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100b"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100c"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100d"), -354.190, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100e"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100a"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100b"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100c"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100d"), -354.190, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100e"), -354.190, 0.1);
 
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000a"), -351.171, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000c"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000a"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000c"), -351.171, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000d"), -351.171, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000e"), -351.171, 0.1);
 
