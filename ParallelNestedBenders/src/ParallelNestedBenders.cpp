@@ -4929,6 +4929,7 @@ namespace parallel_benders {
 
 	void ParallelNestedBenders::GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable) {
 		
+		bool construct_domain_if_cgp_infeasible(false);
         bool use_2nd_stage_info(false);
 		bool solve_dual_of_cgp(false);
 		int lift_and_project_cut_type(PNB_CUT_TYPE_EPIGRAPH);
@@ -4967,10 +4968,16 @@ namespace parallel_benders {
         // -> solve Dual of Alpha-Normalized (dual of domain cut generation problem)
         int total_num_cuts_with_theta = benders_node_pointer->optimality_cuts_.size() + benders_node_pointer->epigraph_cuts_.size() + (lp_parallel_mode_ < PNB_PARAL_FRACTS ? benders_node_pointer->lp_round_optimality_cuts_.size() : 0);
         if (total_num_cuts_with_theta == 0) {
-            LogSpecialCase(lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH, "Will generate L&P Domain cut. Reason: no optimality-like cuts (with theta) are present: optimality cuts, strengthened information from PNB CGP, epigraph cuts.", fractional_variable.second);
-            LogSpecialCase(true, "Solve DAN w/o optimality-like cuts", fractional_variable.second);
-            use_2nd_stage_info = false;
-            lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+			if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && construct_domain_if_cgp_infeasible) {
+				LogSpecialCase(true, "Will generate L&P Domain cut. Reason: no optimality-like cuts (with theta) are present: optimality cuts, strengthened information from PNB CGP, epigraph cuts.", fractional_variable.second);
+				LogSpecialCase(true, "Solve DAN w/o optimality-like cuts", fractional_variable.second);
+				use_2nd_stage_info = false;
+				lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+			}
+			else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH){
+				LogSpecialCase(true, "Will not generate epigraph L&P cut. Reason: no optimality-like cuts (with theta) are present.", fractional_variable.second);
+				return;
+			} 
         }
 
         {
@@ -5050,9 +5057,14 @@ namespace parallel_benders {
                 cgp_pnb->upper_bound_ = cgp_pnb->iteration_u_and_l_bounds_.back().first; // if problem is infeasible, ub is set to infinity. Let us revert it
                 if (RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_, infinity_, std::max(cgp_relative_epsilon_, 0.01))) {
                     // TODO: we could get domain cut from MP of CGP PNB w/o solving the DAN
-                    lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
-                    LogSpecialCase(cgp_pnb->current_iteration_ == 1, "Will generate L&P Domain cut. Reason: PNB CGP is infeasible in its first iteration, gap is too large", fractional_variable.second);
-                    LogSpecialCase(cgp_pnb->current_iteration_ > 1, "Will generate L&P Domain cut. Reason: PNB CGP is infeasible in 2nd or later iteration, gap is too large", fractional_variable.second);
+					if (construct_domain_if_cgp_infeasible) {
+						lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
+						LogSpecialCase(cgp_pnb->current_iteration_ == 1, "Will generate L&P Domain cut. Reason: PNB CGP is infeasible in its first iteration, gap is too large", fractional_variable.second);
+					}
+					else {
+						LogSpecialCase(cgp_pnb->current_iteration_ > 1, "Will not generate epigraph L&P cut.Reason: PNB CGP is infeasible in 2nd or later iteration, gap is too large", fractional_variable.second);
+						terminate_cut_generation = true;
+					}
                 }
                 else {
                     LogSpecialCase(true, "PNB CGP finished due to infeasible first stage problem, gap is ok", fractional_variable.second);
@@ -5200,22 +5212,24 @@ namespace parallel_benders {
 
 			// if infeasible -> DZN unbounded (DAN should be always solvable) -> AddAlphaNormalization and resolve
 			if (!dual_cgp_solver->isProvenOptimal()) {
-                if (dual_cgp_solver->isProvenPrimalInfeasible() && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) { // lets build Domain cut
-                    LogSpecialCase(true, "DZN is infeasible", fractional_variable.second);
-                    LogSpecialCase(cgp_pnb != nullptr && cgp_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL, "DZN is infeasible even though PNB CGP was solved", fractional_variable.second);
+				if (dual_cgp_solver->isProvenPrimalInfeasible() && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
+					LogSpecialCase(true, "DZN is infeasible", fractional_variable.second);
 
-                    if (cgp_pnb != nullptr && cgp_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) {
-                        // at least in r01_1_0-2_16_cr it leads to UB<LB
+					if (cgp_pnb != nullptr && cgp_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) {
+						// at least in r01_1_0-2_16_cr it leads to UB<LB
 						// I assume that this would anyway lead to dual_cgp_solver->getObjValue() <= fractional_variable.second + zero_tolerance_ later
 						// see the identical code at the end of the function
-                        if (cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->alpha_normalized_) {
-                            assert(false && "Do we really want it");
-                            SetAlphaNormalization(cgp_pnb->osi_solver_, false);
-                        }
-                        cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
-                        cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
-                        return;
-                    }
+						LogSpecialCase(true, "DZN is infeasible even though PNB CGP was solved. Do not build L&P cut", fractional_variable.second);
+						if (cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->alpha_normalized_) {
+							assert(false && "Do we really want it");
+							SetAlphaNormalization(cgp_pnb->osi_solver_, false);
+						}
+						cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
+						cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
+						return;
+					}
+				}
+				else if (dual_cgp_solver->isProvenPrimalInfeasible() && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && construct_domain_if_cgp_infeasible){
 
                     lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
                     SetAlphaNormalization(dual_cgp_solver, true);
