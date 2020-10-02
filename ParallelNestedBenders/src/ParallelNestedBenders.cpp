@@ -4929,7 +4929,7 @@ namespace parallel_benders {
 
 	void ParallelNestedBenders::GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable) {
 		
-        bool construct_epigraph_if_cgp_pnb_fails(false);
+        bool construct_epigraph_if_cgp_pnb_fails(true);
         bool construct_domain_if_cgp_fails(false); // it often leadas to unboundess or infeasibility
         bool use_2nd_stage_info(false);
 		bool solve_dual_of_cgp(false);
