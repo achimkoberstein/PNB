@@ -1094,7 +1094,7 @@ namespace parallel_benders {
         double old_gap = 0;
         double gap = 0;
         int gap_counter = 0;
-        int gap_counter_maximum = 1000;
+        int gap_counter_maximum = max_similarity_iteration_;
 
 		double temporary_stage_upper_bound = infinity_;
 		double temporary_stage_lower_bound = -infinity_;
@@ -5043,13 +5043,14 @@ namespace parallel_benders {
             bool terminate_cut_generation = false;
 			if (cgp_pnb->solution_code_ == PNB_SOLUTION_UPPER_LESS_LOWER_BOUND ||
                 cgp_pnb->solution_code_ == PNB_SOLUTION_SIMILARITY_LIMIT ||
+				cgp_pnb->solution_code_ == PNB_SOLUTION_GAP_NONIMPROVING ||
                 cgp_pnb->solution_code_ == PNB_SOLUTION_TIME_LIMIT) {
                 if (RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_, infinity_, std::max(cgp_relative_epsilon_, 0.01))) {
-                    LogSpecialCase(true, "PNB CGP finished due to UB < LB, similarity limit, or solution time limit, do not build L&P cut, gap is too large", fractional_variable.second);
+                    LogSpecialCase(true, "PNB CGP finished due to UB < LB, similarity limit, gap non-improving limit or solution time limit, do not build L&P cut, gap is too large", fractional_variable.second);
                     terminate_cut_generation = true;
                 }
                 else {
-                    LogSpecialCase(true, "PNB CGP finished due to UB < LB, similarity limit, or solution time limit, gap is ok", fractional_variable.second);
+                    LogSpecialCase(true, "PNB CGP finished due to UB < LB, similarity limit, gap non-improving limit or solution time limit, gap is ok", fractional_variable.second);
                 }
 			}
 			else if (cgp_pnb->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
