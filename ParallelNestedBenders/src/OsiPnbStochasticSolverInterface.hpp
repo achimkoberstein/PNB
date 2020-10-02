@@ -43,6 +43,8 @@ public:
     int getNumOptimalityCuts() const;
     int getNumFeasibilityCuts() const;
 	int getNumEpigraphCuts() const;
+    int getNumStrengthenedEpigraphCuts() const;
+    int getNumPlainEpigraphCuts() const;
 	int getNumDomainCuts() const;
     int getLpCgpCounter() const;
     void setParameters(const parallel_benders::Parameter& parameters);

@@ -3024,6 +3024,9 @@ namespace parallel_benders {
                 //Move L&P cuts to the main loop
                 if (!benders_tree_node_pointer->getDataPtr()->lp_round_epigraph_cuts_.empty() || !benders_tree_node_pointer->getDataPtr()->lp_round_domain_cuts_.empty()) {
                     stage_data_[current_stage_]->added_epigraph_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_epigraph_cuts_.size();
+                    stage_data_[current_stage_]->added_str_epigraph_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_str_epigraph_cuts_counter_;
+                    stage_data_[current_stage_]->added_plain_epigraph_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_plain_epigraph_cuts_counter_;
+                    assert(stage_data_[current_stage_]->added_epigraph_cuts_ == (stage_data_[current_stage_]->added_str_epigraph_cuts_ + stage_data_[current_stage_]->added_plain_epigraph_cuts_));
                     stage_data_[current_stage_]->added_domain_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_domain_cuts_.size();
 
                     bool change_aggregation_level = benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_;
@@ -3051,6 +3054,8 @@ namespace parallel_benders {
                     }
                     
                     benders_tree_node_pointer->getDataPtr()->lp_round_epigraph_cuts_.clear();
+                    benders_tree_node_pointer->getDataPtr()->lp_round_str_epigraph_cuts_counter_ = 0;
+                    benders_tree_node_pointer->getDataPtr()->lp_round_plain_epigraph_cuts_counter_ = 0;
                     benders_tree_node_pointer->getDataPtr()->lp_round_domain_cuts_.clear();
 
                     LogSpecialCase(current_iteration_ == 1, "Wanted and built L&P cuts in first iteration");
@@ -5041,7 +5046,6 @@ namespace parallel_benders {
             lp_cuts_timer_.AddTime(1, CoinGetTimeOfDay() - start_time);
             SetLogging(google::INFO);
 
-            // TODO: make it a member
             std::map<int, std::string> solution_code_map = { {PNB_SOLUTION_OPTIMAL, "PNB_SOLUTION_OPTIMAL"},
                 {PNB_SOLUTION_INFEASIBLE, "PNB_SOLUTION_INFEASIBLE"},
                 {PNB_SOLUTION_UNBOUNDED, "PNB_SOLUTION_UNBOUNDED"},
@@ -5076,7 +5080,7 @@ namespace parallel_benders {
                     return;
                 }
                 else {
-                    log_message << "Will build L&P cut since gap is ok.";
+                    log_message << "Will build L&P cut.";
                     LogSpecialCase(true, log_message.str(), fractional_variable.second);
                 }   
             }
@@ -5183,7 +5187,10 @@ namespace parallel_benders {
                     }
                 }
                 assert(dual_cgp_solver->getNumRows() == start_lp_round_cuts_rows + new_cgp_pnb_opt_cuts + cgp_pnb->stage_data_[0]->added_feasibility_cuts_ + lp_round_cuts_applied*2); // round cuts applied to prime/double prime sides
-                LogSpecialCase(new_cgp_pnb_opt_cuts + cgp_pnb->stage_data_[0]->added_feasibility_cuts_ == 0, "No cuts generated in PNB CGP - plain and strengthened L&P CGP are the same", fractional_variable.second);
+                if (new_cgp_pnb_opt_cuts + cgp_pnb->stage_data_[0]->added_feasibility_cuts_ == 0) {
+                    LogSpecialCase(new_cgp_pnb_opt_cuts + cgp_pnb->stage_data_[0]->added_feasibility_cuts_ == 0, "No cuts generated in PNB CGP - plain and strengthened L&P CGP are the same", fractional_variable.second);
+                    use_2nd_stage_info = false;
+                }
 			}
             
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
@@ -5377,11 +5384,15 @@ namespace parallel_benders {
                         assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_optimality_cuts_) && "The same cut to just build epigraph cut is present in L&P round optimality cuts. Never happened before.");
                         
                         bool duplicate_cut = CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_epigraph_cuts_) || CheckForSameCut(*cut_stuff, benders_node_pointer->epigraph_cuts_);
-                        LogSpecialCase(duplicate_cut && benders_node_pointer->lp_round_epigraph_cuts_.size() >= 1, "The same cut to just build epigraph cut is present in epigraph cuts: for round >1 fract vars", fractional_variable.second);
-                        assert(!(duplicate_cut && benders_node_pointer->lp_round_epigraph_cuts_.size() == 0) && "The same cut to just build epigraph cut is present in epigraph cuts: for round with one fract vars. Never happened before.");
                         if (!duplicate_cut){
                             benders_node_pointer->active_aggregates_.set(); // L&P cut is defined for all aggregates
                             benders_node_pointer->lp_round_epigraph_cuts_.push_back(cut_stuff);
+                            use_2nd_stage_info ? benders_node_pointer->lp_round_str_epigraph_cuts_counter_++ : benders_node_pointer->lp_round_plain_epigraph_cuts_counter_++;
+                        }
+                        else {
+                            std::stringstream log_message;
+                            log_message << "Fract index:" << lp_cut_index << " The same cut to just build epigraph cut is present in epigraph cuts";
+                            LogSpecialCase(benders_node_pointer->lp_round_epigraph_cuts_.size() >= 1, log_message.str(), fractional_variable.second);
                         }
                     }
                     else {
