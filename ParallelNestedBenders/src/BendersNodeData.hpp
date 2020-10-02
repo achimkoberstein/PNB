@@ -329,6 +329,8 @@ public:
     cut_container lp_round_optimality_cuts_;
     cut_container lp_round_feasibility_cuts_;
     cut_container lp_round_epigraph_cuts_;
+    std::atomic_int lp_round_str_epigraph_cuts_counter_;
+    std::atomic_int lp_round_plain_epigraph_cuts_counter_;
     cut_container lp_round_domain_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
 	cut_container::iterator last_in_lp_cgp_start_optimality_;
@@ -458,6 +460,8 @@ struct BendersStageData {
 
 	std::atomic_int added_optimality_cuts_;
 	std::atomic_int added_epigraph_cuts_;
+    std::atomic_int added_str_epigraph_cuts_;
+    std::atomic_int added_plain_epigraph_cuts_;
     std::atomic_int lp_cgp_counter_; // number of Lift & Project CGp we tried to solve. Sometimes problems are infeasible etc. and no cut is built
 	std::atomic_int added_domain_cuts_;
 	std::atomic_int added_feasibility_cuts_;

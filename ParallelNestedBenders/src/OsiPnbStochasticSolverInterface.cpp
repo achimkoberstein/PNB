@@ -380,6 +380,28 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumEpigraphCuts() cons
     return cut_counter;
 }
 
+int OsiStochasticParallelNestedBendersSolverInterface::getNumStrengthenedEpigraphCuts() const
+{
+    assert(nested_benders_);
+    int cut_counter = 0;
+    if (!nested_benders_->stage_data_.empty())
+        for (int i = 0; i < nested_benders_->num_stages_; i++) {
+            cut_counter += nested_benders_->stage_data_[i]->added_str_epigraph_cuts_;
+        }
+    return cut_counter;
+}
+
+int OsiStochasticParallelNestedBendersSolverInterface::getNumPlainEpigraphCuts() const
+{
+    assert(nested_benders_);
+    int cut_counter = 0;
+    if (!nested_benders_->stage_data_.empty())
+        for (int i = 0; i < nested_benders_->num_stages_; i++) {
+            cut_counter += nested_benders_->stage_data_[i]->added_plain_epigraph_cuts_;
+        }
+    return cut_counter;
+}
+
 int OsiStochasticParallelNestedBendersSolverInterface::getNumDomainCuts() const
 {
     assert(nested_benders_);
