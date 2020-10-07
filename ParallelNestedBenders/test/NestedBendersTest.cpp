@@ -2071,10 +2071,10 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//have bin and sometimes cont vars on the 1st stage
 	//need >0.2 secs to be solved on workstation with DETEQ
 	//second stage integrality is relaxed since some instances have int on the 2nd stage
-	//[solved]benders_parameter_.SetParameterValue(parallel_benders::PNB_EPSILON_RELATIVE, 0.000001);
-	//[solved]benders_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.0001);
-	//[solved]benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 10800);
-	//[solved]benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_EPSILON_RELATIVE, 0.000001);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.0001);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 10800);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 
 	//sndp_mini_tests
 	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250, 0.1);
