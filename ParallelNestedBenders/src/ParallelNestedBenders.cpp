@@ -5685,8 +5685,8 @@ namespace parallel_benders {
                     }
 
                     column_upper->reserve(cols_to_allocate);
-                    column_upper->insert(column_upper->end(), c_upper, c_upper + num_cols); // for z
-                    column_upper->insert(column_upper->end(), c_upper, c_upper + num_cols); // for y
+                    column_upper->insert(column_upper->end(), num_cols, infinity_); // for z UB is inf
+                    column_upper->insert(column_upper->end(), num_cols, infinity_); // for y UB is also inf
                     column_lower->reserve(cols_to_allocate);
                     column_lower->insert(column_lower->end(), c_lower, c_lower + num_cols); // for z
                     column_lower->insert(column_lower->end(), c_lower, c_lower + num_cols); // for y
