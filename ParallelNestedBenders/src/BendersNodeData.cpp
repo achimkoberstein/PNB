@@ -750,16 +750,26 @@ CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer
 void CutStuff::DumpCutStuff(const std::string& fname) const
 {
     // we export sparse vector (row) as a full storage vector
+    // file will have four rows: indices (0,1,2), values (0,-1,10.5), ub and lb
     // since we cannot know number of elements in full storage vector from sparse vector, we end up export on the last non-zero element
     const CoinPackedVector* row = &cut_->row();
 	int num_elements = row->getMaxIndex() + 1; // last non-zero element
 
 	std::ofstream file_out;
 	file_out.open(fname.c_str(), ios::trunc);
-	// index, element incl. 0 values
-	for (int index = 0; index < num_elements; index++) {
-		file_out << index  << "," << std::setprecision(20) << (*row)[index] << '\n';
+	// indices
+    file_out << 0;
+	for (int index = 1; index < num_elements; index++) {
+		file_out << "," << index;
 	}
+    file_out << '\n';
+
+    // elements incl. 0 values
+    file_out << std::setprecision(20) << (*row)[0];
+    for (int index = 1; index < num_elements; index++) {
+        file_out << "," << std::setprecision(20) << (*row)[index];
+    }
+    file_out << '\n';
 	
 	// ub and lb
 	file_out << std::setprecision(20) << cut_->ub() << '\n';
