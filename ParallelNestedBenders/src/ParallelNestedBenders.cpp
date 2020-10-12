@@ -9814,7 +9814,8 @@ namespace parallel_benders {
 
 		if ( first.aggregate_number_ != second.aggregate_number_ )
 			return false;
-        if (first.column_set_ != second.column_set_) {
+		// PNB_COL_SET_NONE is a super class of prime/double prime, e.g., PNB_COL_SET_NONE == prime shour be true 
+        if (first.column_set_ != PNB_COL_SET_NONE && second.column_set_ != PNB_COL_SET_NONE && first.column_set_ != second.column_set_) {
             return false;
         }
 		if ( !CompareForEquality(first.cut_->lb(),second.cut_->lb(),tolerance))
