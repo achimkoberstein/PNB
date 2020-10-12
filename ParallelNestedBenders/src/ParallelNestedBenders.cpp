@@ -4501,7 +4501,7 @@ namespace parallel_benders {
             cut_stuff->aggregate_number_ = i;
 			cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
 			int theta_index = i + (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME ? benders_tree_node_pointer->getDataPtr()->num_thetas_ : 0);
-            if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index]-d_square_translation_term_ : 0) ){
+            if ((lp_main_loop_iteration_round_ && current_iteration_ == 1) || change_aggregation_level || cvar_constr_decomp_ || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index]-d_square_translation_term_ : 0) ){
                 added_cuts++;
                 benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate
             }
