@@ -33,6 +33,10 @@ int main(int argc,  char* argv[])
     std::string parameter;
 	std::string specs_to_file;
 
+    google::SetLogDestination(google::WARNING, "google_log_"); // output file
+    //google::LogToStderr(); // only to console
+    google::SetStderrLogging(google::INFO); // logging to std::err enabled for all logging levels >= 0 (Different logging under release builds?)
+
     // Declare the supported options.
     boost::program_options::options_description desc("Allowed options");
     desc.add_options()
