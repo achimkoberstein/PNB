@@ -1,0 +1,5 @@
+TIME          sslp_20_100_200
+PERIODS       IMPLICIT
+    x1        c1        PERIOD1
+    x21       c2        PERIOD2
+ENDATA

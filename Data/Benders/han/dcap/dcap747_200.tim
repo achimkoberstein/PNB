@@ -1,0 +1,5 @@
+TIME          dcap747_200
+PERIODS       IMPLICIT
+    x1        c1        PERIOD1
+    x99       c50       PERIOD2
+ENDATA

@@ -1695,6 +1695,11 @@ TEST_F(CollectInstanceSpecs, cap) {
 	EXPECT_TRUE(true);
 }
 
+TEST_F(CollectInstanceSpecs, han) {
+	solveSMPSFromList("../../../../Data/Benders/InstanceListHan.txt");
+	EXPECT_TRUE(true);
+}
+
 TEST_F(LiftAndProjectCutsTest, fast) {
 	// Binary 1st stage
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
@@ -2716,6 +2721,17 @@ TEST_F(NestedBendersTestInteger, sslp_SIPLIB) { // binary first, mixed-binary se
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_25"), -253.602, 0.1); // not present in the original test set and is empty in Christian version
 }
 
+TEST_F(NestedBendersTestInteger, sslp_HAN) { // binary first, mixed-binary second stage
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_20_100_50"), -121.6, 0.1);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_20_100_200"), -127.37, 0.1);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_30_100_50"), -364.640, 0.1);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_30_100_200"), -354.190, 0.1);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_60_60_50"), -349.136, 0.1);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_60_60_200"), -351.171, 0.1);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_90_45_50"), -347.262, 0.1);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_90_45_200"), -262.400, 0.1);
+}
+
 TEST_F(NestedBendersTestInteger, dcap_SIPLIP) { // Contains integer, two-stage
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.868, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
@@ -2729,6 +2745,17 @@ TEST_F(NestedBendersTestInteger, dcap_SIPLIP) { // Contains integer, two-stage
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_200"), 1619.531, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
+}
+
+TEST_F(NestedBendersTestInteger, dcap_HAN) { // Contains integer, two-stage
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap468_50"), 1834.868, 0.1);
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap468_200"), 1644.342, 0.1);
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap575_50"), 1737.719, 0.1);
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap575_200"), 2322.721, 0.1);
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap665_50"), 2559.297, 0.1);
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap665_200"), 2167.512, 0.1);
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap747_50"), 1060.676, 0.1);
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap747_200"), 1253.040, 0.1);
 }
 
 TEST_F(NestedBendersTestInteger, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage, two-stage

@@ -1,0 +1,5 @@
+TIME          dcap665_50
+PERIODS       IMPLICIT
+    x1        c1        PERIOD1
+    x61       c31       PERIOD2
+ENDATA
