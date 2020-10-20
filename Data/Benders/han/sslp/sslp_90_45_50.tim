@@ -1,0 +1,5 @@
+TIME          sslp_90_45_50
+PERIODS       IMPLICIT
+    x1        c1        PERIOD1
+    x91       c2        PERIOD2
+ENDATA
