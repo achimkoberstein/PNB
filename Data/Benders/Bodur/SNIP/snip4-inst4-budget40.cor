@@ -6725,13 +6725,17 @@ COLUMNS
     node_829              probarccons_509_829                  -0.557378 
     node_830              probarccons_510_830                  -0.576522  arccons_830_155                              1 
     node_830              arccons_830_861                              1  Obj                                          0 
+    node_851        sinkcons              1.0
     node_851              Obj                                          0  arccons_529_851                             -1 
     node_851              arccons_599_851                             -1 
+    node_852        sinkcons              1.0
     node_852              arccons_569_852                             -1  arccons_811_852                             -1 
     node_852              arccons_645_852                             -1  arccons_805_852                             -1 
     node_852              arccons_770_852                             -1  Obj                                          0 
     node_852              arccons_602_852                             -1  arccons_520_852                             -1 
+    node_853        sinkcons              1.0
     node_853              arccons_770_853                             -1  Obj                                          0 
+    node_854        sinkcons              1.0
     node_854              arccons_811_854                             -1  arccons_518_854                             -1 
     node_854              arccons_551_854                             -1  arccons_804_854                             -1 
     node_854              arccons_597_854                             -1  arccons_559_854                             -1 
@@ -6767,15 +6771,18 @@ COLUMNS
     node_854              arccons_512_854                             -1  arccons_565_854                             -1 
     node_854              arccons_784_854                             -1  arccons_785_854                             -1 
     node_854              arccons_566_854                             -1  arccons_789_854                             -1 
+    node_855        sinkcons              1.0
     node_855              arccons_642_855                             -1  arccons_624_855                             -1 
     node_855              arccons_589_855                             -1  arccons_586_855                             -1 
     node_855              arccons_819_855                             -1  arccons_560_855                             -1 
     node_855              arccons_811_855                             -1  arccons_519_855                             -1 
     node_855              arccons_511_855                             -1  Obj                                          0 
+    node_856        sinkcons              1.0
     node_856              arccons_809_856                             -1  arccons_817_856                             -1 
     node_856              arccons_812_856                             -1  arccons_544_856                             -1 
     node_856              arccons_766_856                             -1  arccons_560_856                             -1 
     node_856              arccons_615_856                             -1  Obj                                          0 
+    node_857        sinkcons              1.0
     node_857              arccons_634_857                             -1  arccons_560_857                             -1 
     node_857              arccons_804_857                             -1  Obj                                          0 
     node_857              arccons_766_857                             -1  arccons_564_857                             -1 
@@ -6789,7 +6796,9 @@ COLUMNS
     node_857              arccons_609_857                             -1  arccons_601_857                             -1 
     node_857              arccons_590_857                             -1  arccons_626_857                             -1 
     node_857              arccons_825_857                             -1 
+    node_858        sinkcons              1.0
     node_858              Obj                                          0  arccons_512_858                             -1 
+    node_859        sinkcons              1.0
     node_859              arccons_622_859                             -1  arccons_623_859                             -1 
     node_859              arccons_612_859                             -1  arccons_626_859                             -1 
     node_859              arccons_611_859                             -1  arccons_610_859                             -1 
@@ -6818,6 +6827,7 @@ COLUMNS
     node_859              arccons_527_859                             -1  arccons_526_859                             -1 
     node_859              arccons_524_859                             -1  arccons_523_859                             -1 
     node_859              arccons_522_859                             -1  arccons_521_859                             -1 
+    node_860        sinkcons              1.0
     node_860              arccons_762_860                             -1  arccons_787_860                             -1 
     node_860              arccons_813_860                             -1  arccons_639_860                             -1 
     node_860              arccons_631_860                             -1  arccons_628_860                             -1 
@@ -6839,6 +6849,7 @@ COLUMNS
     node_860              arccons_531_860                             -1  arccons_519_860                             -1 
     node_860              arccons_518_860                             -1  arccons_517_860                             -1 
     node_860              arccons_513_860                             -1 
+    node_861        sinkcons              1.0
     node_861              arccons_544_861                             -1  arccons_554_861                             -1 
     node_861              arccons_560_861                             -1  arccons_561_861                             -1 
     node_861              arccons_563_861                             -1  arccons_577_861                             -1 
@@ -6853,6 +6864,7 @@ COLUMNS
     node_861              arccons_538_861                             -1  arccons_525_861                             -1 
     node_861              arccons_532_861                             -1  Obj                                          0 
     node_861              arccons_531_861                             -1  arccons_527_861                             -1 
+    node_862        sinkcons              1.0
     node_862              Obj                                          0  arccons_827_862                             -1 
     node_862              arccons_795_862                             -1  arccons_793_862                             -1 
     node_862              arccons_792_862                             -1  arccons_791_862                             -1 
