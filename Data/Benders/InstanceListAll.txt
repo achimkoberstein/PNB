@@ -2327,6 +2327,22 @@ wright/data-scenarios/storm;wright/data-scenarios/storm-2000
 wright/data-scenarios/storm;wright/data-scenarios/storm-3000
 wright/data-scenarios/storm;wright/data-scenarios/storm-5000
 posts/pltexp/pltexpa7_6
+han/dcap/dcap468_50
+han/dcap/dcap468_200
+han/dcap/dcap575_50
+han/dcap/dcap575_200
+han/dcap/dcap665_50
+han/dcap/dcap665_200
+han/dcap/dcap747_50
+han/dcap/dcap747_200
+han/sslp/sslp_20_100_50
+han/sslp/sslp_20_100_200
+han/sslp/sslp_30_100_50
+han/sslp/sslp_30_100_200
+han/sslp/sslp_60_60_50
+han/sslp/sslp_60_60_200
+han/sslp/sslp_90_45_50
+han/sslp/sslp_90_45_200
 // the instances need extremely a lot of memory to load the model via smi_model->readSmps()
 // machine with 24 Gb RAM could not handle that
 //posts/pltexp/pltexpa7_16
