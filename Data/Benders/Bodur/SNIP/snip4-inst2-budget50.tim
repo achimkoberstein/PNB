@@ -1,0 +1,5 @@
+TIME
+PERIODS   LP
+     sensor_191_511     budget     STAGE-1
+     node_1     sinkcons     STAGE-2
+ENDATA
