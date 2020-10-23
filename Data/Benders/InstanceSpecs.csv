@@ -2399,8 +2399,6 @@ bodur;snip;snip4-inst4-budget60;2;456;0;320;0;1;0;0;783;2907;true;false;false;fa
 bodur;snip;snip4-inst4-budget70;2;456;0;320;0;1;0;0;783;2907;true;false;false;false;false;true;false;true;true;false
 bodur;snip;snip4-inst4-budget80;2;456;0;320;0;1;0;0;783;2907;true;false;false;false;false;true;false;true;true;false
 bodur;snip;snip4-inst4-budget90;2;456;0;320;0;1;0;0;783;2907;true;false;false;false;false;true;false;true;true;false
-<<<<<<< HEAD
-=======
 siplib;smkp;smkp_1;2;20;0;240;0;50;0;120;0;5;false;true;false;false;false;true;false;false;false;false
 siplib;smkp;smkp_10;2;20;0;240;0;50;0;120;0;5;false;true;false;false;false;true;false;false;false;false
 siplib;smkp;smkp_11;2;20;0;240;0;50;0;120;0;5;false;true;false;false;false;true;false;false;false;false
@@ -2461,4 +2459,3 @@ maher;rrtailassign;us_rrtailassign_1_100;2;100;0;4832;0;1454;5997;0;28866;15887;
 maher;rrtailassign;us_rrtailassign_1_20;2;20;0;4832;0;1454;5997;0;28866;15887;true;false;true;false;false;true;false;false;false;false
 maher;rrtailassign;us_rrtailassign_1_5;2;5;0;4832;0;1454;5997;0;28866;15887;true;false;true;false;false;true;false;false;false;false
 maher;rrtailassign;us_rrtailassign_1_50;2;50;0;4832;0;1454;5997;0;28866;15887;true;false;true;false;false;true;false;false;false;false
->>>>>>> ee3d6be4f... [squash] rtassign specs
