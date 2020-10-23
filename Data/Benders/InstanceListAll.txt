@@ -2413,6 +2413,36 @@ Bodur/SNIP/snip4-inst4-budget60
 Bodur/SNIP/snip4-inst4-budget70
 Bodur/SNIP/snip4-inst4-budget80
 Bodur/SNIP/snip4-inst4-budget90
+maher/rrtailassign/qf_rrtailassign_0;maher/rrtailassign/qf_rrtailassign_0_10
+maher/rrtailassign/qf_rrtailassign_0;maher/rrtailassign/qf_rrtailassign_0_100
+maher/rrtailassign/qf_rrtailassign_0;maher/rrtailassign/qf_rrtailassign_0_20
+maher/rrtailassign/qf_rrtailassign_0;maher/rrtailassign/qf_rrtailassign_0_5
+maher/rrtailassign/qf_rrtailassign_0;maher/rrtailassign/qf_rrtailassign_0_50
+maher/rrtailassign/qf_rrtailassign_1;maher/rrtailassign/qf_rrtailassign_1_10
+maher/rrtailassign/qf_rrtailassign_1;maher/rrtailassign/qf_rrtailassign_1_100
+maher/rrtailassign/qf_rrtailassign_1;maher/rrtailassign/qf_rrtailassign_1_20
+maher/rrtailassign/qf_rrtailassign_1;maher/rrtailassign/qf_rrtailassign_1_5
+maher/rrtailassign/qf_rrtailassign_1;maher/rrtailassign/qf_rrtailassign_1_50
+maher/rrtailassign/sw_rrtailassign_0;maher/rrtailassign/sw_rrtailassign_0_10
+maher/rrtailassign/sw_rrtailassign_0;maher/rrtailassign/sw_rrtailassign_0_100
+maher/rrtailassign/sw_rrtailassign_0;maher/rrtailassign/sw_rrtailassign_0_20
+maher/rrtailassign/sw_rrtailassign_0;maher/rrtailassign/sw_rrtailassign_0_5
+maher/rrtailassign/sw_rrtailassign_0;maher/rrtailassign/sw_rrtailassign_0_50
+maher/rrtailassign/sw_rrtailassign_1;maher/rrtailassign/sw_rrtailassign_1_10
+maher/rrtailassign/sw_rrtailassign_1;maher/rrtailassign/sw_rrtailassign_1_100
+maher/rrtailassign/sw_rrtailassign_1;maher/rrtailassign/sw_rrtailassign_1_20
+maher/rrtailassign/sw_rrtailassign_1;maher/rrtailassign/sw_rrtailassign_1_5
+maher/rrtailassign/sw_rrtailassign_1;maher/rrtailassign/sw_rrtailassign_1_50
+maher/rrtailassign/us_rrtailassign_0;maher/rrtailassign/us_rrtailassign_0_10
+maher/rrtailassign/us_rrtailassign_0;maher/rrtailassign/us_rrtailassign_0_100
+maher/rrtailassign/us_rrtailassign_0;maher/rrtailassign/us_rrtailassign_0_20
+maher/rrtailassign/us_rrtailassign_0;maher/rrtailassign/us_rrtailassign_0_5
+maher/rrtailassign/us_rrtailassign_0;maher/rrtailassign/us_rrtailassign_0_50
+maher/rrtailassign/us_rrtailassign_1;maher/rrtailassign/us_rrtailassign_1_10
+maher/rrtailassign/us_rrtailassign_1;maher/rrtailassign/us_rrtailassign_1_100
+maher/rrtailassign/us_rrtailassign_1;maher/rrtailassign/us_rrtailassign_1_20
+maher/rrtailassign/us_rrtailassign_1;maher/rrtailassign/us_rrtailassign_1_5
+maher/rrtailassign/us_rrtailassign_1;maher/rrtailassign/us_rrtailassign_1_50
 // the instances need extremely a lot of memory to load the model via smi_model->readSmps()
 // machine with 24 Gb RAM could not handle that
 //posts/pltexp/pltexpa7_16
