@@ -1695,6 +1695,11 @@ TEST_F(CollectInstanceSpecs, snip) {
 	EXPECT_TRUE(true);
 }
 
+TEST_F(CollectInstanceSpecs, rrtailassign) {
+	solveSMPSFromList("../../../../Data/Benders/InstanceListMaherRrtailassign.txt");
+	EXPECT_TRUE(true);
+}
+
 TEST_F(CollectInstanceSpecs, cap) {
 	solveSMPSFromList("../../../../Data/Benders/InstanceListBodurCAP.txt");
 	EXPECT_TRUE(true);
