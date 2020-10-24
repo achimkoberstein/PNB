@@ -2473,6 +2473,36 @@ SIPLIB/smkp/smkp_6
 SIPLIB/smkp/smkp_7
 SIPLIB/smkp/smkp_8
 SIPLIB/smkp/smkp_9
+SIPLIB/vaccine/vac1000a
+SIPLIB/vaccine/vac1000b
+SIPLIB/vaccine/vac1000c
+SIPLIB/vaccine/vac1000d
+SIPLIB/vaccine/vac1000e
+SIPLIB/vaccine/vac100a
+SIPLIB/vaccine/vac100b
+SIPLIB/vaccine/vac100c
+SIPLIB/vaccine/vac100d
+SIPLIB/vaccine/vac100e
+SIPLIB/vaccine/vac2000a
+SIPLIB/vaccine/vac2000b
+SIPLIB/vaccine/vac2000c
+SIPLIB/vaccine/vac2000d
+SIPLIB/vaccine/vac2000e
+SIPLIB/vaccine/vac250a
+SIPLIB/vaccine/vac250b
+SIPLIB/vaccine/vac250c
+SIPLIB/vaccine/vac250d
+SIPLIB/vaccine/vac250e
+SIPLIB/vaccine/vac500a
+SIPLIB/vaccine/vac500b
+SIPLIB/vaccine/vac500c
+SIPLIB/vaccine/vac500d
+SIPLIB/vaccine/vac500e
+SIPLIB/vaccine/vac750a
+SIPLIB/vaccine/vac750b
+SIPLIB/vaccine/vac750c
+SIPLIB/vaccine/vac750d
+SIPLIB/vaccine/vac750e
 // the instances need extremely a lot of memory to load the model via smi_model->readSmps()
 // machine with 24 Gb RAM could not handle that
 //posts/pltexp/pltexpa7_16
