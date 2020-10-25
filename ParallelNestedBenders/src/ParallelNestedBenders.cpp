@@ -3912,7 +3912,7 @@ namespace parallel_benders {
 			int num_cols = stage_pointer->num_columns_;
 			int num_rows = stage_pointer->num_rows_;
 			
-			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(false, num_cols*2 + num_rows*2, num_cols * 2); // rowOrdered, num_rows, num_cols
+			CoinPackedMatrix* problem_matrix = new CoinPackedMatrix(false, num_cols*2 + num_rows*2, 0 * 2); // rowOrdered, num_rows, num_cols
             // Line 5
             //*** (1-lambda) * x' + lambda * x" rows are fract var specific. Exact values are set in GenerateLiftAndProjectCut() of the main loop
                 // dimensions(num_cols, num_cols*2)
@@ -3930,7 +3930,9 @@ namespace parallel_benders {
                 CoinPackedMatrix temp_matrix = CoinPackedMatrix(*A_matrix, num_rows * 2, num_cols * 2);
                 temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
                 // double prime side
-                CoinPackedMatrix double_prime_cols = CoinPackedMatrix(false, num_rows * 2, num_cols);
+                // function arguments: row ordered, number of vectors in major dim (rows for row ordered), size of each major dim vector (row).
+                // If last argument is not 0 we get memory error for problems with only stochastic objective coefs. I do not know why.
+                CoinPackedMatrix double_prime_cols = CoinPackedMatrix(false, num_rows * 2, 0);
                 double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
                 double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
                 // combine two matrices
@@ -5652,7 +5654,9 @@ namespace parallel_benders {
                         assert(!temp_matrix.isColOrdered());
                         temp_matrix.setDimensions(num_rows * 2, num_cols); // add rows
                         // double prime side
-                        CoinPackedMatrix double_prime_cols = CoinPackedMatrix(false, num_rows*2, num_cols); // row ordered, number of vectors in major dim (rows for row ordered), size of each major dim vector (row)
+                        // function arguments: row ordered, number of vectors in major dim (rows for row ordered), size of each major dim vector (row).
+                        // If last argument is not 0 we get memory error for problems with only stochastic objective coefs. I do not know why.
+                        CoinPackedMatrix double_prime_cols = CoinPackedMatrix(false, num_rows*2, 0);
                         double_prime_cols.setDimensions(num_rows, num_cols); // empty matrix
                         double_prime_cols.bottomAppendPackedMatrix(*A_matrix); // new cols => empty top half	
                         // combine two matrices
