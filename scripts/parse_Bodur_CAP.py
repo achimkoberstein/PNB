@@ -1,7 +1,7 @@
 from pathlib import Path
 
 MAX_NUM_SCENARIOS = 5000 # according to the paper and data
-NUM_SCENARIOS = [5, 50, 250, 1000, 2000, 3000, 4000, 5000]
+NUM_SCENARIOS = [5, 25, 50, 250, 1000, 5000]
 PATH_TO_CAP = "..\\Data\\Benders\\Bodur\\CAP"
 TEST_NAME = "cap_test"
 PROBLEMS = [TEST_NAME, "cap101", "cap102", "cap103", "cap111", "cap112", "cap113", "cap114", "cap121", "cap122", "cap123", "cap124", "cap131", "cap132", "cap133", "cap134"]
@@ -104,6 +104,77 @@ def matrix_to_text(matrix: list):
     list_of_row_strings = [vector_to_text(row) for row in matrix] # e.g., ["11,12,13", "21,22,23"]
 
     return '\n'.join(list_of_row_strings)
+
+def generate_cor_text(instance_name: str, matrix_T: list, matrix_A: list, matrix_W: list, vector_c: list, vector_d: list, vector_b: list) -> str:
+    n_rows = len(matrix_T)
+    assert(len(matrix_W) == n_rows)
+    I = len(vector_c) # n_first_stage_cols
+    assert(len(vector_b) == 1) # we always have one constraint on the first stage
+    assert(len(matrix_A) == 1)
+
+    contents = f'NAME          {instance_name} (MIN)\n'
+
+    contents += 'ROWS\n'
+    contents += '  N Objective\n  G FirstStCnstr\n'
+    for row_index in range(n_rows):
+        contents += f'  G SecondStCnstr{row_index+1}\n'
+
+    contents += 'COLUMNS\n'
+    # 1st stage
+    for var_index, c_value in enumerate(vector_c):
+        contents += f'    x{var_index+1}        Objective           {c_value}\n'
+        contents += f'    x{var_index+1}        FirstStCnstr        {matrix_A[0][var_index]}\n'
+        for row_index in range(0, n_rows):
+            if matrix_T[row_index][var_index] != 0:
+                contents += f'    x{var_index+1}        SecondStCnstr{row_index+1}     {matrix_T[row_index][var_index]}\n'
+    # 2nd stage
+    for var_index, d_value in enumerate(vector_d):
+        contents += f'    y{var_index+1}        Objective           {d_value}\n'
+        for row_index in range(0, n_rows):
+            if matrix_W[row_index][var_index] != 0:
+                contents += f'    y{var_index+1}        SecondStCnstr{row_index+1}      {matrix_W[row_index][var_index]}\n'
+
+    contents += 'RHS\n'
+    first_stage_coef = vector_b[0]
+    contents += f'    RHS1      FirstStCnstr         {first_stage_coef}\n'
+    for row_index in range(0, n_rows-I): # last I values are 0 and can be omitted in MPS
+        contents += f'    RHS1      SecondStCnstr{row_index+1}         12345.0\n' # 12345.0 is a dummy value. Correct value will be provided in .sto
+
+    contents += 'BOUNDS\n'
+    for bin_index in range(I):
+        contents += f' BV BOUND1    x{bin_index+1}                 1.0\n'
+
+    contents += 'ENDATA'
+
+    return contents
+
+def generate_tim_text(instance_name) -> str:
+    contents = f'''TIME          {instance_name}  (MIN)
+PERIODS       IMPLICIT
+    x1        FirstStCnstr                 Stage1    
+    y1        SecondStCnstr1               Stage2    
+ENDATA
+    '''
+
+    return contents
+
+def generate_sto_text(instance_name, matrix_H: list, I: int) -> str:
+    contents = f'STOCH         {instance_name} (MIN)\nSCENARIOS\n'
+    num_scen = len(matrix_H)
+    scen_prob = 1/num_scen
+    for scen_index, scen_rhs in enumerate(matrix_H):
+        if scen_index == 0:
+            scen_name = "'ROOT'"
+            scen_stage = 1
+        else:
+            scen_name = f'SCEN1'
+            scen_stage = 2
+        contents += f' SC Scen{scen_index+1}     {scen_name}             {scen_prob}   Stage{scen_stage}    \n'
+        for rhs_row_index, rhs_element in enumerate(scen_rhs[:-I]):
+            contents += f'    RHS1      SecondStCnstr{rhs_row_index+1}          {rhs_element}\n'
+    contents += 'ENDATA'
+
+    return contents
 
 def main():
 
@@ -225,6 +296,27 @@ def main():
             instance_mpl.write_text(instance_formulation)
 
             print(f" -- Created {instance_mpl_path}. You can transform it to SMPS with opt_convert.\n")
+
+            #  ... .cor
+            cor_path = f"{path_prefix}.cor"
+            cor_file = Path(cor_path)
+            text = generate_cor_text(instance_name, matrix_T, matrix_A, matrix_W, vector_c, vector_d, vector_b)
+            cor_file.write_text(text)
+            print(f" -- Created {cor_path}")
+
+            # ... .tim
+            tim_path = f"{path_prefix}.tim"
+            tim_file = Path(tim_path)
+            text = generate_tim_text(instance_name)
+            tim_file.write_text(text)
+            print(f" -- Created {tim_path}")
+
+            #  ... .sto
+            sto_path = f"{path_prefix}.sto"
+            sto_file = Path(sto_path)
+            text = generate_sto_text(instance_name, matrix_h, I)
+            sto_file.write_text(text)
+            print(f" -- Created {sto_path}.\n")
 
             # for test there is only one instance of 5 scen
             if problem_name == TEST_NAME:
