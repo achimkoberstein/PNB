@@ -299,8 +299,8 @@ void OsiCpxSolverInterface::initialSolve()
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
-  //else
-  //   CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+  else
+     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 0 );
@@ -432,10 +432,10 @@ void OsiCpxSolverInterface::resolve()
   else
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
 
-//  if (messageHandler()->logLevel() == 0)
-//     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
-//  else
-//     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+  if (messageHandler()->logLevel() == 0)
+     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
+  else
+     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 0 );
@@ -566,8 +566,8 @@ void OsiCpxSolverInterface::branchAndBound()
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
-  //else
-  //   CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+  else
+     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_MIPDISPLAY, 0 );
