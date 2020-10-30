@@ -3194,6 +3194,27 @@ namespace parallel_benders {
                     //    benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter] *= -1.0;
                     //}
 
+                    // Switch off preprocessing and advanced start (at least for CPLEX)
+                    bool takeHint, gotHint, old_presolve;
+                    OsiHintStrength strength;
+                    gotHint = (osi_solver->getHintParam(OsiDoPresolveInInitial, takeHint, strength));
+                    assert(gotHint);
+                    if (strength != OsiHintIgnore)
+                        old_presolve = takeHint ? true : false;
+                    osi_solver->setHintParam(OsiDoPresolveInInitial, false);
+                    // sometimes simply using primal simplex helps (numerical issues?)
+                    if (lp_method_ != PNB_INT_PRIMAL_SIMPLEX && (!integer_problems_[current_stage_] || generate_lp_cuts_)) {
+                        osi_solver->setHintParam(OsiDoDualInInitial, false);
+                        SolveSolverInterface(osi_solver);
+                        SetSolverOptions(osi_solver);
+                        if (osi_solver->isProvenOptimal()) {
+                            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being unbounded. We have solved it using primal simplex.");
+                            LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is solvable after being unbounded. We have solved it using primal simplex.");
+                            StoreWarmStart(osi_solver, benders_tree_node_pointer);
+                            return;
+                        }
+                    }
+
                     int start_theta = stage_data_[current_stage_]->num_columns_;
                     bool unbounded_theta = true;
                     //// Find out if the problem is unbounded in the direction of the theta variable.
@@ -3229,16 +3250,10 @@ namespace parallel_benders {
                         // We need to remove this row again, when we finished everything with this problem!
                         //benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
 
-                        // Switch preprocessing and advanced start off (at least for CPLEX)
-                        bool takeHint, gotHint, old_presolve;
-                        OsiHintStrength strength;
-                        gotHint = (osi_solver->getHintParam(OsiDoPresolveInInitial, takeHint, strength));
-                        assert(gotHint);
-                        if (strength != OsiHintIgnore)
-                            old_presolve = takeHint ? true : false;
                         osi_solver->setHintParam(OsiDoPresolveInInitial, false);
                         SolveSolverInterface(osi_solver);
-						                       
+                        osi_solver->setHintParam(OsiDoPresolveInInitial, old_presolve);
+                                                
                         // Depending on the solution to this
                         if (osi_solver->isProvenOptimal()) {
 							LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being unbounded. We have adjusted (bound) it.");
@@ -3332,6 +3347,28 @@ namespace parallel_benders {
 					//}
 				}
                 else{
+
+                    // Switch off preprocessing and advanced start (at least for CPLEX)
+                    bool takeHint, gotHint, old_presolve;
+                    OsiHintStrength strength;
+                    gotHint = (osi_solver->getHintParam(OsiDoPresolveInInitial, takeHint, strength));
+                    assert(gotHint);
+                    if (strength != OsiHintIgnore)
+                        old_presolve = takeHint ? true : false;
+                    osi_solver->setHintParam(OsiDoPresolveInInitial, false);
+                    // sometimes simply using primal simplex helps (numerical issues?)
+                    if (lp_method_ != PNB_INT_PRIMAL_SIMPLEX && (!integer_problems_[current_stage_] || generate_lp_cuts_)) {
+                        osi_solver->setHintParam(OsiDoDualInInitial, false);
+                        SolveSolverInterface(osi_solver);
+                        SetSolverOptions(osi_solver);
+                        if (osi_solver->isProvenOptimal()) {
+                            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is solvable after being infeasible. We have solved it using primal simplex.");
+                            LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is solvable after being infeasible. We have solved it using primal simplex.");
+                            StoreWarmStart(osi_solver, benders_tree_node_pointer);
+                            return;
+                        }
+                    }
+
 					// almost copy from unbounded case above
                     int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
                     if (lp_main_loop_iteration_round_) {
@@ -3354,13 +3391,6 @@ namespace parallel_benders {
                         // We need to remove this row again, when we finished everything with this problem!
                         //benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
 
-                        // Switch preprocessing and advanced start off (at least for CPLEX)
-                        bool takeHint, gotHint, old_presolve;
-                        OsiHintStrength strength;
-                        gotHint = (osi_solver->getHintParam(OsiDoPresolveInInitial, takeHint, strength));
-                        assert(gotHint);
-                        if (strength != OsiHintIgnore)
-                            old_presolve = takeHint ? true : false;
                         osi_solver->setHintParam(OsiDoPresolveInInitial, false);
                         SolveSolverInterface(osi_solver);
                         osi_solver->setHintParam(OsiDoPresolveInInitial, old_presolve);
@@ -3379,7 +3409,7 @@ namespace parallel_benders {
                         infeasible_problems_[0] = true;
                         LOG(ERROR) << "Your master problem is infeasible.";
 						LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is infeasible after being infeasible. We have adjusted (bounded) it.");
-						LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is infeasible after being infeasible. We have adjusted (bounded) it.");
+						LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is infeasible after being infeasible. We have adjusted (bounded) it. TRY TO FIND IIS AND ELIMINATE CONFLICTING CONSTRAINTS/CUTS");
                     }
                     else if (osi_solver->isProvenDualInfeasible()) {
                         PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "adjusted_unbounded");
