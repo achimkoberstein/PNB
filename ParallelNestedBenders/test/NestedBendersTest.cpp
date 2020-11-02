@@ -2128,8 +2128,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	
 	//rahmaniani - complete recourse
 	//from paper
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_32_cr"), 58242.3, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_32_cr"), 58242.3, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_16_cr"), 55844.8, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_32_cr"), 56158.6, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_64_cr"), 56803.7, 0.1);
@@ -2144,7 +2144,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_3_0-4_16_cr"), 96700.1, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_3_0-6_16_cr"), 94435.7, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_3_0_16_cr"), 95726.4, 0.1);
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_5_0-6_16_cr"), 84706.1, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_5_0-6_16_cr"), 84706.1, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_5_0_16_cr"), 86198.2, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r04_1_0-8_16_cr"), 25765.8, 0.1);
 
@@ -2157,7 +2157,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_3_0_64_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_5_0_64_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_7_0_64_cr"), 0.0, 0.1); // obj value?
-	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_9_0_64_cr"), 0.0, 0.1); // obj value?
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_9_0_64_cr"), 0.0, 0.1); // obj value?
 
 	//sslp_SIPLIB
 	// from paper
@@ -2264,14 +2264,14 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//rrtailassign_MAHER
 	//we exclude them us_rrtailassign instances because they have ints on the second stage
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_10"), -114935, 0.1); // what are the correct sol values of these instances?
-	EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_100"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_100"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_20"), -114935, 0.1);
-	EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_5"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_5"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_50"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_1", "maher/rrtailassign/qf_rrtailassign_1_10"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_1", "maher/rrtailassign/qf_rrtailassign_1_100"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_1", "maher/rrtailassign/qf_rrtailassign_1_20"), -114935, 0.1);
-	EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_1", "maher/rrtailassign/qf_rrtailassign_1_5"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_1", "maher/rrtailassign/qf_rrtailassign_1_5"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_1", "maher/rrtailassign/qf_rrtailassign_1_50"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_0", "maher/rrtailassign/sw_rrtailassign_0_10"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_0", "maher/rrtailassign/sw_rrtailassign_0_100"), -114935, 0.1);
@@ -2285,9 +2285,9 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/sw_rrtailassign_1_50"), -114935, 0.1);
 
 	//smkp_SIPLIB
-	EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_1"), -114935, 0.1); // what are the correct sol values of these instances?
+	//EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_1"), -114935, 0.1); // what are the correct sol values of these instances?
 	//EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_10"), -114935, 0.1);
-	EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_11"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_11"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_12"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_13"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_14"), -114935, 0.1);
@@ -2317,13 +2317,13 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_9"), -114935, 0.1);
 
 	//snip_BODUR
-	EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget30"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget30"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget40"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget50"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget60"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget70"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget80"), -114935, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget90"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst0-budget90"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst1-budget30"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst1-budget40"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip3-inst1-budget50"), -114935, 0.1);
@@ -2359,13 +2359,13 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst0-budget70"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst0-budget80"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst0-budget90"), -114935, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget30"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget30"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget40"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget50"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget60"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget70"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget80"), -114935, 0.1);
-	EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget90"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst1-budget90"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst2-budget30"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst2-budget40"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst2-budget50"), -114935, 0.1);
@@ -2389,8 +2389,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("Bodur/SNIP/snip4-inst4-budget90"), -114935, 0.1);
 	
 	//cap_BODUR
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5"), -114935, 0.1); // what is the obj value for these instances?
-	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5"), -114935, 0.1);
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5"), -114935, 0.1); // what is the obj value for these instances?
+	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5"), -114935, 0.1);
 }
 
 TEST_F(NestedBendersTestInteger, lsfrp_GLUSHKO) {
