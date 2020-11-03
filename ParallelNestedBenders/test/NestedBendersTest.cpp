@@ -1725,14 +1725,6 @@ TEST_F(LiftAndProjectCutsTest, fast) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1); // domain cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1); // domain cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1); // feasibility cuts
-
-	//new big ones (price adjusted)  cor_tim;sto
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1"), -19949245.0, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_125"), 0.0, 0.1); // obj value?
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_500"), 0.0, 0.1); // obj value?
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_1000"), 0.0, 0.1); // obj value?
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_5000"), 0.0, 0.1); // obj value?
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_2560_10_2_1", "glushko/sndp/sndp_2560_10_2_10000"), 0.0, 0.1); // obj value?
 	
 	// Integer 2 stages
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relaxation for the 2nd stage, ERROR otherwise
@@ -1744,6 +1736,8 @@ TEST_F(LiftAndProjectCutsTest, fast) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_17"), -985.0, 0.1); // similar characteristics to siplib/sizes/sizes...
 	EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224444.4, 0.1); // same characteristics as SNDP_TestCase_17, CGP MP is always infeasible due to some reason
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 882.615, 0.1); // 1834.87 for MIP
+	EXPECT_NEAR(solveSMPS("han/dcap/dcap468_50"), 1401.06, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/smkp/smkp_11"), 9415.88, 0.1);
 		// generate feasibility cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_15"), -10750, 0.1); // feasibility cuts, similar characteristics to ssch/c...
 }
@@ -2565,8 +2559,7 @@ TEST_F(LiftAndProjectCutsTest, slow) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.5);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_25"), -479326, 0.5);
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_160_3_3_25"), -2.24214e+06, 2.9); // often PNB_SOLUTION_SIMILARITY_LIMIT when PNB_WARM_START == 0 (no warm start) or slightly wrong solution for warm start
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_320_4_2_25"), -3.85151e+06, 5.5); // often PNB_SOLUTION_SIMILARITY_LIMIT when PNB_WARM_START == 0 (no warm start)
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_16_cr"), 53891.6, 0.1); //slow
 
 	// Integer on 2 stages
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
