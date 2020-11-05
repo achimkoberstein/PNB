@@ -1370,31 +1370,39 @@ protected:
 		//parameter_strings_.push_back("{}"); // default parameters
 		
 		// DETEQ
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
 
 		// BENDERS
 		// single core (1CORE), simple
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1}"); // single cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1}"); // single cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }"); // multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20 }"); // hybrid cut
 
 		// single core (1CORE), scenario wise warm start (SCWS)
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // single cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // single cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
 
+		// single core (1CORE), PNB_USE_FIRST_PHASE, PNB_INT_WARM_START_SCENARIO_WISE
+			// single cut
+		//parameter_strings_.push_back("{ \"PNB_USE_FIRST_PHASE\" : true, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
+
 		// multithread (MCORE), simple
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0 }"); // single cut (SC)
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0 }"); // single cut (SC)
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0 }"); // multi cut (MC)
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut (HC)
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut (HC)
 
 		// multithread (MCORE), scenario wise warm start (SCWS)
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // single cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // single cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+
+		// multithread (MCORE), PNB_USE_FIRST_PHASE, PNB_INT_WARM_START_SCENARIO_WISE
+			// single cut
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
 
 		// multithread (MCORE), stagewise warm start (STEWS)
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_STAGE_WISE\" }"); // single cut
@@ -1420,7 +1428,7 @@ protected:
 			// single cut
 		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
-		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 
 		// single core (1CORE), PNB_WARM_START = PNB_INT_WARM_START_SCENARIO_WISE
@@ -1432,6 +1440,10 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 40,  \"PNB_LP_MAJOR_IT_LIMIT\" : 10, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 			// multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
+
+		// single core (1CORE), PNB_USE_FIRST_PHASE, PNB_INT_WARM_START_SCENARIO_WISE
+			// single cut
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
 
 		// multithread (MCORE)
 			// single cut
@@ -1447,7 +1459,7 @@ protected:
 
 		// multithread (MCORE), PNB_WARM_START = PNB_INT_WARM_START_SCENARIO_WISE
 			// single cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
@@ -1456,6 +1468,10 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
+
+		// multithread (MCORE), PNB_USE_FIRST_PHASE, PNB_INT_WARM_START_SCENARIO_WISE
+			// single cut
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
 
 		//multithread (MCORE), PNB_WARM_START = PNB_INT_WARM_START_SCENARIO_WISE, PNB_LP_CUTS_FOR_FRACT (default is 100)
 		// PNB_LP_CUTS_FOR_FRACT == 10
@@ -1477,9 +1493,9 @@ protected:
 		// single core (1CORE)
 			// single cut
 		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
-		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
-		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
-		parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
 		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1 }");
@@ -1491,13 +1507,17 @@ protected:
 
 		// single core (1CORE), PNB_WARM_START = PNB_INT_WARM_START_SCENARIO_WISE
 			// single cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 			// multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 		
+		// single core (1CORE), PNB_USE_FIRST_PHASE, PNB_INT_WARM_START_SCENARIO_WISE
+			// single cut
+		//parameter_strings_.push_back("{ \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
+
 		// multithread (MCORE)
 			// single cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }"); // preprocessing
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }"); // preprocessing
 			// multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1 }"); // preprocessing
 		
@@ -1506,7 +1526,7 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 			// hybrid cut (20)
 			// multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
@@ -1520,6 +1540,10 @@ protected:
 			// hybrid cut (100)
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // preprocessing
 
+		// multithread (MCORE), PNB_USE_FIRST_PHASE, PNB_INT_WARM_START_SCENARIO_WISE
+			// single cut
+		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
+
 		//single core (1CORE), PNB_LP_CUTS_FOR_FRACT (default is 100)
 		// PNB_LP_CUTS_FOR_FRACT == 10
 			// single cut
@@ -1530,7 +1554,7 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_LP_CUTS_FOR_FRACT\" : 10 }"); // 3 switches
 		// PNB_LP_CUTS_FOR_FRACT == 50
 			// single cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40,  \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_LP_CUTS_FOR_FRACT\" : 50 }"); // preprocessing
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40,  \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_LP_CUTS_FOR_FRACT\" : 50 }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_LP_CUTS_FOR_FRACT\" : 50 }"); // 3 switches
 			// multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40,  \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_LP_CUTS_FOR_FRACT\" : 50 }"); // preprocessing
@@ -1544,11 +1568,11 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1,  \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\", \"PNB_CGP_EPSILON_RELATIVE\" : 0.0001 }"); // preprocessing
 			// PNB_CGP_EPSILON_RELATIVE == 0.05
 			// single cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_CGP_EPSILON_RELATIVE\" : 0.05 }"); // preprocessing
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_CGP_EPSILON_RELATIVE\" : 0.05 }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_CGP_EPSILON_RELATIVE\" : 0.05 }"); // preprocessing
 			// PNB_CGP_EPSILON_RELATIVE == 0.1
 			// single cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }"); // preprocessing
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }"); // preprocessing
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }"); // preprocessing
 			// PNB_CGP_EPSILON_RELATIVE == 0.2
 			// single cut
@@ -1722,16 +1746,17 @@ TEST_F(CollectInstanceSpecs, cap) {
 TEST_F(LiftAndProjectCutsTest, fast) {
 	// Binary 1st stage
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.3); // same characteristics as SNDP_TestCase_0
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_2"), -54250.00, 0.1); // 3 bin vars on 1st stage (in standard there are 2)
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_2"), -15250, 0.1);
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_3"), -15250, 0.1);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_9"), -19300, 0.1);
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_9"), -19300, 0.1); // relaxation solution == MIP
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_3"), -5000, 0.1); // cont in 1st stage
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_1"), -15000, 0.1); // domain cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_4"), -15000, 0.1); // domain cuts
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1); // domain cuts
+	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1); // domain cuts // relaxation solution == MIP
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1); // domain cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1); // feasibility cuts
 	
@@ -2098,7 +2123,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//second stage integrality is relaxed since some instances have int on the 2nd stage
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_EPSILON_RELATIVE, 0.000001);
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
-	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 3600);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 10800);
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 
 	//sndp_mini_tests
@@ -2137,8 +2162,8 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	
 	//rahmaniani - complete recourse
 	//from paper
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_32_cr"), 58242.3, 0.1);
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_16_cr"), 57214.1, 0.1);
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-2_32_cr"), 58242.3, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_16_cr"), 55844.8, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_32_cr"), 56158.6, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-4_64_cr"), 56803.7, 0.1);
@@ -2156,6 +2181,11 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_5_0-6_16_cr"), 84706.1, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_5_0_16_cr"), 86198.2, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r04_1_0-8_16_cr"), 25765.8, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_7_0_16_cr"), 25765.8, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r02_1_0_16_cr"), 25765.8, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r02_7_0_16_cr"), 25765.8, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r03_1_0_16_cr"), 25765.8, 0.1);
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r03_7_0_16_cr"), 25765.8, 0.1);
 
 	//other
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_1_0-2_64_cr"), 0.0, 0.1); // obj value?
@@ -2166,7 +2196,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_3_0_64_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_5_0_64_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_7_0_64_cr"), 0.0, 0.1); // obj value?
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_9_0_64_cr"), 0.0, 0.1); // obj value?
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_9_0_64_cr"), 0.0, 0.1); // obj value?
 
 	//sslp_SIPLIB
 	// from paper
@@ -2188,7 +2218,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_1"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_2"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf10/sslprf10_50_100_3"), 0.0, 0.1); // what is the correct solution?
-	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_1"), 0.0, 0.1); // what is the correct solution?
+	EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_50_5_1"), -110403, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_2"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_100_3"), 0.0, 0.1); // what is the correct solution?
 	//EXPECT_NEAR(solveSMPS("sslprf/sslprf15/sslprf15_100_10_1"), 0.0, 0.1); // what is the correct solution?
@@ -2236,10 +2266,10 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_100e"), -354.190, 0.1);
 
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000a"), -351.171, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000b"), -351.171, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000c"), -351.171, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000d"), -351.171, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000e"), -351.171, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_1000e"), -351.171, 0.1);
 
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000a"), -347.262, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000b"), -347.262, 0.1);
@@ -2247,18 +2277,18 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000d"), -347.262, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000e"), -347.262, 0.1);
 
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25a"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25b"), -253.602, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25a"), -253.602, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25b"), -253.602, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25c"), -253.602, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25d"), -253.602, 0.1);
-	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25e"), -253.602, 0.1);
+	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25e"), -253.602, 0.1);
 
 	//sslp_HAN
-	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_20_100_50"), -12345.6, 1.0);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_20_100_50"), -12345.6, 1.0);
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_20_100_200"), -12345.6, 1.0);
-	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_30_100_50"), -12345.6, 1.0);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_30_100_50"), -12345.6, 1.0);
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_30_100_200"), -12345.6, 1.0);
-	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_60_60_50"), -12345.6, 1.0);
+	EXPECT_NEAR(solveSMPS("han/sslp/sslp_60_60_50"), -12345.6, 1.0);
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_60_60_200"), -12345.6, 1.0);
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_90_45_50"), -12345.6, 1.0);
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_90_45_200"), -12345.6, 1.0);
@@ -2271,11 +2301,11 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//they are multistage and take much time
 
 	//rrtailassign_MAHER
-	//we exclude them us_rrtailassign instances because they have ints on the second stage
+	//us_rrtailassign instances have ints on the second stage
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_10"), -114935, 0.1); // what are the correct sol values of these instances?
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_100"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_20"), -114935, 0.1);
-	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_5"), -114935, 0.1);
+	EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_5"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_0", "maher/rrtailassign/qf_rrtailassign_0_50"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_1", "maher/rrtailassign/qf_rrtailassign_1_10"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/qf_rrtailassign_1", "maher/rrtailassign/qf_rrtailassign_1_100"), -114935, 0.1);
@@ -2289,9 +2319,11 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_0", "maher/rrtailassign/sw_rrtailassign_0_50"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/sw_rrtailassign_1_10"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/sw_rrtailassign_1_100"), -114935, 0.1);
-	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/sw_rrtailassign_1_20"), -114935, 0.1);
+	EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/sw_rrtailassign_1_20"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/sw_rrtailassign_1_5"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/sw_rrtailassign_1_50"), -114935, 0.1);
+	EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/us_rrtailassign_0_5"), -114935, 0.1);
+	EXPECT_NEAR(solveSMPS("maher/rrtailassign/sw_rrtailassign_1", "maher/rrtailassign/us_rrtailassign_1_5"), -114935, 0.1);
 
 	//smkp_SIPLIB
 	//EXPECT_NEAR(solveSMPS("SIPLIB/smkp/smkp_1"), -114935, 0.1); // what are the correct sol values of these instances?
@@ -2400,6 +2432,7 @@ TEST_F(LiftAndProjectCutsTest, for_LP) {
 	//cap_BODUR
 	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5"), -114935, 0.1); // what is the obj value for these instances?
 	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5"), -114935, 0.1);
+	EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_5"), -114935, 0.1);
 }
 
 TEST_F(NestedBendersTestInteger, lsfrp_GLUSHKO) {
@@ -2564,6 +2597,7 @@ TEST_F(NestedBendersTestInteger, cap) {
 
 TEST_F(LiftAndProjectCutsTest, slow) {
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/SNDP_20_4_2_1"), -87272, 0.1);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.5);
