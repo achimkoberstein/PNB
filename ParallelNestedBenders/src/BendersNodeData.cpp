@@ -502,6 +502,7 @@ void Parameter::init()
 	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
     parameter_.put(PNB_RELAXATION, 0); // Give stage from which we should solve the relaxed problem! (default: 0 - no relaxation, standard: 2 - allow integers in first-stage, but relax later stages!)
+    parameter_.put(PNB_USE_FIRST_PHASE, false);
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)
@@ -550,6 +551,7 @@ void Parameter::init()
 	SetParameterValue(PNB_AUTO_D2_ALGORITHM, false);
 	// LiftAndProject Cuts
 	parameter_.put(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED);
+    parameter_.put(PNB_CONT_PHASE_IT_LIMIT, 0);
 	parameter_.put(PNB_LP_ROUNDS_LIMIT, 0);
 	parameter_.put(PNB_LP_SWITCHES_LIMIT, 1);
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);

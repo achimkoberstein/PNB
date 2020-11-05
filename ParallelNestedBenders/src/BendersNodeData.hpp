@@ -61,6 +61,7 @@ namespace parallel_benders{
     const std::string PNB_STAGE_LEVEL = "PNB_STAGE_LEVEL";
 	const std::string PNB_AUTO_D2_ALGORITHM = "PNB_AUTO_D2_ALGORITHM";
 	const std::string PNB_LIFT_AND_P_METHOD = "PNB_LIFT_AND_P_METHOD";
+    const std::string PNB_CONT_PHASE_IT_LIMIT = "PNB_CONT_PHASE_IT_LIMIT"; // run this number of iteration for the MP relaxation before L&P round and major it
 	const std::string PNB_LP_ROUNDS_LIMIT = "PNB_LP_ROUNDS_LIMIT";
 	const std::string PNB_LP_SWITCHES_LIMIT = "PNB_LP_SWITCHES_LIMIT";
 	const std::string PNB_LP_MAJOR_IT_LIMIT = "PNB_LP_MAJOR_IT_LIMIT";
@@ -68,6 +69,7 @@ namespace parallel_benders{
 	const std::string PNB_LP_ALLOW_TEST_CASES = "PNB_LP_ALLOW_TEST_CASES";
     const std::string PNB_LP_PARALLEL_MODE = "PNB_LP_PARALLEL_MODE"; // what do we want to do parallel: schedule the generation of each L&P cut and/or make PNB CGP parallel
     const std::string PNB_LP_USE_CGP_PNB_CUTS = "PNB_LP_USE_CGP_PNB_CUTS"; // use optimality and feasibility cuts generated in L&P cuts CGP Benders
+    const std::string PNB_USE_FIRST_PHASE = "PNB_USE_FIRST_PHASE"; // whether to construct Benders cuts for stoch. problem with MP relaxation
 
 
     // Here come the double parameters

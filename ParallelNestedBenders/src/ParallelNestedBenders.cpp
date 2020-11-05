@@ -290,11 +290,11 @@ namespace parallel_benders {
     }
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) :
-    smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(nullptr),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
+    smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(nullptr),cont_phase_pnb_(nullptr),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),solved_counter_(0),
-        current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),lp_cuts_timer_(4),maximal_solution_time_(0),solution_code_(0),
+        current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),cont_phase_it_limit_(0),use_first_phase_(false),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),solved_counter_(0),
+        current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(5),lp_cuts_timer_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_dual_cgp_node_data_mutex_(),lp_round_cuts_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
 		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(false),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
@@ -667,6 +667,7 @@ namespace parallel_benders {
 
         // Solve LP relaxation instead IP problem?
         solve_relaxation_ = param.get(PNB_RELAXATION,0);
+        use_first_phase_ = param.get(PNB_USE_FIRST_PHASE, false);
 
         // Set numerical issue handling for sequencing protocols
         old_discrepancies_.resize(num_stages_,infinity_);
@@ -682,6 +683,7 @@ namespace parallel_benders {
 
 		// LiftAndProject cuts
 		lift_and_p_method_ = param.get(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED);
+        cont_phase_it_limit_ = param.get(PNB_CONT_PHASE_IT_LIMIT, 0);
 		lp_rounds_limit_ = param.get(PNB_LP_ROUNDS_LIMIT, 0);
 		lp_switches_limit_ = param.get(PNB_LP_SWITCHES_LIMIT, 1);
 		lp_major_it_limit_ = param.get(PNB_LP_MAJOR_IT_LIMIT, 1);
@@ -706,6 +708,11 @@ namespace parallel_benders {
         if (integer_problems_[0]) { // In the first stage.
             LOG(INFO) << "Your problem contains first-stage integer variables.";
         }
+        else {
+            use_first_phase_ = false;
+            cont_phase_it_limit_ = 0;
+            lp_rounds_limit_ = 0;
+        }
         std::vector<int> new_columns(num_stages_, 0);
         if (non_staircase_problem_) {
             // We need to generate the non1300-staircase constraints
@@ -723,6 +730,9 @@ namespace parallel_benders {
         if (integer_problems_[0] && solve_relaxation_ == 1) { // stages are indexed as 0,1,2...
             integer_problems_[0] = false;
             LOG(INFO) << "We solve the LP relaxation for stage 1.";
+            use_first_phase_ = false;
+            cont_phase_it_limit_ = 0;
+            lp_rounds_limit_ = 0;
         }
         for (int i = 1; i < num_stages_; i++) {
             LOG_IF(WARNING, integer_problems_[i]) << "Your problem contains integer variables at stage " << i + 1 << ".";
@@ -774,6 +784,24 @@ namespace parallel_benders {
             InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
             AdjustProblem(); // We need to set the important properties again!
             // Best way would be to just recreate the benders_node_data tree from scratch!
+        }
+        if (cont_phase_it_limit_ && lp_rounds_limit_ == 0) {
+            LOG(INFO) << "Usage of continuous phase is not implemented for the case when L&P round limit = 0";
+            solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+            solved_counter_++;
+            return;
+        }
+        if ((cont_phase_it_limit_ || use_first_phase_) && start_solution_ != PNB_INT_NO_START_SOLUTION) {
+            LOG(INFO) << "Usage of continuous phase and first phase is not implemented for the case when start solution is used as well";
+            solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+            solved_counter_++;
+            return;
+        }
+        if ((cont_phase_it_limit_ || use_first_phase_) && num_stages_ > 2) {
+            LOG(INFO) << "Usage of continuous phase and first phase is not implemented multistage stochastic models.";
+            solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+            solved_counter_++;
+            return;
         }
 
         if (instance_specs_to_file_) {
@@ -929,6 +957,7 @@ namespace parallel_benders {
             cgp_pnb->problem_name_ = problem_name_;
             cgp_pnb->instance_name_ = instance_name_ + "_CGP_PNB";
             cgp_pnb->Init();
+            assert(!cgp_pnb->cont_phase_it_limit_ && !cgp_pnb->use_first_phase_);
         }
         {
             std::lock_guard<std::mutex> unique_lock(cgp_pnb_map_mutex_);
@@ -1262,6 +1291,9 @@ namespace parallel_benders {
 					current_iteration_++;
 					minor_iteration_++;
 					uncritical_iteration_counter_++;
+                    solution_times_.Start(4);
+                    HandleContinuousPhase();
+                    solution_times_.Stop(4);
 				}
 				if (lp_rounds_limit_) { // we use L&P cuts
 					fractional_variables_.clear();
@@ -2467,6 +2499,10 @@ namespace parallel_benders {
         
         // Solvers
         other->osi_solver_ = osi_solver_->clone(true);
+        if (cont_phase_pnb_) {
+            assert(false && "Never tested");
+            other->cont_phase_pnb_ = cont_phase_pnb_->clone();
+        }
         // clone thread solvers
         for (auto id_solver_pair : osi_solver_map_) {
             assert(false && "It might be not guaranteed that the same solver is not copied to multiple threads and the other thread has no solver");
@@ -2571,7 +2607,9 @@ namespace parallel_benders {
         other->relative_epsilon_ = relative_epsilon_;
         other->current_iteration_ = current_iteration_;
         other->insubstantial_iteration_ = insubstantial_iteration_;
-        //other->max_iteration_ = max_iteration_; set to 5000 in init list of constructor
+        other->max_iteration_ = max_iteration_;
+        other->cont_phase_it_limit_ = cont_phase_it_limit_;
+        other->use_first_phase_ = use_first_phase_;
         other->minor_iteration_ = minor_iteration_;
         other->major_iteration_ = major_iteration_;
         other->feasible_iteration_ = feasible_iteration_;
@@ -2881,6 +2919,9 @@ namespace parallel_benders {
         bool build_subproblem(false);
         if (!seperate_first_stage_solver_ || current_stage_ > 0) {
             build_subproblem = true;
+        }
+        else if (current_stage_ == 0 && lp_switch_counter_ > 0) { // we definitely have build MP
+            build_subproblem = false;
         }
         // we have already build MP for PNB CGP in SetLnPCGPRoundSpecifics()
         // we do not need to rebuild MP in first iteration for LnP rounds
@@ -4098,6 +4139,7 @@ namespace parallel_benders {
     {
         // Delete all solver instances 
         delete osi_solver_;
+        delete cont_phase_pnb_;
 		for( auto id_solver_pair: osi_solver_map_ ){
             delete id_solver_pair.second;
         }
@@ -6499,7 +6541,7 @@ namespace parallel_benders {
 				else
 					it = benders_node_pointer->epigraph_cuts_.end();
 			}
-			LOG_IF(FATAL, current_iteration_ == 1 && generate_lp_cuts_) << "Is it a problem?";  //changed_aggregation_level_ should be changed if we build lp cut in 1st iteration. Right?
+			LOG_IF(FATAL, current_iteration_ == 1 && generate_lp_cuts_ && !cont_phase_it_limit_ && !use_first_phase_) << "Is it a problem?";  //changed_aggregation_level_ should be changed if we build lp cut in 1st iteration. Right?
 			benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
 
 			for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
@@ -8133,7 +8175,7 @@ namespace parallel_benders {
 			// We need to activate the theta variables!
 			for (int i = 0; i < benders_node_pointer->num_thetas_; i++){
 				osi_solver->setObjCoeff(benders_node_pointer->cols_+i,benders_node_pointer->active_aggregates_[i] ? 1.0 : 0.0);
-				LOG_IF(FATAL, lp_rounds_limit_ && !benders_node_pointer->active_aggregates_[i] && "What happens when theta for L&P cuts is not active?");
+				LOG_IF(FATAL, lp_rounds_limit_ && !benders_node_pointer->active_aggregates_[i] && !cont_phase_it_limit_ && !use_first_phase_ && "What happens when theta for L&P cuts is not active?");
             }
 		}
 
@@ -9162,6 +9204,123 @@ namespace parallel_benders {
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
         d_square_c_rhs_timer_ += start_time;
 
+    }
+
+    void ParallelNestedBenders::HandleContinuousPhase()
+    {
+        int cont_phase_pnb_it_limit = cont_phase_it_limit_;
+        if (current_iteration_ == 1 && use_first_phase_) {
+            cont_phase_pnb_it_limit = 10000; // basically means "solve it to optimality"
+        }
+
+        if (!cont_phase_pnb_it_limit) {
+            return;
+        }
+
+        parallel_benders::Parameter cont_phase_param = Parameter(parameter_); // TODO: does copy work
+        cont_phase_param.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
+        cont_phase_param.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
+
+        assert(cont_phase_pnb_ == nullptr && "Before relaxation phase is implemented it should be not initialized in FirstPhase");
+        if (!cont_phase_pnb_) {
+            cont_phase_pnb_ = new ParallelNestedBenders(smi_);
+            cont_phase_pnb_->parameter_ = cont_phase_param;
+            cont_phase_pnb_->testset_name_ = testset_name_;
+            cont_phase_pnb_->problem_name_ = problem_name_;
+            cont_phase_pnb_->instance_name_ = instance_name_ + "_FIRST_PHASE";
+            cont_phase_pnb_->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
+            cont_phase_pnb_->Init();
+            cont_phase_pnb_->max_iteration_ = cont_phase_pnb_it_limit;
+            cont_phase_pnb_->max_similarity_iteration_ = 200;
+        }       
+        assert(!cont_phase_pnb_->cont_phase_it_limit_ && !cont_phase_pnb_->use_first_phase_);
+        cont_phase_pnb_->Solve();
+
+        std::map<int, std::string> solution_code_map = { {PNB_SOLUTION_OPTIMAL, "PNB_SOLUTION_OPTIMAL"},
+                {PNB_SOLUTION_INFEASIBLE, "PNB_SOLUTION_INFEASIBLE"},
+                {PNB_SOLUTION_UNBOUNDED, "PNB_SOLUTION_UNBOUNDED"},
+                {PNB_SOLUTION_TIME_LIMIT, "PNB_SOLUTION_TIME_LIMIT"},
+                {PNB_SOLUTION_ITERATION_LIMIT, "PNB_SOLUTION_ITERATION_LIMIT"},
+                {PNB_SOLUTION_SIMILARITY_LIMIT, "PNB_SOLUTION_SIMILARITY_LIMIT"},
+                {PNB_SOLUTION_GAP_NONIMPROVING, "PNB_SOLUTION_GAP_NONIMPROVING"},
+                {PNB_SOLUTION_SUBSOLVER_PROBLEM, "PNB_SOLUTION_SUBSOLVER_PROBLEM"},
+                {PNB_SOLUTION_PARAMETER_PROBLEM, "PNB_SOLUTION_PARAMETER_PROBLEM"},
+                {PNB_SOLUTION_UPPER_LESS_LOWER_BOUND, "PNB_SOLUTION_UPPER_LESS_LOWER_BOUND"},
+                {PNB_SOLUTION_CVAR_H_NEGATIVE, "PNB_SOLUTION_CVAR_H_NEGATIVE"} };
+        std::vector<int> handled_solution_codes = { PNB_SOLUTION_INFEASIBLE, PNB_SOLUTION_UNBOUNDED, PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT,
+                                                    PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_UPPER_LESS_LOWER_BOUND };
+
+        if (std::find(handled_solution_codes.begin(), handled_solution_codes.end(), cont_phase_pnb_->solution_code_) != handled_solution_codes.end()) {
+            std::stringstream log_message("CONTINUOUS (FIRST) PHASE solution code is ");
+            log_message << solution_code_map[cont_phase_pnb_->solution_code_] << " after ";
+            log_message << (cont_phase_pnb_->current_iteration_ == 1 ? "the first iteration. " : "2nd or later iteration. ");
+            if (cont_phase_pnb_->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
+                cont_phase_pnb_->upper_bound_ = cont_phase_pnb_->iteration_u_and_l_bounds_.back().first; // if problem is infeasible, UB is set to infinity. Let us revert it
+            }
+            LogSpecialCase(true, log_message.str(), 0.0);
+        }
+        else if (cont_phase_pnb_->solution_code_ != PNB_SOLUTION_OPTIMAL) {
+            LOG(FATAL) << "CONT (FIRST) PHASE solution code is other than: PNB_SOLUTION_INFEASIBLE, PNB_SOLUTION_UNBOUNDED, PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT" <<
+                "PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_UPPER_LESS_LOWER_BOUND. Is it an ERROR?";
+        }
+        // Move cuts from first phase to pnb
+        BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
+        std::vector<BendersNodeData::cut_container*> cut_containers;
+        cut_containers.push_back(&cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_);
+        //cut_containers.push_back(&first_phase_pnb->tree_nodes_by_stage_[0][0]->feasibility_cuts_);  // probably feasibility cuts are not that useful
+        for (auto& cut_container : cut_containers) {
+            for (auto& cut_stuff : *cut_container) {
+                cut_stuff->cut_creation_iteration_ = current_iteration_;
+                AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);
+            }
+        }
+        if (!cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty()) {
+           benders_node_pointer->num_thetas_ = cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_;
+           benders_node_pointer->changed_aggregation_level_ = true;
+            createRoundRobinAggregation(tree_nodes_by_stage_[0][0]->getDataPtr(), tree_nodes_by_stage_[0][0]->numChildren(),benders_node_pointer->num_thetas_, (int)std::ceil((double)tree_nodes_by_stage_[0][0]->numChildren() /benders_node_pointer->num_thetas_), num_oda_aggregates_);
+           benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_); // Gets initialized with 0
+           benders_node_pointer->active_aggregates_.set();
+           benders_node_pointer->was_under_threshold_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_); // Gets initialized with 0
+        }
+        std::vector<int> can_use_bounds_solution_codes = { PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT, PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_OPTIMAL };
+        bool can_use_bounds = std::find(can_use_bounds_solution_codes.begin(), can_use_bounds_solution_codes.end(), cont_phase_pnb_->solution_code_) != can_use_bounds_solution_codes.end();
+        if (can_use_bounds) {
+            lower_bound_ = cont_phase_pnb_->lower_bound_; // LB from the first phase is valid for next phases (since it is the solution of relaxation by definition)
+        } 
+        bool integer_solution = true; // if solution is integer, it is feasible for integer problem and gives us a valid UB
+        assert(current_stage_ == 0);
+        for (int index : core_->getBinaryCols(current_stage_)) {
+            double value = cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[index];
+            double fractionality = abs(round(value) - value); // distance from 0 or 1
+            if (!CompareForEquality(fractionality, 0.0, integer_tolerance_)) {
+                assert(fractionality > 0 && fractionality <= 0.5);
+                integer_solution = false;
+                break;
+            }
+        }
+        if (integer_solution && can_use_bounds) {
+            //here we could also copy col_solution_ etc. (see StoreData()) As for now we do not need them
+			//and also we could copy members related to the UB
+            LOG(INFO) << "Solution of the integer relaxation in the first phase has integer solution (feasible for MIP problem)";
+            upper_bound_ = cont_phase_pnb_->upper_bound_;
+        }
+        // Copy warm start of MP and SP
+        if (warm_start_ && cont_phase_pnb_->warm_start_) {
+            assert(num_stages_ == cont_phase_pnb_->num_stages_);
+            for (int stage = 0; stage < num_stages_; stage++) { 
+                CoinWarmStart* ws;
+                if (cont_phase_pnb_->stage_data_[stage]->warm_start_) {
+                    ws = (cont_phase_pnb_->stage_data_[stage]->warm_start_.get())->clone();
+                    stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
+                }
+                for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
+                    if (cont_phase_pnb_->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
+                        ws = (cont_phase_pnb_->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
+                        tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
+                    }
+                }
+            }
+        }
     }
 
     void ParallelNestedBenders::HandleInitialSolutionProcedures()

@@ -94,6 +94,14 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations() const
 {
     return nested_benders_->current_iteration_;
 }
+int OsiStochasticParallelNestedBendersSolverInterface::getNumContPhasePnbIterations() const
+{   
+    int num_iter = 0;
+    if (nested_benders_->cont_phase_pnb_) {
+        num_iter = nested_benders_->cont_phase_pnb_->current_iteration_;
+    }
+    return num_iter;
+}
 int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterations() const
 {
     return nested_benders_->insubstantial_iteration_;
@@ -124,6 +132,24 @@ double OsiStochasticParallelNestedBendersSolverInterface::getLB() const
 double OsiStochasticParallelNestedBendersSolverInterface::getRelativeGap() const
 {
 	return parallel_benders::ComputeRelativeGap(nested_benders_->upper_bound_, nested_benders_->lower_bound_, 1e-10);
+}
+
+double OsiStochasticParallelNestedBendersSolverInterface::getIntegerGap() const
+{
+    parallel_benders::ParallelNestedBenders* cont_phase_pnb = nested_benders_->cont_phase_pnb_;
+    
+    assert(nested_benders_->cont_phase_it_limit_ == 0 && "We cannot take the solution of cont_phase_pnb_ in this case");
+    if (nested_benders_->integer_problems_.none()) {
+        return 0.0;
+    }
+    else if (cont_phase_pnb && cont_phase_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL && nested_benders_->solved_counter_ > 0 && nested_benders_->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) {
+        assert(cont_phase_pnb->solved_counter_ == 1); // should be solved at least but not more than once
+        // if we used cont phase, we could take UB from the first iteration, since it will be the relaxation solution
+        return parallel_benders::ComputeRelativeGap(nested_benders_->upper_bound_, cont_phase_pnb->upper_bound_, 1e-10);
+    }
+    else {
+        return -1.0;
+    }
 }
 
 void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
@@ -354,6 +380,18 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts() co
     if ( !nested_benders_->stage_data_.empty())
         for (int i = 0; i < nested_benders_->num_stages_; i++){
             cut_counter += nested_benders_->stage_data_[i]->added_optimality_cuts_;
+        }
+    return cut_counter;
+}
+
+int OsiStochasticParallelNestedBendersSolverInterface::getNumContinuousOptimalityCuts() const
+{
+    assert(nested_benders_);
+    assert(!nested_benders_->cont_phase_it_limit_ && "If we use continuous phase (not only first phase) we need to excluded opt cuts that were taken from the main loop");
+    int cut_counter = 0;
+    if (nested_benders_->cont_phase_pnb_ && !nested_benders_->cont_phase_pnb_->stage_data_.empty())
+        for (int i = 0; i < nested_benders_->cont_phase_pnb_->num_stages_; i++) {
+            cut_counter += nested_benders_->cont_phase_pnb_->stage_data_[i]->added_optimality_cuts_;
         }
     return cut_counter;
 }

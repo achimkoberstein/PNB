@@ -168,6 +168,7 @@ private:
     // ODA-Level methods!
     void BuildAndSolveOnDemandAccuracyProblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
+    void HandleContinuousPhase(); // relax the integrality constraints in the MP, solve the problem with PNB and add the continous Benders cuts to the cut container
     void HandleInitialSolutionProcedures();
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
     void AddCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
@@ -185,6 +186,7 @@ private:
     SmiCoreData* core_;
     OsiSolverInterface* osi_solver_;
     std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_;
+    ParallelNestedBenders* cont_phase_pnb_;
     // Scenario Tree that contains problem and solution data
     SmiScenarioTree<BendersNodeData*> tree_;
     std::vector<std::vector<SmiTreeNode<BendersNodeData*>* > > tree_nodes_by_stage_;
@@ -216,7 +218,9 @@ private:
     // Solution process
     int current_iteration_;
     int insubstantial_iteration_;
-    const int max_iteration_;
+    int max_iteration_;
+    int cont_phase_it_limit_;
+    bool use_first_phase_;
     int minor_iteration_;
     int major_iteration_;
     int feasible_iteration_;
@@ -283,7 +287,7 @@ private:
     Timer timer_; // timer for stage 1, stage 2, ..., Init() + time until main loop in Solve() + Reset()
     Timer wall_clock_solution_time_; // timer of the main loop in Solve()
     Timer detailed_timer_; // 0 - build master (incl. as part of L&P cuts since will be used for major iteration), 1 - build projections, 2 - build oda [never used], 3 - build subs: sum of 2nd stage: node->build_time_, 4 - cut generation: sum of 2nd stage node->cut_generation_time_
-    Timer solution_times_; // 0 - solve master (excl. solving the relaxation for L&P cuts), 1 - solve projections, 2 - solve oda, 3 - solve sub: sum of 2nd stage: node->solution_time_
+    Timer solution_times_; // 0 - solve master (excl. solving the relaxation for L&P cuts), 1 - solve projections, 2 - solve oda, 3 - solve sub: sum of 2nd stage: node->solution_time_, 4 - cont phase wall clock
     Timer lp_cuts_timer_; // 0 - solve MP relaxation, 1 - build and solve PNB CGP, 2 - build and solve Dual CGP, 3 - L&P generation wall clock time
 
     int maximal_solution_time_;
