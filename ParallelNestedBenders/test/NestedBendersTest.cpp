@@ -807,8 +807,8 @@ protected:
 		std::stringstream s;
 		// Header line of File should be this one
 		// We need to write the header line for this file
-		s << "Testset;Problem;Instance;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Return Code;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
-		s << "Created Optimality Cuts;Created Feasibility Cuts;Created Epigraph Cuts;Created Strengthened Epigraph Cuts;Created Plain Epigraph Cuts;Created Domain Cuts;Solved L&P CGPs;";
+		s << "Testset;Problem;Instance;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Return Code;Cont Phase Iterations;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
+		s << "Created Optimality Cuts;Created Continuous Optimality Cuts;Created Feasibility Cuts;Created Epigraph Cuts;Created Strengthened Epigraph Cuts;Created Plain Epigraph Cuts;Created Domain Cuts;Solved L&P CGPs;Integer Gap;";
 		// //TODO: Iterate over property tree
 		BOOST_FOREACH(boost::property_tree::ptree::value_type & v, benders_parameter_.parameter_)
 		{
@@ -821,7 +821,7 @@ protected:
 			s << "Time Stage " << i << ";";
 		}
 		// Detailled Time for several tasks
-		s << "Time Master;Time Projection;Time ODA;Time Sub;Build Master;Build Projection;Build ODA;Build Sub;Generate Cut;";
+		s << "Time Master;Time Projection;Time ODA;Time Sub;Build Master;Build Projection;Build ODA;Build Sub;Generate Cut;Time Cont Phase;";
 		// L&P Cuts related timers
 		s << "Solve MP Relaxation;Build and Solve PNB CGP;Build and Solve Dual CGP;Generate L&P Cut;";
 		// Date/Timestamp
@@ -890,13 +890,16 @@ protected:
 		std::string lb_string("lb");
 		std::string relative_gap_string("relative_gap");
 		std::string optimality_cuts_string("optimality_cuts");
+		std::string cont_optimality_cuts_string("cont_optimality_cuts");
 		std::string feasibility_cuts_string("feasibility_cuts");
 		std::string epigraph_cuts_string("epigraph_cuts");
 		std::string epigraph_str_cuts_string("epigraph_strengthened_cuts");
 		std::string epigraph_plain_cuts_string("epigraph_plain_cuts");
 		std::string domain_cuts_string("domain_cuts");
 		std::string lp_cgp_problems_string("lp_cgp_problems");
+		std::string integer_gap_string("integer_gap");
 		std::string return_code_string("return_code");
+		std::string cont_phase_iterations_string("cont_iterations");
 		std::string critical_iteration_sequence_length_string("critical_iteration_sequence");
 		std::string critical_iterations_string("critical_iterations");
 		std::string time_stage_0_string("stage0");
@@ -914,6 +917,7 @@ protected:
 		std::string computing_time_1_string("computing1");
 		std::string computing_time_2_string("computing2");
 		std::string computing_time_3_string("computing3");
+		std::string computing_time_4_string("computing4");
 		std::string building_time_0_string("building0");
 		std::string building_time_1_string("building1");
 		std::string building_time_2_string("building2");
@@ -992,6 +996,7 @@ protected:
 				}
 			}
 			int created_opt_cuts = nested_benders.getNumOptimalityCuts();
+			int created_cont_opt_cuts = nested_benders.getNumContinuousOptimalityCuts();
 			int created_feas_cuts = nested_benders.getNumFeasibilityCuts();
 			int created_epigraph_cuts = nested_benders.getNumEpigraphCuts();
 			int created_str_epigraph_cuts = nested_benders.getNumStrengthenedEpigraphCuts();
@@ -1028,12 +1033,15 @@ protected:
 			values_map[lb_string] += nested_benders.getLB();
 			values_map[relative_gap_string] += nested_benders.getRelativeGap();
 			values_map[optimality_cuts_string] += created_opt_cuts;
+			values_map[cont_optimality_cuts_string] += created_cont_opt_cuts;
 			values_map[feasibility_cuts_string] += created_feas_cuts;
 			values_map[epigraph_cuts_string] += created_epigraph_cuts;
 			values_map[epigraph_str_cuts_string] += created_str_epigraph_cuts;
 			values_map[epigraph_plain_cuts_string] += created_plain_epigraph_cuts;
 			values_map[domain_cuts_string] += created_domain_cuts;
 			values_map[lp_cgp_problems_string] += solved_lp_cgp_problems;
+			values_map[integer_gap_string] += nested_benders.getIntegerGap();
+			values_map[cont_phase_iterations_string] += nested_benders.getNumContPhasePnbIterations();
 			values_map[return_code_string] += nested_benders.getSolutionCode();
 			values_map[critical_iterations_string] += nested_benders.getNumCriticalIteration();
 			values_map[critical_iteration_sequence_length_string] += nested_benders.getMaximalLengthOfCriticalIterationSequence();
@@ -1115,9 +1123,9 @@ protected:
 			value /= repetitions_;
 		}
 		// Prepare outputstring, according to ordering from above (bad coding..)
-		aggregated_s << testset_problem_instance.str() << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";" << values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";" << values_map[relative_gap_string] << ";" << values_map[return_code_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << ";" << values_map[solver_time_string] << ";" << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
+		aggregated_s << testset_problem_instance.str() << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";" << values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";" << values_map[relative_gap_string] << ";" << values_map[return_code_string] << ";" << values_map[cont_phase_iterations_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << ";" << values_map[solver_time_string] << ";" << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
 		// Write num cuts
-		aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";" << values_map[epigraph_cuts_string] << ";" << values_map[epigraph_str_cuts_string] << ";" << values_map[epigraph_plain_cuts_string] << ";" << values_map[domain_cuts_string] << ";" << values_map[lp_cgp_problems_string] << ";";
+		aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[cont_optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";" << values_map[epigraph_cuts_string] << ";" << values_map[epigraph_str_cuts_string] << ";" << values_map[epigraph_plain_cuts_string] << ";" << values_map[domain_cuts_string] << ";" << values_map[lp_cgp_problems_string] << ";" << values_map[integer_gap_string] << ";";
 
 		BOOST_FOREACH(boost::property_tree::ptree::value_type & v, benders_parameter_.parameter_)
 		{
@@ -1140,6 +1148,7 @@ protected:
 		aggregated_s << values_map[computing_time_1_string] << ";";
 		aggregated_s << values_map[computing_time_2_string] << ";";
 		aggregated_s << values_map[computing_time_3_string] << ";";
+		aggregated_s << values_map[computing_time_4_string] << ";";
 		aggregated_s << values_map[building_time_0_string] << ";";
 		aggregated_s << values_map[building_time_1_string] << ";";
 		aggregated_s << values_map[building_time_2_string] << ";";

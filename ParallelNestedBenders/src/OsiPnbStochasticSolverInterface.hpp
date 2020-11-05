@@ -41,6 +41,7 @@ public:
     double getSolutionValueForScenario(int scenario);
 
     int getNumOptimalityCuts() const;
+    int getNumContinuousOptimalityCuts() const;
     int getNumFeasibilityCuts() const;
 	int getNumEpigraphCuts() const;
     int getNumStrengthenedEpigraphCuts() const;
@@ -49,6 +50,7 @@ public:
     int getLpCgpCounter() const;
     void setParameters(const parallel_benders::Parameter& parameters);
     int getNumIterations() const;
+    int getNumContPhasePnbIterations() const;
 	const parallel_benders::Parameter& getParameters() const;
     const parallel_benders::Timer& getTimer() const;
     const parallel_benders::Timer& getBuildTimer() const;
@@ -67,6 +69,7 @@ public:
 	double getLB() const;
 
 	double getRelativeGap() const;
+    double getIntegerGap() const;
 
     int getNumCriticalIteration() const ;
     int getMaximalLengthOfCriticalIterationSequence() const;
