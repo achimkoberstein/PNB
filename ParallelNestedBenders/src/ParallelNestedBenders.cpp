@@ -2149,10 +2149,10 @@ namespace parallel_benders {
                     }
                 }
                 else if ( current_stage_ == 0){
-					if (!generate_lp_cuts_) {
 						std::cout << "Lower Bound:  " << lower_bound_ << "\n";
 						std::cout << "Upper Bound:  " << upper_bound_ << "\n";
 						std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_, lower_bound_) << std::endl;
+                    if (!generate_lp_cuts_) {
                         iteration_u_and_l_bounds_.push_back(make_pair(upper_bound_, lower_bound_));
 					}
                 }
@@ -3011,8 +3011,7 @@ namespace parallel_benders {
                 stage_data_[current_stage_]->lp_cgp_counter_ += num_cuts; // every cut requires CGP to solve
 				
 				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0);
-				std::cout << "Solution of MP relaxation: " << benders_tree_node_pointer->getDataPtr()->solution_value_ + theta_sum << std::endl;
-                std::cout << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate (according to PNB_LP_CUTS_FOR_FRACT parameter)." << std::endl;
+				std::cout << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate (according to PNB_LP_CUTS_FOR_FRACT parameter)." << std::endl;
 
                 assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
                 // Set round specifics to all dual cgp
@@ -3653,14 +3652,15 @@ namespace parallel_benders {
             }
         }
 
-		if ( !generate_lp_cuts_ && !num_normaliz_cols) { // for L&P cuts we force to solve the relaxation - it is not a lower bound. The same when we solve Alph-Normalization of L&P PNB CGP 
+		bool lowerer_lb_because_of_relaxation = generate_lp_cuts_ && solution_value < (benders_node_pointer->lower_bound_ + zero_tolerance_);
+		if (!lowerer_lb_because_of_relaxation && !num_normaliz_cols ) { // do not update when we solve Alph-Normalization of L&P PNB CGP 
 			benders_node_pointer->lower_bound_ = solution_value;
 		}
 
         if ( current_stage_ == 0){ // This works in the multithreaded cases, as we have only one thread for the first stage problem{
             // We are again at stage 0, test for new upper bound!
             old_lower_bound_ = lower_bound_; // Set old lower bound to last lower bound. If we added a feasibility cut lately, we have to take special care.
-            if ( !warm_up_ && !generate_lp_cuts_)
+            if ( !warm_up_ && !lowerer_lb_because_of_relaxation)
                 lower_bound_ = benders_node_pointer->lower_bound_;
             if (num_theta == 0 || benders_node_pointer->unbounded_){// We have no thetas yet or whole problem is unbounded!
                 lower_bound_ = -infinity_;
