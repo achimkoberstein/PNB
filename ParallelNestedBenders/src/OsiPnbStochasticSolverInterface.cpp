@@ -182,6 +182,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             LOG(ERROR) << "No scenarios available.";
         }
         int relaxation = nested_benders_->parameter_.GetIntParamValue(parallel_benders::PNB_RELAXATION);
+        //osi_->setHintParam(OsiDoPresolveInInitial, true); // true be default
         // Model statistics
         std::cout << "Variables: " << osi_->getNumCols() << " Rows: " << osi_->getNumRows() << " Elements: " << osi_->getNumElements() << " Integer: " << osi_->getNumIntegers() << std::endl;
         solution_time.Stop(1);
@@ -199,7 +200,8 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 			CPXsetintparam(envPtr,CPX_PARAM_THREADS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_NUM_CPU,0));
             //CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.999);
             CPXsetdblparam(envPtr,CPX_PARAM_TILIM,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600));
-            //CPXsetintparam(envPtr,CPX_PARAM_PREIND,0);
+            //CPXsetintparam(envPtr,CPX_PARAM_PREIND,CPX_OFF); // on by default, do not set it in this way, will be overwritten in osi_->branchAndBound()
+            //CPXsetintparam(envPtr, CPX_PARAM_AGGIND, CPX_ON); // on by default
             // We may want to set a start solution!
 
 			//PNB_TOLERANCE_ZERO
