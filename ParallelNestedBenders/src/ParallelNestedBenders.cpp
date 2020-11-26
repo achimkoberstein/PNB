@@ -2912,7 +2912,7 @@ namespace parallel_benders {
             detailed_timer_.Start(0);
         }
 #ifdef COMPUTING_TIMER
-        double current_time = CoinGetTimeOfDay();
+        double current_time = timer_.Now();
         double elapsed_build_time = 0;
 #endif // COMPUTING_TIMER
 
@@ -2949,8 +2949,8 @@ namespace parallel_benders {
         }
 #ifdef COMPUTING_TIMER
         if ( current_stage_ == 1){
-            elapsed_build_time = CoinGetTimeOfDay()-current_time;
-            current_time = CoinGetTimeOfDay();
+            elapsed_build_time = timer_.Now()-current_time;
+            current_time = timer_.Now();
         }
 #endif // COMPUTING_TIMER
 
@@ -2978,11 +2978,11 @@ namespace parallel_benders {
         }
 #ifdef COMPUTING_TIMER
         if ( current_stage_ == 1){
-            double elapsed_solution_time = CoinGetTimeOfDay()-current_time;
+            double elapsed_solution_time = timer_.Now()-current_time;
             benders_tree_node_pointer->getDataPtr()->build_time_ += elapsed_build_time;
             benders_tree_node_pointer->getDataPtr()->solution_time_ += elapsed_solution_time;
         }
-        current_time = CoinGetTimeOfDay();
+        current_time = timer_.Now();
 #endif // COMPUTING_TIMER
 
         // We only need to store data if we have a feasible solution for the subproblem.
@@ -3124,7 +3124,7 @@ namespace parallel_benders {
 
             // If we employ level decomposition, we need to construct and solve the problem, but not at the last stage!
 #ifdef COMPUTING_TIMER
-            current_time = CoinGetTimeOfDay()-current_time;
+            current_time = timer_.Now()-current_time;
             benders_tree_node_pointer->getDataPtr()->cut_generation_time_ += current_time;
 #endif
             if ( level_decomp_ && (current_stage_ == 0 || ( current_stage_ <= level_stage_ && forward_  && level_loop_backward_ ))){
@@ -5108,7 +5108,7 @@ namespace parallel_benders {
 		if (use_2nd_stage_info && !load_cut_stuff) {
 			assert(lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && "How to add the 2nd stage information (for theta var) to domain cut?");
 			
-            start_time = CoinGetTimeOfDay();
+            start_time = timer_.Now();
             cgp_pnb = GetLnP_PNB_CGP_ByThread();      
 
             //-- For every fract var (and every thread)
@@ -5142,13 +5142,9 @@ namespace parallel_benders {
                 old_cgp_pnb_feas_cuts_back--;
             }
             assert(!(cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() && cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.empty()) && "How can we end up here: Solve CGP PNB w/o optimality-like cuts");
-            
-#ifdef NDEBUG
-            SetLogging(google::ERROR); // no output for cgp_pnb_ in release
-#endif           
+                   
 			cgp_pnb->Solve();
-            lp_cuts_timer_.AddTime(1, CoinGetTimeOfDay() - start_time);
-            SetLogging(google::INFO);
+            lp_cuts_timer_.AddTime(1, timer_.Now() - start_time);
 
             std::map<int, std::string> solution_code_map = { {PNB_SOLUTION_OPTIMAL, "PNB_SOLUTION_OPTIMAL"},
                 {PNB_SOLUTION_INFEASIBLE, "PNB_SOLUTION_INFEASIBLE"},
@@ -5200,7 +5196,7 @@ namespace parallel_benders {
         OsiSolverInterface* dual_cgp_solver(nullptr);
         if (solve_dual_of_cgp) {
             if (!load_cut_stuff) {
-                start_time = CoinGetTimeOfDay();
+                start_time = timer_.Now();
                 assert(current_stage_ == 0);
                 // similar to GetSolverByThread()
                 std::map<boost::thread::id, OsiSolverInterface*>::iterator it;
@@ -5301,14 +5297,13 @@ namespace parallel_benders {
                 else {
                     SetAlphaNormalization(dual_cgp_solver, false);
                 }
-                lp_cuts_timer_.AddTime(2, CoinGetTimeOfDay() - start_time);
+                lp_cuts_timer_.AddTime(2, timer_.Now() - start_time);
 
-                start_time = CoinGetTimeOfDay();
+                start_time = timer_.Now();
                 SolveSolverInterface(dual_cgp_solver);
-                lp_cuts_timer_.AddTime(4, CoinGetTimeOfDay() - start_time);
+                lp_cuts_timer_.AddTime(4, timer_.Now() - start_time);
                 {
-                    std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-                    DLOG_IF(INFO, dual_cgp_solver->isProvenOptimal()) << "Fract var with index " << fractional_variable.first << ": Solution of " << (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? "Alpha" : "Zeta") << "-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
+                    DLOG_IF(INFO, log_level_ <= google::INFO && dual_cgp_solver->isProvenOptimal()) << "Fract var with index " << fractional_variable.first << ": Solution of " << (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? "Alpha" : "Zeta") << "-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue();
                 }
 
                 std::stringstream suffix;
@@ -5556,18 +5551,18 @@ namespace parallel_benders {
 
         // Clear internal structures of CGP PNB (or we could simply delete it)
         if (cgp_pnb != nullptr) {
-            start_time = CoinGetTimeOfDay();
+            start_time = timer_.Now();
             if (cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->alpha_normalized_) {
                 assert(false && "Do we really want it");
                 SetAlphaNormalization(cgp_pnb->osi_solver_, false);
             }
             cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
             cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
-            lp_cuts_timer_.AddTime(1, CoinGetTimeOfDay() - start_time);
+            lp_cuts_timer_.AddTime(1, timer_.Now() - start_time);
         }
 
         if (dual_cgp_solver != nullptr) {
-            start_time = CoinGetTimeOfDay();
+            start_time = timer_.Now();
             // Delete new L&P CGP cuts
             int num_cgp_cuts_to_delete = dual_cgp_solver->getNumRows() - start_lp_round_cuts_rows;
             std::vector<int> row_indices(num_cgp_cuts_to_delete);
@@ -5588,7 +5583,7 @@ namespace parallel_benders {
             vallist = { 0.0, 0.0 };
             CPXchgcoeflist(env_ptr, lp_ptr, 2, rowlist.data(), collist.data(), vallist.data());
             // TODO: get rid of direct Cplex interface call
-            lp_cuts_timer_.AddTime(2, CoinGetTimeOfDay() - start_time);
+            lp_cuts_timer_.AddTime(2, timer_.Now() - start_time);
         }
 	}
 
