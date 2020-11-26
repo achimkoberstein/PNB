@@ -512,10 +512,14 @@ struct RowOrderedSparseMatrixPointer{
     const int* start_;
 };
 
+typedef chrono::high_resolution_clock wall_clock;
+
 class Timer {
 public:
     explicit Timer(int stgs) : stages_(stgs),start_time_(stages_,0.0),overall_time_(stages_,0.0), overall_time_mutex_() {}
     ~Timer() { }
+
+    double Now();
 
     void Start(int stg);
     void Stop(int stg);

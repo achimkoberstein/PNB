@@ -21,6 +21,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/thread.hpp>
 
 #include "OsiCpxSolverInterface.hpp"
 //#include "OsiGrbSolverInterface.hpp"
@@ -38,6 +39,75 @@
 #include "ilcplex/cplex.h"
 #include "ilcplex/cpxconst.h"
 
+class TimerTest : public ::testing::Test {
+public:
+	typedef std::chrono::high_resolution_clock wall_clock;
+
+	std::atomic<int> wall_thread_timer; // milliseconds
+	parallel_benders::Timer pnb_thread_timer;
+
+	void infiniteSumApprox(std::mutex& cout_mutex, int repetition, int log_every_it) {
+		// Start timers
+		auto begin_wall = wall_clock::now();
+		double begin_pnb = pnb_thread_timer.Now();
+		
+		double sum = 0;
+		double add = 1;
+
+		int iterations = 1000000;
+		for (int i = 0; i < iterations; i++) {
+			sum += add;
+			add /= 2.0;
+			
+			if (i % log_every_it == 0) {
+				//std::lock_guard<std::mutex> unique_lock(cout_mutex);
+				std::cout.setstate(std::ios_base::failbit);
+				DLOG(INFO) << "Thread: " << boost::this_thread::get_id() << " Repetition: " << repetition << " Iteration: " << i << std::endl;
+				//std::cout << "Thread: " << boost::this_thread::get_id() << " Repetition: " << repetition << " Iteration: " << i << std::endl;
+			}
+		}
+		//this_thread::sleep_for(chrono::seconds(5)); // for testing CPU time
+		int duration = std::chrono::duration_cast<std::chrono::milliseconds>(wall_clock::now() - begin_wall).count();
+		wall_thread_timer += duration;
+		pnb_thread_timer.AddTime(0, pnb_thread_timer.Now() - begin_pnb);
+	}
+
+	void sumApproxTimes(int repetitions, int num_cpu, int log_every_it, bool logging) {
+		setLogging(logging);
+		boost::threadpool::pool thread_pool = boost::threadpool::pool(num_cpu);
+		std::mutex cout_mutex;
+		for (int i = 0; i < repetitions; i++) {
+			if (num_cpu > 1) { // schedule
+				thread_pool.schedule(boost::bind(&TimerTest::infiniteSumApprox, this, boost::ref(cout_mutex), i, log_every_it));
+			}
+			else { // use the current thread
+				infiniteSumApprox(cout_mutex, i, log_every_it);
+			}
+		}
+		thread_pool.wait(0);
+
+		setLogging(true);
+		std::cout << "Finished sumApproxTimes with parameters Reps: " << repetitions << " Num CPU: " << num_cpu << " Log every It: " << log_every_it << std::endl;
+	}
+
+	void setLogging(bool logging) {
+		// copy of void ParallelNestedBenders::SetLogLevel(int logging_level)
+
+		if (!logging) { // block console output if logging leve > INFO
+			std::cout.clear();
+			std::cout.setstate(std::ios_base::failbit);
+		}
+		else {
+			std::cout.clear(); // else unblock it
+		}
+	}
+protected:
+	TimerTest() : 
+		pnb_thread_timer(10)
+	{
+		wall_thread_timer = 0;
+	}
+};
 
 
 class NestedBendersTest : public ::testing::Test { // this is the Test set, e.g.,  TEST(NestedBendersTest, test_case). Second argument is the test (also called test case) 
@@ -948,8 +1018,9 @@ protected:
 
 		const int orig_repetitions = repetitions_;
 		for (int loop_counter = 0; loop_counter < repetitions_; loop_counter++) {
+			parallel_benders::Timer overall_and_solver_timer(2);
 			// This can be done in a loop.
-			double cpuTime = CoinGetTimeOfDay();
+			overall_and_solver_timer.Start(0);
 			SmiScnModel smi;
 			OsiCpxSolverInterface osi_cpx;
 			smi.setOsiSolverHandle(&osi_cpx);
@@ -960,7 +1031,7 @@ protected:
 			}
 			num_stages = smi.getCore()->getNumStages();
 			// Load ParallelNestedBendersSolver
-			double solver_time = CoinGetTimeOfDay();
+			overall_and_solver_timer.Start(1);
 			OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, &smi);
 			nested_benders.setTestsetProblemInstanceNames(total_stoch_string);
 			if (benders_parameter_.GetBoolParamValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS)) {
@@ -972,8 +1043,10 @@ protected:
 				nested_benders.giveStartSolution(current_start_solution_.get(), num_single_scenario_cols_);
 			}
 			nested_benders.initialSolve();
-			solver_time = CoinGetTimeOfDay() - solver_time; // Solver only time
-			cpuTime = CoinGetTimeOfDay() - cpuTime; // Overall WallClockTime;
+			overall_and_solver_timer.Stop(0);
+			overall_and_solver_timer.Stop(1);
+			double solver_time = overall_and_solver_timer.GetTime(1); // Solver only time
+			double cpuTime = overall_and_solver_timer.GetTime(0); // Overall WallClockTime;
 			nested_benders.printSolutionToFile("primal_solution.txt");
 			min_cpu = min(cpuTime, min_cpu);
 			min_solver = min(solver_time, min_solver);
@@ -1283,7 +1356,8 @@ public:
 			logfile.open("saa-log.txt", fstream::out | fstream::app);
 			logfile << core_name_string << std::endl;
 			logfile.close();
-			double solver_time = CoinCpuTime();
+			parallel_benders::Timer solver_timer(1);
+			solver_timer.Start(0);
 			saa_solver.setParameters(benders_parameter);
 			// These values do not change!
 			saa_solver.setNumberBatches(num_batches_lower);
@@ -1298,7 +1372,8 @@ public:
 			double alpha = 0.95;
 			saa_solver.setConfidenceLevel(alpha);
 			saa_solver.initialSolve();
-			solver_time = CoinCpuTime() - solver_time; // Solver only time
+			solver_timer.Stop(0);
+			double solver_time = solver_timer.GetTime(0); // Solver only time
 
 			logfile.open("saa-log.txt", fstream::out | fstream::app);
 			logfile << "Overall Solution Time: " << solver_time << std::endl;
@@ -1755,6 +1830,23 @@ TEST(UnitTest, pnb) {
 	}
 	thread_pnbs.clear();
 	delete osi_solver;
+}
+
+TEST_F(TimerTest, timer) {
+	parallel_benders::Timer pnb_timer(4);
+	pnb_timer.Start(0);
+	sumApproxTimes(6, 6, 100000, true);
+	pnb_timer.Stop(0);
+
+	google::SetStderrLogging(google::INFO);
+	pnb_timer.Start(1);
+	sumApproxTimes(6, 6, 1, true);
+	pnb_timer.Stop(1);
+
+	for (int timer_st = 0; timer_st < pnb_timer.GetTimeStages(); timer_st++) {
+		std::cout << "Elapsed PNB " << timer_st << ": " << pnb_timer.GetTime(timer_st) << std::endl;
+	}
+	std::cout << "Total PNB Timer: " << pnb_timer.GetAggregatedTime() << " Elapsed Thread Wall (msec): " << wall_thread_timer.load() << " Elapsed Thread PNB: " << pnb_thread_timer.GetTime(0) << std::endl;
 }
 
 TEST_F(CollectInstanceSpecs, all) {
@@ -3852,7 +3944,8 @@ TEST_F(NestedBendersTest, DISABLED_temporary) {// TODO: crashes
 
 TEST_F(NestedBendersTest, DISABLED_temporarySD) { // TODO: crashes
 	assert(false && "see TODO above");
-	double cpuTime = CoinCpuTime();
+	parallel_benders::Timer overall_and_solver_timer(2);
+	overall_and_solver_timer.Start(0);
 	SmiScnModel smi;
 	OsiCpxSolverInterface osi_cpx;
 	smi.setOsiSolverHandle(&osi_cpx);
@@ -3864,14 +3957,16 @@ TEST_F(NestedBendersTest, DISABLED_temporarySD) { // TODO: crashes
 	}
 	int num_stages = smi.getCore()->getNumStages();
 	// Load ParallelNestedBendersSolver
-	double solver_time = CoinCpuTime();
+	overall_and_solver_timer.Start(1);
 	OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, &smi);
 	parallel_benders::Parameter benders_parameter;
 	benders_parameter.init();
 	nested_benders.setParameters(benders_parameter);
 	nested_benders.initialSolve();
-	solver_time = CoinCpuTime() - solver_time; // Solver only time
-	cpuTime = CoinCpuTime() - cpuTime; // Overall WallClockTime;
+	overall_and_solver_timer.Stop(0);
+	overall_and_solver_timer.Stop(1);
+	double solver_time = overall_and_solver_timer.GetTime(1); // Solver only time
+	double cpuTime = overall_and_solver_timer.GetTime(0); // Overall WallClockTime;
 	LOG(INFO) << "Solution Time: " << cpuTime;
 }
 

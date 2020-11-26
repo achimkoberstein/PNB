@@ -432,14 +432,14 @@ elements_(elements),indices_(indices),start_(start)
 void Timer::Start( int stg )
 {
     assert( start_time_[stg] == 0.0);
-    start_time_[stg] = CoinCpuTime();
+    start_time_[stg] = Now();
 
 }
 
 void Timer::Stop( int stg )
 {
     if ( start_time_[stg] != 0.0)
-        overall_time_[stg] += CoinCpuTime() - start_time_[stg];
+        overall_time_[stg] += Now() - start_time_[stg];
     start_time_[stg] = 0.0;
 }
 
@@ -479,6 +479,12 @@ void Timer::AddTime( int stg, double time )
 void Timer::Reset() {
     start_time_.assign(start_time_.size(), 0.0);
     overall_time_.assign(overall_time_.size(), 0.0);
+}
+
+double Timer::Now()
+{
+    std::chrono::duration<double> now = wall_clock::now().time_since_epoch();
+    return now.count();
 }
 
 void Parameter::init()
