@@ -77,8 +77,6 @@ private:
 
     void SetLnPCGPFractVarSpecifics(ParallelNestedBenders* cgp_pnb, const std::pair<int, double>& fractional_variable);
 
-    // Adjust google logging to the logging_level: 0 - console and INFO, 1 - WARNING, 2 - ERROR, 3 - FATAL
-    void SetLogging(int logging_level);
     void LogSpecialCase(bool condition, const std::string& log_message, double fract_var_value_ = 0);
 
     // High-level methods we need during the algorithm
@@ -423,6 +421,17 @@ private:
     bool debug_test_duplicate_indices_; // Should be set to false, otherwise slows down the problem (Multi-Cut)
 
     // Output parameters
+/* Amount of print out:
+   0 - google::INFO
+   1 - google::WARNING
+   2 - google::ERROR
+   3 - google::FATAL
+   
+   We do not google::SetStderrLogging(log_level) because it will set globally for the whole application
+   We use LOG_IF / DLOG everywhere due to the efficiency concerns
+   LOG(INFO) vs LOG_IF(INFO, log_level_ <= google::INFO). First will slower the application much even if log_level_ > google::INFO
+*/
+    int log_level_;
     bool pretty_printing_;
     bool pretty_printing_verbose_;
 	bool print_subproblems_;

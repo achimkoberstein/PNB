@@ -238,9 +238,7 @@ namespace parallel_benders {
 
 
                 if (!( node_ptr->getCoreCombineRule() == SmiCoreCombineReplace::Instance() || node_ptr->getCoreCombineRule() == SmiCoreCombineAdd::Instance())){
-                    std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
                     LOG(FATAL) << "The supplied SMPS format is not understood. You used something that is not REPLACE in your stoch file.";
-
                 }
 
                 //benders_node_ptr->no_staircase_constraints_ = non_staircase;
@@ -302,7 +300,7 @@ namespace parallel_benders {
         stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
         cvar_constr_decomp_(false),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),cvar_feasible_first_stage_solution_(false),cvar_next_iterate_problem_(false),change_cvar_alpha_(false),stop_cvar_(false),osi_stopping_criterion_solver_(nullptr),
-        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(0),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),print_subproblems_(false),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(1000)
+        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(0),debug_test_duplicate_indices_(false),log_level_(google::INFO),pretty_printing_(false),pretty_printing_verbose_(true),print_subproblems_(false),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(1000)
     {
 
     }
@@ -378,7 +376,7 @@ namespace parallel_benders {
             warm_start_stage_ = true;
         if (warm_start_version > PNB_INT_WARM_START_STAGE_WISE) {
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
-            LOG(ERROR) << "Unknown value of PNB_WARM_START parameter. Possible values: 0 - no warm start, 1 - warm start with the solution from the previous iteration, 2 - warm start with solution from the first scenario (in the same iteration)";
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "Unknown value of PNB_WARM_START parameter. Possible values: 0 - no warm start, 1 - warm start with the solution from the previous iteration, 2 - warm start with solution from the first scenario (in the same iteration)";
             return;
         }
 
@@ -496,7 +494,7 @@ namespace parallel_benders {
 
         // For now
         if ( oda_method_ ){
-            LOG_IF(WARNING,level_stage_ > 0) << "Adjusting level_stage to first stage, because we use ODA cuts.";
+            LOG_IF(WARNING, log_level_ <= google::WARNING && level_stage_ > 0) << "Adjusting level_stage to first stage, because we use ODA cuts.";
             level_stage_ = 0;
         }
 
@@ -529,7 +527,7 @@ namespace parallel_benders {
         if ( regularization_ ){
             compute_stage_bounds_ = true;
             if ( start_solution_ == PNB_INT_NO_START_SOLUTION ){
-                LOG(WARNING) << "Using EEV solution as default start solution, as none was specified";
+                LOG_IF(WARNING, log_level_ <= google::WARNING) << "Using EEV solution as default start solution, as none was specified";
                 warm_up_ = true; // We need EEV start solution!
                 start_solution_ = PNB_INT_USE_EV_SOLUTION;
             }
@@ -646,7 +644,7 @@ namespace parallel_benders {
                 begin_aggregation_stage_ = std::max(0, num_stages_ - (PNB_INT_STAGE_AGGREGATION_LAST_STAGE-begin_aggregation_stage_) );
             if ( begin_aggregation_stage_ == 0 && end_aggregation_stage_ == num_stages_-1 ){
                 stage_aggregation_ = false;
-                LOG(ERROR) << "You specified stage aggregation that would result in the deterministic equivalent. We therefore disable stage aggregation for this run!";
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "You specified stage aggregation that would result in the deterministic equivalent. We therefore disable stage aggregation for this run!";
             }
             aggregate_from_start_ = param.get(PNB_STAGE_AGGREGATION_DIRECTION,true);
         }
@@ -706,7 +704,7 @@ namespace parallel_benders {
         }
         // We can stop here, if we have integer variables on more than the second stage..
         if (integer_problems_[0]) { // In the first stage.
-            LOG(INFO) << "Your problem contains first-stage integer variables.";
+            LOG_IF(INFO, log_level_ <= google::INFO) << "Your problem contains first-stage integer variables.";
         }
         else {
             use_first_phase_ = false;
@@ -716,7 +714,7 @@ namespace parallel_benders {
         std::vector<int> new_columns(num_stages_, 0);
         if (non_staircase_problem_) {
             // We need to generate the non1300-staircase constraints
-            LOG(INFO) << "Transforming to a non-staircase problem..";
+            LOG_IF(INFO, log_level_ <= google::INFO) << "Transforming to a non-staircase problem..";
             smi_->transformToStaircaseStructure(non_staircase_coefficients_);
             non_staircase_problem_ = false;
             non_staircase_stochastic_problem_ = false;
@@ -725,20 +723,19 @@ namespace parallel_benders {
             AdjustProblem();
             assert(!non_staircase_problem_);
             assert(!non_staircase_stochastic_problem_);
-            LOG(INFO) << "Done.";
         }
         if (integer_problems_[0] && solve_relaxation_ == 1) { // stages are indexed as 0,1,2...
             integer_problems_[0] = false;
-            LOG(INFO) << "We solve the LP relaxation for stage 1.";
+            LOG_IF(INFO, log_level_ <= google::INFO) << "We solve the LP relaxation for stage 1.";
             use_first_phase_ = false;
             cont_phase_it_limit_ = 0;
             lp_rounds_limit_ = 0;
         }
         for (int i = 1; i < num_stages_; i++) {
-            LOG_IF(WARNING, integer_problems_[i]) << "Your problem contains integer variables at stage " << i + 1 << ".";
+            LOG_IF(INFO, log_level_ <= google::INFO && integer_problems_[i]) << "Your problem contains integer variables at stage " << i + 1 << ".";
             if (solve_relaxation_ != 0 && solve_relaxation_ - 1 <= i && integer_problems_[i]) {
                 integer_problems_[i] = false; // Ensure we do solve the LP relaxation! (for second stage?)
-                LOG(INFO) << "We solve the LP relaxation for stage " << i + 1 << ".";
+                LOG_IF(INFO, log_level_ <= google::INFO) << "We solve the LP relaxation for stage " << i + 1 << ".";
             }
 
             // TODO: If we want D_square_ we have to remove the && false statement
@@ -755,11 +752,11 @@ namespace parallel_benders {
                         // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
                         d_square_translation_term_ = 20000; // Is taken for LaporteLoveaux Cuts as the minimum value of second stage problems!
                         d_square_w_iteration_.resize(stage_data_[1]->num_columns_, -1);
-                        LOG(INFO) << "Enabling D^2 algorithm.";
+                        LOG_IF(INFO, log_level_ <= google::INFO) << "Enabling D^2 algorithm.";
                     }
                     else {
                         // We have a problem with first-stage pure binary and second stage integers. We can use D^2 algorithm
-                        LOG(ERROR) << "You tried to solve a pure first stage binary problem and mixed-integers at another stage. You can activate the D^2 algorithm with param PNB_AUTO_D2_ALGORITHM or solve relaxation by specifying the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
+                        LOG_IF(ERROR, log_level_ <= google::ERROR) << "You tried to solve a pure first stage binary problem and mixed-integers at another stage. You can activate the D^2 algorithm with param PNB_AUTO_D2_ALGORITHM or solve relaxation by specifying the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
                         solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
                         solved_counter_++;
                         return;
@@ -767,7 +764,7 @@ namespace parallel_benders {
                 }
                 else {
                     // We have a problem with first-stage mixed-integer and second stage integers. We can not solve such a problem!
-                    LOG(ERROR) << "You tried to solve a problem with mixed-integer or pure integer first stage and mixed-integers at another stage. We can not solve this, only the relaxation. You can specify the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
+                    LOG_IF(ERROR, log_level_ <= google::ERROR) << "You tried to solve a problem with mixed-integer or pure integer first stage and mixed-integers at another stage. We can not solve this, only the relaxation. You can specify the stage from which you would like to relax the integer constraints with param PNB_RELAXATION.";
                     solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
                     solved_counter_++;
                     return;
@@ -786,19 +783,19 @@ namespace parallel_benders {
             // Best way would be to just recreate the benders_node_data tree from scratch!
         }
         if (cont_phase_it_limit_ && lp_rounds_limit_ == 0) {
-            LOG(INFO) << "Usage of continuous phase is not implemented for the case when L&P round limit = 0";
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "Usage of continuous phase is not implemented for the case when L&P round limit = 0";
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
             solved_counter_++;
             return;
         }
         if ((cont_phase_it_limit_ || use_first_phase_) && start_solution_ != PNB_INT_NO_START_SOLUTION) {
-            LOG(INFO) << "Usage of continuous phase and first phase is not implemented for the case when start solution is used as well";
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "Usage of continuous phase and first phase is not implemented for the case when start solution is used as well";
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
             solved_counter_++;
             return;
         }
         if ((cont_phase_it_limit_ || use_first_phase_) && num_stages_ > 2) {
-            LOG(INFO) << "Usage of continuous phase and first phase is not implemented multistage stochastic models.";
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "Usage of continuous phase and first phase is not implemented multistage stochastic models.";
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
             solved_counter_++;
             return;
@@ -956,6 +953,9 @@ namespace parallel_benders {
             cgp_pnb->testset_name_ = testset_name_;
             cgp_pnb->problem_name_ = problem_name_;
             cgp_pnb->instance_name_ = instance_name_ + "_CGP_PNB";
+#ifdef NDEBUG
+            cgp_pnb->log_level_ = google::WARNING; // no INFO output for cgp_pnb_ in release
+#endif
             cgp_pnb->Init();
             assert(!cgp_pnb->cont_phase_it_limit_ && !cgp_pnb->use_first_phase_);
         }
@@ -1062,40 +1062,22 @@ namespace parallel_benders {
         }
     }
 
-    void ParallelNestedBenders::SetLogging(int logging_level) {
-        
-        if (logging_level > google::INFO) { // block console output if logging leve > INFO
-            std::cout.clear();
-			std::cout.setstate(std::ios_base::failbit);
-        }
-        else {
-            std::cout.clear(); // else unblock it
-        }
-        google::SetStderrLogging(logging_level);
-    }
-
     void ParallelNestedBenders::LogSpecialCase(bool condition, const std::string& log_message, double fract_var_value)
     {
-#ifdef SPEC_CASES
-        std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-        if (lp_main_loop_iteration_round_ == nullptr) {
-            //It: 3 L&P round: 18 Fract: 0.38888
-            LOG_IF(WARNING, condition) << instance_name_ 
-                << " - It: " << current_iteration_ << " L&P round: " << lp_round_ << " Fract: " << fract_var_value 
-                << ": " << log_message << std::endl;
+        if (log_level_ <= google::WARNING) {
+            if (lp_main_loop_iteration_round_ == nullptr) {
+                //It: 3 L&P round: 18 Fract: 0.38888
+                DLOG_IF(WARNING, condition) << instance_name_
+                    << " - It: " << current_iteration_ << " L&P round: " << lp_round_ << " Fract: " << fract_var_value
+                    << ": " << log_message << std::endl;
+            }
+            else {
+                fract_var_value = lp_main_loop_fract_var_value_;
+                DLOG_IF(WARNING, condition) << instance_name_
+                    << " - It: " << lp_main_loop_iteration_round_->first << " L&P round: " << lp_main_loop_iteration_round_->second << " Fract: " << fract_var_value << " PNB CGP It: " << current_iteration_
+                    << ": " << log_message << std::endl;
+            }
         }
-        else {
-            //It: 3 L&P round: 18 Fract: 0.38888 PNB CGP It: 2
-            fract_var_value = lp_main_loop_fract_var_value_;
-            LOG_IF(WARNING, condition) << instance_name_ 
-                << " - It: " << lp_main_loop_iteration_round_->first << " L&P round: " << lp_main_loop_iteration_round_->second << " Fract: " << fract_var_value << " PNB CGP It: " << current_iteration_ 
-                << ": " << log_message << std::endl;
-        }
-        
-        
-        
-        
-#endif
     }
 
     void ParallelNestedBenders::Solve()
@@ -1103,7 +1085,7 @@ namespace parallel_benders {
         smi_->writeSmps("modeloutput");
 		
         if (solution_code_ == PNB_SOLUTION_PARAMETER_PROBLEM) {
-            LOG(INFO) << "Cannot solve because of the problem in parameters.";
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "Cannot solve because of the problem in parameters.";
             return;
         }
         if ( thread_pool_.size() == 0){
@@ -1147,7 +1129,7 @@ namespace parallel_benders {
         timer_.Stop(setup_timer);
         wall_clock_solution_time_.Start(0);
         // Print initial solution line
-        std::cout << left << std::setw(7) << "It." << std::setw(16) << "Lower Bound: " << std::setw(16) << "Upper Bound: " << std::setw(16) << "Relative Gap: " << std::endl; // This has to be done only once!
+        LOG_IF(INFO, log_level_ <= google::INFO) << left << std::setw(7) << "It." << std::setw(16) << "Lower Bound: " << std::setw(16) << "Upper Bound: " << std::setw(16) << "Relative Gap: ";
         // Do initialization stuff necessary for solve process
         bool not_stop_loop = false;
         while ( true  ) 
@@ -1209,7 +1191,7 @@ namespace parallel_benders {
             }
 
             if ( !not_stop_loop ){ // We stop the loop!
-                LOG_IF(INFO,solution_similiarity_counter_ >= max_similarity_iteration_) << "Stopped due to solution similarity for " << solution_similiarity_counter_ << " iterations.";
+                LOG_IF(WARNING, log_level_ <= google::WARNING && solution_similiarity_counter_ >= max_similarity_iteration_) << "Stopped due to solution similarity for " << solution_similiarity_counter_ << " iterations.";
                 if ( solution_similiarity_counter_ >= max_similarity_iteration_ )
                     solution_code_ = PNB_SOLUTION_SIMILARITY_LIMIT;
                 if ( current_iteration_-insubstantial_iteration_ >= max_iteration_ )
@@ -1224,7 +1206,7 @@ namespace parallel_benders {
             wall_clock_solution_time_.Stop(0);
             // Check if we already went over the time limit
             if ( ((int) wall_clock_solution_time_.GetTime(0)) > maximal_solution_time_ ){
-                LOG(ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
                 solution_code_ = PNB_SOLUTION_TIME_LIMIT;
                 solved_counter_++;
                 break; // We stop solving the problem
@@ -1237,11 +1219,11 @@ namespace parallel_benders {
             }
             if ( upper_bound_ < lower_bound_ ){
                 if ( !regularization_ )
-                    LOG(INFO) << "Upper Bound is lower than lower Bound. Iteration: " << current_iteration_;
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "Upper Bound is lower than Lower Bound. Iteration: " << current_iteration_;
             }
             if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){
 				if (!regularization_) {
-					LOG(INFO) << "New Lower bound " << lower_bound_ << " is less than old lower bound " << old_lower_bound_;
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "New Lower Bound " << lower_bound_ << " is less than old Lower Bound " << old_lower_bound_;
 				}
             }
             if ( !infeasible_problem_ ){
@@ -1265,7 +1247,7 @@ namespace parallel_benders {
                         solution_similiarity_counter_ = 0;
                     }
                     if ( gap_counter > gap_counter_maximum ){
-                        LOG(INFO) << "Algorithm stops as gap does not narrow anymore for " << gap_counter << " successive iterations.";
+                        LOG_IF(WARNING, log_level_ <= google::WARNING) << "Algorithm stops as gap does not narrow anymore for " << gap_counter << " successive iterations.";
                         solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
                         solved_counter_++;
                         break;
@@ -1274,7 +1256,7 @@ namespace parallel_benders {
                     critical_iteration_ = false;
                     if ( (1-level_lambda_)*last_critical_iteration_gap_ > gap ){
                         maximal_number_of_uncritical_iterations_ = std::max(maximal_number_of_uncritical_iterations_,uncritical_iteration_counter_);
-                        LOG(INFO) << "Critical iteration after " << uncritical_iteration_counter_;
+                        LOG_IF(INFO, log_level_ <= google::INFO) << "Critical iteration after " << uncritical_iteration_counter_;
                         uncritical_iteration_counter_ = 0;
                         last_critical_iteration_gap_ = gap;
                         critical_iteration_ = true;
@@ -1411,7 +1393,7 @@ namespace parallel_benders {
                 if (current_stage_ > 0 && lp_main_loop_iteration_round_) {
                     side = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME ? " prime" : " double-prime");
                 }
-				std::cout << minor_iteration_ << " Iteration " << direction << current_iteration_ << "." << current_stage_ << side << std::endl;
+                LOG_IF(INFO, log_level_ <= google::INFO) << minor_iteration_ << " Iteration " << direction << current_iteration_ << "." << current_stage_ << side;
             }
             if ( current_stage_ == 0) // lower_bound_ is only computed in the first stage!
                 old_lower_bound_ = lower_bound_;
@@ -1744,8 +1726,7 @@ namespace parallel_benders {
             if (lp_rounds_limit_ && !allowed_test_cases_.test(7) && stage_data_[current_stage_]->added_domain_cuts_) {
                 solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
                 solved_counter_++;
-                std::cout << "Domain cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
-                LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Domain cuts are prohibited for L&P cuts! Change solver parameter. \n Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
                 return;
             }
 
@@ -1944,7 +1925,7 @@ namespace parallel_benders {
                         else if ( CompareForEquality(col_solution[*it],0,integer_tolerance_) )
                             cut_coefficients.push_back(+cut_coefficient_scalar);
                         else
-                            LOG(INFO) << "Not at bound: " << col_solution[*it];
+                            LOG_IF(INFO, log_level_ <= google::INFO) << "Not at bound: " << col_solution[*it];
                     }
                     // Compute RHS
                     cut_rhs += lower_bound_for_second_stage;
@@ -1972,7 +1953,7 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.push_back(cut_stuff);
                     if ( seperate_first_stage_solver_ && current_stage_ == 1 && tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->last_iteration_start_optimality_ == tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.end())
                         tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->last_iteration_start_optimality_ = --tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.end();
-                    LOG(INFO) << "Current Expected value of second stage value function: " << current_expected_second_stage_value_function;
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "Current Expected value of second stage value function: " << current_expected_second_stage_value_function;
                 }
 
                 // Clear non-integer scenario
@@ -2138,6 +2119,7 @@ namespace parallel_benders {
             else {
                 if ( regularization_ ){
                     if ( current_stage_ == num_stages_-1 ){
+                        // TODO: use LOG_IF here for efficiency
                         std::cout << "Current Incumbent solution " << regularized_solution_value_ << "\n";
                         double current_solution = 0;
                         for (int i = 0; i < num_stages_; i++)
@@ -2149,9 +2131,7 @@ namespace parallel_benders {
                     }
                 }
                 else if ( current_stage_ == 0){
-						std::cout << "Lower Bound:  " << lower_bound_ << "\n";
-						std::cout << "Upper Bound:  " << upper_bound_ << "\n";
-						std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_, lower_bound_) << std::endl;
+                        LOG_IF(INFO, log_level_ <= google::INFO) << " \nLower Bound: " << lower_bound_ << "\n" << "Upper Bound: " << upper_bound_ << "\n" << "Relative Gap: " << ComputeRelativeGap(upper_bound_, lower_bound_) << std::endl;
                     if (!generate_lp_cuts_) {
                         iteration_u_and_l_bounds_.push_back(make_pair(upper_bound_, lower_bound_));
 					}
@@ -2164,7 +2144,7 @@ namespace parallel_benders {
                     unbounded_problem_ = false;
                 }
                 else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() && !tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.empty()){// Lets see if we already have optimality cuts added to the problem?!
-                    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
+                    LOG_IF(ERROR, log_level_ <= google::ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
                     solution_code_ = PNB_SOLUTION_UNBOUNDED;
                     solved_counter_++;
 					// we could also set here upper_bound_ = infinity_;
@@ -2179,7 +2159,7 @@ namespace parallel_benders {
 				// Set boolean variable to indicate that during this backward run, we do not generate optimality cuts!.
                 infeasible_problem_ = true;
                 if ( current_stage_ == 0){
-                    LOG(INFO) << "First stage problem is infeasible.";
+                    LOG_IF(WARNING, log_level_ <= google::WARNING) << "First stage problem is infeasible.";
                     // We have to stop the algorithm, our master problem is infeasible..
                     solution_code_ = PNB_SOLUTION_INFEASIBLE;
                     solved_counter_++;
@@ -2188,8 +2168,7 @@ namespace parallel_benders {
 				if (lp_rounds_limit_ && !allowed_test_cases_.test(6)) {
 					solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
                     solved_counter_++;
-					std::cout << "Feasibility cuts are prohibited for L&P cuts! Change solver parameter." << std::endl;
-					LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
+                    LOG_IF(ERROR, log_level_ <= google::ERROR) << "Feasibility cuts are prohibited for L&P cuts! Change solver parameter. \n Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
 					return;
                 }
                 // Change direction
@@ -2242,7 +2221,7 @@ namespace parallel_benders {
             if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD )&& theta_approximations_everywhere_ && !forward_){
                 if ( current_stage_ > 0 && current_stage_ < num_stages_-1 && cuts_added_last_round_ == stage_data_[current_stage_-1]->added_optimality_cuts_ && !infeasible_problem_ && !enforce_direction_){
                     forward_ = true;
-                    LOG_IF(INFO,sequencing_protocol_==PNB_INT_EPSILON_FAST_BACKWARD) << "Going forward to next stage because of no new cuts!.";
+                    LOG_IF(INFO, log_level_ <= google::INFO && sequencing_protocol_==PNB_INT_EPSILON_FAST_BACKWARD) << "Going forward to next stage because of no new cuts!.";
                 }
             }
 
@@ -2284,12 +2263,12 @@ namespace parallel_benders {
                     initial_time_for_stage[i] = timer_.GetTime(i);
                 time_not_measured = false;
                 bool changed_bouncing_stage = false;
-                LOG(INFO) << "Overall initial time" << initial_time;
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Overall initial time" << initial_time;
                 double overall_time = initial_time_for_stage[0];
-                LOG(INFO) << "Percentage stage 0 " << initial_time_for_stage[0]/initial_time;
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Percentage stage 0 " << initial_time_for_stage[0]/initial_time;
                 for (int i = 1; i < num_stages_;i++){ // Assumption: Later stages take longer than earlier stages
                     overall_time+= initial_time_for_stage[i];
-                    LOG(INFO) << "Percentage stage " << i << " " << initial_time_for_stage[i]/initial_time;
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "Percentage stage " << i << " " << initial_time_for_stage[i]/initial_time;
                     if ( overall_time/initial_time > percent_threshold ){
                         critical_stage = i;
                         changed_bouncing_stage = true;
@@ -2303,10 +2282,10 @@ namespace parallel_benders {
                     }
                 }
                 if ( !changed_bouncing_stage ){ // If we did not changed the bouncing stage
-                    LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high.";
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "Your chosen threshold for the tree walk strategy was set to high.";
                 }
                 //critical_stage = num_stages_-1;
-                LOG(INFO) << "Bouncing stage is stage " << critical_stage;
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Bouncing stage is stage " << critical_stage;
             }
             timer_.Stop(current_stage_);
             // Change next stage, depending on where we are heading (forward or backward)
@@ -2327,36 +2306,35 @@ namespace parallel_benders {
         if ( pretty_printing_ )
             std::cout << "\n";
         // Output the final values once again!
-        std::cout << "Algorithm finished with status code " << solution_code_ << ", final values below.\n"; 
-        std::cout << "Lower Bound:  " << (regularization_ ? regularized_solution_value_ : lower_bound_) << "\n";
-        std::cout << "Upper Bound:  " << upper_bound_ << "\n";
-        std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_,lower_bound_)  << "\n";
-        std::cout << "Major Iterations: " << major_iteration_ << "\n";
-        std::cout << "Overall Iterations: " << current_iteration_ << "\n";
-        if ( insubstantial_iteration_ > 0)
-            std::cout << "Insubstantial Iterations: " << insubstantial_iteration_ << "\n";
-        int cut_counter = 0;
-        for (int i = 0; i < num_stages_; i++){
-            cut_counter += stage_data_[i]->added_optimality_cuts_;
-        }
-        LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
-        cut_counter = 0;
-        for (int i = 0; i < num_stages_; i++){
-            cut_counter += stage_data_[i]->added_feasibility_cuts_;
-        }
-        LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
-        if (lp_rounds_limit_) { // if we use L&P cuts
+        if (log_level_ <= google::INFO) {
+            LOG(INFO) << "Algorithm finished with status code " << solution_code_ << ", final values below.";
+            LOG(INFO) << "Lower Bound:  " << (regularization_ ? regularized_solution_value_ : lower_bound_) << "\n" << "Upper Bound:  " << upper_bound_ << "\n" << "Relative Gap: " << ComputeRelativeGap(upper_bound_, lower_bound_);
+            LOG(INFO) << "Major Iterations: " << major_iteration_ << "\n" << "Overall Iterations: " << current_iteration_;
+            if (insubstantial_iteration_ > 0)
+                LOG(INFO) << "Insubstantial Iterations: " << insubstantial_iteration_;
+            int cut_counter = 0;
+            for (int i = 0; i < num_stages_; i++) {
+                cut_counter += stage_data_[i]->added_optimality_cuts_;
+            }
+            LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
             cut_counter = 0;
             for (int i = 0; i < num_stages_; i++) {
-                cut_counter += stage_data_[i]->added_epigraph_cuts_;
+                cut_counter += stage_data_[i]->added_feasibility_cuts_;
             }
-            LOG(INFO) << "Added " << cut_counter << " L&P epigraph cuts.";
-            cut_counter = 0;
-            for (int i = 0; i < num_stages_; i++) {
-                cut_counter += stage_data_[i]->added_domain_cuts_;
+            LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
+            if (lp_rounds_limit_) { // if we use L&P cuts
+                cut_counter = 0;
+                for (int i = 0; i < num_stages_; i++) {
+                    cut_counter += stage_data_[i]->added_epigraph_cuts_;
+                }
+                LOG(INFO) << "Added " << cut_counter << " L&P epigraph cuts.";
+                cut_counter = 0;
+                for (int i = 0; i < num_stages_; i++) {
+                    cut_counter += stage_data_[i]->added_domain_cuts_;
+                }
+                LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
             }
-            LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
-        }        
+        }    
 
         // Compute solution times for subproblems!
 #ifdef COMPUTING_TIMER
@@ -2369,24 +2347,23 @@ namespace parallel_benders {
         // We finished solving
         if (!infeasible_problem_){
             std::cout.setf(std::ios::fixed);
-            std::cout << "Solution: " << upper_bound_ << std::endl;
-            //LOG(INFO) << "Solution: " << upper_bound_;
+            LOG_IF(INFO, log_level_ <= google::INFO) << "Solution: " << upper_bound_;
             std::cout.unsetf(std::ios::fixed);
         }
         else{
             upper_bound_ = infinity_;
-            LOG(INFO) << "Problem is infeasible.";
+            LOG_IF(WARNING, log_level_ <= google::WARNING) << "Problem is infeasible.";
         }
 		// For unbounded problem, set upper_bound_ to -infinity
-        LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
-        LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
-        LOG_IF(WARNING,current_iteration_-insubstantial_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
-        LOG_IF(WARNING,max_similarity_iteration_ < solution_similiarity_counter_) << "Algorithm stopped, because solution did not changed for " << solution_similiarity_counter_ << " consecutive iterations.";
-        LOG_IF(INFO,d_square_) << "Spent " << d_square_c_triple_timer_ << " seconds to compute C^3 problems.";
-        LOG_IF(INFO,d_square_) << "Spent "  << d_square_c_rhs_timer_ << " seconds to compute D^2 RHS problems.";
+        LOG_IF(INFO,store_cut_information_ && log_level_ <= google::INFO) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
+        LOG_IF(INFO,adaptive_&& log_level_ <= google::INFO) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
+        LOG_IF(WARNING,current_iteration_-insubstantial_iteration_ >= max_iteration_ && log_level_ <= google::WARNING) << "Algorithm exceeded maximum number of iterations.";
+        LOG_IF(WARNING,max_similarity_iteration_ < solution_similiarity_counter_ && log_level_ <= google::WARNING) << "Algorithm stopped, because solution did not changed for " << solution_similiarity_counter_ << " consecutive iterations.";
+        LOG_IF(INFO,d_square_ && log_level_ <= google::INFO) << "Spent " << d_square_c_triple_timer_ << " seconds to compute C^3 problems.";
+        LOG_IF(INFO,d_square_ && log_level_ <= google::INFO) << "Spent "  << d_square_c_rhs_timer_ << " seconds to compute D^2 RHS problems.";
 
         // Check cut containers for duplicates
-#ifdef SPEC_CASES
+#ifndef NDEBUG
         if (!lp_main_loop_iteration_round_) {
             for (int stage = 0; stage < 1; stage++) { // do it for the first stage as for now
                 for (int node_index = 0; node_index < tree_nodes_by_stage_[stage].size(); node_index++) {
@@ -2718,6 +2695,7 @@ namespace parallel_benders {
         other->seperate_stage_solver_ = seperate_stage_solver_;
         other->solve_relaxation_ = solve_relaxation_;
         other->debug_test_duplicate_indices_ = debug_test_duplicate_indices_;
+        other->log_level_ = log_level_;
         other->pretty_printing_ = pretty_printing_;
         other->pretty_printing_verbose_ = pretty_printing_verbose_;
         other->print_subproblems_ = print_subproblems_;
@@ -3011,7 +2989,7 @@ namespace parallel_benders {
                 stage_data_[current_stage_]->lp_cgp_counter_ += num_cuts; // every cut requires CGP to solve
 				
 				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0);
-				std::cout << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate (according to PNB_LP_CUTS_FOR_FRACT parameter)." << std::endl;
+                LOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate (according to PNB_LP_CUTS_FOR_FRACT parameter).";
 
                 assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
                 // Set round specifics to all dual cgp
@@ -3101,7 +3079,7 @@ namespace parallel_benders {
                     LogSpecialCase(current_iteration_ == 1, "Wanted and built L&P cuts in first iteration");
                 }
                 else { // if no L&P cuts build - we can switch
-                    DLOG(INFO) << "No L&P cuts build in this round. Switching to minor iteration." << std::endl;
+                    LOG_IF(WARNING, log_level_ <= google::WARNING) << "No L&P cuts build in this round. Switching to minor iteration." << std::endl;
                     if (lp_round_ == 1) {
                         lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
                     }
@@ -3342,9 +3320,8 @@ namespace parallel_benders {
                     //if ( seperate_first_stage_solver_ && current_stage_ == 0) // Strange behaviour may results if we use the seperate_first_stage_solver!
                     //    seperate_first_stage_solver_ = false;
 					unbounded_problem_ = true;
-					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
-                    LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
-                    LOG(ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem. Switching off seperate first stage solver.";
+                    LOG_IF(ERROR, log_level_ <= google::ERROR) << "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+                    LOG_IF(ERROR, log_level_ <= google::ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem. Switching off seperate first stage solver.";
                     LOG(FATAL) << "Never tested before. Do we handle it correct in Solve() loop?";
 					return;
 				}
@@ -3358,7 +3335,7 @@ namespace parallel_benders {
 				if (lp_main_loop_iteration_round_ && cgp_do_when_infeasible_ > PNB_CGP_STOP_WHEN_INFEASIBLE) { // L&P PNB CGP
                     LogSpecialCase(current_iteration_ == 1, "PNB CGP is infeasible in its first iteration");
                     LogSpecialCase(current_iteration_ > 1, "PNB CGP is infeasible in 2nd or later iteration");
-                    LOG(INFO) << "Master problem is infeasible. We apply Alpha-Normalization";
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "Master problem is infeasible. We apply Alpha-Normalization";
 					SetAlphaNormalization(osi_solver, true);
 					SolveSolverInterface(osi_solver);
 					assert(osi_solver->isProvenOptimal());
@@ -3447,7 +3424,7 @@ namespace parallel_benders {
                         PrintSubproblem(osi_solver, 0, "adjusted_master_infeasible");
                         infeasible_problem_ = true;
                         infeasible_problems_[0] = true;
-                        LOG(ERROR) << "Your master problem is infeasible.";
+                        LOG_IF(WARNING, log_level_ <= google::WARNING) << "Your master problem is infeasible.";
 						LogSpecialCase(lp_main_loop_iteration_round_ != nullptr, "PNB CGP is infeasible after being infeasible. We have adjusted (bounded) it.");
 						LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is infeasible after being infeasible. We have adjusted (bounded) it. TRY TO FIND IIS AND ELIMINATE CONFLICTING CONSTRAINTS/CUTS");
                     }
@@ -3459,6 +3436,17 @@ namespace parallel_benders {
                         return;
                     }
                     else {
+                        // Get cplex status
+                        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+                        if (cpx_ptr) {
+                            // Get ENV and LP ptr
+                            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                            CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                            int stat = CPXgetstat(env_ptr, lp_ptr);
+                            LOG_IF(ERROR, log_level_ <= google::ERROR && !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
+                            std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
+                            CPXwriteprob(env_ptr, lp_ptr, "not_optimal", "lp");
+                        }
                         LOG(FATAL) << "What do we have here if it is not Optimal, Infeasible, or Ubounded?";
                     }
                 }
@@ -3471,7 +3459,7 @@ namespace parallel_benders {
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
-                    LOG_IF(ERROR, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
+                    LOG_IF(ERROR, log_level_ <= google::WARNING && !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
 					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
                     CPXwriteprob(env_ptr,lp_ptr,"not_optimal","lp");
                 }
@@ -3506,13 +3494,13 @@ namespace parallel_benders {
 					while (fractional_variables_.find(fractionality) != fractional_variables_.end()) {
 						fractionality += zero_tolerance_*2;
 					}
-					LOG_IF(FATAL, fractional_variables_.find(fractionality) != fractional_variables_.end());
+					DLOG_IF(FATAL, fractional_variables_.find(fractionality) != fractional_variables_.end());
 					fractional_variables_.emplace(fractionality, make_pair(index, value));
 				}
 			}
 
 			if (fractional_variables_.empty()) {
-				LOG(INFO) << "Iteration " << current_iteration_ << " - L&P round " << lp_round_ << ": no fractional variables in MP relaxation and no L&P cuts to generate." << std::endl;
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Iteration " << current_iteration_ << " - L&P round " << lp_round_ << ": no fractional variables in MP relaxation and no L&P cuts to generate." << std::endl;
 
 				generate_lp_cuts_ = false;
 				if (lp_round_ > 1) { // we do not count as a switch the L&P rounds session in which no cuts were build
@@ -3635,7 +3623,7 @@ namespace parallel_benders {
 		if (num_normaliz_cols) {
 			// in Alpha-Normalized L&P PNB CGP PNB only the last objective coefficient (belongs to the last norm cols) is non zero, it is 1
 			assert(CompareWithZero(solution_value));
-			LOG(INFO) << "Solution of Alpha-Normalized master problem: " << osi_solver->getObjValue() << ". Its column + thetas solution is 0.";
+            LOG_IF(INFO, log_level_ <= google::INFO) << "Solution of Alpha-Normalized master problem: " << osi_solver->getObjValue() << ". Its column + thetas solution is 0.";
 		}
         benders_node_pointer->solution_value_ = solution_value;
 
@@ -3646,7 +3634,7 @@ namespace parallel_benders {
             if ( d_square_ && current_stage_ == 0)
                 solution_value -= d_square_translation_term_;
             for ( double theta_value : benders_node_pointer->next_stage_approximation_){ // Add all thetas to the c*x solution to get lower bound for node at this stage
-				LOG_IF(FATAL, (!lp_main_loop_iteration_round_ && cvar_constr_decomp_ == false)  && !(CompareForEquality(obj_coefs[i], 1.0, integer_tolerance_) || CompareForEquality(obj_coefs[i], 0.0, integer_tolerance_))) << "Theta coef is always 1 except L&P CGP or risk algorithms. In the first iteration it is 0.";
+				DLOG_IF(FATAL, (!lp_main_loop_iteration_round_ && cvar_constr_decomp_ == false)  && !(CompareForEquality(obj_coefs[i], 1.0, integer_tolerance_) || CompareForEquality(obj_coefs[i], 0.0, integer_tolerance_))) << "Theta coef is always 1 except L&P CGP or risk algorithms. In the first iteration it is 0.";
 				solution_value += theta_value*obj_coefs[i]; // in L&P CGP obj coefs for theta are not 1
 				i++;
             }
@@ -4150,7 +4138,6 @@ namespace parallel_benders {
         for( BendersStageData* stage_data : stage_data_ ){
             delete stage_data;
         }
-
     }
 
     void ParallelNestedBenders::GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -4423,8 +4410,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
         if ( infeasible_problems_.any() && !generate_feasibility_and_optimality_cuts_){
-            std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
-            LOG(WARNING) << "Attempting to generate optimality cuts in the presence of infeasible problems in this stage.";
+            LOG_IF(WARNING, log_level_ <= google::WARNING) << "Attempting to generate optimality cuts in the presence of infeasible problems in this stage.";
             return;
         }
         if ( generate_feasibility_and_optimality_cuts_ && infeasible_problems_.any() ){
@@ -4449,7 +4435,7 @@ namespace parallel_benders {
 
         if ( stage_data_[current_stage_]->solve_binary_subproblems_ ){
             // Return or better: call method that calls laporte-louveaux cut generation routine
-            LOG(INFO) << "Not adding new benders style optimality cuts to problems at stage " << current_stage_-1 << " because we solved mip-subproblems.";
+            LOG_IF(INFO, log_level_ <= google::INFO) << "Not adding new benders style optimality cuts to problems at stage " << current_stage_-1 << " because we solved mip-subproblems.";
             return;
         }
 
@@ -4754,13 +4740,13 @@ namespace parallel_benders {
                     cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas.get(),0,number_rows-1);// If we use the primal method, we get the dual ray via the dual variables
                     if ( cpx_stat != 0){
                         //Routine was unsuccesful, we need to compute the values by the normal method
-                        LOG_IF(INFO,cpx_stat) << "CPXgetpi : " << cpx_stat;
+                        LOG_IF(INFO, log_level_ <= google::INFO && cpx_stat) << "CPXgetpi : " << cpx_stat;
                         use_cplex = false;
                     }
                 }
                 else {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas.get(),&proof);
-                    LOG_IF(INFO,cpx_stat) << "CPXdualfarks : " << cpx_stat;
+                    LOG_IF(INFO, log_level_ <= google::INFO && cpx_stat) << "CPXdualfarks : " << cpx_stat;
                     if ( cpx_stat != 0 ){// If CPXdualfarkas returns a value that is not zero, it was unsuccessful, so we need to compute the dual ray the normal way
                         use_cplex = false;
                     }
@@ -4797,8 +4783,7 @@ namespace parallel_benders {
             }//End If infeasible
             else {
                 // Print out the stat
-                std::lock_guard<std::mutex> u_lock(*console_mutex_ptr_);
-                LOG(INFO) << "Solver returned with status code : " << cpx_stat << " instead infeasible, while solving the original problem again with primal or dual simplex during generation of feasibility cuts.";
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Solver returned with status code : " << cpx_stat << " instead infeasible, while solving the original problem again with primal or dual simplex during generation of feasibility cuts.";
 
                 use_cplex = false;
                 if ( cpx_stat == CPX_STAT_OPTIMAL ){
@@ -4806,7 +4791,6 @@ namespace parallel_benders {
                     CPXwriteprob(env_ptr,lp_ptr,"optimal_infeasible_problem.lp","lp");
                     return false;
                 }
-
             }
 
             if ( use_cplex && stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
@@ -4879,7 +4863,7 @@ namespace parallel_benders {
             for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
                 // Look at variable value and their bounds
                 if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
-                    std::cout << "var " << i << " has reduced cost of " << dual_values_variable_bounds[i] << "\n";
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "var " << i << " has reduced cost of " << dual_values_variable_bounds[i];
                     if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                         computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
                     else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
@@ -5093,10 +5077,9 @@ namespace parallel_benders {
 
         {
             int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
-            std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
-            DLOG(INFO) << current_iteration_ << " Iteration - L&P round " << lp_round_ << ": fractional variable " << lp_cut_index + 1 << "/" << num_cuts << std::endl;
-            DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) << "Generating " << (use_2nd_stage_info ? "strengthened" : "plain") << " Epigraph L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
-            DLOG_IF(INFO, lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) << "Generating Domain L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second << std::endl;
+            DLOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P round " << lp_round_ << ": fractional variable " << lp_cut_index + 1 << "/" << num_cuts;
+            DLOG_IF(INFO, log_level_ <= google::INFO && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) << "Generating " << (use_2nd_stage_info ? "strengthened" : "plain") << " Epigraph L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
+            DLOG_IF(INFO, log_level_ <= google::INFO && lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) << "Generating Domain L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
         }
 		
         assert(current_stage_ == 0 && "We build L&P cuts for the MP.");
@@ -5185,7 +5168,6 @@ namespace parallel_benders {
                 }   
             }
             else if (cgp_pnb->solution_code_ != PNB_SOLUTION_OPTIMAL) {
-                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                 LOG(FATAL) << "Fract var with index " << fractional_variable.first << ": L&P CGP solution code is other than: PNB_SOLUTION_INFEASIBLE, PNB_SOLUTION_UNBOUNDED, PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT" <<
                     "PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_UPPER_LESS_LOWER_BOUND. Is it an ERROR?";
             }
@@ -5314,8 +5296,7 @@ namespace parallel_benders {
                 bool terminate_cut_generation = false;
                 if (dual_cgp_solver->isProvenPrimalInfeasible()) {
                     if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
-                        std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-                        LOG(FATAL) << "DAN should always be feasible";
+                        LOG_IF(FATAL) << "DAN should always be feasible";
                     }
                     else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && construct_domain_if_cgp_fails) {
 
@@ -5327,13 +5308,9 @@ namespace parallel_benders {
                         suffix << "_with_Alpha_Normalization";
                         PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
 
-                        std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                         DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is infeasible." << std::endl;
                         DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
-
-                        if (!dual_cgp_solver->isProvenOptimal()) {
-                            LOG(FATAL) << "DAN should always be feasible";
-                        }
+                        LOG_IF(FATAL, !dual_cgp_solver->isProvenOptimal()) << "DAN should always be feasible";
                     }
                     else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && !construct_domain_if_cgp_fails) {
                         LogSpecialCase(true, "Will not generate Epigraph L&P cut since DZN is infeasible", fractional_variable.second);
@@ -5344,8 +5321,7 @@ namespace parallel_benders {
                     LogSpecialCase(lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN, "DAN is unbounded", fractional_variable.second);
                     LogSpecialCase(lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH, "DZN is unbounded", fractional_variable.second);
                     if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
-                        std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-                        LOG(FATAL) << "DAN should always be feasible";
+                        LOG_IF(FATAL, log_level_ <= google::FATAL) << "DAN should always be feasible";
                     }
                     else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && construct_domain_if_cgp_fails) {
                         lift_and_project_cut_type = PNB_CUT_TYPE_DOMAIN;
@@ -5358,10 +5334,7 @@ namespace parallel_benders {
                         std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                         DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is unbounded." << std::endl;
                         DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
-
-                        if (!dual_cgp_solver->isProvenOptimal()) {
-                            LOG(FATAL) << "DAN should always be feasible";
-                        }
+                        LOG_IF(FATAL, !dual_cgp_solver->isProvenOptimal()) << "DAN should always be feasible";
                     }
                     else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && !construct_domain_if_cgp_fails) {
                         LogSpecialCase(true, "Will not generate Epigraph L&P cut since DZN is unbounded", fractional_variable.second);
@@ -5369,8 +5342,7 @@ namespace parallel_benders {
                     }
                 }
                 else if (!dual_cgp_solver->isProvenOptimal()) {
-                    std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-                    LOG(FATAL) << "What if not optimal, infeasible or unbounded?";
+                    LOG_IF(FATAL, log_level_ <= google::FATAL) << "What if not optimal, infeasible or unbounded?";
                 }
 
                 if (terminate_cut_generation) {
@@ -5389,7 +5361,7 @@ namespace parallel_benders {
                     LogSpecialCase(RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, dual_cgp_solver->getObjValue(), infinity_, std::max(cgp_relative_epsilon_, 0.01)), "Gap between PNB CGP and Dual CGP solutions is too large.", fractional_variable.second);
                 }
 
-#ifdef SPEC_CASES
+#ifndef NDEBUG
                 OsiSolverInterface* temp_osi = dual_cgp_solver->clone(true); // for experimentation
                 if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
                     SetAlphaNormalization(temp_osi, false); // DZN
@@ -5426,8 +5398,7 @@ namespace parallel_benders {
 
 			if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN && CompareWithZero(dual_cgp_solver->getObjValue()))  {
                 LogSpecialCase(true, "L&P cut will not be added to the container. Reason: solution of DAN is zero", fractional_variable.second);
-                std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
-                LOG_IF(FATAL, dual_cgp_solver->getObjValue() <= fractional_variable.second + zero_tolerance_) << "Check this cut. Probably coefs are 0 => it is something weird.";
+                DLOG_IF(FATAL, dual_cgp_solver->getObjValue() <= fractional_variable.second + zero_tolerance_) << "Check this cut. Probably coefs are 0 => it is something weird.";
 			}
             else {
                 assert(current_stage_ == 0);
@@ -6055,56 +6026,58 @@ namespace parallel_benders {
 		bool lp_check_passed = true;
 		//Parameter validity
 		if (lp_switches_limit_ <= 0) {
-			std::cout << "PNB_LP_SWITCHES_LIMIT parameter should have value > 0. If you want to turn off L&P cuts, set PNB_LP_ROUNDS_LIMIT to 0" << std::endl;
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "PNB_LP_SWITCHES_LIMIT parameter should have value > 0. If you want to turn off L&P cuts, set PNB_LP_ROUNDS_LIMIT to 0";
 			lp_check_passed = false;
 		}
 		if (lp_major_it_limit_ <= 0) {
-			std::cout << "PNB_LP_MAJOR_IT_LIMIT parameter should have value > 0. If you want to turn off L&P cuts, set PNB_LP_ROUNDS_LIMIT to 0" << std::endl;
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "PNB_LP_MAJOR_IT_LIMIT parameter should have value > 0. If you want to turn off L&P cuts, set PNB_LP_ROUNDS_LIMIT to 0";
 			lp_check_passed = false;
 		}
 		if (lp_rounds_limit_ < 0) {
-			std::cout << "PNB_LP_ROUNDS_LIMIT parameter should have value >= 0. If you want to turn off L&P cuts, set it to 0" << std::endl;
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "PNB_LP_ROUNDS_LIMIT parameter should have value >= 0. If you want to turn off L&P cuts, set it to 0";
 			lp_check_passed = false;
 		}
 		const std::vector<int>* bin_cols = &core_->getBinaryCols(0);
 		const std::vector<int>* int_cols = &core_->getIntCols(0);
 		if (lp_rounds_limit_ > 0 && (num_stages_ != 2 || bin_cols->size() != core_->getIntCols(0).size() || bin_cols->empty())) { //two stage problem and bins + cont only on the first stage
-			std::cout << " - Number stages: " << num_stages_ << std::endl;
-			std::cout << " - Number 1st stage integer vars: " << int_cols->size() << std::endl;
-			std::cout << "               among them binary: " << bin_cols->size() << std::endl;
-			// integers on the 2nd stage will be treated later
-			std::cout << "L&P cuts are applicable to 2 stage problems with mixed binary variables on the first stage only." << std::endl;
+            if (log_level_ <= google::ERROR) {
+                std::cout << " - Number stages: " << num_stages_ << std::endl;
+                std::cout << " - Number 1st stage integer vars: " << int_cols->size() << std::endl;
+                std::cout << "               among them binary: " << bin_cols->size() << std::endl;
+                // integers on the 2nd stage will be treated later
+                std::cout << "L&P cuts are applicable to 2 stage problems with mixed binary variables on the first stage only." << std::endl;
+            }
 			lp_check_passed = false;
 		}
 		if (lp_rounds_limit_ > 0 || lp_main_loop_iteration_round_) {
 			//Check parameters
 			if (!allow_cut_aggregation && stage_data_[0]->num_thetas_ > 1) {
-				std::cout << "Cut aggreagation is not implemented for L&P cuts! Change solver parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Cut aggreagation is not implemented for L&P cuts! Change solver parameter.";
 				lp_check_passed = false;
 			}
 			if (oda_method_ != false) {
-				std::cout << "ODA is not implemented for L&P cuts! Change PNB_BENDERS parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "ODA is not implemented for L&P cuts! Change PNB_BENDERS parameter.";
 				lp_check_passed = false;
 			}
 			if (regularization_ != false) {
-				std::cout << "Regularization is not implemented for L&P cuts! Change PNB_BENDERS parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Regularization is not implemented for L&P cuts! Change PNB_BENDERS parameter.";
 				lp_check_passed = false;
 			}
 			if (level_decomp_ != false) {
-				std::cout << "Level decomposition is not implemented for L&P cuts! Change PNB_BENDERS parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Level decomposition is not implemented for L&P cuts! Change PNB_BENDERS parameter.";
 				lp_check_passed = false;
 			}
 
 			if (cvar_constr_decomp_ != false) {
-				std::cout << "CVAR not implemented for L&P cuts! Change PNB_BENDERS parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "CVAR not implemented for L&P cuts! Change PNB_BENDERS parameter.";
 				lp_check_passed = false;
 			}
 			if ((warm_start_ || warm_start_scenarios_ || warm_start_stage_) && !allow_warm_start) {
-				std::cout << "Warm start is not implemented for L&P cuts! Change solver parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Warm start is not implemented for L&P cuts! Change solver parameter.";
 				lp_check_passed = false;
 			}
 			if (adaptive_ != false) {
-				std::cout << "Adaptive cut aggregation is not implemented for L&P cuts! Change solver parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Adaptive cut aggregation is not implemented for L&P cuts! Change solver parameter.";
 				lp_check_passed = false;
 			}
 			if (stage_aggregation_ != false) {
@@ -6112,15 +6085,15 @@ namespace parallel_benders {
 				//lp_check_passed = false;
 			}
 			if (store_cut_information_ != false) {
-				std::cout << "Cut consolidation is not implemented for L&P cuts! Change solver parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Cut consolidation is not implemented for L&P cuts! Change solver parameter.";
 				lp_check_passed = false;
 			}
 			if (start_solution_ != 0) {
-				std::cout << "Start solution is not implemented for L&P cuts! Change solver parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Start solution is not implemented for L&P cuts! Change solver parameter.";
 				lp_check_passed = false;
 			}
 			if (num_cpu_ > 1 && !allow_multiprocessing) {
-				std::cout << "Multithread is not tested for L&P cuts! Change solver parameter." << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Multithread is not tested for L&P cuts! Change solver parameter.";
 				lp_check_passed = false;
 			}
 
@@ -6131,7 +6104,7 @@ namespace parallel_benders {
 			// d_square_ is not implemented for L&P cuts
 			// integer_problems_ is filled later in the algorithm
 			if (!core_->getIntCols(1).empty() && (solve_relaxation_ > 2 || solve_relaxation_ == 0)) {
-				std::cout << "L&P cuts are not applicable for problems with integer vars on the 2nd stage. Set PNB_RELAXATION parameter to 2." << std::endl; //// stages are indexed as 0,1,2...
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "L&P cuts are not applicable for problems with integer vars on the 2nd stage. Set PNB_RELAXATION parameter to 2."; // stages are indexed as 0,1,2...
 				lp_check_passed = false;
 			}
 
@@ -6179,53 +6152,53 @@ namespace parallel_benders {
 			}
 
 			if (!allow_le_constr && le_constr) {
-				std::cout << "L&P cuts not tested for <= 1st stage constraints" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "L&P cuts not tested for <= 1st stage constraints";
 				lp_check_passed = false;
 			}
 			if (!allow_ge_constr && ge_constr) {
-				std::cout << "L&P cuts not tested for >= 1st stage constraints" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "L&P cuts not tested for >= 1st stage constraints";
 				lp_check_passed = false;
 			}
 			if (!allow_eq_constr && eq_constr) {
-				std::cout << "L&P cuts not tested for = 1st stage constraints" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "L&P cuts not tested for = 1st stage constraints";
 				lp_check_passed = false;
 			}
 			if (!allow_non_standard_lb && non_standard_lb) {
-				std::cout << "L&P cuts not tested for non standard LB of 1st stage vars" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "L&P cuts not tested for non standard LB of 1st stage vars";
 				lp_check_passed = false;
 			}
 			if (!allow_non_standard_ub && non_standard_ub) {
-				std::cout << "L&P cuts not tested for non standard UB of 1st stage vars" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "L&P cuts not tested for non standard UB of 1st stage vars";
 				lp_check_passed = false;
 			}
 
 			// Mixed binary 1st stage
 			if (!allow_cont_first_stage && bin_cols->size() > 0 && bin_cols->size() != core_->getNumCols(0)) {
-				std::cout << "L&P cuts are not implemented for mixed-binary 1st stage" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "L&P cuts are not implemented for mixed-binary 1st stage";
 				lp_check_passed = false;
 			}
 
 			// Stochastic elements not only in rhs
 			if (second_stage_pointer->stochastic_bounds_) {
-				std::cout << "Never tested L&P cuts for problems with stochastic bounds" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Never tested L&P cuts for problems with stochastic bounds";
 				lp_check_passed = false;
 			}
 			if (second_stage_pointer->stochastic_matrix_w_) {
-				//std::cout << "Never tested L&P cuts for problems with stochastic matrix W" << std::endl;
+				//LOG_IF(ERROR, log_level_ <= google::ERROR) << "Never tested L&P cuts for problems with stochastic matrix W";
 				//lp_check_passed = false;
 			}
 			if (second_stage_pointer->stochastic_matrix_t_) {
-				std::cout << "Never tested L&P cuts for problems with stochastic matrix T" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Never tested L&P cuts for problems with stochastic matrix T";
 				lp_check_passed = false;
 			}
 			if (second_stage_pointer->stochastic_objective_) {
-				std::cout << "Your problem has stochastic objective" << std::endl;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Your problem has stochastic objective";
 				//lp_check_passed = false;
 			}
 		}
 
 		if (lp_rounds_limit_ > 0 && solve_relaxation_ == 1) {
-			std::cout << "PNB_RELAXATION set to 1. L&P cuts are not applicable when 1st stage is relaxed." << std::endl; //// stages are indexed as 0,1,2...
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "PNB_RELAXATION set to 1. L&P cuts are not applicable when 1st stage is relaxed."; // stages are indexed as 0,1,2...
 			lp_check_passed = false;
 		}
 
@@ -6442,7 +6415,7 @@ namespace parallel_benders {
 								if ( level_length_ == osi_cpx->getNumRows() )
 									CPXcopybasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
 								else
-									LOG(INFO) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+                                    LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
 							}
 						}
 					}
@@ -6474,7 +6447,7 @@ namespace parallel_benders {
 								if (level_length_ == osi_cpx->getNumRows())
 									CPXcopybasednorms(env_ptr, lp_ptr, level_cstat_.get(), level_rstat_.get(), level_dnorm_.get());
 								else
-									LOG(INFO) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+                                    LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
 							}
 						}
 					}
@@ -6513,7 +6486,7 @@ namespace parallel_benders {
 							if ( level_length_ == osi_cpx->getNumRows() )
 								CPXcopybasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
 							else
-								LOG(INFO) << "Trying to copy basednorms where problem has now " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+                                LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has now " << osi_cpx->getNumRows() << " rows and had " << level_length_;
                         }
 
                     }
@@ -6582,7 +6555,7 @@ namespace parallel_benders {
         for (int i = 0; i < num_scenarios_; i++){
             total_prob += smi_->getScenarioProb(i);
         }
-        LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one, but " << total_prob;
+        LOG_IF(WARNING, log_level_ <= google::WARNING && !CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one, but " << total_prob << ". We will adjust it now.";
         if ( total_prob > 1+zero_tolerance_ || total_prob < 1-zero_tolerance_ ){
             // Scenario probability is wrong for the leafs. We normalize these and recompute all the probabilities back up the tree 
             for (int i = 0; i < num_scenarios_; i++){
@@ -6642,8 +6615,8 @@ namespace parallel_benders {
             for (int i = 0; i < num_scenarios_; i++){
                 total_prob += smi_->getScenarioProb(i);
             }
-            LOG_IF(ERROR,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "We tried to fix your problem with the model probabilities, but did not succeed. The probabilities sum up to " << total_prob;
-            LOG(INFO) << "We modified your problem by normalizing the leaf node probabilities and updating the scenario tree accordingly.";
+            LOG_IF(ERROR, log_level_ <= google::ERROR && !CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "We tried to fix your problem with the model probabilities, but did not succeed. The probabilities sum up to " << total_prob;
+            LOG_IF(WARNING, log_level_ <= google::WARNING) << "We modified your problem by normalizing the leaf node probabilities and updating the scenario tree accordingly.";
         }// if
 
         std::vector<std::vector<BendersNodeData*> > nodeVec;
@@ -6782,13 +6755,13 @@ namespace parallel_benders {
             //return;
         }
         if ( benders_tree_node_pointer->getDataPtr()->dual_solution_.empty()){
-            LOG(INFO) << "You tried to do cut consolidation without dual solution information.";
+            LOG_IF(INFO, log_level_ <= google::INFO) << "You tried to do cut consolidation without dual solution information.";
             return;
         }
 
 		LOG_IF(FATAL, lp_rounds_limit_ > 0) << "Never tested";
 
-        double start_time = CoinGetTimeOfDay();
+        double start_time = timer_.Now();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
         // What do we need? The dual values. They are stored and thus checked against zero tolerance
         assert( !benders_node_pointer->dual_solution_.empty());
@@ -7032,7 +7005,7 @@ namespace parallel_benders {
                         else {
                             cut_stuffs[j]->aggregate_number_ = CutStuff::AGGREGATE_OVER_PARTIAL;
                             // We do not want to create these cuts in the case of adaptive_ aggregation
-                            LOG_IF(ERROR,adaptive_) << "We IntraIteration aggregated, but only " << number_cuts_in_this_iteration << " instead of " << benders_node_pointer->num_thetas_;
+                            LOG_IF(ERROR, log_level_ <= google::ERROR && adaptive_) << "We IntraIteration aggregated, but only " << number_cuts_in_this_iteration << " instead of " << benders_node_pointer->num_thetas_;
                         }
 
                         cut_stuffs[j]->active_value = 1.0;
@@ -7074,16 +7047,12 @@ namespace parallel_benders {
                         StoreWarmStart(osi_solver,benders_tree_node_pointer);      
                     }
                     else{
-                        std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
-                        LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
+                        LOG_IF(WARNING, log_level_ <= google::WARNING) << "Resolve after deletion of old cuts has not led to a proper solution.";
                     }
-
                 }
-
-            }// End If 
-
+            }// End If
         }//End If Forward
-        start_time = CoinGetTimeOfDay()-start_time;
+        start_time = timer_.Now()-start_time;
         if ( current_stage_ > 0 ){
             std::lock_guard<std::mutex> unique_lock(misc_mutex_);
             intra_cut_aggregation_time_ += start_time;
@@ -7099,14 +7068,12 @@ namespace parallel_benders {
             return;
         if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1)
             return;
-        double time = CoinGetTimeOfDay();
+        double time = timer_.Now();
         int threshold = 3; // cuts that are not consecutively active for more than threshold iterations
         double inactive_ratio = 0.7; // Aggregates that are inactive for more than inactive_ratio of all iterations (only feasible iterations!)
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         // We have the dual solution
-        if ( benders_node_pointer->dual_solution_.empty()){
-            LOG(WARNING) << "You tried to analyse optimality cuts without dual information.";
-        }
+        LOG_IF(WARNING, log_level_ <= google::WARNING && benders_node_pointer->dual_solution_.empty()) << "You tried to analyse optimality cuts without dual information.";
         // Optimality cuts start after normal rows and feasibility cuts
         assert(false && "It will not work after we decided to add optimality and feasibility cuts in the order of their creation.");
         int optimality_cut_start = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Performance issues may arise here
@@ -7332,7 +7299,7 @@ namespace parallel_benders {
                     new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
                 }
 
-                LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
+                LOG_IF(INFO, log_level_ <= google::INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
                 benders_node_pointer->num_thetas_ = new_thetas;
                 benders_node_pointer->changed_aggregation_level_ = true;
                 benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
@@ -7504,8 +7471,7 @@ namespace parallel_benders {
                 StoreValuesFromSolverInVector(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,new_thetas); // Store new approximation
             }
             else{
-                std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
-                LOG(ERROR) << "Solver did not solve problem to optimality after aggregation.";
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Solver did not solve problem to optimality after aggregation.";
                 // Get CPLEX error code
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
                 if ( cpx_ptr ){
@@ -7513,7 +7479,7 @@ namespace parallel_benders {
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
-                    LOG(INFO) << "Cplex returned solution process with " << stat;
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "Cplex returned solution process with " << stat;
                     //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
                     //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
                 }
@@ -7527,7 +7493,7 @@ namespace parallel_benders {
 
 
 
-        time = CoinGetTimeOfDay()-time;
+        time = timer_.Now()-time;
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
         adaptive_cut_time_ += time;
         //TODO: When code is really used, store time in a node-wise variable
@@ -7643,7 +7609,7 @@ namespace parallel_benders {
 
         int num_columns = stage_data_[current_stage_]->num_columns_+1;
         if ( first_length > num_columns){
-            LOG(INFO) << "Why?";
+            LOG_IF(WARNING, log_level_ <= google::WARNING) << "Why?";
             num_columns += first_length;
         }
 
@@ -7746,7 +7712,7 @@ namespace parallel_benders {
                     for (int i = 1; i < stage_data_[current_stage_]->mip_solution_.size(); i++){
                         mip_solution = &stage_data_[current_stage_]->mip_solution_[i][0];
                         err = CPXaddmipstarts(env_ptr,lp_ptr,num_mipstarts,stage_data_[current_stage_]->num_columns_,&begin_mipstarts,&stage_data_[current_stage_]->column_indices_[0],mip_solution,&effortlevel_mipstarts,nullptr);
-                        LOG_IF(INFO,err != 0) << "CPXcopymipstart returned with " << err;
+                        LOG_IF(WARNING, log_level_ <= google::WARNING && err != 0) << "CPXcopymipstart returned with " << err;
                     }
                 } // End OsiCpx
             } // End If WarmStartAdded
@@ -7810,7 +7776,7 @@ namespace parallel_benders {
 
 					int cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
 					level_length_ = CPXgetnumrows(env_ptr,lp_ptr);
-					LOG_IF(INFO,cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
+					LOG_IF(WARNING, log_level_ <= google::WARNING && cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
 
 				}
 			}
@@ -8013,7 +7979,7 @@ namespace parallel_benders {
                     CPXmipopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     if ( code == CPXMIP_INForUNBD){ // Solve without presolve to determine correct direction!
-                        LOG(WARNING) << "We need to resolve the problem, because it is either unbounded or infeasible.";
+                        LOG_IF(WARNING, log_level_ <= google::WARNING) << "We need to resolve the problem, because it is either unbounded or infeasible.";
                         CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
                         // Discard presolve information by changing objective Sense
                         int objsen = CPXgetobjsen(env_ptr, lp_ptr);
@@ -8023,10 +7989,7 @@ namespace parallel_benders {
                         code = CPXgetstat(env_ptr,lp_ptr);
                         CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
                     }
-                    if ( code != CPXMIP_OPTIMAL ){
-                        std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
-                        LOG(WARNING) << "MIQP solved with status " << code;
-                    }
+                    LOG_IF(WARNING, log_level_ <= google::WARNING && code != CPXMIP_OPTIMAL) << "MIQP solved with status " << code;
                 }
             }
             else{
@@ -8074,8 +8037,7 @@ namespace parallel_benders {
                     if ( code != CPX_STAT_OPTIMAL ){
 						double kappa_value;
 						CPXgetdblquality(env_ptr,lp_ptr,&kappa_value,CPX_KAPPA);
-                        std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
-                        LOG(WARNING) << "Quadratic problem solved with status " << code << " and has condition number " << kappa_value;
+                        LOG_IF(WARNING, log_level_ <= google::WARNING) << "Quadratic problem solved with status " << code << " and has condition number " << kappa_value;
                     }
                 }
             }
@@ -8361,11 +8323,11 @@ namespace parallel_benders {
             else if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution ){
                 if ( 1.0/regularized_sigma_ < 1024 ) // TODO: Hard-fixed value, should be replaced by something else!
                     regularized_sigma_ *= 0.5; // Vladimirou: *= 0.25
-                LOG(INFO) << "Null Step";
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Null Step";
 
             }
             else 
-                LOG(INFO) << "Approximate Step";
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Approximate Step";
         }
        
 
@@ -8452,7 +8414,7 @@ namespace parallel_benders {
 					if ( number_of_rows_temp == benders_tree_node_pointer->getDataPtr()->level_warm_start_length_)
 						CPXcopybasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
 					else 
-						LOG(INFO) << "Trying to copy basednorms where problem has " << osi_solver->getNumRows() << " and had " << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_;
+                        LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_solver->getNumRows() << " and had " << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_;
 					// Question is: Can we really apply this call?
 				}
 			}
@@ -8513,8 +8475,7 @@ namespace parallel_benders {
 				if ( cpx_stat != CPX_STAT_OPTIMAL ){
 					double kappa_value;
 					int status = CPXgetdblquality(env_ptr, lp_ptr, &kappa_value, CPX_KAPPA);
-					std::lock_guard<std::mutex> console_lock(*console_mutex_ptr_);
-					LOG(INFO) << "Level projection problem returned with status " << cpx_stat << " and has a basis condition number of " << kappa_value << ".";
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "Level projection problem returned with status " << cpx_stat << " and has a basis condition number of " << kappa_value << ".";
 
 				}
 
@@ -8524,7 +8485,7 @@ namespace parallel_benders {
 
 				cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
 				benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
-				LOG_IF(INFO,cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
+				LOG_IF(WARNING, log_level_ <= google::WARNING && cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
 				// Now we need to switch the entries of the new optimality cuts with the extra row 
 				int num_current_rows = osi_solver->getNumRows();
 				benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ = num_current_rows;
@@ -8616,7 +8577,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::BuildAndSolveCTripleProblem(  )
     {
-        double start_time = CoinGetTimeOfDay();
+        double start_time = timer_.Now();
         assert(d_square_);
         // TODO: Put problem description here for C^3-SLP
         //
@@ -8647,7 +8608,7 @@ namespace parallel_benders {
 
         // TODO: We must take care what kind of PI-elements we actually add to this problem, to assure convergence, see paper of Higle/Sen for that.
         int removed_rows = 0;
-        LOG(INFO) << "DI : " << disjunctive_variable_index;
+        LOG_IF(INFO, log_level_ <= google::INFO) << "DI : " << disjunctive_variable_index;
         std::vector<int> active_lambda(stage_pointer->num_d_square_cuts_,0); // Can be a bitset!
         if ( stage_pointer->d_square_matrix_ != nullptr){
             // I think we should store the disjunctive variables 
@@ -8877,10 +8838,8 @@ namespace parallel_benders {
         //osi_solver->writeLp(string_stream.str().c_str());
 
         osi_solver->initialSolve(); // Solve problem!
-        if ( !osi_solver->isProvenOptimal() ){
-            LOG(ERROR) << "C^3-SLP solve was not optimal.";
-        }
-        LOG(INFO) << osi_solver->getObjValue();
+        LOG_IF(ERROR, log_level_ <= google::ERROR && !osi_solver->isProvenOptimal()) << "C^3-SLP solve was not optimal.";
+        LOG_IF(INFO, log_level_ <= google::INFO) << osi_solver->getObjValue();
 
         // Store important variables (\lambda,\pi,\pi_0)
         //Lambda
@@ -8905,14 +8864,14 @@ namespace parallel_benders {
 
 
 
-        start_time = CoinGetTimeOfDay()-start_time;
+        start_time = timer_.Now()-start_time;
         d_square_c_triple_timer_ += start_time;
 
     }
 
     void ParallelNestedBenders::BuildAndSolveRHSProblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        double start_time = CoinGetTimeOfDay();
+        double start_time = timer_.Now();
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
 
         int num_cols_first_stage = stage_data_[0]->num_columns_;
@@ -9165,7 +9124,7 @@ namespace parallel_benders {
 
         osi_solver->initialSolve(); // Solve problem!
         if ( !osi_solver->isProvenOptimal() ){
-            LOG(ERROR) << "RHS-SLP solve was not optimal.";
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "RHS-SLP solve was not optimal.";
         }
         else {
             // Store relevant values for D^2 Cut Generation
@@ -9197,7 +9156,7 @@ namespace parallel_benders {
         }
 
         // TODO: WarmStart-Handling
-        start_time = CoinGetTimeOfDay()-start_time;
+        start_time = timer_.Now()-start_time;
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
         d_square_c_rhs_timer_ += start_time;
 
@@ -9298,7 +9257,7 @@ namespace parallel_benders {
         if (integer_solution && can_use_bounds) {
             //here we could also copy col_solution_ etc. (see StoreData()) As for now we do not need them
 			//and also we could copy members related to the UB
-            LOG(INFO) << "Solution of the integer relaxation in the first phase has integer solution (feasible for MIP problem)";
+            LOG_IF(INFO, log_level_ <= google::INFO) << "Solution of the integer relaxation in the first phase has integer solution (feasible for MIP problem)";
             upper_bound_ = cont_phase_pnb_->upper_bound_;
         }
         // Copy warm start of MP and SP
@@ -9331,7 +9290,7 @@ namespace parallel_benders {
                 if ( stage_data_[stage]->stochastic_matrix_w_ || stage_data_[stage]->stochastic_objective_ || stage_data_[stage]->stochastic_bounds_ )
                 {
                     start_solution_ = PNB_INT_USE_EV_SOLUTION;
-                    LOG(INFO) << "Problem has stochastic coefficents not only in RHS and T-matrix, so we can not use EV-problem cuts.";
+                    LOG_IF(WARNING, log_level_ <= google::WARNING) << "Problem has stochastic coefficents not only in RHS and T-matrix, so we can not use EV-problem cuts.";
                     break;
                 }
             }
@@ -9386,14 +9345,14 @@ namespace parallel_benders {
 				if (osi_solver_->isProvenOptimal()) {
 					// Set parallel benders solution
 					ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
-					LOG(INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
+                    LOG_IF(INFO, log_level_ <= google::INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
 				}
 				// Reenable osi_solver
 				osi_solver_->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 			}		
             ev_pnb.Init();
             ev_pnb.Solve();
-			LOG(INFO) << "Calculated EV Solution with value " << ev_pnb.upper_bound_;
+            LOG_IF(INFO, log_level_ <= google::INFO) << "Calculated EV Solution with value " << ev_pnb.upper_bound_;
             double * temp_ptr = new double[num_cols_for_warm_up_solution];
 			LOG_IF(FATAL, ev_pnb.solution_code_ != PNB_SOLUTION_OPTIMAL) << "PNB for EV starting solution is not solved to optimality";
             for (int i = 0; i < num_stages_-1; i++)
@@ -9438,7 +9397,7 @@ namespace parallel_benders {
             delete ev_smi;
         }
         if ( warm_up_ && start_solution_ == PNB_INT_USE_SUPPLIED_SOLUTION && warm_up_solution_.get() == nullptr){
-            LOG(WARNING) << "No startup solution supplied. Starting without initial solution.";
+            LOG_IF(WARNING, log_level_ <= google::WARNING) << "No startup solution supplied. Starting without initial solution.";
             warm_up_ = false; start_solution_ = 0;
         }
         if ( warm_up_ && start_solution_ == PNB_INT_USE_EV_SOLUTION ){
@@ -9474,7 +9433,7 @@ namespace parallel_benders {
                 double * temp_ptr = new double[num_cols_for_warm_up_solution];
                 memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*num_cols_for_warm_up_solution);
                 warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
-                LOG(INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
 
                 // Set first stage objective function value and solution
                 const double * obj_coefs = osi_solver_->getObjCoefficients();
@@ -9983,7 +9942,7 @@ namespace parallel_benders {
                 cvar_stopping_first_round_ = false;
                 cvar_stopping_second_round_ = false;
             }
-            LOG(INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
+            LOG_IF(INFO, log_level_ <= google::INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
         }
 
         //TODO Tuning the dual variable (alpha) and get solution value for the chosen (alpha)
