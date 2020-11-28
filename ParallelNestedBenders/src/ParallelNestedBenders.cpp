@@ -809,7 +809,7 @@ namespace parallel_benders {
         if (lp_rounds_limit_ && !ProblemSuitableForLPCuts()) {
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
             solved_counter_++;
-            LOG(ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
+            LOG_IF(ERROR, log_level_ <= google::ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
             timer_.Stop(num_stages_);
             return;
         }
@@ -976,7 +976,7 @@ namespace parallel_benders {
             for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
                 CoinWarmStart* ws;
                 std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
-                if (stage_data_[stage]->warm_start_) { // no mutex because we read data
+                if (stage_data_[stage]->warm_start_) {
                     ws = (stage_data_[stage]->warm_start_.get())->clone();
                     cgp_pnb->stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
                 }
@@ -3185,8 +3185,8 @@ namespace parallel_benders {
                     }
                     if ( CPXgetstat(env_ptr,lp_ptr) == 0){
                         std::lock_guard<std::mutex> unique_lock(*console_mutex_ptr_);
-                        LOG(FATAL) << "Solution process abandoned. Cplex returned with status code " << CPXgetstat(env_ptr,lp_ptr);
-                        CPXwriteprob(env_ptr,lp_ptr,"abandonedProblem","lp");
+                        CPXwriteprob(env_ptr, lp_ptr, "abandonedProblem", "lp");
+                        LOG(FATAL) << "Solution process abandoned. Cplex returned with status code " << CPXgetstat(env_ptr,lp_ptr);    
                     }
                 }
             }
@@ -5296,7 +5296,7 @@ namespace parallel_benders {
                 bool terminate_cut_generation = false;
                 if (dual_cgp_solver->isProvenPrimalInfeasible()) {
                     if (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) {
-                        LOG_IF(FATAL) << "DAN should always be feasible";
+                        LOG(FATAL) << "DAN should always be feasible";
                     }
                     else if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH && construct_domain_if_cgp_fails) {
 
@@ -5331,7 +5331,6 @@ namespace parallel_benders {
                         suffix << "_with_Alpha_Normalization";
                         PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
 
-                        std::lock_guard<std::mutex>unique_lock(*console_mutex_ptr_);
                         DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is unbounded." << std::endl;
                         DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
                         LOG_IF(FATAL, !dual_cgp_solver->isProvenOptimal()) << "DAN should always be feasible";
