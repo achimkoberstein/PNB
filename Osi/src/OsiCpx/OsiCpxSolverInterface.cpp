@@ -903,6 +903,19 @@ bool OsiCpxSolverInterface::isIterationLimitReached() const
 #endif
 }
 
+bool OsiCpxSolverInterface::isTimeLimitReached() const
+{
+    debugMessage("OsiCpxSolverInterface::isTimeLimitReached()\n");
+
+    int stat = CPXgetstat(env_, getMutableLpPtr());
+
+#if CPX_VERSION >= 800
+    return stat == CPX_STAT_ABORT_TIME_LIM;
+#else
+    return stat == CPX_TIME_LIM_FEAS || stat == CPX_TIME_LIM_INFEAS;
+#endif
+}
+
 //#############################################################################
 // WarmStart related methods
 //#############################################################################

@@ -153,6 +153,11 @@ bool OsiCbcSolverInterface::isIterationLimitReached() const
   return modelPtr_->solver()->isIterationLimitReached();
 }
 
+bool OsiCbcSolverInterface::isTimeLimitReached() const
+{
+	return modelPtr_->solver()->isTimeLimitReached();
+}
+
 //#############################################################################
 // WarmStart related methods
 //#############################################################################

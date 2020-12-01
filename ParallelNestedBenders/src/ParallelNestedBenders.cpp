@@ -3435,6 +3435,10 @@ namespace parallel_benders {
 						LogSpecialCase(lp_main_loop_iteration_round_ == nullptr, "MP is unbounded after being infeasible. We have adjusted (bounded) it.");
                         return;
                     }
+                    else if (osi_solver->isIterationLimitReached() ||  osi_solver->isTimeLimitReached()) {
+                        LOG_IF(ERROR, log_level_ <= google::ERROR) << "Subsolver quit because its solution time or iteration counter reached maximum.";
+                        return;
+                    }
                     else {
                         // Get cplex status
                         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -3459,7 +3463,7 @@ namespace parallel_benders {
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
-                    LOG_IF(ERROR, log_level_ <= google::WARNING && !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
+                    LOG_IF(ERROR, log_level_ <= google::ERROR && !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
 					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
                     CPXwriteprob(env_ptr,lp_ptr,"not_optimal","lp");
                 }
@@ -6187,8 +6191,8 @@ namespace parallel_benders {
 				//lp_check_passed = false;
 			}
 			if (second_stage_pointer->stochastic_matrix_t_) {
-                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Never tested L&P cuts for problems with stochastic matrix T";
-				lp_check_passed = false;
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "Your problem has stochastic matrix T";
+				//lp_check_passed = false;
 			}
 			if (second_stage_pointer->stochastic_objective_) {
                 LOG_IF(ERROR, log_level_ <= google::ERROR) << "Your problem has stochastic objective";
@@ -9187,6 +9191,10 @@ namespace parallel_benders {
             cont_phase_pnb_->Init();
             cont_phase_pnb_->max_iteration_ = cont_phase_pnb_it_limit;
             cont_phase_pnb_->max_similarity_iteration_ = 200;
+
+#ifdef NDEBUG
+            cont_phase_pnb_->log_level_ = google::WARNING; // no INFO output for cont phase in release
+#endif
         }       
         assert(!cont_phase_pnb_->cont_phase_it_limit_ && !cont_phase_pnb_->use_first_phase_);
         cont_phase_pnb_->Solve();
