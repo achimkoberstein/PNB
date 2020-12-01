@@ -1613,6 +1613,13 @@ bool OsiClpSolverInterface::isIterationLimitReached() const
   return (stat == 3);
 }
 
+bool OsiClpSolverInterface::isTimeLimitReached() const
+{
+    const int stat = modelPtr_->status();
+    throw std::logic_error("Not implemented. Which stat code?");
+    return (stat == 3);
+}
+
 //#############################################################################
 // WarmStart related methods
 //#############################################################################

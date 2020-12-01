@@ -728,6 +728,18 @@ bool OsiGrbSolverInterface::isIterationLimitReached() const
 	return (stat == GRB_ITERATION_LIMIT);
 }
 
+bool OsiGrbSolverInterface::isTimeLimitReached() const
+{
+    debugMessage("OsiGrbSolverInterface::isTimeLimitReached()\n");
+
+    GUROBI_CALL("isTimeLimitReached", GRBupdatemodel(getMutableLpPtr()));
+
+    int stat;
+    GUROBI_CALL("isTimeLimitReached", GRBgetintattr(getMutableLpPtr(), GRB_INT_ATTR_STATUS, &stat));
+
+    return (stat == GRB_TIME_LIMIT);
+}
+
 //#############################################################################
 // WarmStart related methods
 //#############################################################################

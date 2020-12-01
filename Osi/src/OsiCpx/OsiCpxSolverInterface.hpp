@@ -92,6 +92,8 @@ public:
     virtual bool isDualObjectiveLimitReached() const;
     /// Iteration limit reached?
     virtual bool isIterationLimitReached() const;
+    /// Time limit reached?
+    virtual bool isTimeLimitReached() const;
   //@}
 
   //---------------------------------------------------------------------------
