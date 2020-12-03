@@ -944,12 +944,12 @@ namespace parallel_benders {
 
         ParallelNestedBenders* cgp_pnb = nullptr;
         {
+            int pnb_cgp_it_limit = 50;
             std::lock_guard<std::mutex> unique_lock(smi_mutex_);
             cgp_pnb = new ParallelNestedBenders(smi_);
             cgp_pnb->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
             cgp_pnb->parameter_ = cgp_parameter;
             cgp_pnb->cgp_do_when_infeasible_ = cgp_do_when_infeasible_; // as for now check if cgp solution is equal to one of DAN problem
-			cgp_pnb->max_similarity_iteration_ = 50;
             cgp_pnb->testset_name_ = testset_name_;
             cgp_pnb->problem_name_ = problem_name_;
             cgp_pnb->instance_name_ = instance_name_ + "_CGP_PNB";
@@ -957,6 +957,8 @@ namespace parallel_benders {
             cgp_pnb->log_level_ = google::WARNING; // no INFO output for cgp_pnb_ in release
 #endif
             cgp_pnb->Init();
+            cont_phase_pnb_->max_iteration_ = pnb_cgp_it_limit;
+            cgp_pnb->max_similarity_iteration_ = pnb_cgp_it_limit * 0.75;
             assert(!cgp_pnb->cont_phase_it_limit_ && !cgp_pnb->use_first_phase_);
         }
         {
