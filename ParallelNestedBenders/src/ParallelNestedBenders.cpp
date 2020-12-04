@@ -957,7 +957,7 @@ namespace parallel_benders {
             cgp_pnb->log_level_ = google::WARNING; // no INFO output for cgp_pnb_ in release
 #endif
             cgp_pnb->Init();
-            cont_phase_pnb_->max_iteration_ = pnb_cgp_it_limit;
+            cgp_pnb->max_iteration_ = pnb_cgp_it_limit;
             cgp_pnb->max_similarity_iteration_ = pnb_cgp_it_limit * 0.75;
             assert(!cgp_pnb->cont_phase_it_limit_ && !cgp_pnb->use_first_phase_);
         }
@@ -2991,7 +2991,7 @@ namespace parallel_benders {
                 stage_data_[current_stage_]->lp_cgp_counter_ += num_cuts; // every cut requires CGP to solve
 				
 				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0);
-                LOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate (according to PNB_LP_CUTS_FOR_FRACT parameter).";
+                LOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate.";
 
                 assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
                 // Set round specifics to all dual cgp
@@ -4578,6 +4578,10 @@ namespace parallel_benders {
 #ifndef NDEBUG
             LogSpecialCase(lp_main_loop_iteration_round_ != nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for L&P PNB CGP.");
             LogSpecialCase(lp_main_loop_iteration_round_ == nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for main loop.");
+
+			std::stringstream cut_filename;
+            cut_filename << instance_name_ << "_optimality_cut_it_" << current_iteration_ << "_aggregate_" << i << ".txt";
+            //cut_stuff->DumpCutStuff(cut_filename.str());
 #endif
             AddCutToContainer(benders_tree_node_pointer,cut_stuff);
             /************************************************************************/
@@ -5013,7 +5017,7 @@ namespace parallel_benders {
 
         bool load_cut_stuff = false;
         std::stringstream cut_filename;
-        cut_filename << instance_name_ << "_new/" << "cut_stuff_" << current_iteration_ << "_" << lp_round_ << "_" << fractional_variable.first << ".txt";
+        cut_filename << instance_name_ << "cut_stuff_" << current_iteration_ << "_" << lp_round_ << "_" << fractional_variable.first << ".txt";
         std::fstream file;
         file.open(cut_filename.str());
         if (file.is_open()) {
@@ -5083,7 +5087,7 @@ namespace parallel_benders {
 
         {
             int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
-            DLOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P round " << lp_round_ << ": fractional variable " << lp_cut_index + 1 << "/" << num_cuts;
+            DLOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << lp_round_ << ": fractional variable " << lp_cut_index + 1 << "/" << num_cuts;
             DLOG_IF(INFO, log_level_ <= google::INFO && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) << "Generating " << (use_2nd_stage_info ? "strengthened" : "plain") << " Epigraph L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
             DLOG_IF(INFO, log_level_ <= google::INFO && lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) << "Generating Domain L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
         }
@@ -5460,6 +5464,7 @@ namespace parallel_benders {
                         }
                         else {
                             cut_elements[new_index] = cut_elements[i];
+                            //!!!cut_elements[new_index] = 0;
                             cut_indices[new_index] = cut_indices[i];
                             new_index++;
                         }
@@ -5473,6 +5478,12 @@ namespace parallel_benders {
                 OsiRowCut* cut = new OsiRowCut();
                 cut->setLb(cut_lower_bound);
                 cut->setUb(infinity_);
+
+                // uncomment to ommit L&P cuts
+                //cut->setLb(-std::abs(fractional_variable.second));
+                //cut->setUb(infinity_);
+                // see above cut_elements[new_index] = cut_elements[i];
+				
                 cut->setRow(new_index, cut_indices.data(), cut_elements.data(), debug_test_duplicate_indices_); // copy
                 std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
                 std::shared_ptr<CutStuff> cut_stuff(new CutStuff(1, cut_pointer, lift_and_project_cut_type)); // cut iteration should be 1. We will then identify these cut by it and delete from PNB CGP
@@ -5484,7 +5495,7 @@ namespace parallel_benders {
                 }
 
                 //For testing we might want to dump and/or load the cuts
-                cut_stuff->DumpCutStuff(cut_filename.str());
+                //cut_stuff->DumpCutStuff(cut_filename.str());
 
                 if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
                     // also here was if (change_aggregation_level || sum > ...
