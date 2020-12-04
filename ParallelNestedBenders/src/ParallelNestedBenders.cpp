@@ -4375,7 +4375,7 @@ namespace parallel_benders {
         for (int i = 1; i < original_cut->row().getNumElements(); i++) {
             assert(original_cut->row().getIndices()[i-1] < original_cut->row().getIndices()[i] && "Indices in the cut are not ordered.");
         }
-#endif // !NDEBUG       
+#endif //       
         
         std::vector<OsiRowCut> cuts;
         cuts.reserve(2);
@@ -4578,10 +4578,11 @@ namespace parallel_benders {
 #ifndef NDEBUG
             LogSpecialCase(lp_main_loop_iteration_round_ != nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for L&P PNB CGP.");
             LogSpecialCase(lp_main_loop_iteration_round_ == nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for main loop.");
-
+#endif
+#ifdef LOAD_DUMP_CUTS
 			std::stringstream cut_filename;
             cut_filename << instance_name_ << "_optimality_cut_it_" << current_iteration_ << "_aggregate_" << i << ".txt";
-            //cut_stuff->DumpCutStuff(cut_filename.str());
+            cut_stuff->DumpCutStuff(cut_filename.str());
 #endif
             AddCutToContainer(benders_tree_node_pointer,cut_stuff);
             /************************************************************************/
@@ -5016,6 +5017,7 @@ namespace parallel_benders {
         double start_time(0); // used for timers
 
         bool load_cut_stuff = false;
+#ifdef LOAD_DUMP_CUTS
         std::stringstream cut_filename;
         cut_filename << instance_name_ << "cut_stuff_" << current_iteration_ << "_" << lp_round_ << "_" << fractional_variable.first << ".txt";
         std::fstream file;
@@ -5027,7 +5029,7 @@ namespace parallel_benders {
         else {
             load_cut_stuff = false;
         }
-        load_cut_stuff = false; // comment to allow cuts loading
+#endif
 
 		if (lift_and_p_method_ == parallel_benders::PNB_LIFT_AND_P_METHOD_DOMAIN) {
 			use_2nd_stage_info = false;
@@ -5489,13 +5491,15 @@ namespace parallel_benders {
                 std::shared_ptr<CutStuff> cut_stuff(new CutStuff(1, cut_pointer, lift_and_project_cut_type)); // cut iteration should be 1. We will then identify these cut by it and delete from PNB CGP
                 cut_stuff->aggregate_number_ = -1; // L&P cut (incl. epigraph) is defined for all aggregates, i.e., all thetas have coef 1 in the row
 
-                //load_cut_stuff = true; // uncomment to overwrite L&P cut found in PNB CGP
+#ifdef LOAD_DUMP_CUTS
                 if (load_cut_stuff) {
                     cut_stuff->LoadCutStuff(cut_filename.str());
                 }
-
-                //For testing we might want to dump and/or load the cuts
-                //cut_stuff->DumpCutStuff(cut_filename.str());
+                else {
+                    //For testing we might want to dump and/or load the cuts
+                    cut_stuff->DumpCutStuff(cut_filename.str());
+                } 
+#endif
 
                 if (lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) {
                     // also here was if (change_aggregation_level || sum > ...
@@ -9189,113 +9193,163 @@ namespace parallel_benders {
             return;
         }
 
-        parallel_benders::Parameter cont_phase_param = Parameter(parameter_); // TODO: does copy work
-        cont_phase_param.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
-        cont_phase_param.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
+        bool load_cut_stuff = false;
+        std::stringstream cut_filename;
+        cut_filename << instance_name_ << "_FIRST_PHASE_optimality_cut_it_" << 1 << "_aggregate_" << 0 << ".txt";
+#ifdef LOAD_DUMP_CUTS
+        // KNOWN ISSUE: at least for sslp_10_50_1000c for Epigraph-Str for multicut loading cuts for first phase leads to error
+        std::fstream file;
+        file.open(cut_filename.str());
+        if (file.is_open()) {
+            file.close();
+            load_cut_stuff = true;
+        }
+        else {
+            load_cut_stuff = false;
+        }
+#endif
 
-        assert(cont_phase_pnb_ == nullptr && "Before relaxation phase is implemented it should be not initialized in FirstPhase");
-        if (!cont_phase_pnb_) {
-            cont_phase_pnb_ = new ParallelNestedBenders(smi_);
-            cont_phase_pnb_->parameter_ = cont_phase_param;
-            cont_phase_pnb_->testset_name_ = testset_name_;
-            cont_phase_pnb_->problem_name_ = problem_name_;
-            cont_phase_pnb_->instance_name_ = instance_name_ + "_FIRST_PHASE";
-            cont_phase_pnb_->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
-            cont_phase_pnb_->Init();
-            cont_phase_pnb_->max_iteration_ = cont_phase_pnb_it_limit;
-            cont_phase_pnb_->max_similarity_iteration_ = 200;
+        BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
+        bool have_cont_phase_opt_cuts = false;
+        if (!load_cut_stuff) {
+            parallel_benders::Parameter cont_phase_param = Parameter(parameter_);
+            cont_phase_param.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
+            cont_phase_param.SetParameterValue(parallel_benders::PNB_RELAXATION, 1);
+
+            assert(cont_phase_pnb_ == nullptr && "Before relaxation phase is implemented it should be not initialized in FirstPhase");
+            if (!cont_phase_pnb_) {
+                cont_phase_pnb_ = new ParallelNestedBenders(smi_);
+                cont_phase_pnb_->parameter_ = cont_phase_param;
+                cont_phase_pnb_->testset_name_ = testset_name_;
+                cont_phase_pnb_->problem_name_ = problem_name_;
+                cont_phase_pnb_->instance_name_ = instance_name_ + "_FIRST_PHASE";
+                cont_phase_pnb_->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
+                cont_phase_pnb_->Init();
+                cont_phase_pnb_->max_iteration_ = cont_phase_pnb_it_limit;
+                cont_phase_pnb_->max_similarity_iteration_ = 200;
 
 #ifdef NDEBUG
-            cont_phase_pnb_->log_level_ = google::WARNING; // no INFO output for cont phase in release
+                cont_phase_pnb_->log_level_ = google::WARNING; // no INFO output for cont phase in release
 #endif
-        }       
-        assert(!cont_phase_pnb_->cont_phase_it_limit_ && !cont_phase_pnb_->use_first_phase_);
-        cont_phase_pnb_->Solve();
+            }
+            assert(!cont_phase_pnb_->cont_phase_it_limit_ && !cont_phase_pnb_->use_first_phase_);
+            cont_phase_pnb_->Solve();
 
-        std::map<int, std::string> solution_code_map = { {PNB_SOLUTION_OPTIMAL, "PNB_SOLUTION_OPTIMAL"},
-                {PNB_SOLUTION_INFEASIBLE, "PNB_SOLUTION_INFEASIBLE"},
-                {PNB_SOLUTION_UNBOUNDED, "PNB_SOLUTION_UNBOUNDED"},
-                {PNB_SOLUTION_TIME_LIMIT, "PNB_SOLUTION_TIME_LIMIT"},
-                {PNB_SOLUTION_ITERATION_LIMIT, "PNB_SOLUTION_ITERATION_LIMIT"},
-                {PNB_SOLUTION_SIMILARITY_LIMIT, "PNB_SOLUTION_SIMILARITY_LIMIT"},
-                {PNB_SOLUTION_GAP_NONIMPROVING, "PNB_SOLUTION_GAP_NONIMPROVING"},
-                {PNB_SOLUTION_SUBSOLVER_PROBLEM, "PNB_SOLUTION_SUBSOLVER_PROBLEM"},
-                {PNB_SOLUTION_PARAMETER_PROBLEM, "PNB_SOLUTION_PARAMETER_PROBLEM"},
-                {PNB_SOLUTION_UPPER_LESS_LOWER_BOUND, "PNB_SOLUTION_UPPER_LESS_LOWER_BOUND"},
-                {PNB_SOLUTION_CVAR_H_NEGATIVE, "PNB_SOLUTION_CVAR_H_NEGATIVE"} };
-        std::vector<int> handled_solution_codes = { PNB_SOLUTION_INFEASIBLE, PNB_SOLUTION_UNBOUNDED, PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT,
-                                                    PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_UPPER_LESS_LOWER_BOUND };
+            std::map<int, std::string> solution_code_map = { {PNB_SOLUTION_OPTIMAL, "PNB_SOLUTION_OPTIMAL"},
+                    {PNB_SOLUTION_INFEASIBLE, "PNB_SOLUTION_INFEASIBLE"},
+                    {PNB_SOLUTION_UNBOUNDED, "PNB_SOLUTION_UNBOUNDED"},
+                    {PNB_SOLUTION_TIME_LIMIT, "PNB_SOLUTION_TIME_LIMIT"},
+                    {PNB_SOLUTION_ITERATION_LIMIT, "PNB_SOLUTION_ITERATION_LIMIT"},
+                    {PNB_SOLUTION_SIMILARITY_LIMIT, "PNB_SOLUTION_SIMILARITY_LIMIT"},
+                    {PNB_SOLUTION_GAP_NONIMPROVING, "PNB_SOLUTION_GAP_NONIMPROVING"},
+                    {PNB_SOLUTION_SUBSOLVER_PROBLEM, "PNB_SOLUTION_SUBSOLVER_PROBLEM"},
+                    {PNB_SOLUTION_PARAMETER_PROBLEM, "PNB_SOLUTION_PARAMETER_PROBLEM"},
+                    {PNB_SOLUTION_UPPER_LESS_LOWER_BOUND, "PNB_SOLUTION_UPPER_LESS_LOWER_BOUND"},
+                    {PNB_SOLUTION_CVAR_H_NEGATIVE, "PNB_SOLUTION_CVAR_H_NEGATIVE"} };
+            std::vector<int> handled_solution_codes = { PNB_SOLUTION_INFEASIBLE, PNB_SOLUTION_UNBOUNDED, PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT,
+                                                        PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_UPPER_LESS_LOWER_BOUND };
 
-        if (std::find(handled_solution_codes.begin(), handled_solution_codes.end(), cont_phase_pnb_->solution_code_) != handled_solution_codes.end()) {
-            std::stringstream log_message("CONTINUOUS (FIRST) PHASE solution code is ");
-            log_message << solution_code_map[cont_phase_pnb_->solution_code_] << " after ";
-            log_message << (cont_phase_pnb_->current_iteration_ == 1 ? "the first iteration. " : "2nd or later iteration. ");
-            if (cont_phase_pnb_->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
-                cont_phase_pnb_->upper_bound_ = cont_phase_pnb_->iteration_u_and_l_bounds_.back().first; // if problem is infeasible, UB is set to infinity. Let us revert it
-            }
-            LogSpecialCase(true, log_message.str(), 0.0);
-        }
-        else if (cont_phase_pnb_->solution_code_ != PNB_SOLUTION_OPTIMAL) {
-            LOG(FATAL) << "CONT (FIRST) PHASE solution code is other than: PNB_SOLUTION_INFEASIBLE, PNB_SOLUTION_UNBOUNDED, PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT" <<
-                "PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_UPPER_LESS_LOWER_BOUND. Is it an ERROR?";
-        }
-        // Move cuts from first phase to pnb
-        BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
-        std::vector<BendersNodeData::cut_container*> cut_containers;
-        cut_containers.push_back(&cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_);
-        //cut_containers.push_back(&first_phase_pnb->tree_nodes_by_stage_[0][0]->feasibility_cuts_);  // probably feasibility cuts are not that useful
-        for (auto& cut_container : cut_containers) {
-            for (auto& cut_stuff : *cut_container) {
-                cut_stuff->cut_creation_iteration_ = current_iteration_;
-                AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);
-            }
-        }
-        if (!cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty()) {
-           benders_node_pointer->num_thetas_ = cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_;
-           benders_node_pointer->changed_aggregation_level_ = true;
-            createRoundRobinAggregation(tree_nodes_by_stage_[0][0]->getDataPtr(), tree_nodes_by_stage_[0][0]->numChildren(),benders_node_pointer->num_thetas_, (int)std::ceil((double)tree_nodes_by_stage_[0][0]->numChildren() /benders_node_pointer->num_thetas_), num_oda_aggregates_);
-           benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_); // Gets initialized with 0
-           benders_node_pointer->active_aggregates_.set();
-           benders_node_pointer->was_under_threshold_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_); // Gets initialized with 0
-        }
-        std::vector<int> can_use_bounds_solution_codes = { PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT, PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_OPTIMAL };
-        bool can_use_bounds = std::find(can_use_bounds_solution_codes.begin(), can_use_bounds_solution_codes.end(), cont_phase_pnb_->solution_code_) != can_use_bounds_solution_codes.end();
-        if (can_use_bounds) {
-            lower_bound_ = cont_phase_pnb_->lower_bound_; // LB from the first phase is valid for next phases (since it is the solution of relaxation by definition)
-        } 
-        bool integer_solution = true; // if solution is integer, it is feasible for integer problem and gives us a valid UB
-        assert(current_stage_ == 0);
-        for (int index : core_->getBinaryCols(current_stage_)) {
-            double value = cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[index];
-            double fractionality = abs(round(value) - value); // distance from 0 or 1
-            if (!CompareForEquality(fractionality, 0.0, integer_tolerance_)) {
-                assert(fractionality > 0 && fractionality <= 0.5);
-                integer_solution = false;
-                break;
-            }
-        }
-        if (integer_solution && can_use_bounds) {
-            //here we could also copy col_solution_ etc. (see StoreData()) As for now we do not need them
-			//and also we could copy members related to the UB
-            LOG_IF(INFO, log_level_ <= google::INFO) << "Solution of the integer relaxation in the first phase has integer solution (feasible for MIP problem)";
-            upper_bound_ = cont_phase_pnb_->upper_bound_;
-        }
-        // Copy warm start of MP and SP
-        if (warm_start_ && cont_phase_pnb_->warm_start_) {
-            assert(num_stages_ == cont_phase_pnb_->num_stages_);
-            for (int stage = 0; stage < num_stages_; stage++) { 
-                CoinWarmStart* ws;
-                if (cont_phase_pnb_->stage_data_[stage]->warm_start_) {
-                    ws = (cont_phase_pnb_->stage_data_[stage]->warm_start_.get())->clone();
-                    stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
+            if (std::find(handled_solution_codes.begin(), handled_solution_codes.end(), cont_phase_pnb_->solution_code_) != handled_solution_codes.end()) {
+                std::stringstream log_message("CONTINUOUS (FIRST) PHASE solution code is ");
+                log_message << solution_code_map[cont_phase_pnb_->solution_code_] << " after ";
+                log_message << (cont_phase_pnb_->current_iteration_ == 1 ? "the first iteration. " : "2nd or later iteration. ");
+                if (cont_phase_pnb_->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
+                    cont_phase_pnb_->upper_bound_ = cont_phase_pnb_->iteration_u_and_l_bounds_.back().first; // if problem is infeasible, UB is set to infinity. Let us revert it
                 }
-                for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
-                    if (cont_phase_pnb_->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
-                        ws = (cont_phase_pnb_->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
-                        tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
+                LogSpecialCase(true, log_message.str(), 0.0);
+            }
+            else if (cont_phase_pnb_->solution_code_ != PNB_SOLUTION_OPTIMAL) {
+                LOG(FATAL) << "CONT (FIRST) PHASE solution code is other than: PNB_SOLUTION_INFEASIBLE, PNB_SOLUTION_UNBOUNDED, PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT" <<
+                    "PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_UPPER_LESS_LOWER_BOUND. Is it an ERROR?";
+            }
+            // Move cuts from first phase to pnb
+            std::vector<BendersNodeData::cut_container*> cut_containers;
+            cut_containers.push_back(&cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_);
+            //cut_containers.push_back(&first_phase_pnb->tree_nodes_by_stage_[0][0]->feasibility_cuts_);  // probably feasibility cuts are not that useful
+            for (auto& cut_container : cut_containers) {
+                for (auto& cut_stuff : *cut_container) {
+                    cut_stuff->cut_creation_iteration_ = current_iteration_;
+                    AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);
+                }
+            }
+            have_cont_phase_opt_cuts = !cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty();
+            std::vector<int> can_use_bounds_solution_codes = { PNB_SOLUTION_TIME_LIMIT, PNB_SOLUTION_ITERATION_LIMIT, PNB_SOLUTION_SIMILARITY_LIMIT, PNB_SOLUTION_GAP_NONIMPROVING, PNB_SOLUTION_OPTIMAL };
+            bool can_use_bounds = std::find(can_use_bounds_solution_codes.begin(), can_use_bounds_solution_codes.end(), cont_phase_pnb_->solution_code_) != can_use_bounds_solution_codes.end();
+            if (can_use_bounds) {
+                lower_bound_ = cont_phase_pnb_->lower_bound_; // LB from the first phase is valid for next phases (since it is the solution of relaxation by definition)
+            }
+            bool integer_solution = true; // if solution is integer, it is feasible for integer problem and gives us a valid UB
+            assert(current_stage_ == 0);
+            for (int index : core_->getBinaryCols(current_stage_)) {
+                double value = cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[index];
+                double fractionality = abs(round(value) - value); // distance from 0 or 1
+                if (!CompareForEquality(fractionality, 0.0, integer_tolerance_)) {
+                    assert(fractionality > 0 && fractionality <= 0.5);
+                    integer_solution = false;
+                    break;
+                }
+            }
+            if (integer_solution && can_use_bounds) {
+                //here we could also copy col_solution_ etc. (see StoreData()) As for now we do not need them
+                //and also we could copy members related to the UB
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Solution of the integer relaxation in the first phase has integer solution (feasible for MIP problem)";
+                upper_bound_ = cont_phase_pnb_->upper_bound_;
+            }
+            // Copy warm start of MP and SP
+            if (warm_start_ && cont_phase_pnb_->warm_start_) {
+                assert(num_stages_ == cont_phase_pnb_->num_stages_);
+                for (int stage = 0; stage < num_stages_; stage++) {
+                    CoinWarmStart* ws;
+                    if (cont_phase_pnb_->stage_data_[stage]->warm_start_) {
+                        ws = (cont_phase_pnb_->stage_data_[stage]->warm_start_.get())->clone();
+                        stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
+                    }
+                    for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
+                        if (cont_phase_pnb_->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
+                            ws = (cont_phase_pnb_->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
+                            tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
+                        }
                     }
                 }
             }
+        }
+        else { // load cut stuff
+            have_cont_phase_opt_cuts = true;
+
+            int iteration = 1;
+            bool all_iterations_done = false;
+            while (!all_iterations_done) {
+                for (int aggregate_number = 0; aggregate_number < stage_data_[0]->num_thetas_; aggregate_number++) {
+                    cut_filename.str("");
+                    cut_filename << instance_name_ << "_FIRST_PHASE_optimality_cut_it_" << iteration << "_aggregate_" << aggregate_number << ".txt";
+                    std::fstream file;
+                    file.open(cut_filename.str());
+                    if (file.is_open()) {
+                        file.close();
+                        const OsiRowCut* cut = new OsiRowCut();
+                        std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
+                        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_, cut_pointer, PNB_CUT_TYPE_OPTIMALITY));
+                        cut_stuff->aggregate_number_ = aggregate_number;
+                        cut_stuff->LoadCutStuff(cut_filename.str());
+                        AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);  
+                    }
+                    else {
+                        LOG_IF(FATAL, aggregate_number != 0) << "Cut stuff file for first phase iteration " << iteration << " aggregate " << aggregate_number << " is missing.";
+                        all_iterations_done = true;
+                        break;
+                    }
+                }
+                iteration++;
+            }  
+        }
+        if (have_cont_phase_opt_cuts) {
+            benders_node_pointer->num_thetas_ = stage_data_[0]->num_thetas_;
+            assert(!(cont_phase_pnb_ && benders_node_pointer->num_thetas_ != cont_phase_pnb_->tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_));
+            benders_node_pointer->changed_aggregation_level_ = true;
+            createRoundRobinAggregation(tree_nodes_by_stage_[0][0]->getDataPtr(), tree_nodes_by_stage_[0][0]->numChildren(), benders_node_pointer->num_thetas_, (int)std::ceil((double)tree_nodes_by_stage_[0][0]->numChildren() / benders_node_pointer->num_thetas_), num_oda_aggregates_);
+            benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(benders_node_pointer->num_thetas_); // Gets initialized with 0
+            benders_node_pointer->active_aggregates_.set();
+            benders_node_pointer->was_under_threshold_ = boost::dynamic_bitset<>(benders_node_pointer->num_thetas_); // Gets initialized with 0
         }
     }
 
