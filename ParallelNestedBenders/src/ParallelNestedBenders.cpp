@@ -3129,19 +3129,34 @@ namespace parallel_benders {
         if (!benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.empty() || !benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.empty()) {
             assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ == benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
             assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_feasibility_ == benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.end());
-            stage_data_[current_stage_]->added_optimality_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
-            stage_data_[current_stage_]->added_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size();
-            
+            stage_data_[current_stage_]->added_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size(); // we always add feas cuts
+            double dist_violation_threshold = 0.0001; // in Bodur 0.00001 is the violation for Benders (lazy) cuts. For user (L&P) cuts it is 0.0001 in root node and 0.001 for other nodes 
+
+            int added_opt_cuts = 0;
             for (auto& cut_container : { &benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_, &benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_ }) {
                 for (auto& cut_stuff : *cut_container) {
-                    assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_) &&
-                        !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->epigraph_cuts_) &&
-                        !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->feasibility_cuts_) &&
-                        !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->domain_cuts_) && "It cannot be a duplicate since we checked before.");
-                    cut_stuff->cut_creation_iteration_ = current_iteration_;
-                    AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+                    bool efficient_cut = true;
+                    if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {  // feas cuts are always efficient
+                        double theta_value = (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[cut_stuff->aggregate_number_] : 0);
+                        double dist_violation = cut_stuff->DistanceViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, theta_value);
+                        efficient_cut = dist_violation > dist_violation_threshold;
+                    }
+                    if (efficient_cut) {
+                        added_opt_cuts += cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY ? 1 : 0;
+                        stage_data_[current_stage_]->added_optimality_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
+                        assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_) &&
+                            !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->epigraph_cuts_) &&
+                            !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->feasibility_cuts_) &&
+                            !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->domain_cuts_) && "It cannot be a duplicate since we checked before.");
+                        cut_stuff->cut_creation_iteration_ = current_iteration_;
+                        AddCutToContainer(benders_tree_node_pointer, cut_stuff);
+                    }
                 }
             }
+
+            stage_data_[current_stage_]->added_optimality_cuts_ += added_opt_cuts;
+            LOG_IF(INFO, log_level_ <= google::WARNING) << "Added " << added_opt_cuts << "/" << benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size() << " CGP optimality cuts and " << benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts.";
+
             benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.clear();
             benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.clear();
         }
@@ -4524,6 +4539,7 @@ namespace parallel_benders {
                     cut_elements[k] += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->current_cut_coefficients_[k];
                 
             }
+#ifndef NDEBUG
             // Check if cut is not redundant: Conditional Expected Value of Subproblems (theta) is greater than before. For implementation reasons, we only do this if we do not change aggregation level..
 
             // Theta = cut lower bound - cut_vector * column_solution
@@ -4537,7 +4553,7 @@ namespace parallel_benders {
             sum = cut_lower_bound-sum;
             // Check with previous stuff only, if we did not changed the aggregation level. Because if we changed we do not have the data yet to check for validity of new cut
             // If solution value of problem is greater than approximation we have, we need to add a new cut, otherwise we don't, but it does not harm to do so (except solution time..)
-
+#endif // !NDEBUG
 
             // "Sparsify" the cut
             int new_index = 0;
@@ -4567,7 +4583,11 @@ namespace parallel_benders {
             cut_stuff->aggregate_number_ = i;
 			cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
 			int theta_index = i + (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME ? benders_tree_node_pointer->getDataPtr()->num_thetas_ : 0);
-            if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index]-d_square_translation_term_ : 0) ){
+            double theta_value = (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index] - d_square_translation_term_ : 0);
+#ifndef NDEBUG
+            DLOG_IF(FATAL, !CompareForEquality(cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, theta_value), sum - theta_value, zero_tolerance_));
+#endif
+            if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, theta_value) > 0){
                 added_cuts++;
                 benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate
             }
@@ -9268,6 +9288,8 @@ namespace parallel_benders {
             //cut_containers.push_back(&first_phase_pnb->tree_nodes_by_stage_[0][0]->feasibility_cuts_);  // probably feasibility cuts are not that useful
             for (auto& cut_container : cut_containers) {
                 for (auto& cut_stuff : *cut_container) {
+                    // TODO: here we could evaulate cut violation with the main loop solution or consolidate cuts (not applicable for first phase)
+                    // None of the cuts will be violated for the solution of the cont phase
                     cut_stuff->cut_creation_iteration_ = current_iteration_;
                     AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);
                 }

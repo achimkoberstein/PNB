@@ -216,6 +216,11 @@ namespace parallel_benders{
 
 		void DumpCutStuff(const std::string& fname) const;
 		void LoadCutStuff(const std::string& fname);
+        void Print() const;
+
+        double AbsoluteViolation(std::vector<double> const& col_solution, double theta_value); // alpha*x - Beta
+        double RelativeViolation(std::vector<double> const& col_solution, double theta_value); // (alpha*x - Beta)/|Beta|
+        double DistanceViolation(std::vector<double> const& col_solution, double theta_value); // (alpha*x - Beta)/||alpha||
 
         int cut_creation_iteration_;
         int not_active_iterations_;
