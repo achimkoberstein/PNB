@@ -835,6 +835,51 @@ void CutStuff::LoadCutStuff(const std::string& fname)
 	cut_.reset(std::as_const(cut));
 }
 
+void CutStuff::Print() const
+{
+    cut_->print();
+}
+
+double CutStuff::AbsoluteViolation(std::vector<double> const& col_solution, double theta_value)
+{
+    //solution_column_shift is used to get columns from double prime column set in PNB CGP
+    int solution_column_shift = (column_set_ == PNB_COL_SET_DOUBLE_PRIME ? col_solution.size()/2 : 0);
+
+    const CoinPackedVector& row(cut_->row());
+    const double* elements = row.getElements();
+    const int* indices = row.getIndices();
+    int num_elements = row.getNumElements();
+    double sum = 0.0;
+    for (int i = 0; i < num_elements-1; i++) { // We do not need the aggregate index (which is by construction always the last one!
+        sum += col_solution[indices[i] + solution_column_shift] * elements[i];
+    }
+
+    return cut_->lb() - sum - theta_value; // Violation = cut lower bound - cut_vector * column_solution - Theta
+}
+
+double CutStuff::RelativeViolation(std::vector<double> const& col_solution, double theta_value)
+{
+    if (cut_->lb() == 0.0) {
+        return -1.0;
+    }
+    return AbsoluteViolation(col_solution, theta_value )/abs(cut_->lb());
+}
+
+double CutStuff::DistanceViolation(std::vector<double> const& col_solution, double theta_value)
+{
+    const CoinPackedVector& row(cut_->row());
+    const double* elements = row.getElements();
+    const int* indices = row.getIndices();
+    int num_elements = row.getNumElements();
+    double sum = 0.0;
+    for (int i = 0; i < num_elements - 1; i++) { // We do not need the aggregate index (which is by construction always the last one!
+        sum += pow(elements[i], 2);
+    }
+    double norm = sqrt(sum);
+
+    return AbsoluteViolation(col_solution, theta_value ) / norm;
+}
+
 bool is_active( const std::shared_ptr<CutStuff>& value )
 {
     return value->active_value < 0;
