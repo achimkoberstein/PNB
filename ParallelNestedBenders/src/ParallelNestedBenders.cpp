@@ -944,7 +944,7 @@ namespace parallel_benders {
 
         ParallelNestedBenders* cgp_pnb = nullptr;
         {
-            int pnb_cgp_it_limit = 50;
+            int pnb_cgp_it_limit = 100;
             std::lock_guard<std::mutex> unique_lock(smi_mutex_);
             cgp_pnb = new ParallelNestedBenders(smi_);
             cgp_pnb->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
@@ -3136,7 +3136,7 @@ namespace parallel_benders {
             for (auto& cut_container : { &benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_, &benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_ }) {
                 for (auto& cut_stuff : *cut_container) {
                     bool efficient_cut = true;
-                    if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {  // feas cuts are always efficient
+                    if (stage_data_[current_stage_]->num_thetas_ > 1 && cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {  // take all cuts for single cuts, feas cuts are always efficient
                         double theta_value = (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[cut_stuff->aggregate_number_] : 0);
                         double dist_violation = cut_stuff->DistanceViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, theta_value);
                         efficient_cut = dist_violation > dist_violation_threshold;
