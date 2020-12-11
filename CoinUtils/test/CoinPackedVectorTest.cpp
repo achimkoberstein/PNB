@@ -627,6 +627,36 @@ CoinPackedVectorUnitTest()
     assert( r.isEquivalent(rV) );
 
   } 
+
+  // Test +=. Note that zeros are not automatically
+  // compressed out of the result.
+  {
+      const int ne1 = 5;
+      int inx1[ne1] = { 1,  3,  4,  7,  5 };
+      double el1[ne1] = { 1., 5., 6., 2., 9. };
+      const int ne2 = 4;
+      int inx2[ne2] = { 7,  4,  2,  1 };
+      double el2[ne2] = { 7., 4., 2., 1. };
+
+      CoinPackedVector v1;
+      CoinPackedVector v2;
+      CoinPackedVector rV;
+
+      v1.setVector(ne1, inx1, el1);
+
+      rV.setVector(ne1, inx1, el1);
+      v1 += v2;
+      assert(v1.isEquivalent(rV));
+
+      v2.setVector(ne2, inx2, el2);
+      v1 += v2;
+      const int ner = 6;
+      int inxr[ner] = { 1,     2,     3,     4,     5,     7 };
+      double elr[ner] = { 1. + 1., 0. + 2., 5. + 0., 6. + 4., 9. + 0., 2. + 7. };
+      rV.setVector(ner, inxr, elr);
+      assert(v1.isEquivalent(rV));
+
+  }
   
   // Test subtracting vectors. Note that zeros are not automatically
   // compressed out of the result.
