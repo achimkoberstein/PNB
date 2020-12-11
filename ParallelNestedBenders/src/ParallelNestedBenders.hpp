@@ -506,6 +506,7 @@ bool CutIsEqual(const CutStuff& first, const CutStuff& second, double tolerance)
 
 bool DoubleIsHigher(const std::pair<int,double>& first, const std::pair<int,double>& second);
 
+void ConsolidateCuts(BendersNodeData::cut_container& cuts, int num_thetas, int from_iteration);
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
