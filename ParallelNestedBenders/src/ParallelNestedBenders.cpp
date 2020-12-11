@@ -3142,14 +3142,13 @@ namespace parallel_benders {
             for (auto& cut_container : { &benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_, &benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_ }) {
                 for (auto& cut_stuff : *cut_container) {
                     bool efficient_cut = true;
-                    if (stage_data_[current_stage_]->num_thetas_ > 1 && cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {  // take all cuts for single cuts, feas cuts are always efficient
+                    if (stage_data_[current_stage_]->num_thetas_ > 1 && cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY && cut_stuff->aggregate_number_ != CutStuff::AGGREGATE_OVER_ALL) {  // take all cuts for single cuts, feas cuts are always efficient
                         double theta_value = (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[cut_stuff->aggregate_number_] : 0);
                         double dist_violation = cut_stuff->DistanceViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, theta_value);
                         efficient_cut = dist_violation > dist_violation_threshold;
                     }
                     if (efficient_cut) {
                         added_opt_cuts += cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY ? 1 : 0;
-                        stage_data_[current_stage_]->added_optimality_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size();
                         assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_) &&
                             !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->epigraph_cuts_) &&
                             !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->feasibility_cuts_) &&
