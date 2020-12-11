@@ -214,6 +214,7 @@ namespace parallel_benders{
 
         CutStuff(int iteration,std::shared_ptr<const OsiRowCut>& cut_pointer, int type, int num_cols);
 
+        int CutStuff::GetNumberAggregates() const;
 		void DumpCutStuff(const std::string& fname) const;
 		void LoadCutStuff(const std::string& fname);
         void Print() const;
