@@ -1592,6 +1592,7 @@ TEST(UnitTestPNB, unitTest) {
 }
 
 TEST(UnitTestCutStuff, unitTest) {
+	//double-prime opt cut with 1 theta
 	std::vector<int> ind1{4,5,1,2};
 	std::vector<double> coef1{4.,1.,1.,2.}; // FullVector: 0., 1., 2., 0., 4., 1.
 	OsiRowCut* cut1 = new OsiRowCut();
@@ -1599,9 +1600,12 @@ TEST(UnitTestCutStuff, unitTest) {
 	cut1->setUb(INFINITY);
 	cut1->setRow(4, ind1.data(), coef1.data(), true);
 	std::shared_ptr<const OsiRowCut> cut_pointer1(std::as_const(cut1));
-	parallel_benders::CutStuff cs1(1, cut_pointer1, parallel_benders::PNB_CUT_TYPE_OPTIMALITY, 4);
+	parallel_benders::CutStuff cs1(1, cut_pointer1, parallel_benders::PNB_CUT_TYPE_OPTIMALITY, 5);
 	cs1.aggregate_number_ = 0;
+	cs1.type_ = parallel_benders::PNB_CUT_TYPE_OPTIMALITY;
+	cs1.column_set_ = parallel_benders::PNB_COL_SET_DOUBLE_PRIME;
 
+	//epigraph cut with 2 thetas
 	std::vector<int> ind2{ 4,5,1,2,6 };
 	std::vector<double> coef2{ 4.,1.,1.,2.,1. }; // FullVector: 0., 1., 2., 0., 4., 1., 1.
 	OsiRowCut* cut2 = new OsiRowCut();
@@ -1612,10 +1616,38 @@ TEST(UnitTestCutStuff, unitTest) {
 	std::shared_ptr<const OsiRowCut> cut_pointer2(std::as_const(cut2));
 	parallel_benders::CutStuff cs2(2, cut_pointer2, parallel_benders::PNB_CUT_TYPE_EPIGRAPH, 5);
 	cs2.aggregate_number_ = parallel_benders::CutStuff::AGGREGATE_OVER_ALL;
+	cs2.type_ = parallel_benders::PNB_CUT_TYPE_EPIGRAPH;
+
+	//feas cut with 0 thetas
+	std::vector<int> ind3{ 0,2,1 };
+	std::vector<double> coef3{ 2.,2.,1. }; // FullVector: 2., 1., 2., 0., 0.
+	OsiRowCut* cut3 = new OsiRowCut();
+	cut3->setLb(30.);
+	cut3->setUb(INFINITY);
+	cut3->setRow(3, ind3.data(), coef3.data(), true);
+	std::shared_ptr<const OsiRowCut> cut_pointer3(std::as_const(cut3));
+	parallel_benders::CutStuff cs3(1, cut_pointer3, parallel_benders::PNB_CUT_TYPE_OPTIMALITY, 5);
+	cs3.type_ = parallel_benders::PNB_CUT_TYPE_FEASIBILITY;
 
 	//GetNumberAggregates
 	EXPECT_EQ(cs1.GetNumberAggregates(), 1);
 	EXPECT_EQ(cs2.GetNumberAggregates(), 2);
+
+	//Metrics
+	std::vector<double> solution{ .5, .5, .5, .5, .5 };
+	std::vector<double> solution_cgp{ .5, .5, .5, .5, .5 , 1.2, 1.2, 1.2, 1.2, 1.2};
+	double theta = 5.5;
+	EXPECT_NEAR(cs1.AbsoluteViolation(solution_cgp, theta), -3.9, 0.0001);
+	EXPECT_NEAR(cs1.RelativeViolation(solution_cgp, theta), -.39, 0.0001);
+	EXPECT_NEAR(cs1.DistanceViolation(solution_cgp, theta), -.8315, 0.0001);
+
+	EXPECT_NEAR(cs2.AbsoluteViolation(solution, theta), 11.0, 0.0001);
+	EXPECT_NEAR(cs2.RelativeViolation(solution, theta), .55, 0.0001);
+	EXPECT_NEAR(cs2.DistanceViolation(solution, theta), 2.2937, 0.0001);
+
+	EXPECT_NEAR(cs3.AbsoluteViolation(solution, theta), 27.5, 0.0001);
+	EXPECT_NEAR(cs3.RelativeViolation(solution, theta), .916667, 0.0001);
+	EXPECT_NEAR(cs3.DistanceViolation(solution, theta), 9.16667, 0.0001);
 }
 
 TEST_F(TimerTest, unitTest) {

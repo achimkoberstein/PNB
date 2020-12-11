@@ -980,17 +980,7 @@ double CutStuff::RelativeViolation(std::vector<double> const& col_solution, doub
 
 double CutStuff::DistanceViolation(std::vector<double> const& col_solution, double theta_value)
 {
-    const CoinPackedVector& row(cut_->row());
-    const double* elements = row.getElements();
-    const int* indices = row.getIndices();
-    int num_elements = row.getNumElements();
-    double sum = 0.0;
-    for (int i = 0; i < num_elements - 1; i++) { // We do not need the aggregate index (which is by construction always the last one!
-        sum += pow(elements[i], 2);
-    }
-    double norm = sqrt(sum);
-
-    return AbsoluteViolation(col_solution, theta_value ) / norm;
+    return AbsoluteViolation(col_solution, theta_value ) / cut_->row().twoNorm();
 }
 
 bool is_active( const std::shared_ptr<CutStuff>& value )
