@@ -751,17 +751,18 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
 
 double CutStuff::active_threshold_ = 1.0;
 int CutStuff::strike_threshold_ = -1;
-CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer, int type): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),type_(type),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
+CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer, int type, int num_cols): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),type_(type), num_cols_(num_cols),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
 {
 }
 
 void CutStuff::DumpCutStuff(const std::string& fname) const
 {
     // we export sparse vector (row) as a full storage vector
-    // file will have four rows: indices (0,1,2), values (0,-1,10.5), ub and lb
+    // file will have five rows: indices (0,1,2), values (0,-1,10.5), ub and lb, num_cols (w/o theta)
     // since we cannot know number of elements in full storage vector from sparse vector, we end up export on the last non-zero element
     const CoinPackedVector* row = &cut_->row();
 	int num_elements = row->getMaxIndex() + 1; // last non-zero element
+    assert(num_elements >= num_cols_);
 
 	std::ofstream file_out;
 	file_out.open(fname.c_str(), ios::trunc);
@@ -782,6 +783,9 @@ void CutStuff::DumpCutStuff(const std::string& fname) const
 	// ub and lb
 	file_out << std::setprecision(20) << cut_->ub() << '\n';
 	file_out << std::setprecision(20) << cut_->lb() << '\n';
+
+    // num_cols
+    file_out << num_cols_ << '\n';
 	file_out.close();
 }
 
@@ -797,6 +801,7 @@ void CutStuff::LoadCutStuff(const std::string& fname)
 	std::vector<double> cut_elements{};
 	double ub(0);
 	double lb(0);
+    int num_cols(0);
 	while (getline(file, line, '\n')) {
 		assert(line_number < 4); // indices, coefs, ub, lb
 		int from = 0;
@@ -824,6 +829,10 @@ void CutStuff::LoadCutStuff(const std::string& fname)
 		else if (line_number == 3) { // lb
 			lb = std::stod(line);
 		}
+        else if (line_number == 4) { // num_cols
+            num_cols = std::stoi(line);
+            assert(num_cols == num_cols_);
+        }
 		++line_number;
 	}
 	file.close();

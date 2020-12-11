@@ -212,7 +212,7 @@ namespace parallel_benders{
         static double active_threshold_; // If active_value is less than
         static int strike_threshold_; // If non_active_iterations_ is more than
 
-        CutStuff(int iteration,std::shared_ptr<const OsiRowCut>& cut_pointer, int type);
+        CutStuff(int iteration,std::shared_ptr<const OsiRowCut>& cut_pointer, int type, int num_cols);
 
 		void DumpCutStuff(const std::string& fname) const;
 		void LoadCutStuff(const std::string& fname);
@@ -222,6 +222,7 @@ namespace parallel_benders{
         double RelativeViolation(std::vector<double> const& col_solution, double theta_value); // (alpha*x - Beta)/|Beta|
         double DistanceViolation(std::vector<double> const& col_solution, double theta_value); // (alpha*x - Beta)/||alpha||
 
+        int num_cols_; // number of columns w/o theta (cut_ does not provide this information)
         int cut_creation_iteration_;
         int not_active_iterations_;
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
