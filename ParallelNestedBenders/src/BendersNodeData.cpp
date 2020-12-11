@@ -838,6 +838,56 @@ void CutStuff::LoadCutStuff(const std::string& fname)
 void CutStuff::Print() const
 {
     cut_->print();
+    std::string type_str;
+    switch (type_) {
+    case PNB_CUT_TYPE_OPTIMALITY:
+        type_str = "optimality";
+        break;
+    case PNB_CUT_TYPE_FEASIBILITY:
+        type_str = "feasibility";
+        break;
+    case PNB_CUT_TYPE_EPIGRAPH:
+        type_str = "L&P epigraph";
+        break;
+    case PNB_CUT_TYPE_DOMAIN:
+        type_str = "L&P domain";
+        break;
+    case PNB_CUT_TYPE_CVAR:
+        type_str = "CVaR";
+        break;
+    default:
+        throw std::invalid_argument("Unknown cut type");
+    }
+
+    std::string column_set_str;
+    switch (column_set_) {
+    case PNB_COL_SET_NONE:
+        column_set_str = "none";
+        break;
+    case PNB_COL_SET_PRIME:
+        column_set_str = "prime";
+        break;
+    case PNB_COL_SET_DOUBLE_PRIME:
+        column_set_str = "double-prime";
+        break;
+    default:
+        throw std::invalid_argument("Unknown column set");
+    }
+
+    std::string aggregate_str;
+    switch (aggregate_number_) {
+    case CutStuff::AGGREGATE_OVER_ALL:
+        aggregate_str = "aggregate over all (consolidated)";
+        break;
+    case CutStuff::AGGREGATE_OVER_PARTIAL:
+        aggregate_str = "aggregate over partial";
+        break;
+    default:
+        aggregate_str = to_string(aggregate_number_);
+    }
+
+    std::cout << "- Creation Iteration: " << cut_creation_iteration_ << "\n- Aggregate: " << aggregate_str << "\n- Type: " << type_str << "\n- Column set: " << column_set_str << std::endl;;
+    std::cout << "- To use: " << to_use_ << "\n- Not active iterations: " << not_active_iterations_ << "\n- Active value: " << active_value << "\n- Index in solver: " << current_index_in_solver_ << std::endl;
 }
 
 double CutStuff::AbsoluteViolation(std::vector<double> const& col_solution, double theta_value)
