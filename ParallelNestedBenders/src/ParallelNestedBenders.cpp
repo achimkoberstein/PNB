@@ -4318,26 +4318,34 @@ namespace parallel_benders {
     }
 
 	int ParallelNestedBenders::ApplyCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff) {
-		const OsiRowCut* original_cut = cut_stuff->cut_.get();
+        const OsiRowCut* original_cut = cut_stuff->cut_.get();
+
+        LOG_IF(FATAL, stage_data_[current_stage_]->num_columns_ != cut_stuff->num_cols_);
 		
 		if (!lp_main_loop_iteration_round_) {
 			osi_solver->applyRowCuts(1, original_cut);
 			return 1;
 		}
-		else {
+		else { // apply cuts to prime and double-prime sides in PNB CGP
             assert(current_stage_ == 0 && "Why would we apply cuts to PNB CGP not on the first stage. Might happen if ApplyCut is called not from the Solve() routine");
 			int column_set = cut_stuff->column_set_;
             int num_theta = tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_;
             if (num_theta == 0) {
                 num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
             }
-            int num_theta_indices = 0;
-            if (cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH) {
-                num_theta_indices = num_theta;
+            int num_theta_elements = 0;
+            if (cut_stuff->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL && (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH)) { // Consolidated Optimality cuts
+                num_theta_elements = num_theta;
+            }
+            else if (cut_stuff->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL) {
+                num_theta_elements = cut_stuff->GetNumberAggregates();
             }
             else if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {
-                num_theta_indices = 1;
+                num_theta_elements = 1;
             }
+#ifndef NDEBUG
+            assert(num_theta_elements == cut_stuff->GetNumberAggregates());
+#endif              
 			
             std::vector<OsiRowCut> cuts;
             cuts.reserve(2);
@@ -4345,7 +4353,7 @@ namespace parallel_benders {
                 cuts.emplace_back(*original_cut);
                 CoinPackedVector* row = &(cuts.back().mutableRow());
                 // loop will run only for cuts with theta
-                for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
+                for (int aggregate_index = 0; aggregate_index < num_theta_elements; aggregate_index++) {
                     row->getIndices()[row->getNumElements() - 1 - aggregate_index] += stage_data_[current_stage_]->num_columns_; // shift theta
                 }
 			}
@@ -4353,10 +4361,10 @@ namespace parallel_benders {
 				//apply to the right side => shift by num_cols - used for L&P CGP master problem
                 cuts.emplace_back(*original_cut);
                 CoinPackedVector* row = &(cuts.back().mutableRow());
-                for (int i = 0; i < row->getNumElements() - num_theta_indices; ++i) {
+                for (int i = 0; i < row->getNumElements() - num_theta_elements; ++i) {
 					row->getIndices()[i] += stage_data_[current_stage_]->num_columns_;
 				}
-                for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
+                for (int aggregate_index = 0; aggregate_index < num_theta_elements; aggregate_index++) {
                     row->getIndices()[row->getNumElements() - 1 - aggregate_index] += stage_data_[current_stage_]->num_columns_ + num_theta; // shift theta
 				}
 			}
