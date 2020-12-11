@@ -755,6 +755,42 @@ CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer
 {
 }
 
+int CutStuff::GetNumberAggregates() const
+{
+    if (aggregate_number_ >= 0) {
+        assert(cut_->row().getIndices()[cut_->row().getNumElements() - 1] == num_cols_ + aggregate_number_);
+        assert(cut_->row().getElements()[cut_->row().getNumElements() - 1] == 1.0);
+#ifndef NDEBUG
+        for (int i = 0; i < cut_->row().getNumElements() - 1; i++) {
+            assert(cut_->row().getIndices()[cut_->row().getNumElements()] < num_cols_);
+        }
+#endif
+        return 1;
+    }
+    if (aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL || aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL) {
+        int num_aggregates = 0;
+        // Count the number of aggregates. We need to know the number of columns for the current stage for that!
+        int num_elems = cut_->row().getNumElements();
+        assert(std::is_sorted(cut_->row().getIndices(), cut_->row().getIndices()+num_elems) && "Row indices should be sorted.");
+        for (int i = num_elems; i > 0; i--) {
+            if (cut_->row().getIndices()[i - 1] >= num_cols_) {
+                assert(cut_->row().getElements()[i - 1] == 1.0);
+                num_aggregates++;
+            }
+            else
+                break;
+        }
+#ifndef NDEBUG
+        for (int i = 0; i < cut_->row().getNumElements() - num_aggregates; i++) {
+            assert(cut_->row().getIndices()[cut_->row().getNumElements()] < num_cols_);
+        }
+#endif
+        return num_aggregates;
+    }
+    assert(false);
+    return 0;
+}
+
 void CutStuff::DumpCutStuff(const std::string& fname) const
 {
     // we export sparse vector (row) as a full storage vector
@@ -901,16 +937,34 @@ void CutStuff::Print() const
 
 double CutStuff::AbsoluteViolation(std::vector<double> const& col_solution, double theta_value)
 {
+    //TODO: theta_value should be theta_solution
+#ifndef NDEBUG
+    //check col_solution
+    int num_cols_in_arg = col_solution.size();
+    if (column_set_ == PNB_COL_SET_PRIME || column_set_ == PNB_COL_SET_DOUBLE_PRIME) {
+        assert(col_solution.size() % 2 == 0 && "Solution size should be even.");
+        num_cols_in_arg /= 2;
+    }
+    assert(num_cols_in_arg == num_cols_);
+#endif
+
+    if (type_ == PNB_CUT_TYPE_FEASIBILITY || type_ == PNB_CUT_TYPE_DOMAIN) {
+        assert(cut_->row()[num_cols_] == 0.0 && "Theta coef should be 0.0");
+        theta_value = 0.0; // Theta has coef 0 in these cutes
+    }
+    
     //solution_column_shift is used to get columns from double prime column set in PNB CGP
-    int solution_column_shift = (column_set_ == PNB_COL_SET_DOUBLE_PRIME ? col_solution.size()/2 : 0);
+    int solution_column_shift = (column_set_ == PNB_COL_SET_DOUBLE_PRIME ? num_cols_ : 0);
 
     const CoinPackedVector& row(cut_->row());
     const double* elements = row.getElements();
     const int* indices = row.getIndices();
     int num_elements = row.getNumElements();
     double sum = 0.0;
-    for (int i = 0; i < num_elements-1; i++) { // We do not need the aggregate index (which is by construction always the last one!
-        sum += col_solution[indices[i] + solution_column_shift] * elements[i];
+    for (int i = 0; i < num_elements; i++) {
+        if (indices[i] < num_cols_) { // we need only columns (not theta)
+            sum += col_solution[indices[i] + solution_column_shift] * elements[i];
+        }
     }
 
     return cut_->lb() - sum - theta_value; // Violation = cut lower bound - cut_vector * column_solution - Theta

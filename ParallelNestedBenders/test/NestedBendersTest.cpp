@@ -39,6 +39,8 @@
 #include "ilcplex/cplex.h"
 #include "ilcplex/cpxconst.h"
 
+#include "OsiRowCut.hpp"
+
 class TimerTest : public ::testing::Test {
 public:
 	typedef std::chrono::high_resolution_clock wall_clock;
@@ -1531,7 +1533,7 @@ protected:
 	}
 };
 
-TEST(UnitTest, pnb) {
+TEST(UnitTestPNB, unitTest) {
 	
 	//SmiScnModel smi;
 	std::string folder("../../../../Data/Benders/");
@@ -1589,7 +1591,34 @@ TEST(UnitTest, pnb) {
 	delete osi_solver;
 }
 
-TEST_F(TimerTest, timer) {
+TEST(UnitTestCutStuff, unitTest) {
+	std::vector<int> ind1{4,5,1,2};
+	std::vector<double> coef1{4.,1.,1.,2.}; // FullVector: 0., 1., 2., 0., 4., 1.
+	OsiRowCut* cut1 = new OsiRowCut();
+	cut1->setLb(10.);
+	cut1->setUb(INFINITY);
+	cut1->setRow(4, ind1.data(), coef1.data(), true);
+	std::shared_ptr<const OsiRowCut> cut_pointer1(std::as_const(cut1));
+	parallel_benders::CutStuff cs1(1, cut_pointer1, parallel_benders::PNB_CUT_TYPE_OPTIMALITY, 4);
+	cs1.aggregate_number_ = 0;
+
+	std::vector<int> ind2{ 4,5,1,2,6 };
+	std::vector<double> coef2{ 4.,1.,1.,2.,1. }; // FullVector: 0., 1., 2., 0., 4., 1., 1.
+	OsiRowCut* cut2 = new OsiRowCut();
+	cut2->setLb(20.);
+	cut2->setUb(INFINITY);
+	cut2->setRow(5, ind2.data(), coef2.data(), true);
+	cut2->mutableRow().sortIncrIndex(); // for GetNumberAggregates() must be sorted
+	std::shared_ptr<const OsiRowCut> cut_pointer2(std::as_const(cut2));
+	parallel_benders::CutStuff cs2(2, cut_pointer2, parallel_benders::PNB_CUT_TYPE_EPIGRAPH, 5);
+	cs2.aggregate_number_ = parallel_benders::CutStuff::AGGREGATE_OVER_ALL;
+
+	//GetNumberAggregates
+	EXPECT_EQ(cs1.GetNumberAggregates(), 1);
+	EXPECT_EQ(cs2.GetNumberAggregates(), 2);
+}
+
+TEST_F(TimerTest, unitTest) {
 	parallel_benders::Timer pnb_timer(4);
 	pnb_timer.Start(0);
 	sumApproxTimes(6, 6, 100000, true);

@@ -7405,6 +7405,7 @@ namespace parallel_benders {
                                 CombineTwoCuts(new_single_cut,*temp_it);
                                 // Add the correct number of aggregates TODO
                                 aggregates_for_creation_iteration += GetNumberOfAggregatesFromCut(*temp_it);
+                                assert(GetNumberOfAggregatesFromCut(*temp_it) == (*temp_it)->GetNumberAggregates());
                                 // Remove the temp_it cut from the set of optimality cuts!
                                 benders_node_pointer->optimality_cuts_.erase(temp_it++);
                             }
@@ -7435,6 +7436,7 @@ namespace parallel_benders {
 
                     // Add the elements of the current (sparse) vector without the theta part
                     int number_aggregates_for_cut = GetNumberOfAggregatesFromCut(*it);
+                    assert(GetNumberOfAggregatesFromCut(*it) == (*it)->GetNumberAggregates());
                     for (int i = 0; i < old_cut->row().getNumElements() - number_aggregates_for_cut; i++)
                         new_elements[old_cut->row().getIndices()[i]] = old_cut->row().getElements()[i];
 
@@ -7476,6 +7478,7 @@ namespace parallel_benders {
                         ++aggregates_for_creation_iteration;
                     if ( store_cut_information_ )
                         aggregates_for_creation_iteration += GetNumberOfAggregatesFromCut(*it);
+                        assert(GetNumberOfAggregatesFromCut(*it) == (*it)->GetNumberAggregates());
                     ++it;
 
                 }
@@ -7485,6 +7488,7 @@ namespace parallel_benders {
                         ++aggregates_for_creation_iteration;
                     else {
                         aggregates_for_creation_iteration += GetNumberOfAggregatesFromCut(*it);
+                        assert(GetNumberOfAggregatesFromCut(*it) == (*it)->GetNumberAggregates());
                     }
                     benders_node_pointer->optimality_cuts_.erase(it++);
                 }
@@ -7832,6 +7836,7 @@ namespace parallel_benders {
 
     int ParallelNestedBenders::GetNumberOfAggregatesFromCut( std::shared_ptr<CutStuff>& cut )
     {
+        //TODO: we can delete it because CutStuff has this method
         if ( cut->aggregate_number_ >= 0)
             return 1;
         if ( cut->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL || cut->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL){
