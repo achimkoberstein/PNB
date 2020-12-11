@@ -421,6 +421,37 @@ binaryOp(CoinPackedVector& retVal,
    }
 }
 
+template <class BinaryFunction> void
+binaryOp(CoinPackedVector& op1, const CoinPackedVectorBase& op2,
+    BinaryFunction bf)
+{
+    const int s1 = op1.getNumElements();
+    const int s2 = op2.getNumElements();
+
+    if (s2 == 0)
+        return;
+
+    op1.reserve(s1 + s2);
+
+    double* elems1 = op1.getElements();
+    const int* inds2 = op2.getIndices();
+    const double* elems2 = op2.getElements();
+
+    int i;
+    // loop once for each element in operand2
+    for (i = 0; i < s2; ++i) {
+        const int index = inds2[i];
+        const int pos1 = op1.findIndex(index);
+        if (pos1 != -1) { // element present in operand1
+            elems1[pos1] = bf(elems2[i], elems1[pos1]);
+        }
+        else {
+            const double val = bf(elems2[i], 0.0);
+            op1.insert(index, val);
+        }
+    }
+}
+
 //-----------------------------------------------------------------------------
 
 template <class BinaryFunction> CoinPackedVector
@@ -462,6 +493,13 @@ inline CoinPackedVector operator+(const CoinPackedVectorBase& op1,
    retVal.setTestForDuplicateIndex(true);
    binaryOp(retVal, op1, op2, std::plus<double>());
    return retVal;
+}
+
+/// +=
+inline void operator+=(CoinPackedVector& op1,
+    const CoinPackedVectorBase& op2)
+{
+    binaryOp(op1, op2, std::plus<double>());
 }
 
 /// Return the difference of two packed vectors

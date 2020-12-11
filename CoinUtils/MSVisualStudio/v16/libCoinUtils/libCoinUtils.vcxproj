@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{C4867F15-438D-4FF8-8388-62FBAAA9786C}</ProjectGuid>
+    <ProjectGuid>{E1245C46-CDA8-4B60-AA71-578A0DDB8EA6}</ProjectGuid>
     <RootNamespace>libCoinUtils</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
