@@ -4375,34 +4375,35 @@ namespace parallel_benders {
 	}
 
     void ParallelNestedBenders::ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff, BendersNodeData* benders_node_data) {
-        
         assert(current_stage_ == 0);
         int column_set = cut_stuff->column_set_;
         int num_theta = benders_node_data->num_thetas_;
         if (num_theta == 0) {
             num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
         }
-        int num_theta_indices = 0;
-        if (cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH) {
-            num_theta_indices = num_theta;
+        int num_theta_elements = 0;
+        if (cut_stuff->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL && (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH)) { // Epigraph or consolidated Optimality cuts
+            num_theta_elements = num_theta;
+        }
+        else if (cut_stuff->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL) {
+            num_theta_elements = cut_stuff->GetNumberAggregates();
         }
         else if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {
-            num_theta_indices = 1;
+            num_theta_elements = 1;
         }
 
         int num_cols = stage_data_[current_stage_]->num_columns_;
+        LOG_IF(FATAL, num_cols != cut_stuff->num_cols_);
         int z0_col_index = num_cols * 2;
         int y0_col_index = num_cols * 2 + 1;
         int theta_tau_shift = num_cols + 2;
         int theta_v_shift = theta_tau_shift + num_theta;
         
         const OsiRowCut* original_cut = cut_stuff->cut_.get();
-        assert(original_cut->row().getNumElements() <= num_cols + num_theta_indices); // <= because elements with value 0 are not included
+        assert(original_cut->row().getNumElements() <= num_cols + num_theta_elements); // <= because elements with value 0 are not included
         assert(original_cut->row().getMaxIndex() < num_cols + num_theta);
 #ifndef NDEBUG
-        for (int i = 1; i < original_cut->row().getNumElements(); i++) {
-            assert(original_cut->row().getIndices()[i-1] < original_cut->row().getIndices()[i] && "Indices in the cut are not ordered.");
-        }
+        assert(num_theta_elements == cut_stuff->GetNumberAggregates()); // and they are sorted
 #endif //       
         
         std::vector<OsiRowCut> cuts;
@@ -4415,7 +4416,7 @@ namespace parallel_benders {
             CoinPackedVector* row = &(cuts.back().mutableRow());
             row->reserve(row->getNumElements() + 2); // incl. z_0 and y_0 columns
             // loop will run only for cuts with theta
-            for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
+            for (int aggregate_index = 0; aggregate_index < num_theta_elements; aggregate_index++) {
                 row->getIndices()[row->getNumElements() - 1 - aggregate_index] += theta_tau_shift; // shift theta to the tau column
             }
             row->insert(z0_col_index, -original_cut->lb()); // add RHS as coef for z_0, it has vector_size position in vector
@@ -4428,10 +4429,10 @@ namespace parallel_benders {
             cuts.back().setLb(0.0); // lb is moved to the problem matrix in cols z_0 and y_0
             CoinPackedVector* row = &(cuts.back().mutableRow());
             row->reserve(row->getNumElements() + 2); // incl. z_0 and y_0 columns
-            for (int i = 0; i < row->getNumElements() - num_theta_indices; ++i) {
+            for (int i = 0; i < row->getNumElements() - num_theta_elements; ++i) {
                 row->getIndices()[i] += num_cols;
             }
-            for (int aggregate_index = 0; aggregate_index < num_theta_indices; aggregate_index++) {
+            for (int aggregate_index = 0; aggregate_index < num_theta_elements; aggregate_index++) {
                 row->getIndices()[row->getNumElements() - 1 - aggregate_index] += theta_v_shift; // shift theta to the v column
             }
             row->setElement(row->getNumElements(), 0.0); // set coef for z_0 to 0, it has row->getNumElements() position in vector
