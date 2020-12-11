@@ -5258,6 +5258,7 @@ namespace parallel_benders {
                     // Add lp_round_opt and feas cuts
                     for (auto& cut_container : lp_round_cut_containers) {
 						// no need to use mutex since only in sequential
+                        // TODO: could not we simply change the position of old_cgp_pnb_opt_cuts_back in PNB CGP before adding these cuts?
 						assert(lp_parallel_mode_ < PNB_PARAL_FRACTS);
                         lp_round_cuts_applied += cut_container->size();
                         for (auto& cut_stuff : *cut_container) {
@@ -5284,11 +5285,33 @@ namespace parallel_benders {
                         if ((*it)->to_use_) {
                             assert((*it->get()).cut_creation_iteration_ != 0 && "All cuts from PNB CGP should have being created during Solve() -> in it > 0. It == 0 is for cuts from the main loop copied ot PNB CGP.");
                             ApplyCutToLnPCGP(dual_cgp_solver, (*it), benders_node_pointer);
-                            (*it)->column_set_ = parallel_benders::PNB_COL_SET_NONE; // do it here because we take into account column_set in cut comparison
-                            std::lock_guard<std::mutex>unique_lock(lp_round_cuts_mutex_);
-                            if (lp_use_cgp_pnb_cuts_ && !CheckForSameCut((*it->get()), benders_node_pointer->lp_round_optimality_cuts_) && !CheckForSameCut((*it->get()), benders_node_pointer->optimality_cuts_)) {
-                                // we set cut_creation_iteration_ to the current_iteration_ after the round: now it might make order of the cuts in CGP PNB not according to the iteration
-                                benders_node_pointer->lp_round_optimality_cuts_.push_back(*it);
+                        }
+                    }
+
+                    if (lp_use_cgp_pnb_cuts_) {
+                        int num_aggregates = getNumThetasByStage(tree_nodes_by_stage_[current_stage_][0]);
+                        if (num_aggregates > 1) {
+                            // TODO: do cuts before old_cgp_pnb_opt_cuts_back all have iteration 0 and were taken from previous iterations? lp_round cuts not
+                            // TODO: get rid of RelativeViolation filter for PNB CGP cuts
+                            // TODO: info of how many cuts we consolidated
+                            ConsolidateCuts(*cgp_optimality_cuts, num_aggregates, 1); //TODO: from which iteration if we use lp_round_optimality cuts
+                            benders_node_pointer->active_aggregates_.set(); // L&P cut is defined for all aggregates
+                        }
+
+                        if (old_cgp_pnb_opt_cuts_back == cgp_optimality_cuts->end()) { // there were no opt cuts in PNB CGP before we solved it
+                            it = cgp_optimality_cuts->begin(); // therefore, all cuts are new and we add all of them
+                        }
+                        else {
+                            it = std::next(old_cgp_pnb_opt_cuts_back);
+                        }
+                        for (; it != cgp_optimality_cuts->end(); ++it) {
+                            if ((*it)->to_use_) {
+                                (*it)->column_set_ = parallel_benders::PNB_COL_SET_NONE; // do it here because we take into account column_set in cut comparison
+                                std::lock_guard<std::mutex>unique_lock(lp_round_cuts_mutex_);
+                                if (!CheckForSameCut((*it->get()), benders_node_pointer->lp_round_optimality_cuts_) && !CheckForSameCut((*it->get()), benders_node_pointer->optimality_cuts_)) {
+                                    // we set cut_creation_iteration_ to the current_iteration_ after the round: now it might make order of the cuts in CGP PNB not according to the iteration
+                                    benders_node_pointer->lp_round_optimality_cuts_.push_back(*it);
+                                }
                             }
                         }
                     }
