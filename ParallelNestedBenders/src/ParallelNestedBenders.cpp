@@ -2903,10 +2903,16 @@ namespace parallel_benders {
         else if (current_stage_ == 0 && lp_switch_counter_ > 0) { // we definitely have build MP
             build_subproblem = false;
         }
-        // we have already build MP for PNB CGP in SetLnPCGPRoundSpecifics()
+        else if (current_stage_ == 0 && current_iteration_ == 1 && lp_main_loop_iteration_round_) { // we have already build MP for PNB CGP in SetLnPCGPRoundSpecifics()
+            build_subproblem = false;
+        }
+        else if (current_stage_ == 0 && current_iteration_ == 1 && solved_counter_ != 0) { // if problem was solved before it should have MP solver loaded
+            build_subproblem = false;
+        }
         // we do not need to rebuild MP in first iteration for LnP rounds
-        // if problem was solved before it should have MP solver loaded
-        else if (current_stage_ == 0 && current_iteration_ == 1 && !lp_main_loop_iteration_round_ && lp_round_ < 2 && solved_counter_ == 0) {
+        // osi_solver_->getNumCols() == 0 is necessary for the case when we tried to build L&P cuts in first iteration but could not (lp_round will be 1 onr MP is already built)
+        else if (current_stage_ == 0 && current_iteration_ == 1 && lp_round_ < 2 && osi_solver_->getNumCols() == 0) {
+            assert(seperate_first_stage_solver_ && "osi_solver_->getNumCols() == 0 might work wrong here.");
             build_subproblem = true;
         }
         
