@@ -370,12 +370,13 @@ public:
 		std::string total_stoch_string = folder + stoch_name_string;
 
 		num_stages_ = 2;
+		int num_scenarios(-1);
 		int num_childs_first_stage = 1;
 
 		parallel_benders::Parameter param(benders_parameter_); // Copy parameter!
 		updateParameterSets();
 
-		int read_in_smps_file = 0;
+		int read_in_smps_file = 1;
 		int num_aggregates_by_magic = 0;
 		double* min_scenario_pointer = NULL;
 		double* max_scenario_pointer = NULL;
@@ -391,6 +392,7 @@ public:
 			int smi_read_in = smi_model->readSmps(total_core_string.c_str(), total_time_string.c_str(), total_stoch_string.c_str());
 			assert(smi_read_in == 0);
 			num_stages_ = smi_model->getCore()->getNumStages();
+			num_scenarios = smi_model->getNumScenarios();
 			num_childs_first_stage = smi_model->getSmiTree()->getRoot()->numChildren();
 
 			num_aggregates_by_magic = 0;
@@ -632,7 +634,7 @@ public:
 			benders_parameter_ = parameter_set;
 			int aggregates = benders_parameter_.parameter_.get(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 1);
 			// we skip if number of aggregates > number of scenarios
-			LOG_IF(INFO, num_childs_first_stage < aggregates && num_stages_ == 2) << "Solving of " << stoch_name << " with PNB_AGGREGATED_OPTIMALITY_CUTS " << aggregates << " was skipped. Num 2nd stage scenarios < aggregates";
+			LOG_IF(INFO, num_scenarios < aggregates && num_stages_ == 2) << "Solving of " << stoch_name << " with PNB_AGGREGATED_OPTIMALITY_CUTS " << aggregates << " was skipped. Num 2nd stage scenarios < aggregates. Maybe you did not activate read_in_smps_file to set num_scenarios.";
 			if (!(num_childs_first_stage < aggregates && num_stages_ == 2)) {
 				write_xml("current_param.xml", benders_parameter_.parameter_);
 				solutions.push_back(solveProblemWithParameters(core_name, time_name, stoch_name));
