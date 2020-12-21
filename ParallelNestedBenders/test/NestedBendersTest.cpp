@@ -141,19 +141,7 @@ public:
 		boost::dynamic_bitset<> aggregates(num_theta);
 		for (int i = theta_start_ind; i < theta_start_ind + num_theta; i++) {
 			if (cut_info[i] == 1.0) {
-				aggregates.set(i - theta_start_ind);
 				row.insert(num_cols + i - theta_start_ind, 1.0);
-			}
-		}
-
-		int aggregate_number = -3; // TODO: this should be aggregate number for feas cut
-		if (aggregates.all()) {
-			aggregate_number = parallel_benders::CutStuff::AGGREGATE_OVER_ALL;
-		}
-		else if (aggregates.find_first() != boost::dynamic_bitset<>::npos) {
-			aggregate_number = aggregates.find_first();
-			if (aggregates.find_next(aggregate_number) != boost::dynamic_bitset<>::npos) {
-				aggregate_number = parallel_benders::CutStuff::AGGREGATE_OVER_PARTIAL;
 			}
 		}
 
@@ -164,7 +152,6 @@ public:
 		std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
 
 		parallel_benders::CutStuff* cut_stuff = new parallel_benders::CutStuff(cut_info[it_ind], cut_pointer, cut_info[type_ind], num_cols);
-		cut_stuff->aggregate_number_ = aggregate_number;
 		cut_stuff->column_set_ = cut_info[col_set_ind];
 
 		return cut_stuff;
@@ -1660,46 +1647,54 @@ TEST(UnitTestPNB, unitTest) {
 
 TEST_F(UnitTestCutStuff, unitTest) {
 	//TODO: use here CutStuffFromCutInfo()
-	//double-prime opt cut with 1 theta
-	std::vector<int> ind1{4,5,1,2};
-	std::vector<double> coef1{4.,1.,1.,2.}; // FullVector: 0., 1., 2., 0., 4., 1.
-	OsiRowCut* cut1 = new OsiRowCut();
-	cut1->setLb(10.);
-	cut1->setUb(INFINITY);
-	cut1->setRow(4, ind1.data(), coef1.data(), true);
-	std::shared_ptr<const OsiRowCut> cut_pointer1(std::as_const(cut1));
-	parallel_benders::CutStuff cs1(1, cut_pointer1, parallel_benders::PNB_CUT_TYPE_OPTIMALITY, 5);
-	cs1.aggregate_number_ = 0;
-	cs1.type_ = parallel_benders::PNB_CUT_TYPE_OPTIMALITY;
-	cs1.column_set_ = parallel_benders::PNB_COL_SET_DOUBLE_PRIME;
+	using namespace parallel_benders;
+	std::vector<double>cut_info;
 
-	//epigraph cut with 2 thetas
-	std::vector<int> ind2{ 4,5,1,2,6 };
-	std::vector<double> coef2{ 4.,1.,1.,2.,1. }; // FullVector: 0., 1., 2., 0., 4., 1., 1.
-	OsiRowCut* cut2 = new OsiRowCut();
-	cut2->setLb(20.);
-	cut2->setUb(INFINITY);
-	cut2->setRow(5, ind2.data(), coef2.data(), true);
-	cut2->mutableRow().sortIncrIndex(); // for GetNumberAggregates() must be sorted
-	std::shared_ptr<const OsiRowCut> cut_pointer2(std::as_const(cut2));
-	parallel_benders::CutStuff cs2(2, cut_pointer2, parallel_benders::PNB_CUT_TYPE_EPIGRAPH, 5);
-	cs2.aggregate_number_ = parallel_benders::CutStuff::AGGREGATE_OVER_ALL;
-	cs2.type_ = parallel_benders::PNB_CUT_TYPE_EPIGRAPH;
+	//double-prime opt cut with 1 theta
+	//		   col,	coef,		lb,	theta,	it,type,col set
+	cut_info = { 5,	0,1,2,0,4,	10,	1,		1,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_DOUBLE_PRIME };
+	//TODO: the method below does not need theta
+	CutStuff cs1(*CutStuffFromCutInfo(cut_info, 1));
+	EXPECT_EQ(cs1.getNumberAggregates(), 1);
+	EXPECT_EQ(cs1.getAggregates()[0], 0);
+	EXPECT_EQ(cs1.getAggregateType(1), 0);
+	EXPECT_EQ(cs1.type_, PNB_CUT_TYPE_OPTIMALITY);
+	EXPECT_EQ(cs1.column_set_, PNB_COL_SET_DOUBLE_PRIME);
+
+	//epigraph cut with 2 thetas and later 3 thetas
+	cut_info = { 5,	0,1,2,0,4,	20,	0,1,	2,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE };
+	CutStuff cs2(*CutStuffFromCutInfo(cut_info, 2));
+	EXPECT_EQ(cs2.getNumberAggregates(), 1);
+	EXPECT_EQ(cs2.getAggregates()[0], 1);
+	EXPECT_EQ(cs2.getAggregateType(2), 1);
+	EXPECT_EQ(cs2.type_, PNB_CUT_TYPE_OPTIMALITY);
+	EXPECT_EQ(cs2.column_set_, PNB_COL_SET_NONE);
+
+	//setAggregate
+	cs2.setAggregate(2);
+	EXPECT_EQ(cs2.getNumberAggregates(), 2);
+	EXPECT_EQ(cs2.getAggregates()[0], 1);
+	EXPECT_EQ(cs2.getAggregates()[1], 2);
+	EXPECT_EQ(cs2.getAggregateType(2), CutStuff::AGGREGATE_OVER_PARTIAL);
+	cs2.setAggregate(0);
+	EXPECT_EQ(cs2.getNumberAggregates(), 3);
+	EXPECT_EQ(cs2.getAggregates()[0], 0);
+	EXPECT_EQ(cs2.getAggregates()[1], 1);
+	EXPECT_EQ(cs2.getAggregates()[2], 2);
+	EXPECT_EQ(cs2.getAggregateType(3), CutStuff::AGGREGATE_OVER_ALL);
 
 	//feas cut with 0 thetas
-	std::vector<int> ind3{ 0,2,1 };
-	std::vector<double> coef3{ 2.,2.,1. }; // FullVector: 2., 1., 2., 0., 0.
-	OsiRowCut* cut3 = new OsiRowCut();
-	cut3->setLb(30.);
-	cut3->setUb(INFINITY);
-	cut3->setRow(3, ind3.data(), coef3.data(), true);
-	std::shared_ptr<const OsiRowCut> cut_pointer3(std::as_const(cut3));
-	parallel_benders::CutStuff cs3(1, cut_pointer3, parallel_benders::PNB_CUT_TYPE_OPTIMALITY, 5);
-	cs3.type_ = parallel_benders::PNB_CUT_TYPE_FEASIBILITY;
+	//		   col,	coef,		lb,	theta,	it,type,col set
+	cut_info = { 5,	2,1,2,0,0,		30,	0,0,	1,PNB_CUT_TYPE_FEASIBILITY,PNB_COL_SET_NONE };
+	CutStuff cs3(*CutStuffFromCutInfo(cut_info, 2));
+	//void CutStuff::setAggregate(int aggregate);
+	EXPECT_EQ(cs3.getNumberAggregates(), 0);
+	EXPECT_EQ(cs3.getAggregates().size(), 0);
+	EXPECT_EQ(cs3.getAggregateType(2), CutStuff::AGGREGATE_OVER_NONE);
+	EXPECT_EQ(cs3.type_, PNB_CUT_TYPE_FEASIBILITY);
+	EXPECT_EQ(cs3.column_set_, PNB_COL_SET_NONE);
 
-	//GetNumberAggregates
-	EXPECT_EQ(cs1.GetNumberAggregates(), 1);
-	EXPECT_EQ(cs2.GetNumberAggregates(), 2);
+	//TODO: epigraph cut
 
 	//Metrics
 	std::vector<double> solution{ .5, .5, .5, .5, .5 };
@@ -1711,7 +1706,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 
 	EXPECT_NEAR(cs2.AbsoluteViolation(solution, theta), 11.0, 0.0001);
 	EXPECT_NEAR(cs2.RelativeViolation(solution, theta), .55, 0.0001);
-	EXPECT_NEAR(cs2.DistanceViolation(solution, theta), 2.2937, 0.0001);
+	EXPECT_NEAR(cs2.DistanceViolation(solution, theta), 2.2453, 0.0001);
 
 	EXPECT_NEAR(cs3.AbsoluteViolation(solution, theta), 27.5, 0.0001);
 	EXPECT_NEAR(cs3.RelativeViolation(solution, theta), .916667, 0.0001);
@@ -1719,7 +1714,6 @@ TEST_F(UnitTestCutStuff, unitTest) {
 
 	//ConsolidateCuts
 	{
-		using namespace parallel_benders;
 		const int num_theta(3);
 		const int from_iteration(4);
 		std::vector<std::vector<double>>cut_infos;

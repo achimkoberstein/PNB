@@ -751,44 +751,53 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
 
 double CutStuff::active_threshold_ = 1.0;
 int CutStuff::strike_threshold_ = -1;
-CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer, int type, int num_cols): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),type_(type), num_cols_(num_cols),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
+CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer, int type, int num_cols): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregates_(),cut_(cut_pointer),type_(type), num_cols_(num_cols),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
 {
+    
+    updateAggregData();
+
 }
 
-int CutStuff::GetNumberAggregates() const
+const std::vector<int> CutStuff::getAggregates() const
 {
-    if (aggregate_number_ >= 0) {
-        assert(cut_->row().getIndices()[cut_->row().getNumElements() - 1] == num_cols_ + aggregate_number_);
-        assert(cut_->row().getElements()[cut_->row().getNumElements() - 1] == 1.0);
-#ifndef NDEBUG
-        for (int i = 0; i < cut_->row().getNumElements() - 1; i++) {
-            assert(cut_->row().getIndices()[cut_->row().getNumElements()] < num_cols_);
-        }
-#endif
-        return 1;
+    // it is rather expensive
+    std::vector<int> aggregates_vector;
+    aggregates_vector.reserve(aggregates_.size());
+    
+    int aggregate_index = aggregates_.find_first();
+    while (aggregate_index != boost::dynamic_bitset<>::npos) {
+        aggregates_vector.push_back(aggregate_index);
+        aggregate_index = aggregates_.find_next(aggregate_index);
     }
-    if (aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL || aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL) {
-        int num_aggregates = 0;
-        // Count the number of aggregates. We need to know the number of columns for the current stage for that!
-        int num_elems = cut_->row().getNumElements();
-        assert(std::is_sorted(cut_->row().getIndices(), cut_->row().getIndices()+num_elems) && "Row indices should be sorted.");
-        for (int i = num_elems; i > 0; i--) {
-            if (cut_->row().getIndices()[i - 1] >= num_cols_) {
-                assert(cut_->row().getElements()[i - 1] == 1.0);
-                num_aggregates++;
-            }
-            else
-                break;
-        }
-#ifndef NDEBUG
-        for (int i = 0; i < cut_->row().getNumElements() - num_aggregates; i++) {
-            assert(cut_->row().getIndices()[cut_->row().getNumElements()] < num_cols_);
-        }
-#endif
-        return num_aggregates;
+    return aggregates_vector;
+}
+
+int CutStuff::getNumberAggregates() const
+{
+    return aggregates_.count();
+}
+
+int CutStuff::getAggregateType(int num_theta) const
+{
+    
+    assert(num_theta >= aggregates_.size());
+    if (aggregates_.empty()) {
+        return CutStuff::AGGREGATE_OVER_NONE;
     }
-    assert(false);
-    return 0;
+    assert(!aggregates_.none()); // if not empty, than at least one should be active
+    int num_aggregates = getNumberAggregates();
+    if (num_aggregates == 1) {
+        return aggregates_.find_first();
+    }
+    else if (num_aggregates == num_theta) {
+        return CutStuff::AGGREGATE_OVER_ALL;
+    }
+    else if (num_aggregates > 1) {
+        return CutStuff::AGGREGATE_OVER_PARTIAL;
+    }
+    else {
+        throw runtime_error("");
+    }
 }
 
 void CutStuff::DumpCutStuff(const std::string& fname) const
@@ -919,19 +928,7 @@ void CutStuff::Print() const
         throw std::invalid_argument("Unknown column set");
     }
 
-    std::string aggregate_str;
-    switch (aggregate_number_) {
-    case CutStuff::AGGREGATE_OVER_ALL:
-        aggregate_str = "aggregate over all (consolidated)";
-        break;
-    case CutStuff::AGGREGATE_OVER_PARTIAL:
-        aggregate_str = "aggregate over partial";
-        break;
-    default:
-        aggregate_str = to_string(aggregate_number_);
-    }
-
-    std::cout << "- Creation Iteration: " << cut_creation_iteration_ << "\n- Aggregate: " << aggregate_str << "\n- Type: " << type_str << "\n- Column set: " << column_set_str << std::endl;;
+    std::cout << "- Creation Iteration: " << cut_creation_iteration_ << "\n- Type: " << type_str << "\n- Column set: " << column_set_str << std::endl;
     std::cout << "- To use: " << to_use_ << "\n- Not active iterations: " << not_active_iterations_ << "\n- Active value: " << active_value << "\n- Index in solver: " << current_index_in_solver_ << std::endl;
 }
 
@@ -981,6 +978,23 @@ double CutStuff::RelativeViolation(std::vector<double> const& col_solution, doub
 double CutStuff::DistanceViolation(std::vector<double> const& col_solution, double theta_value)
 {
     return AbsoluteViolation(col_solution, theta_value ) / cut_->row().twoNorm();
+}
+
+void CutStuff::setAggregate(int aggregate)
+{
+    if (aggregate+1 > aggregates_.size()) {
+        aggregates_.resize(aggregate+1);
+    }
+    if (aggregates_.test(aggregate)) {
+        assert(cut_->row()[num_cols_ + aggregate] == 1.0);
+        return;
+    }
+    aggregates_.set(aggregate);
+    //TODO: create method getCut and getMutableCut, make cut_ private
+    assert(cut_->row()[num_cols_ + aggregate] == 0.0);
+    OsiRowCut new_cut(*cut_);
+    new_cut.mutableRow().insert(num_cols_ + aggregate, 1.0);
+    cut_ = std::make_shared<const OsiRowCut>(std::as_const(new_cut));
 }
 
 bool is_active( const std::shared_ptr<CutStuff>& value )
