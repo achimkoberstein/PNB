@@ -131,9 +131,9 @@ private:
 
     void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
-    void CombineTwoCuts( std::shared_ptr<CutStuff>&, std::shared_ptr<CutStuff>& );
+    void CombineTwoCuts( std::shared_ptr<CutStuff>&, std::shared_ptr<CutStuff>&, int num_theta );
 
-    int GetNumberOfAggregatesFromCut( std::shared_ptr<CutStuff>& cut);
+    int GetNumberOfAggregatesFromCut( std::shared_ptr<CutStuff>& cut, int num_theta);
 
     void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const std::vector<double>& dual_solution, std::vector<double>* cut_coefficients_pointer);
 
