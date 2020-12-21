@@ -755,7 +755,7 @@ CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer
 {
     
     updateAggregData();
-
+	assert(is_consistent());
 }
 
 const std::vector<int> CutStuff::getAggregates() const
@@ -780,11 +780,12 @@ int CutStuff::getNumberAggregates() const
 int CutStuff::getAggregateType(int num_theta) const
 {
     
-    assert(num_theta >= aggregates_.size());
+    
     if (aggregates_.empty()) {
         return CutStuff::AGGREGATE_OVER_NONE;
     }
     assert(!aggregates_.none()); // if not empty, than at least one should be active
+    LOG_IF(FATAL, aggregates_.find_next(num_theta-1) != boost::dynamic_bitset<>::npos) << "Avoid the case, e.g., when theta = 4 and aggregates_ = 01001 (last 1 will not be considered)";
     int num_aggregates = getNumberAggregates();
     if (num_aggregates == 1) {
         return aggregates_.find_first();
@@ -932,26 +933,102 @@ void CutStuff::Print() const
     std::cout << "- To use: " << to_use_ << "\n- Not active iterations: " << not_active_iterations_ << "\n- Active value: " << active_value << "\n- Index in solver: " << current_index_in_solver_ << std::endl;
 }
 
+bool CutStuff::is_consistent() const
+{
+    //The row element vector does not have duplicate indices
+    //The row element vector indices are >= 0
+    if (!cut_->consistent()) {
+        return false;
+    }
+  
+    //Check the cut values
+    std::vector<int> calculated_aggregates(0);
+    if (cut_->row().getNumElements() > num_cols_ + getNumberAggregates()) {
+        return false;
+    }
+    bool started_theta(false);
+    for (int i = 0; i < cut_->row().getNumElements(); i++) {
+        double val = cut_->row().getElements()[i];
+        int ind = cut_->row().getIndices()[i];
+        if (val == 0.0) { //no zero elements in row PackedVector
+            return false;
+        }
+        if (ind >= num_cols_) { // it is theta
+            calculated_aggregates.push_back(ind-num_cols_);
+            if (val != 1.0) { //thetas should have 1.0 value or be ommited in the PackedVector
+                return false;
+            }
+            started_theta = true;
+        }
+        else if (started_theta) { // thetas should go after other coefs
+            return false;
+        }
+    }
+    std::sort(calculated_aggregates.begin(), calculated_aggregates.end());
+
+    //Error in members
+    if (calculated_aggregates.size() != getNumberAggregates()) {
+        return false;
+    }
+    if (calculated_aggregates != getAggregates()) {
+        return false;
+    }
+    if (cut_creation_iteration_ < 0) {
+        return false;
+    }
+    if (column_set_ < PNB_COL_SET_NONE || column_set_ > PNB_COL_SET_DOUBLE_PRIME) {
+        return false;
+    }
+    if (type_ < parallel_benders::PNB_CUT_TYPE_OPTIMALITY || type_ > PNB_CUT_TYPE_CVAR) {
+        return false;
+    }
+
+    //Epigraph and Domain cuts are always PNB_COL_SET_NONE
+    if ((type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH || type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN) && column_set_ != PNB_COL_SET_NONE) {
+        return false;
+    }
+
+    //Feasibility and domain cuts are w/o theta
+    if ((type_ == parallel_benders::PNB_CUT_TYPE_FEASIBILITY || type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN) && getNumberAggregates() != 0) {
+        return false;
+    }
+    //optimality and epigraph cuts are with theta
+    else if ((type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY || type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH) && getNumberAggregates() == 0) {
+        return false;
+    }
+    else if (type_ == parallel_benders::PNB_CUT_TYPE_CVAR) {
+        throw runtime_error("Not implemented.");
+    }
+    
+    //Aggregate type
+    int aggregate_type = getAggregateType(aggregates_.size());
+    if ((type_ == parallel_benders::PNB_CUT_TYPE_FEASIBILITY || type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN) && aggregate_type != CutStuff::AGGREGATE_OVER_NONE) {
+        return false;
+    }
+    else if (type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY && aggregate_type == CutStuff::AGGREGATE_OVER_NONE) {
+        return false;
+    }
+    else if (type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH && !aggregates_.all()) {
+        return false;
+    }
+    else if (type_ == parallel_benders::PNB_CUT_TYPE_CVAR) {
+        throw runtime_error("Not implemented.");
+    }
+
+}
+
 double CutStuff::AbsoluteViolation(std::vector<double> const& col_solution, double theta_value)
 {
     //TODO: theta_value should be theta_solution
-#ifndef NDEBUG
-    //check col_solution
-    int num_cols_in_arg = col_solution.size();
-    if (column_set_ == PNB_COL_SET_PRIME || column_set_ == PNB_COL_SET_DOUBLE_PRIME) {
-        assert(col_solution.size() % 2 == 0 && "Solution size should be even.");
-        num_cols_in_arg /= 2;
-    }
-    assert(num_cols_in_arg == num_cols_);
-#endif
-
-    if (type_ == PNB_CUT_TYPE_FEASIBILITY || type_ == PNB_CUT_TYPE_DOMAIN) {
-        assert(cut_->row()[num_cols_] == 0.0 && "Theta coef should be 0.0");
-        theta_value = 0.0; // Theta has coef 0 in these cutes
-    }
+    assert(is_consistent());
+    LOG_IF(FATAL, column_set_ != PNB_COL_SET_NONE && (col_solution.size() % 2 != 0 || col_solution.size()/2 != num_cols_)) << "Solution size should be even.";
     
     //solution_column_shift is used to get columns from double prime column set in PNB CGP
     int solution_column_shift = (column_set_ == PNB_COL_SET_DOUBLE_PRIME ? num_cols_ : 0);
+
+    if (type_ == PNB_CUT_TYPE_FEASIBILITY || type_ == PNB_CUT_TYPE_DOMAIN) {
+        theta_value = 0.0;
+    }
 
     const CoinPackedVector& row(cut_->row());
     const double* elements = row.getElements();
@@ -961,6 +1038,9 @@ double CutStuff::AbsoluteViolation(std::vector<double> const& col_solution, doub
     for (int i = 0; i < num_elements; i++) {
         if (indices[i] < num_cols_) { // we need only columns (not theta)
             sum += col_solution[indices[i] + solution_column_shift] * elements[i];
+        }
+        else {
+            break;
         }
     }
 

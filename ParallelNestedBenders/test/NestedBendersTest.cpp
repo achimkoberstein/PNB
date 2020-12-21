@@ -1660,6 +1660,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	EXPECT_EQ(cs1.getAggregateType(1), 0);
 	EXPECT_EQ(cs1.type_, PNB_CUT_TYPE_OPTIMALITY);
 	EXPECT_EQ(cs1.column_set_, PNB_COL_SET_DOUBLE_PRIME);
+	EXPECT_TRUE(cs1.is_consistent());
 
 	//epigraph cut with 2 thetas and later 3 thetas
 	cut_info = { 5,	0,1,2,0,4,	20,	0,1,	2,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE };
@@ -1669,19 +1670,22 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	EXPECT_EQ(cs2.getAggregateType(2), 1);
 	EXPECT_EQ(cs2.type_, PNB_CUT_TYPE_OPTIMALITY);
 	EXPECT_EQ(cs2.column_set_, PNB_COL_SET_NONE);
+	EXPECT_TRUE(cs2.is_consistent());
 
 	//setAggregate
 	cs2.setAggregate(2);
 	EXPECT_EQ(cs2.getNumberAggregates(), 2);
 	EXPECT_EQ(cs2.getAggregates()[0], 1);
 	EXPECT_EQ(cs2.getAggregates()[1], 2);
-	EXPECT_EQ(cs2.getAggregateType(2), CutStuff::AGGREGATE_OVER_PARTIAL);
+	EXPECT_EQ(cs2.getAggregateType(3), CutStuff::AGGREGATE_OVER_PARTIAL);
+	EXPECT_TRUE(cs2.is_consistent());
 	cs2.setAggregate(0);
 	EXPECT_EQ(cs2.getNumberAggregates(), 3);
 	EXPECT_EQ(cs2.getAggregates()[0], 0);
 	EXPECT_EQ(cs2.getAggregates()[1], 1);
 	EXPECT_EQ(cs2.getAggregates()[2], 2);
 	EXPECT_EQ(cs2.getAggregateType(3), CutStuff::AGGREGATE_OVER_ALL);
+	EXPECT_TRUE(cs2.is_consistent());
 
 	//feas cut with 0 thetas
 	//		   col,	coef,		lb,	theta,	it,type,col set
@@ -1693,6 +1697,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	EXPECT_EQ(cs3.getAggregateType(2), CutStuff::AGGREGATE_OVER_NONE);
 	EXPECT_EQ(cs3.type_, PNB_CUT_TYPE_FEASIBILITY);
 	EXPECT_EQ(cs3.column_set_, PNB_COL_SET_NONE);
+	EXPECT_TRUE(cs3.is_consistent());
 
 	//TODO: epigraph cut
 
@@ -1805,7 +1810,6 @@ TEST_F(UnitTestCutStuff, unitTest) {
 			delete exp_cut_stuff;
 		}
 	}
-	//TODO: aggregates dynamic_bitset
 	//TODO: CoinPackedVector sparsify
 	//TODO: sparsify method for cut
 	//TODO: check CutStuff consistency

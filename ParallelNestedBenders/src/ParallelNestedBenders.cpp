@@ -4333,19 +4333,7 @@ namespace parallel_benders {
             if (num_theta == 0) {
                 num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
             }
-            int num_theta_elements = 0;
-            if (cut_stuff->getAggregateType(num_theta) == CutStuff::AGGREGATE_OVER_ALL && (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH)) { // Consolidated Optimality cuts
-                num_theta_elements = num_theta;
-            }
-            else if (cut_stuff->getAggregateType(num_theta) == CutStuff::AGGREGATE_OVER_PARTIAL) {
-                num_theta_elements = cut_stuff->getNumberAggregates();
-            }
-            else if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {
-                num_theta_elements = 1;
-            }
-#ifndef NDEBUG
-            assert(num_theta_elements == cut_stuff->getAggregates().size());
-#endif              
+            int num_theta_elements = cut_stuff->getNumberAggregates();             
 			
             std::vector<OsiRowCut> cuts;
             cuts.reserve(2);
@@ -4381,16 +4369,7 @@ namespace parallel_benders {
         if (num_theta == 0) {
             num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
         }
-        int num_theta_elements = 0;
-        if (cut_stuff->getAggregateType(num_theta) == CutStuff::AGGREGATE_OVER_ALL && (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff->type_ == PNB_CUT_TYPE_EPIGRAPH)) { // Epigraph or consolidated Optimality cuts
-            num_theta_elements = num_theta;
-        }
-        else if (cut_stuff->getAggregateType(num_theta) == CutStuff::AGGREGATE_OVER_PARTIAL) {
-            num_theta_elements = cut_stuff->getNumberAggregates();
-        }
-        else if (cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {
-            num_theta_elements = 1;
-        }
+        int num_theta_elements = cut_stuff->getNumberAggregates();
 
         int num_cols = stage_data_[current_stage_]->num_columns_;
         LOG_IF(FATAL, num_cols != cut_stuff->num_cols_);
@@ -4399,13 +4378,7 @@ namespace parallel_benders {
         int theta_tau_shift = num_cols + 2;
         int theta_v_shift = theta_tau_shift + num_theta;
         
-        const OsiRowCut* original_cut = cut_stuff->cut_.get();
-        assert(original_cut->row().getNumElements() <= num_cols + num_theta_elements); // <= because elements with value 0 are not included
-        assert(original_cut->row().getMaxIndex() < num_cols + num_theta);
-#ifndef NDEBUG
-        assert(num_theta_elements == cut_stuff->getAggregates().size()); // and they are sorted
-#endif //       
-        
+        const OsiRowCut* original_cut = cut_stuff->cut_.get();        
         std::vector<OsiRowCut> cuts;
         cuts.reserve(2);
         
@@ -5546,7 +5519,6 @@ namespace parallel_benders {
                 cut->setRow(new_index, cut_indices.data(), cut_elements.data(), debug_test_duplicate_indices_); // copy
                 std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
                 std::shared_ptr<CutStuff> cut_stuff(new CutStuff(1, cut_pointer, lift_and_project_cut_type,num_cols)); // cut iteration should be 1. We will then identify these cut by it and delete from PNB CGP
-                assert(cut_stuff->getAggregateType(num_theta) == CutStuff::AGGREGATE_OVER_ALL); // L&P cut (incl. epigraph) is defined for all aggregates, i.e., all thetas have coef 1 in the row
 
 #ifdef LOAD_DUMP_CUTS
                 if (load_cut_stuff) {
@@ -7242,6 +7214,7 @@ namespace parallel_benders {
                 //TODO: if for iteration we had only one cut - it is not an aggregate over all
                 cut_stuff->column_set_ = column_set;
 
+                assert(cut_stuff->is_consistent());
                 cuts.push_back(cut_stuff);
             }
         }
@@ -10249,11 +10222,9 @@ namespace parallel_benders {
     bool CutIsEqual( const CutStuff& first, const CutStuff& second, double tolerance )
 	{
 
-
-        assert(first.aggregates_.size() == second.aggregates_.size() && "Think about the comparison below if they are not the same");
-        if ( first.aggregates_ != second.aggregates_ )
+        if (first.aggregates_.size() == second.aggregates_.size() && first.aggregates_ != second.aggregates_ )
 			return false;
-		// PNB_COL_SET_NONE is a super class of prime/double prime, e.g., PNB_COL_SET_NONE == prime shour be true 
+		// PNB_COL_SET_NONE is a super class of prime/double prime, e.g., PNB_COL_SET_NONE == prime should be true 
         if (first.column_set_ != PNB_COL_SET_NONE && second.column_set_ != PNB_COL_SET_NONE && first.column_set_ != second.column_set_) {
             return false;
         }

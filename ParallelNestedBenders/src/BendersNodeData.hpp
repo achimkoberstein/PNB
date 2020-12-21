@@ -219,6 +219,7 @@ namespace parallel_benders{
 		void LoadCutStuff(const std::string& fname);
         void Print() const;
 
+        bool is_consistent() const;
         double AbsoluteViolation(std::vector<double> const& col_solution, double theta_value); // alpha*x - Beta
         double RelativeViolation(std::vector<double> const& col_solution, double theta_value); // (alpha*x - Beta)/|Beta|
         double DistanceViolation(std::vector<double> const& col_solution, double theta_value); // (alpha*x - Beta)/||alpha||
