@@ -113,7 +113,7 @@ protected:
 
 class UnitTestCutStuff : public ::testing::Test {
 public:
-	parallel_benders::CutStuff* CutStuffFromCutInfo(const std::vector<double>& cut_info, int num_theta) const {
+	parallel_benders::CutStuff* CutStuffFromCutInfo(const std::vector<double>& cut_info) const {
 		//Example of cut_info
 		//					  col,	coef,		lb,	theta,	it,type,col set
 		//cut_infos.push_back({ 4,	1,1,1,1,	10,	1,0,0,	4,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });
@@ -121,7 +121,7 @@ public:
 		//Position of info in cut_info
 		const int col_ind(0); // number of columns incl. ones with coef 0
 		int num_cols = cut_info[col_ind];
-		assert(cut_info.size() == num_cols + num_theta + 5);
+		int num_theta = cut_info.size() - num_cols - 5;
 
 		const int coef_start_ind(col_ind + 1);
 		const int lb_ind(coef_start_ind + num_cols);
@@ -137,7 +137,6 @@ public:
 				row.insert(i - 1, cut_info[i]);
 			}
 		}
-		//TODO: row.sparsify(zero_tolerance) and modify code above
 		boost::dynamic_bitset<> aggregates(num_theta);
 		for (int i = theta_start_ind; i < theta_start_ind + num_theta; i++) {
 			if (cut_info[i] == 1.0) {
@@ -1653,7 +1652,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	//		   col,	coef,		lb,	theta,	it,type,col set
 	cut_info = { 5,	0,1,2,0,4,	10,	1,		1,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_DOUBLE_PRIME };
 	//TODO: the method below does not need theta
-	CutStuff cs1(*CutStuffFromCutInfo(cut_info, 1));
+	CutStuff cs1(*CutStuffFromCutInfo(cut_info));
 	EXPECT_EQ(cs1.getNumberAggregates(), 1);
 	EXPECT_EQ(cs1.getAggregates()[0], 0);
 	EXPECT_EQ(cs1.getAggregateType(1), 0);
@@ -1663,7 +1662,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 
 	//epigraph cut with 2 thetas and later 3 thetas
 	cut_info = { 5,	0,1,2,0,4,	20,	0,1,	2,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE };
-	CutStuff cs2(*CutStuffFromCutInfo(cut_info, 2));
+	CutStuff cs2(*CutStuffFromCutInfo(cut_info));
 	EXPECT_EQ(cs2.getNumberAggregates(), 1);
 	EXPECT_EQ(cs2.getAggregates()[0], 1);
 	EXPECT_EQ(cs2.getAggregateType(2), 1);
@@ -1689,7 +1688,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	//feas cut with 0 thetas
 	//		   col,	coef,		lb,	theta,	it,type,col set
 	cut_info = { 5,	2,1,2,0,0,		30,	0,0,	1,PNB_CUT_TYPE_FEASIBILITY,PNB_COL_SET_NONE };
-	CutStuff cs3(*CutStuffFromCutInfo(cut_info, 2));
+	CutStuff cs3(*CutStuffFromCutInfo(cut_info));
 	//void CutStuff::setAggregate(int aggregate);
 	EXPECT_EQ(cs3.getNumberAggregates(), 0);
 	EXPECT_EQ(cs3.getAggregates().size(), 0);
@@ -1701,10 +1700,10 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	//double-prime opt cut with 1 theta
 	//		   col,	coef,		lb,	theta,	it,type,col set
 	cut_info = { 5,	0,1,2,0,4,	10,	1,1,	1,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_DOUBLE_PRIME };
-	CutStuff cs4(*CutStuffFromCutInfo(cut_info, 2));
+	CutStuff cs4(*CutStuffFromCutInfo(cut_info));
 	EXPECT_EQ(cs4.getNumberAggregates(), 2);
 	EXPECT_EQ(cs4.getAggregates()[0], 0);
-	EXPECT_EQ(cs4.getAggregateType(1), 1);
+	EXPECT_EQ(cs4.getAggregateType(2), CutStuff::AGGREGATE_OVER_ALL);
 	EXPECT_EQ(cs4.type_, PNB_CUT_TYPE_OPTIMALITY);
 	EXPECT_EQ(cs4.column_set_, PNB_COL_SET_DOUBLE_PRIME);
 	EXPECT_TRUE(cs4.is_consistent());
@@ -1777,7 +1776,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 
 		BendersNodeData::cut_container cuts = BendersNodeData::cut_container();
 		for (auto& cut_info : cut_infos) {
-			std::shared_ptr<CutStuff> cut_stuff(CutStuffFromCutInfo(cut_info, num_theta)); // TODO: see todos in this method
+			std::shared_ptr<CutStuff> cut_stuff(CutStuffFromCutInfo(cut_info));
 			//cut_stuff->Print();
 			cuts.push_back(cut_stuff);
 		}
@@ -1800,7 +1799,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 
 		EXPECT_EQ(expected_results.size(), cuts.size());
 		for (auto& exp_result : expected_results) {
-			CutStuff* exp_cut_stuff = CutStuffFromCutInfo(exp_result, num_theta);
+			CutStuff* exp_cut_stuff = CutStuffFromCutInfo(exp_result);
 			bool exists_in_results(false);
 			for (auto& it : cuts) {
 				//it->Print();
