@@ -227,9 +227,9 @@ namespace parallel_benders{
         void Print() const;
 
         bool is_consistent() const;
-        double AbsoluteViolation(std::vector<double> const& col_solution, double theta_value); // alpha*x - Beta
-        double RelativeViolation(std::vector<double> const& col_solution, double theta_value); // (alpha*x - Beta)/|Beta|
-        double DistanceViolation(std::vector<double> const& col_solution, double theta_value); // (alpha*x - Beta)/||alpha||
+        double AbsoluteViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values); // alpha*x - Beta
+        double RelativeViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values); // (alpha*x - Beta)/|Beta|
+        double DistanceViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values); // (alpha*x - Beta)/||alpha||
 
         int num_cols_; // number of columns w/o theta (cut_ does not provide this information)
         int cut_creation_iteration_;

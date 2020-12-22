@@ -760,7 +760,8 @@ double CutStuff::active_threshold_ = 1.0;
 int CutStuff::strike_threshold_ = -1;
 CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer, int type, int num_cols): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregates_(),cut_(cut_pointer),type_(type), num_cols_(num_cols),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
 {
-    
+    //TODO: CutStuff should be class
+    //TODO: create method getCut and getMutableCut, make cut_ private
     updateAggregData();
 	assert(is_consistent());
 }
@@ -768,7 +769,7 @@ CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer
 const std::vector<int> CutStuff::getAggregates() const
 {
     // it is rather expensive
-    std::vector<int> aggregates_vector;
+    std::vector<int> aggregates_vector{};
     aggregates_vector.reserve(aggregates_.size());
     
     int aggregate_index = aggregates_.find_first();
@@ -811,7 +812,6 @@ int CutStuff::getAggregateType(int num_theta) const
 CutStuff& CutStuff::operator+=(const CutStuff& second_cut_stuff)
 {
     
-    //TODO: Check if cuts have the same necessary members
     LOG_IF(FATAL, num_cols_ != second_cut_stuff.num_cols_);
     LOG_IF(FATAL, cut_creation_iteration_ != second_cut_stuff.cut_creation_iteration_) << "Do you want to consolidate the cuts from different iterations?";
     LOG_IF(FATAL, not_active_iterations_ != 0 || second_cut_stuff.not_active_iterations_ != 0) << "How should we update it?";
@@ -1105,18 +1105,21 @@ bool CutStuff::is_consistent() const
 
 }
 
-double CutStuff::AbsoluteViolation(std::vector<double> const& col_solution, double theta_value)
+double CutStuff::AbsoluteViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values)
 {
-    //TODO: theta_value should be theta_solution
     assert(is_consistent());
     LOG_IF(FATAL, column_set_ != PNB_COL_SET_NONE && (col_solution.size() % 2 != 0 || col_solution.size()/2 != num_cols_)) << "Solution size should be even.";
+    LOG_IF(FATAL, column_set_ != PNB_COL_SET_NONE && theta_values.size() % 2 != 0) << "Theta values size should be even.";
     
     //solution_column_shift is used to get columns from double prime column set in PNB CGP
     int solution_column_shift = (column_set_ == PNB_COL_SET_DOUBLE_PRIME ? num_cols_ : 0);
 
-    if (type_ == PNB_CUT_TYPE_FEASIBILITY || type_ == PNB_CUT_TYPE_DOMAIN) {
-        theta_value = 0.0;
+    double theta_value(0.0);
+    for (auto theta_index : getAggregates()) {
+        theta_index += column_set_ == PNB_COL_SET_DOUBLE_PRIME ? theta_values.size()/2 : 0;
+        theta_value += theta_values[theta_index];
     }
+    LOG_IF(FATAL, (type_ == PNB_CUT_TYPE_FEASIBILITY || type_ == PNB_CUT_TYPE_DOMAIN) && theta_value != 0.0);
 
     const CoinPackedVector& row(cut_->row());
     const double* elements = row.getElements();
@@ -1135,17 +1138,17 @@ double CutStuff::AbsoluteViolation(std::vector<double> const& col_solution, doub
     return cut_->lb() - sum - theta_value; // Violation = cut lower bound - cut_vector * column_solution - Theta
 }
 
-double CutStuff::RelativeViolation(std::vector<double> const& col_solution, double theta_value)
+double CutStuff::RelativeViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values)
 {
     if (cut_->lb() == 0.0) {
         return -1.0;
     }
-    return AbsoluteViolation(col_solution, theta_value )/abs(cut_->lb());
+    return AbsoluteViolation(col_solution, theta_values)/abs(cut_->lb());
 }
 
-double CutStuff::DistanceViolation(std::vector<double> const& col_solution, double theta_value)
+double CutStuff::DistanceViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values)
 {
-    return AbsoluteViolation(col_solution, theta_value ) / cut_->row().twoNorm();
+    return AbsoluteViolation(col_solution, theta_values)/cut_->row().twoNorm();
 }
 
 void CutStuff::setAggregate(int aggregate)
@@ -1158,7 +1161,6 @@ void CutStuff::setAggregate(int aggregate)
         return;
     }
     aggregates_.set(aggregate);
-    //TODO: create method getCut and getMutableCut, make cut_ private
     assert(cut_->row()[num_cols_ + aggregate] == 0.0);
     OsiRowCut new_cut(*cut_);
     new_cut.mutableRow().insert(num_cols_ + aggregate, 1.0);

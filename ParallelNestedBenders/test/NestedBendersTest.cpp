@@ -1712,11 +1712,11 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	//Metrics
 	std::vector<double> solution{ .5, .5, .5, .5, .5 };
 	std::vector<double> solution_cgp{ .5, .5, .5, .5, .5 , 1.2, 1.2, 1.2, 1.2, 1.2};
-	double theta = 5.5;
+	std::vector<double> theta = { 0, 5.5 };
 	EXPECT_NEAR(cs1.AbsoluteViolation(solution_cgp, theta), -3.9, 0.0001);
 	EXPECT_NEAR(cs1.RelativeViolation(solution_cgp, theta), -.39, 0.0001);
 	EXPECT_NEAR(cs1.DistanceViolation(solution_cgp, theta), -.8315, 0.0001);
-
+	theta = { 3.0, 2.5, 0.0 };
 	EXPECT_NEAR(cs2.AbsoluteViolation(solution, theta), 11.0, 0.0001);
 	EXPECT_NEAR(cs2.RelativeViolation(solution, theta), .55, 0.0001);
 	EXPECT_NEAR(cs2.DistanceViolation(solution, theta), 2.2453, 0.0001);
@@ -1818,7 +1818,6 @@ TEST_F(UnitTestCutStuff, unitTest) {
 			delete exp_cut_stuff;
 		}
 	}
-	//TODO: CutStuff as class
 }
 
 TEST_F(TimerTest, unitTest) {

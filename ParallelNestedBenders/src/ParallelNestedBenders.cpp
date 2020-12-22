@@ -3136,7 +3136,6 @@ namespace parallel_benders {
             assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ == benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
             assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_feasibility_ == benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.end());
             stage_data_[current_stage_]->added_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size(); // we always add feas cuts
-            double dist_violation_threshold = 0.0001; // in Bodur 0.00001 is the violation for Benders (lazy) cuts. For user (L&P) cuts it is 0.0001 in root node and 0.001 for other nodes 
 
             int added_opt_cuts = 0;
             bool evaluated_violation(false);
@@ -4569,12 +4568,12 @@ namespace parallel_benders {
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY,num_columns));
             assert(cut_stuff->getAggregateType(stage_data_[current_stage_ - 1]->num_thetas_) == i);
 			cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
+#ifndef NDEBUG
 			int theta_index = i + (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME ? benders_tree_node_pointer->getDataPtr()->num_thetas_ : 0);
             double theta_value = (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index] - d_square_translation_term_ : 0);
-#ifndef NDEBUG
-            DLOG_IF(FATAL, !CompareForEquality(cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, theta_value), sum - theta_value, zero_tolerance_));
+            DLOG_IF(FATAL, !CompareForEquality(cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, benders_tree_node_pointer->getDataPtr()->next_stage_approximation_), sum - theta_value, zero_tolerance_));
 #endif
-            if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, theta_value) > 0){
+            if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, benders_tree_node_pointer->getDataPtr()->next_stage_approximation_) > 0){
                 added_cuts++;
                 benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate
             }
