@@ -1646,7 +1646,6 @@ TEST(UnitTestPNB, unitTest) {
 }
 
 TEST_F(UnitTestCutStuff, unitTest) {
-	//TODO: use here CutStuffFromCutInfo()
 	using namespace parallel_benders;
 	std::vector<double>cut_info;
 
@@ -1699,7 +1698,16 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	EXPECT_EQ(cs3.column_set_, PNB_COL_SET_NONE);
 	EXPECT_TRUE(cs3.is_consistent());
 
-	//TODO: epigraph cut
+	//double-prime opt cut with 1 theta
+	//		   col,	coef,		lb,	theta,	it,type,col set
+	cut_info = { 5,	0,1,2,0,4,	10,	1,1,	1,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_DOUBLE_PRIME };
+	CutStuff cs4(*CutStuffFromCutInfo(cut_info, 2));
+	EXPECT_EQ(cs4.getNumberAggregates(), 2);
+	EXPECT_EQ(cs4.getAggregates()[0], 0);
+	EXPECT_EQ(cs4.getAggregateType(1), 1);
+	EXPECT_EQ(cs4.type_, PNB_CUT_TYPE_OPTIMALITY);
+	EXPECT_EQ(cs4.column_set_, PNB_COL_SET_DOUBLE_PRIME);
+	EXPECT_TRUE(cs4.is_consistent());
 
 	//Metrics
 	std::vector<double> solution{ .5, .5, .5, .5, .5 };
@@ -1810,12 +1818,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 			delete exp_cut_stuff;
 		}
 	}
-	//TODO: CoinPackedVector sparsify
-	//TODO: sparsify method for cut
-	//TODO: check CutStuff consistency
-	//TODO: += operator for CutStuff
 	//TODO: CutStuff as class
-	//TODO: CutStuff should initialy have -3 aggreagate (none)
 }
 
 TEST_F(TimerTest, unitTest) {

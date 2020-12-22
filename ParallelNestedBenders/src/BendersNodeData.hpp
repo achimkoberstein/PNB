@@ -239,7 +239,10 @@ namespace parallel_benders{
         const std::vector<int> CutStuff::getAggregates() const; // thetas for which the cut is activated, i.e., thetas that have coef 1.0 in the cut
         int getNumberAggregates() const; // num thetas for which the cut is activated, i.e., thetas that have coef 1.0 in the cut. Different from num thetas
         int CutStuff::getAggregateType(int num_theta) const; // see AGGREGATE_ const ints above. return aggregate number if aggregate is for one
-		void updateAggregData();
+
+        CutStuff& operator+=(const CutStuff& another); // Combine (consolidate) CutStuff
+
+        void updateAggregData();
     };
 
     // To be able to use find_if on std::list< std::shared_ptr<CutStuff> > in conjunction with active values

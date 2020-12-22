@@ -801,6 +801,87 @@ int CutStuff::getAggregateType(int num_theta) const
     }
 }
 
+CutStuff& CutStuff::operator+=(const CutStuff& second_cut_stuff)
+{
+    
+    //TODO: Check if cuts have the same necessary members
+    LOG_IF(FATAL, num_cols_ != second_cut_stuff.num_cols_);
+    LOG_IF(FATAL, cut_creation_iteration_ != second_cut_stuff.cut_creation_iteration_) << "Do you want to consolidate the cuts from different iterations?";
+    LOG_IF(FATAL, not_active_iterations_ != 0 || second_cut_stuff.not_active_iterations_ != 0) << "How should we update it?";
+    LOG_IF(FATAL, type_ != second_cut_stuff.type_);
+    LOG_IF(FATAL, column_set_ != second_cut_stuff.column_set_);
+    LOG_IF(FATAL, active_value != 0.0 || second_cut_stuff.active_value != 0.0) << "How should we update it?";
+    LOG_IF(FATAL, current_index_in_solver_ != -1 || second_cut_stuff.current_index_in_solver_ != -1) << "How should we update it?";
+    LOG_IF(FATAL, to_use_ != second_cut_stuff.to_use_) << "How should we update it?";
+
+    const OsiRowCut* first = cut_.get();
+    const OsiRowCut* second = second_cut_stuff.cut_.get();
+    LOG_IF(FATAL, first == second);
+
+    const CoinPackedVector& first_vector(first->row());
+    const CoinPackedVector& second_vector(second->row());
+    
+    std::vector<double> new_elements(max(first_vector.getMaxIndex(), second_vector.getMaxIndex())+1, 0.0);
+    for (int i = 0; i < first_vector.getNumElements(); i++) {
+        int index = first_vector.getIndices()[i];
+        double element = first_vector.getElements()[i];
+        new_elements[index] = element;
+    }
+
+    for (int i = 0; i < second_vector.getNumElements(); i++) {
+        int index = second_vector.getIndices()[i];
+        double element = second_vector.getElements()[i];
+        new_elements[index] += element;
+        LOG_IF(FATAL, index >= num_cols_ && new_elements[index] != 1.0) << "Theta should always have value 1.0. We cannot have several cuts with the same aggregate(s).";
+    }
+
+    // Sparsify
+    int max_num_non_zeros = min(first_vector.getNumElements()+second_vector.getNumElements(), int(new_elements.size()));
+    std::vector<int>new_indices;
+    new_indices.reserve(max_num_non_zeros);
+    int index(0);
+    for (int i = 0; i < new_elements.size(); i++) {
+        double element = new_elements[i];
+        if (element != 0.0) {
+            new_indices.push_back(i);
+            new_elements[index] = element;
+            index++;
+        }
+    }
+    
+    // Create cut
+    OsiRowCut* new_cut = new OsiRowCut();
+    new_cut->setLb(first->lb() + second->lb());
+    new_cut->setUb(first->ub());
+    new_cut->setRow(index, new_indices.data(), new_elements.data()); // copy
+
+    cut_.reset(std::as_const(new_cut));
+    updateAggregData();
+
+    assert(is_consistent()); // might be not consistent if we get elements with 0.0 values
+    return *this;
+}
+
+void CutStuff::updateAggregData()
+{
+    if (type_ == PNB_CUT_TYPE_OPTIMALITY || type_ == PNB_CUT_TYPE_EPIGRAPH) {
+        int num_elems = cut_->row().getNumElements();
+        aggregates_.reserve(cut_->row().getMaxIndex()); // at most all elements are thetas
+        for (int i = num_elems; i > 0; i--) {
+            if (cut_->row().getIndices()[i - 1] >= num_cols_) {
+                int current_theta_index = cut_->row().getIndices()[i - 1] - num_cols_;
+                if (current_theta_index + 1 > aggregates_.size()) {
+                    aggregates_.resize(current_theta_index + 1);
+                }
+                aggregates_.set(current_theta_index);
+            }
+            else {
+                break;
+            }
+        }
+    }
+}
+
 void CutStuff::DumpCutStuff(const std::string& fname) const
 {
     // we export sparse vector (row) as a full storage vector
