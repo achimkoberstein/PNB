@@ -295,7 +295,7 @@ namespace parallel_benders {
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(5),lp_cuts_timer_(10),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_dual_cgp_node_data_mutex_(),lp_round_cuts_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
-		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(false),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
+		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(PNB_CGP_CUTS_NONE),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
@@ -689,7 +689,7 @@ namespace parallel_benders {
         if (num_cpu_ == 1) {
             lp_parallel_mode_ = PNB_PARAL_MODE_ALL_SEQUENTIAL; // one cpu => no parallelization
         }
-        lp_use_cgp_pnb_cuts_ = param.get(PNB_LP_USE_CGP_PNB_CUTS, false);
+        lp_use_cgp_pnb_cuts_ = param.get(PNB_LP_USE_CGP_PNB_CUTS,PNB_CGP_CUTS_NONE);
 		cuts_for_fract_vars_ = param.get(PNB_LP_CUTS_FOR_FRACT, 100);
 		cgp_relative_epsilon_ = param.get(PNB_CGP_EPSILON_RELATIVE, relative_epsilon_);
 		std::string allowed_str = parameter_.GetStrParamValue(PNB_LP_ALLOW_TEST_CASES);
@@ -3139,28 +3139,28 @@ namespace parallel_benders {
             double dist_violation_threshold = 0.0001; // in Bodur 0.00001 is the violation for Benders (lazy) cuts. For user (L&P) cuts it is 0.0001 in root node and 0.001 for other nodes 
 
             int added_opt_cuts = 0;
+            bool evaluated_violation(false);
             for (auto& cut_container : { &benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_, &benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_ }) {
                 for (auto& cut_stuff : *cut_container) {
-                    bool efficient_cut = true;
-                    if (stage_data_[current_stage_]->num_thetas_ > 1 && cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY && cut_stuff->aggregate_number_ != CutStuff::AGGREGATE_OVER_ALL) {  // take all cuts for single cuts, feas cuts are always efficient
-                        double theta_value = (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[cut_stuff->aggregate_number_] : 0);
-                        double dist_violation = cut_stuff->DistanceViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, theta_value);
-                        efficient_cut = dist_violation > dist_violation_threshold;
+                    if ((lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_EFFICIENT || lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE) && cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY) {  // feas cuts are always efficient
+                        double dist_violation = cut_stuff->DistanceViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, benders_tree_node_pointer->getDataPtr()->next_stage_approximation_);
+                        if (dist_violation <= 0.0001) { // in Bodur 0.00001 is the violation for Benders (lazy) cuts. For user (L&P) cuts it is 0.0001 in root node and 0.001 for other nodes 
+                            continue;
+                        }
                     }
-                    if (efficient_cut) {
-                        added_opt_cuts += cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY ? 1 : 0;
-                        assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_) &&
-                            !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->epigraph_cuts_) &&
-                            !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->feasibility_cuts_) &&
-                            !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->domain_cuts_) && "It cannot be a duplicate since we checked before.");
-                        cut_stuff->cut_creation_iteration_ = current_iteration_;
-                        AddCutToContainer(benders_tree_node_pointer, cut_stuff);
-                    }
+                    added_opt_cuts += cut_stuff->type_ == PNB_CUT_TYPE_OPTIMALITY ? 1 : 0;
+                    assert(!CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_) &&
+                        !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->epigraph_cuts_) &&
+                        !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->feasibility_cuts_) &&
+                        !CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->domain_cuts_) && "It cannot be a duplicate since we checked before.");
+                    cut_stuff->cut_creation_iteration_ = current_iteration_;
+                    AddCutToContainer(benders_tree_node_pointer, cut_stuff);
                 }
             }
 
             stage_data_[current_stage_]->added_optimality_cuts_ += added_opt_cuts;
-            LOG_IF(INFO, log_level_ <= google::WARNING) << "Added " << added_opt_cuts << "/" << benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size() << " CGP optimality cuts and " << benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts.";
+            LOG_IF(INFO, log_level_ <= google::INFO && evaluated_violation) << "Added " << added_opt_cuts << "/" << benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size() << " CGP optimality cuts and " << benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts (considering DistanceViolation).";
+            LOG_IF(INFO, log_level_ <= google::INFO && !evaluated_violation) << "Added " << added_opt_cuts << " CGP optimality cuts and " << benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts.";
 
             benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.clear();
             benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.clear();
@@ -5012,7 +5012,7 @@ namespace parallel_benders {
 		
         bool use_benders_cuts_intra_round(true);
         bool use_lp_cuts_intra_round(false); // seems that often leads to unboundess or infeasibility
-        if (!lp_use_cgp_pnb_cuts_ || lp_parallel_mode_ >= PNB_PARAL_FRACTS) { //only when fract are solved sequentially 
+        if (lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_NONE || lp_parallel_mode_ >= PNB_PARAL_FRACTS) { //only when fract are solved sequentially 
             use_benders_cuts_intra_round = false;
             use_lp_cuts_intra_round = false;
         }
@@ -5263,10 +5263,8 @@ namespace parallel_benders {
 
                     if (lp_use_cgp_pnb_cuts_) {
                         int num_aggregates = getNumThetasByStage(tree_nodes_by_stage_[current_stage_][0]);
-                        if (num_aggregates > 1) {
+                        if ((lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_CONSOLIDATE || lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE) && num_aggregates > 1) {
                             // TODO: do cuts before old_cgp_pnb_opt_cuts_back all have iteration 0 and were taken from previous iterations? lp_round cuts not
-                            // TODO: get rid of RelativeViolation filter for PNB CGP cuts
-                            // TODO: info of how many cuts we consolidated
                             ConsolidateCuts(*cgp_optimality_cuts, num_aggregates, 1); //TODO: from which iteration if we use lp_round_optimality cuts
                             benders_node_pointer->active_aggregates_.set(); // L&P cut is defined for all aggregates
                         }
