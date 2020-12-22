@@ -7113,110 +7113,34 @@ namespace parallel_benders {
     }
 
     void ConsolidateCuts(BendersNodeData::cut_container &cuts, int num_theta, int from_iteration) {
-        //this method is based on similar to IntraIterationCutAggregation()
-
-        //TODO: make this stuff arrays
+        typedef std::unordered_map< int, std::shared_ptr<CutStuff>> cuts_per_iteration;
+        std::array<cuts_per_iteration,3> cuts_per_iteration_map; // iteration: consolidated CutStuff ptr (none, prime, double-prime)
         std::vector<BendersNodeData::cut_container::iterator> remove_cuts; // these cuts will be removed from the container (almost all)
         remove_cuts.reserve(cuts.size());
-        typedef std::map< int, std::unique_ptr<OsiRowCut>> cuts_per_iteration;
-        std::vector<cuts_per_iteration> cuts_per_iteration_map(3); // iteration: consolidated OsiRowCut ptr (none, prime, double-prime)
-        typedef std::map< int, boost::dynamic_bitset<>> aggregates_in_iteration;
-        std::vector<aggregates_in_iteration> aggregates_in_iteration_map(3); // column_set: iteration: aggregates which were consolidated
-        typedef std::map< int, int> cols_in_iteration;
-        std::vector<cols_in_iteration> num_cols_in_iteration_map(3);  // column_set: iteration
 
         for (BendersNodeData::cut_container::iterator it = cuts.begin(); it != cuts.end(); ++it) {
             int cut_iteration = (*it)->cut_creation_iteration_;
             int column_set = (*it)->column_set_;
-            int aggregate = (*it)->getAggregateType(num_theta);
-            int num_cols = (*it)->num_cols_;
             if ((*it)->type_ != PNB_CUT_TYPE_OPTIMALITY) { //we can consolidate only optimality cuts: epigraph cuts are already consolidated, others have no theta
                 continue;
             }
             if (cut_iteration < from_iteration) {
                 continue;
             }
-            if (num_cols_in_iteration_map[column_set].find(cut_iteration) == num_cols_in_iteration_map[column_set].end()) {
-                num_cols_in_iteration_map[column_set][cut_iteration] = num_cols;
-            }
-            LOG_IF(FATAL, num_cols_in_iteration_map[column_set][cut_iteration] != num_cols) << "All cuts that are to be consolidated into one cut must have the same num cols.";
-            int num_aggregates = (*it)->getNumberAggregates();
+            // Cuts for this iteration were not consolidated
             if (cuts_per_iteration_map[column_set].find(cut_iteration) == cuts_per_iteration_map[column_set].end()) {
-                assert(aggregates_in_iteration_map[column_set].find(cut_iteration) == aggregates_in_iteration_map[column_set].end());
-                cuts_per_iteration_map[column_set][cut_iteration] = std::make_unique<OsiRowCut>(*(*it)->cut_);
-                cuts_per_iteration_map[column_set][cut_iteration]->mutableRow().reserve(num_cols + num_theta);
-                boost::dynamic_bitset<> consolidated_aggregates(num_theta);
-                int num_aggregates = (*it)->getNumberAggregates();
-                if (aggregate < 0 && num_aggregates > 1) { // TODO: we need some efficient methods for that
-                    int found_aggregates(0);
-                    for (int i = (*it)->cut_->row().getNumElements(); i > 0; i--) {
-                        if ((*it)->cut_->row().getIndices()[i - 1] >= num_cols) {
-                            assert((*it)->cut_->row().getElements()[i - 1] == 1.0);
-                            consolidated_aggregates.set((*it)->cut_->row().getIndices()[i - 1] - num_cols);
-                            found_aggregates++;
-                            if (found_aggregates >= num_aggregates) {
-                                break;
-                            }
-                        }
-                    }
-                }
-                else {
-                    consolidated_aggregates.set(aggregate);
-                }
-                aggregates_in_iteration_map[column_set][cut_iteration] = std::move(consolidated_aggregates);
+                cuts_per_iteration_map[column_set].emplace(cut_iteration, *it);
             }
+            // we already have some cuts for this iteration
             else {
-                //TODO: time it, try CombineTwoCuts() if too slow. Should not we use more generic array methods?
-                // TODO: or use CutStuff instead and do not delete the first cut in consolidated cuts (delete all the next cuts)
-                std::unique_ptr<OsiRowCut> &consolidated_cut = cuts_per_iteration_map[column_set][cut_iteration];
-                consolidated_cut->setLb(consolidated_cut->lb() + (*it)->cut_->lb());
-                consolidated_cut->mutableRow() += (*it)->cut_->row();
-                //consolidated_cut->setRow(consolidated_cut->mutableRow() + (*it)->cut_->row());
-                if (aggregate < 0 && num_aggregates > 1) { // TODO: we need some efficient methods for that
-                    int found_aggregates(0);
-                    for (int i = (*it)->cut_->row().getNumElements(); i > 0; i--) {
-                        if ((*it)->cut_->row().getIndices()[i - 1] >= num_cols) {
-                            assert((*it)->cut_->row().getElements()[i - 1] == 1.0);
-                            LOG_IF(FATAL, aggregates_in_iteration_map[column_set][cut_iteration].test((*it)->cut_->row().getIndices()[i - 1] - num_cols)) << "Several cuts for the same aggregate.";
-                            aggregates_in_iteration_map[column_set][cut_iteration].set((*it)->cut_->row().getIndices()[i - 1] - num_cols);
-                            found_aggregates++;
-                            if (found_aggregates >= num_aggregates) {
-                                break;
-                            }
-                        }
-                    }
-                }
-                else {
-                    LOG_IF(FATAL, aggregates_in_iteration_map[column_set][cut_iteration].test(aggregate)) << "Several cuts for the same aggregate.";
-                    aggregates_in_iteration_map[column_set][cut_iteration].set(aggregate);
-                }
+                *cuts_per_iteration_map[column_set][cut_iteration] += *it->get();
+                remove_cuts.push_back(it);
             }
-            remove_cuts.push_back(it);
         }
 
-        // Remove old cuts from container
+        // Remove cuts from container
         for (std::vector<BendersNodeData::cut_container::iterator>::iterator remove_it = remove_cuts.begin(); remove_it != remove_cuts.end(); ++remove_it) {
             cuts.erase(*remove_it);
-        }
-
-        // Add consolidated cuts to container
-        for (int column_set : {PNB_COL_SET_NONE, PNB_COL_SET_PRIME, PNB_COL_SET_DOUBLE_PRIME}) {
-            for (std::map< int, std::unique_ptr<OsiRowCut>>::iterator new_cut = cuts_per_iteration_map[column_set].begin(); new_cut != cuts_per_iteration_map[column_set].end(); ++new_cut) {
-                int new_cut_iteration = new_cut->first;
-
-                //We need sorted row for ApplyCut methods
-                //TODO: time it
-                new_cut->second->sortIncrIndex();
-                
-                //Create and add CutStuff
-                std::shared_ptr<const OsiRowCut> cut_pointer(new const OsiRowCut(std::as_const(*(new_cut->second))));
-                std::shared_ptr<CutStuff> cut_stuff(new CutStuff(new_cut_iteration, cut_pointer, PNB_CUT_TYPE_OPTIMALITY,num_cols_in_iteration_map[column_set][new_cut_iteration]));
-                //TODO: if for iteration we had only one cut - it is not an aggregate over all
-                cut_stuff->column_set_ = column_set;
-
-                assert(cut_stuff->is_consistent());
-                cuts.push_back(cut_stuff);
-            }
         }
     }
 
