@@ -183,6 +183,13 @@ namespace parallel_benders{
 	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED_EFFICIENT = 3; //solve 23 with 2nd stage info (cuts from L&P CGP)
 	const int PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED_ACHIM = 4; //calculate the solution for 23 with 2nd stage info (cuts from L&P CGP) - Achims approach
 
+    // Use CGP PNB cuts
+    const int PNB_CGP_CUTS_NONE = 0;
+    const int PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE = 1;
+    const int PNB_CGP_CUTS_EFFICIENT = 2;
+    const int PNB_CGP_CUTS_CONSOLIDATE = 3;
+    const int PNB_CGP_CUTS_ALL = 4;
+
     // LP parallel modes
     const int PNB_PARAL_MODE_ALL_SEQUENTIAL = 0;
     const int PNB_PARAL_CGP_SUBPROBLEMS = 1; // PNB CGP for L&P cut is parallel, i.e., its subproblems are solved in parallel

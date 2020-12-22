@@ -565,7 +565,7 @@ void Parameter::init()
 	parameter_.put(PNB_CGP_EPSILON_RELATIVE, 1e-06);
 	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 11111111111);
     parameter_.put(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
-    parameter_.put(PNB_LP_USE_CGP_PNB_CUTS, false);
+    parameter_.put(PNB_LP_USE_CGP_PNB_CUTS, PNB_CGP_CUTS_NONE);
 
 	// Fill in constants
 	// PNB_BENDERS
@@ -614,6 +614,13 @@ void Parameter::init()
     consts_["PNB_INT_NO_WARM_START"] = PNB_INT_NO_WARM_START;
     consts_["PNB_INT_WARM_START_SCENARIO_WISE"] = PNB_INT_WARM_START_SCENARIO_WISE; // WarmStart with solution from the previous iteration
     consts_["PNB_INT_WARM_START_STAGE_WISE"] = PNB_INT_WARM_START_STAGE_WISE; // WarmStart with solution from the first scenario (in the same iteration)
+
+    //PNB_LP_USE_CGP_PNB_CUTS
+    consts_["PNB_CGP_CUTS_NONE"] = PNB_CGP_CUTS_NONE;
+    consts_["PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE"] = PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE;
+    consts_["PNB_CGP_CUTS_EFFICIENT"] = PNB_CGP_CUTS_EFFICIENT;
+    consts_["PNB_CGP_CUTS_CONSOLIDATE"] = PNB_CGP_CUTS_CONSOLIDATE;
+    consts_["PNB_CGP_CUTS_ALL"] = PNB_CGP_CUTS_ALL;
 }
 
 void Parameter::update_from_json_string( std::string json_string ) {
