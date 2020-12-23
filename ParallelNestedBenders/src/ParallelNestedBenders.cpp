@@ -5263,9 +5263,14 @@ namespace parallel_benders {
                     if (lp_use_cgp_pnb_cuts_) {
                         int num_aggregates = getNumThetasByStage(tree_nodes_by_stage_[current_stage_][0]);
                         if ((lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_CONSOLIDATE || lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE) && num_aggregates > 1) {
-                            // TODO: do cuts before old_cgp_pnb_opt_cuts_back all have iteration 0 and were taken from previous iterations? lp_round cuts not
-                            ConsolidateCuts(*cgp_optimality_cuts, 1); //TODO: from which iteration if we use lp_round_optimality cuts
+                            lp_cuts_timer_.AddTime(2, timer_.Now() - start_time);
+                            assert(!use_benders_cuts_intra_round && !use_lp_cuts_intra_round); //TODO: from which iteration if we use lp_use_cgp_pnb_cuts_ cuts
+                            int num_non_cgp_pnb_cuts = cgp_optimality_cuts->size()-new_cgp_pnb_opt_cuts;
+                            start_time = timer_.Now();
+                            ConsolidateCuts(*cgp_optimality_cuts, 1); 
+                            lp_cuts_timer_.AddTime(5, timer_.Now() - start_time);
                             benders_node_pointer->active_aggregates_.set(); // L&P cut is defined for all aggregates
+                            LOG_IF(INFO, log_level_ <= google::INFO) << "Consolidated " << new_cgp_pnb_opt_cuts << " CGP PNB opt cuts to " << cgp_optimality_cuts->size()-num_non_cgp_pnb_cuts << " cuts.";
                         }
 
                         if (old_cgp_pnb_opt_cuts_back == cgp_optimality_cuts->end()) { // there were no opt cuts in PNB CGP before we solved it
