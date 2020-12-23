@@ -5264,7 +5264,7 @@ namespace parallel_benders {
                         int num_aggregates = getNumThetasByStage(tree_nodes_by_stage_[current_stage_][0]);
                         if ((lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_CONSOLIDATE || lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE) && num_aggregates > 1) {
                             // TODO: do cuts before old_cgp_pnb_opt_cuts_back all have iteration 0 and were taken from previous iterations? lp_round cuts not
-                            ConsolidateCuts(*cgp_optimality_cuts, num_aggregates, 1); //TODO: from which iteration if we use lp_round_optimality cuts
+                            ConsolidateCuts(*cgp_optimality_cuts, 1); //TODO: from which iteration if we use lp_round_optimality cuts
                             benders_node_pointer->active_aggregates_.set(); // L&P cut is defined for all aggregates
                         }
 
@@ -7109,7 +7109,7 @@ namespace parallel_benders {
             intra_cut_aggregation_time_ += start_time;
     }
 
-    void ConsolidateCuts(BendersNodeData::cut_container &cuts, int num_theta, int from_iteration) {
+    void ConsolidateCuts(BendersNodeData::cut_container &cuts, int from_iteration) {
         typedef std::unordered_map< int, std::shared_ptr<CutStuff>> cuts_per_iteration;
         std::array<cuts_per_iteration,3> cuts_per_iteration_map; // iteration: consolidated CutStuff ptr (none, prime, double-prime)
         std::vector<BendersNodeData::cut_container::iterator> remove_cuts; // these cuts will be removed from the container (almost all)
