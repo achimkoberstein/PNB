@@ -1780,7 +1780,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 			//cut_stuff->Print();
 			cuts.push_back(cut_stuff);
 		}
-		parallel_benders::ConsolidateCuts(cuts, num_theta, from_iteration);
+		parallel_benders::ConsolidateCuts(cuts, from_iteration);
 
 		std:vector<std::vector<double>>expected_results;
 								 //col,	coef,		lb, theta,	it, type, col set
