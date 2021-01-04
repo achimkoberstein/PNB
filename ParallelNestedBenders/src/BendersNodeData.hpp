@@ -214,13 +214,28 @@ namespace parallel_benders{
 
     struct CutStuff
     {
+        const static int AGGREGATE_OVER_ONE = 0;
         const static int AGGREGATE_OVER_ALL = -1;
         const static int AGGREGATE_OVER_PARTIAL = -2;
         const static int AGGREGATE_OVER_NONE = -3; // feasibility or domain cuts
         static double active_threshold_; // If active_value is less than
         static int strike_threshold_; // If non_active_iterations_ is more than
 
-        CutStuff(int iteration,std::shared_ptr<const OsiRowCut>& cut_pointer, int type, int num_cols);
+        CutStuff(int iteration, std::unique_ptr<OsiRowCut>& cut_pointer, int type, int num_cols, int num_theta);
+        CutStuff(const CutStuff& another);
+
+        const OsiRowCut& getCut() const;
+        OsiRowCut& getMutableCut() const;
+        void setCut(std::unique_ptr<OsiRowCut>& new_cut);
+
+        int cut_creation_iteration_;
+        double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
+        int not_active_iterations_;
+        bool to_use_;
+        int column_set_; // used for L&P cuts CGP master problem
+        int type_;
+        int num_cols_; // number of columns w/o theta (cut_ does not provide this information)
+        int current_index_in_solver_; // Needs to be updated at each run to be meaningful
 
 		void DumpCutStuff(const std::string& fname) const;
 		void LoadCutStuff(const std::string& fname);
@@ -231,25 +246,21 @@ namespace parallel_benders{
         double RelativeViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values); // (alpha*x - Beta)/|Beta|
         double DistanceViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values); // (alpha*x - Beta)/||alpha||
 
-        int num_cols_; // number of columns w/o theta (cut_ does not provide this information)
-        int cut_creation_iteration_;
-        int not_active_iterations_;
-        boost::dynamic_bitset<> aggregates_;
-		int type_;
-		int column_set_; // used for L&P cuts CGP master problem
-        std::shared_ptr<const OsiRowCut> cut_; // const because might be shared among PNB instances
-        double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
-        int current_index_in_solver_; // Needs to be updated at each run to be meaningful
-        bool to_use_;
-
-        void CutStuff::setAggregate(int aggregate);
+        void CutStuff::setAggregate(int aggregate); // set aggregate and keep the old values if any
+        bool isAggregate(int aggregate) const; // checks if aggregate is set
+        void CutStuff::resetAggregates(int num_theta = -1); // discard the old aggregate value(s) and change the num_theta to num_theta (do not change if -1)
         const std::vector<int> CutStuff::getAggregates() const; // thetas for which the cut is activated, i.e., thetas that have coef 1.0 in the cut
+        int getNumTheta() const; // number of thetas in the problem for which the cut was constructed
         int getNumberAggregates() const; // num thetas for which the cut is activated, i.e., thetas that have coef 1.0 in the cut. Different from num thetas
-        int CutStuff::getAggregateType(int num_theta) const; // see AGGREGATE_ const ints above. return aggregate number if aggregate is for one
+        int CutStuff::getAggregateType() const; // see AGGREGATE_ const ints above. return aggregate number if aggregate is for one
 
         CutStuff& operator+=(const CutStuff& another); // Combine (consolidate) CutStuff
 
-        void updateAggregData();
+        void updateAggregData(int num_theta);
+
+    private:        
+        boost::dynamic_bitset<> aggregates_;
+        std::unique_ptr<OsiRowCut> cut_;
     };
 
     // To be able to use find_if on std::list< std::shared_ptr<CutStuff> > in conjunction with active values
@@ -262,7 +273,7 @@ namespace parallel_benders{
     struct CutStuffLessComparison: public std::binary_function< std::shared_ptr<CutStuff>, std::shared_ptr<CutStuff>, bool > {
         bool operator () ( const std::shared_ptr<CutStuff> &cut_stuff, const std::shared_ptr<CutStuff> &cut_stuff2 ) const {
             assert(false && "Fix the stuff below. The comparison is probably wrong.");
-			return cut_stuff->cut_creation_iteration_ < cut_stuff2->cut_creation_iteration_ || cut_stuff->aggregates_ < cut_stuff2->aggregates_;
+			//return cut_stuff->cut_creation_iteration_ < cut_stuff2->cut_creation_iteration_ || cut_stuff->aggregates_ < cut_stuff2->aggregates_; // it was returning aggregate number or aggregate type if > 1 aggreg
         }
     };
 
