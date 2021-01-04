@@ -100,8 +100,8 @@ private:
 
 	bool GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
-	int ApplyCut(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff);
-    void ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const std::shared_ptr<CutStuff>& cut_stuff, BendersNodeData* benders_node_data);
+	int ApplyCut(OsiSolverInterface* osi_solver, const CutStuff& cut_stuff);
+    void ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const CutStuff& cut_stuff, BendersNodeData* benders_node_data);
 	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void SetDualCGPRoundSpecifics(OsiSolverInterface& dual_cgp_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
@@ -157,7 +157,7 @@ private:
 	void SaveInstanceSpecs();
     inline int getNumRowsProblem();
     inline int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
-    void ExpandThetaVariablesInOptimalityCut(std::shared_ptr<const OsiRowCut>& cut, int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
+    void ExpandThetaVariablesInOptimalityCut(std::shared_ptr<OsiRowCut>& cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
 
     void AppendDSquareCutsToSubproblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void BuildAndSolveCTripleProblem();
@@ -506,7 +506,7 @@ bool CutIsEqual(const CutStuff& first, const CutStuff& second, double tolerance)
 
 bool DoubleIsHigher(const std::pair<int,double>& first, const std::pair<int,double>& second);
 
-void ConsolidateCuts(BendersNodeData::cut_container& cuts, int from_iteration);
+void ConsolidateCuts(BendersNodeData::cut_container& in_cuts, BendersNodeData::cut_container& out_cuts, BendersNodeData::cut_container::const_iterator from_cut);
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);

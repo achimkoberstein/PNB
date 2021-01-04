@@ -758,19 +758,23 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
 
 double CutStuff::active_threshold_ = 1.0;
 int CutStuff::strike_threshold_ = -1;
-CutStuff::CutStuff( int iteration, std::shared_ptr<const OsiRowCut>& cut_pointer, int type, int num_cols): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregates_(),cut_(cut_pointer),type_(type), num_cols_(num_cols),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
+CutStuff::CutStuff( int iteration, std::unique_ptr<OsiRowCut>& cut_pointer, int type, int num_cols, int num_theta): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregates_(),cut_(std::move(cut_pointer)),type_(type), num_cols_(num_cols),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
 {
-    //TODO: CutStuff should be class
-    //TODO: create method getCut and getMutableCut, make cut_ private
-    updateAggregData();
+    updateAggregData(num_theta);
 	assert(is_consistent());
+}
+
+CutStuff::CutStuff(const CutStuff& another)
+    : cut_creation_iteration_(another.cut_creation_iteration_), not_active_iterations_(another.not_active_iterations_), aggregates_(another.aggregates_), cut_(new OsiRowCut(*another.cut_)), type_(another.type_), num_cols_(another.num_cols_), active_value(another.active_value), current_index_in_solver_(another.current_index_in_solver_), to_use_(another.to_use_), column_set_(another.column_set_)
+{
+    assert(is_consistent());
 }
 
 const std::vector<int> CutStuff::getAggregates() const
 {
     // it is rather expensive
     std::vector<int> aggregates_vector{};
-    aggregates_vector.reserve(aggregates_.size());
+    aggregates_vector.reserve(getNumberAggregates());
     
     int aggregate_index = aggregates_.find_first();
     while (aggregate_index != boost::dynamic_bitset<>::npos) {
@@ -780,32 +784,32 @@ const std::vector<int> CutStuff::getAggregates() const
     return aggregates_vector;
 }
 
+int CutStuff::getNumTheta() const
+{
+    return aggregates_.size();
+}
+
 int CutStuff::getNumberAggregates() const
 {
     return aggregates_.count();
 }
 
-int CutStuff::getAggregateType(int num_theta) const
-{
+int CutStuff::getAggregateType() const
+{   
+    int num_aggregates = getNumberAggregates();
+    int num_theta = getNumTheta();
     
-    
-    if (aggregates_.empty()) {
+    if (num_aggregates == 0) {
         return CutStuff::AGGREGATE_OVER_NONE;
     }
-    assert(!aggregates_.none()); // if not empty, than at least one should be active
-    LOG_IF(FATAL, aggregates_.find_next(num_theta-1) != boost::dynamic_bitset<>::npos) << "Avoid the case, e.g., when theta = 4 and aggregates_ = 01001 (last 1 will not be considered)";
-    int num_aggregates = getNumberAggregates();
-    if (num_aggregates == 1) {
-        return aggregates_.find_first();
+	if (num_aggregates == 1) {
+        return CutStuff::AGGREGATE_OVER_ONE;
     }
-    else if (num_aggregates == num_theta) {
+    if (num_aggregates == num_theta) {
         return CutStuff::AGGREGATE_OVER_ALL;
     }
-    else if (num_aggregates > 1) {
+    if (num_aggregates > 1) {
         return CutStuff::AGGREGATE_OVER_PARTIAL;
-    }
-    else {
-        throw runtime_error("");
     }
 }
 
@@ -813,6 +817,7 @@ CutStuff& CutStuff::operator+=(const CutStuff& second_cut_stuff)
 {
     
     LOG_IF(FATAL, num_cols_ != second_cut_stuff.num_cols_);
+    LOG_IF(FATAL, getNumTheta() != second_cut_stuff.getNumTheta());
     LOG_IF(FATAL, cut_creation_iteration_ != second_cut_stuff.cut_creation_iteration_) << "Do you want to consolidate the cuts from different iterations?";
     LOG_IF(FATAL, not_active_iterations_ != 0 || second_cut_stuff.not_active_iterations_ != 0) << "How should we update it?";
     LOG_IF(FATAL, type_ != second_cut_stuff.type_);
@@ -821,12 +826,12 @@ CutStuff& CutStuff::operator+=(const CutStuff& second_cut_stuff)
     LOG_IF(FATAL, current_index_in_solver_ != -1 || second_cut_stuff.current_index_in_solver_ != -1) << "How should we update it?";
     LOG_IF(FATAL, to_use_ != second_cut_stuff.to_use_) << "How should we update it?";
 
-    const OsiRowCut* first = cut_.get();
-    const OsiRowCut* second = second_cut_stuff.cut_.get();
+    const OsiRowCut& first = getCut();
+    const OsiRowCut& second = second_cut_stuff.getCut();
     LOG_IF(FATAL, first == second);
 
-    const CoinPackedVector& first_vector(first->row());
-    const CoinPackedVector& second_vector(second->row());
+    const CoinPackedVector& first_vector(first.row());
+    const CoinPackedVector& second_vector(second.row());
     
     std::vector<double> new_elements(max(first_vector.getMaxIndex(), second_vector.getMaxIndex())+1, 0.0);
     for (int i = 0; i < first_vector.getNumElements(); i++) {
@@ -858,35 +863,50 @@ CutStuff& CutStuff::operator+=(const CutStuff& second_cut_stuff)
     
     // Create cut
     OsiRowCut* new_cut = new OsiRowCut();
-    new_cut->setLb(first->lb() + second->lb());
-    new_cut->setUb(first->ub());
+    new_cut->setLb(first.lb() + second.lb());
+    new_cut->setUb(first.ub());
     new_cut->setRow(index, new_indices.data(), new_elements.data()); // copy
-
-    cut_.reset(std::as_const(new_cut));
-    updateAggregData();
+    std::unique_ptr<OsiRowCut> cut_pointer(new_cut);
+    setCut(cut_pointer);
 
     assert(is_consistent()); // might be not consistent if we get elements with 0.0 values
     return *this;
 }
 
-void CutStuff::updateAggregData()
+void CutStuff::updateAggregData(int num_theta)
 {
-    if (type_ == PNB_CUT_TYPE_OPTIMALITY || type_ == PNB_CUT_TYPE_EPIGRAPH) {
-        int num_elems = cut_->row().getNumElements();
-        aggregates_.reserve(cut_->row().getMaxIndex()); // at most all elements are thetas
-        for (int i = num_elems; i > 0; i--) {
-            if (cut_->row().getIndices()[i - 1] >= num_cols_) {
-                int current_theta_index = cut_->row().getIndices()[i - 1] - num_cols_;
-                if (current_theta_index + 1 > aggregates_.size()) {
-                    aggregates_.resize(current_theta_index + 1);
-                }
-                aggregates_.set(current_theta_index);
-            }
-            else {
-                break;
-            }
+    if ((type_ == PNB_CUT_TYPE_FEASIBILITY || type_ == PNB_CUT_TYPE_DOMAIN) && num_theta != 0) {
+        throw runtime_error("Num theta should be 0 for the cuts w/o thetas: feasibility and domain cuts.");
+    }
+    const OsiRowCut& cut = getCut();
+    int num_elems = cut.row().getNumElements();
+    aggregates_.reset();
+    aggregates_.resize(num_theta);
+    for (int i = num_elems; i > 0; i--) {
+        if (cut.row().getIndices()[i - 1] >= num_cols_) {
+            int current_theta_index = cut.row().getIndices()[i - 1] - num_cols_;
+            aggregates_.set(current_theta_index);
+        }
+        else {
+            break;
         }
     }
+}
+
+const OsiRowCut& CutStuff::getCut() const
+{
+    return *cut_;
+}
+
+OsiRowCut& CutStuff::getMutableCut() const
+{
+    return *cut_;
+}
+
+void CutStuff::setCut(std::unique_ptr<OsiRowCut>& new_cut)
+{
+    cut_ = std::move(new_cut);
+    updateAggregData(getNumTheta());
 }
 
 void CutStuff::DumpCutStuff(const std::string& fname) const
@@ -894,8 +914,8 @@ void CutStuff::DumpCutStuff(const std::string& fname) const
     // we export sparse vector (row) as a full storage vector
     // file will have five rows: indices (0,1,2), values (0,-1,10.5), ub and lb, num_cols (w/o theta)
     // since we cannot know number of elements in full storage vector from sparse vector, we end up export on the last non-zero element
-    const CoinPackedVector* row = &cut_->row();
-	int num_elements = row->getMaxIndex() + 1; // last non-zero element
+    const CoinPackedVector& row = getCut().row();
+	int num_elements = row.getMaxIndex() + 1; // last non-zero element
     assert(num_elements >= num_cols_);
 
 	std::ofstream file_out;
@@ -908,15 +928,15 @@ void CutStuff::DumpCutStuff(const std::string& fname) const
     file_out << '\n';
 
     // elements incl. 0 values
-    file_out << std::setprecision(20) << (*row)[0];
+    file_out << std::setprecision(20) << row[0];
     for (int index = 1; index < num_elements; index++) {
-        file_out << "," << std::setprecision(20) << (*row)[index];
+        file_out << "," << std::setprecision(20) << row[index];
     }
     file_out << '\n';
 	
 	// ub and lb
-	file_out << std::setprecision(20) << cut_->ub() << '\n';
-	file_out << std::setprecision(20) << cut_->lb() << '\n';
+	file_out << std::setprecision(20) << getCut().ub() << '\n';
+	file_out << std::setprecision(20) << getCut().lb() << '\n';
 
     // num_cols
     file_out << num_cols_ << '\n';
@@ -975,12 +995,15 @@ void CutStuff::LoadCutStuff(const std::string& fname)
 	cut->setLb(lb);
 	cut->setUb(ub);
 	cut->setRow(cut_indices.size(), cut_indices.data(), cut_elements.data(), false);
-	cut_.reset(std::as_const(cut));
+    std::unique_ptr<OsiRowCut> cut_pointer(cut);
+    setCut(cut_pointer);
+
+    LOG_IF(FATAL, !is_consistent());
 }
 
 void CutStuff::Print() const
 {
-    cut_->print();
+    getCut().print();
     std::string type_str;
     switch (type_) {
     case PNB_CUT_TYPE_OPTIMALITY:
@@ -1025,19 +1048,20 @@ bool CutStuff::is_consistent() const
 {
     //The row element vector does not have duplicate indices
     //The row element vector indices are >= 0
-    if (!cut_->consistent()) {
+    const OsiRowCut& cut = getCut();
+    if (!cut.consistent()) {
         return false;
     }
   
     //Check the cut values
     std::vector<int> calculated_aggregates(0);
-    if (cut_->row().getNumElements() > num_cols_ + getNumberAggregates()) {
+    if (cut.row().getNumElements() > num_cols_ + getNumberAggregates()) {
         return false;
     }
     bool started_theta(false);
-    for (int i = 0; i < cut_->row().getNumElements(); i++) {
-        double val = cut_->row().getElements()[i];
-        int ind = cut_->row().getIndices()[i];
+    for (int i = 0; i < cut.row().getNumElements(); i++) {
+        double val = cut.row().getElements()[i];
+        int ind = cut.row().getIndices()[i];
         if (val == 0.0) { //no zero elements in row PackedVector
             return false;
         }
@@ -1061,6 +1085,9 @@ bool CutStuff::is_consistent() const
     if (calculated_aggregates != getAggregates()) {
         return false;
     }
+    if (getNumberAggregates() > getNumTheta()) {
+        return false;
+    }
     if (cut_creation_iteration_ < 0) {
         return false;
     }
@@ -1075,28 +1102,16 @@ bool CutStuff::is_consistent() const
     if ((type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH || type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN) && column_set_ != PNB_COL_SET_NONE) {
         return false;
     }
-
-    //Feasibility and domain cuts are w/o theta
-    if ((type_ == parallel_benders::PNB_CUT_TYPE_FEASIBILITY || type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN) && getNumberAggregates() != 0) {
-        return false;
-    }
-    //optimality and epigraph cuts are with theta
-    else if ((type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY || type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH) && getNumberAggregates() == 0) {
-        return false;
-    }
-    else if (type_ == parallel_benders::PNB_CUT_TYPE_CVAR) {
-        throw runtime_error("Not implemented.");
-    }
     
     //Aggregate type
-    int aggregate_type = getAggregateType(aggregates_.size());
+    int aggregate_type = getAggregateType();
     if ((type_ == parallel_benders::PNB_CUT_TYPE_FEASIBILITY || type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN) && aggregate_type != CutStuff::AGGREGATE_OVER_NONE) {
         return false;
     }
     else if (type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY && aggregate_type == CutStuff::AGGREGATE_OVER_NONE) {
         return false;
     }
-    else if (type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH && !aggregates_.all()) {
+    else if (type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH && aggregate_type != CutStuff::AGGREGATE_OVER_ALL) {
         return false;
     }
     else if (type_ == parallel_benders::PNB_CUT_TYPE_CVAR) {
@@ -1121,7 +1136,7 @@ double CutStuff::AbsoluteViolation(const std::vector<double>& col_solution, cons
     }
     LOG_IF(FATAL, (type_ == PNB_CUT_TYPE_FEASIBILITY || type_ == PNB_CUT_TYPE_DOMAIN) && theta_value != 0.0);
 
-    const CoinPackedVector& row(cut_->row());
+    const CoinPackedVector& row = getCut().row();
     const double* elements = row.getElements();
     const int* indices = row.getIndices();
     int num_elements = row.getNumElements();
@@ -1135,36 +1150,59 @@ double CutStuff::AbsoluteViolation(const std::vector<double>& col_solution, cons
         }
     }
 
-    return cut_->lb() - sum - theta_value; // Violation = cut lower bound - cut_vector * column_solution - Theta
+    return getCut().lb() - sum - theta_value; // Violation = cut lower bound - cut_vector * column_solution - Theta
 }
 
 double CutStuff::RelativeViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values)
 {
-    if (cut_->lb() == 0.0) {
+    const OsiRowCut& cut = getCut();
+    if (cut.lb() == 0.0) {
         return -1.0;
     }
-    return AbsoluteViolation(col_solution, theta_values)/abs(cut_->lb());
+    return AbsoluteViolation(col_solution, theta_values)/abs(cut.lb());
 }
 
 double CutStuff::DistanceViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values)
 {
-    return AbsoluteViolation(col_solution, theta_values)/cut_->row().twoNorm();
+    return AbsoluteViolation(col_solution, theta_values)/getCut().row().twoNorm();
+}
+
+bool CutStuff::isAggregate(int aggregate) const {
+
+    if (aggregate + 1 > getNumTheta()) {
+        throw std::invalid_argument("Aggregate number is out of theta range");
+    }
+    return aggregates_.test(aggregate);
 }
 
 void CutStuff::setAggregate(int aggregate)
 {
-    if (aggregate+1 > aggregates_.size()) {
-        aggregates_.resize(aggregate+1);
+    int num_theta = getNumTheta();
+    OsiRowCut& cut = getMutableCut();
+    if (aggregate+1 > num_theta) {
+        throw std::invalid_argument("Aggregate number is out of theta range");
     }
-    if (aggregates_.test(aggregate)) {
-        assert(cut_->row()[num_cols_ + aggregate] == 1.0);
+    if (isAggregate(aggregate)) {
+        assert(cut.row()[num_cols_ + aggregate] == 1.0);
         return;
     }
-    aggregates_.set(aggregate);
-    assert(cut_->row()[num_cols_ + aggregate] == 0.0);
-    OsiRowCut new_cut(*cut_);
-    new_cut.mutableRow().insert(num_cols_ + aggregate, 1.0);
-    cut_ = std::make_shared<const OsiRowCut>(std::as_const(new_cut));
+    assert(cut.row()[num_cols_ + aggregate] == 0.0);
+    cut.mutableRow().insert(num_cols_ + aggregate, 1.0);
+
+    updateAggregData(num_theta);
+}
+
+void CutStuff::resetAggregates(int num_theta /* = -1*/ )
+{
+    int old_num_aggregs = getNumberAggregates();
+    OsiRowCut& cut = getMutableCut();
+    CoinPackedVector& row = cut.mutableRow();
+    row.truncate(row.getNumElements() - old_num_aggregs);
+
+    if (num_theta == -1) {
+        num_theta = getNumTheta();
+    }
+    updateAggregData(num_theta);
 }
 
 bool is_active( const std::shared_ptr<CutStuff>& value )

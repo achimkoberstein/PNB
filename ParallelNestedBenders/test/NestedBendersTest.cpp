@@ -148,9 +148,14 @@ public:
 		cut->setLb(cut_info[lb_ind]);
 		cut->setUb(INFINITY);
 		cut->setRow(row);
-		std::shared_ptr<const OsiRowCut> cut_pointer(std::as_const(cut));
+		std::unique_ptr<OsiRowCut> cut_pointer(cut);
 
-		parallel_benders::CutStuff* cut_stuff = new parallel_benders::CutStuff(cut_info[it_ind], cut_pointer, cut_info[type_ind], num_cols);
+		int type = cut_info[type_ind];
+		int num_theta_for_cut = num_theta;
+		if (type == parallel_benders::PNB_CUT_TYPE_FEASIBILITY || type == parallel_benders::PNB_CUT_TYPE_DOMAIN) {
+			num_theta_for_cut = 0;
+		}
+		parallel_benders::CutStuff* cut_stuff = new parallel_benders::CutStuff(cut_info[it_ind], cut_pointer, type, num_cols, num_theta_for_cut);
 		cut_stuff->column_set_ = cut_info[col_set_ind];
 
 		return cut_stuff;
@@ -1652,35 +1657,47 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	//TODO: the method below does not need theta
 	CutStuff cs1(*CutStuffFromCutInfo(cut_info));
 	EXPECT_EQ(cs1.getNumberAggregates(), 1);
+	EXPECT_EQ(cs1.getNumTheta(), 1);
 	EXPECT_EQ(cs1.getAggregates()[0], 0);
-	EXPECT_EQ(cs1.getAggregateType(1), 0);
+	EXPECT_TRUE(cs1.isAggregate(0));
+	EXPECT_EQ(cs1.getAggregateType(), CutStuff::AGGREGATE_OVER_ONE);
 	EXPECT_EQ(cs1.type_, PNB_CUT_TYPE_OPTIMALITY);
 	EXPECT_EQ(cs1.column_set_, PNB_COL_SET_DOUBLE_PRIME);
 	EXPECT_TRUE(cs1.is_consistent());
 
-	//epigraph cut with 2 thetas and later 3 thetas
+	//optimality cut with 2 thetas and later 3 thetas
 	cut_info = { 5,	0,1,2,0,4,	20,	0,1,	2,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE };
 	CutStuff cs2(*CutStuffFromCutInfo(cut_info));
 	EXPECT_EQ(cs2.getNumberAggregates(), 1);
+	EXPECT_EQ(cs2.getNumTheta(), 2);
 	EXPECT_EQ(cs2.getAggregates()[0], 1);
-	EXPECT_EQ(cs2.getAggregateType(2), 1);
+	EXPECT_FALSE(cs2.isAggregate(0));
+	EXPECT_TRUE(cs2.isAggregate(1));
+	EXPECT_EQ(cs2.getAggregateType(), CutStuff::AGGREGATE_OVER_ONE);
 	EXPECT_EQ(cs2.type_, PNB_CUT_TYPE_OPTIMALITY);
 	EXPECT_EQ(cs2.column_set_, PNB_COL_SET_NONE);
 	EXPECT_TRUE(cs2.is_consistent());
 
-	//setAggregate
+	//(re)setAggregate
+	cs2.resetAggregates(3);
+	cs2.setAggregate(1);
 	cs2.setAggregate(2);
 	EXPECT_EQ(cs2.getNumberAggregates(), 2);
 	EXPECT_EQ(cs2.getAggregates()[0], 1);
 	EXPECT_EQ(cs2.getAggregates()[1], 2);
-	EXPECT_EQ(cs2.getAggregateType(3), CutStuff::AGGREGATE_OVER_PARTIAL);
+	EXPECT_TRUE(cs2.isAggregate(1));
+	EXPECT_TRUE(cs2.isAggregate(2));
+	EXPECT_EQ(cs2.getAggregateType(), CutStuff::AGGREGATE_OVER_PARTIAL);
 	EXPECT_TRUE(cs2.is_consistent());
+
+	cs2.resetAggregates();
+	EXPECT_EQ(cs2.getAggregateType(), CutStuff::AGGREGATE_OVER_NONE);
+	EXPECT_TRUE(!cs2.is_consistent()); // because optimality cut should have aggregates
 	cs2.setAggregate(0);
+	cs2.setAggregate(1);
+	cs2.setAggregate(2);
 	EXPECT_EQ(cs2.getNumberAggregates(), 3);
-	EXPECT_EQ(cs2.getAggregates()[0], 0);
-	EXPECT_EQ(cs2.getAggregates()[1], 1);
-	EXPECT_EQ(cs2.getAggregates()[2], 2);
-	EXPECT_EQ(cs2.getAggregateType(3), CutStuff::AGGREGATE_OVER_ALL);
+	EXPECT_EQ(cs2.getAggregateType(), CutStuff::AGGREGATE_OVER_ALL);
 	EXPECT_TRUE(cs2.is_consistent());
 
 	//feas cut with 0 thetas
@@ -1690,18 +1707,18 @@ TEST_F(UnitTestCutStuff, unitTest) {
 	//void CutStuff::setAggregate(int aggregate);
 	EXPECT_EQ(cs3.getNumberAggregates(), 0);
 	EXPECT_EQ(cs3.getAggregates().size(), 0);
-	EXPECT_EQ(cs3.getAggregateType(2), CutStuff::AGGREGATE_OVER_NONE);
+	EXPECT_EQ(cs3.getAggregateType(), CutStuff::AGGREGATE_OVER_NONE);
 	EXPECT_EQ(cs3.type_, PNB_CUT_TYPE_FEASIBILITY);
 	EXPECT_EQ(cs3.column_set_, PNB_COL_SET_NONE);
 	EXPECT_TRUE(cs3.is_consistent());
 
-	//double-prime opt cut with 1 theta
+	//double-prime opt cut
 	//		   col,	coef,		lb,	theta,	it,type,col set
 	cut_info = { 5,	0,1,2,0,4,	10,	1,1,	1,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_DOUBLE_PRIME };
 	CutStuff cs4(*CutStuffFromCutInfo(cut_info));
 	EXPECT_EQ(cs4.getNumberAggregates(), 2);
 	EXPECT_EQ(cs4.getAggregates()[0], 0);
-	EXPECT_EQ(cs4.getAggregateType(2), CutStuff::AGGREGATE_OVER_ALL);
+	EXPECT_EQ(cs4.getAggregateType(), CutStuff::AGGREGATE_OVER_ALL);
 	EXPECT_EQ(cs4.type_, PNB_CUT_TYPE_OPTIMALITY);
 	EXPECT_EQ(cs4.column_set_, PNB_COL_SET_DOUBLE_PRIME);
 	EXPECT_TRUE(cs4.is_consistent());
@@ -1724,8 +1741,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 
 	//ConsolidateCuts
 	{
-		const int num_theta(3);
-		const int from_iteration(4);
+		//****** ConsolidateCuts cut_in != cut_out
 		std::vector<std::vector<double>>cut_infos;
 		
 		//It. 3 (iteration < from_iteration: not consolidate)
@@ -1754,8 +1770,8 @@ TEST_F(UnitTestCutStuff, unitTest) {
 		//It. 7 (different num cols in iteration, domain, epigraph, feas cuts)
 		cut_infos.push_back({ 3,	2,2,1,		20,	0,0,0,	7,PNB_CUT_TYPE_FEASIBILITY,	PNB_COL_SET_DOUBLE_PRIME });
 		cut_infos.push_back({ 2,	3,1,	   -30,	1,0,0,	7,PNB_CUT_TYPE_OPTIMALITY,	PNB_COL_SET_DOUBLE_PRIME });
-		cut_infos.push_back({ 2,	2,2,		20,	1,1,1,	7,PNB_CUT_TYPE_EPIGRAPH,	PNB_COL_SET_DOUBLE_PRIME });
-		cut_infos.push_back({ 2,	2,2,		20,	0,0,0,	7,PNB_CUT_TYPE_DOMAIN,		PNB_COL_SET_DOUBLE_PRIME });
+		cut_infos.push_back({ 2,	2,2,		20,	1,1,1,	7,PNB_CUT_TYPE_EPIGRAPH,	PNB_COL_SET_NONE });
+		cut_infos.push_back({ 2,	2,2,		20,	0,0,0,	7,PNB_CUT_TYPE_DOMAIN,		PNB_COL_SET_NONE });
 		
 		//It. 8 see above
 		//It. 9 (partially consolidated cuts already in the iteration)
@@ -1772,18 +1788,21 @@ TEST_F(UnitTestCutStuff, unitTest) {
 		//cut_infos.push_back({ 2,	1,1,		10,	0,0,1,	11,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });
 		//cut_infos.push_back({ 3,	2,2,2,		20,	0,1,0,	11,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });
 
-		BendersNodeData::cut_container cuts = BendersNodeData::cut_container();
+		BendersNodeData::cut_container cuts_in = BendersNodeData::cut_container();
 		for (auto& cut_info : cut_infos) {
 			std::shared_ptr<CutStuff> cut_stuff(CutStuffFromCutInfo(cut_info));
 			//cut_stuff->Print();
-			cuts.push_back(cut_stuff);
+			cuts_in.push_back(cut_stuff);
 		}
-		parallel_benders::ConsolidateCuts(cuts, from_iteration);
+		BendersNodeData::cut_container cuts_out = BendersNodeData::cut_container();
 
-		std:vector<std::vector<double>>expected_results;
+		BendersNodeData::cut_container::const_iterator& start_from = std::next(cuts_in.begin(), 2);
+		const BendersNodeData::cut_container::const_iterator old_start_from = start_from;
+		parallel_benders::ConsolidateCuts(cuts_in, cuts_out, start_from);
+		EXPECT_TRUE(start_from == old_start_from) << "We do not want to change the iterator inside the function."; 
+
+		std:deque<std::vector<double>>expected_results;
 								 //col,	coef,		lb, theta,	it, type, col set
-		expected_results.push_back({ 4,	1,1,1,1,	10,	1,0,0,	3,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });
-		expected_results.push_back({ 4,	2,2,2,2,	20,	0,1,0,	3,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });
 		expected_results.push_back({ 4,	6,6,6,6,	60,	1,1,1,	4,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });
 		expected_results.push_back({ 4,	5,5,5,5,	50,	0,1,1,	5,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_PRIME });
 		expected_results.push_back({ 4,	1,1,1,1,	10,	1,0,0,	5,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_DOUBLE_PRIME });
@@ -1795,11 +1814,11 @@ TEST_F(UnitTestCutStuff, unitTest) {
 		expected_results.push_back({ 4,	3,0,3,1,	30,	0,1,1,	8,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_PRIME });
 		expected_results.push_back({ 4,	3,1,2,3,	30,	1,1,1,	9,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });
 
-		EXPECT_EQ(expected_results.size(), cuts.size());
+		EXPECT_EQ(expected_results.size(), cuts_out.size());
 		for (auto& exp_result : expected_results) {
 			CutStuff* exp_cut_stuff = CutStuffFromCutInfo(exp_result);
 			bool exists_in_results(false);
-			for (auto& it : cuts) {
+			for (auto& it : cuts_out) {
 				//it->Print();
 				if (CutIsEqual(*exp_cut_stuff, *it, 0.00001)) {
 					exists_in_results = true;
@@ -1807,6 +1826,32 @@ TEST_F(UnitTestCutStuff, unitTest) {
 				}
 			}
 			
+			EXPECT_TRUE(exists_in_results);
+			if (!exists_in_results) {
+				LOG(WARNING) << "Expected cut is not found in results:\n";
+				exp_cut_stuff->Print();
+			}
+			delete exp_cut_stuff;
+		}
+
+		//****** ConsolidateCuts cut_in == cut_out
+		expected_results.push_front({ 4,	1,1,1,1,	10,	1,0,0,	3,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });
+		expected_results.push_front({ 4,	2,2,2,2,	20,	0,1,0,	3,PNB_CUT_TYPE_OPTIMALITY,PNB_COL_SET_NONE });		
+
+		parallel_benders::ConsolidateCuts(cuts_in, cuts_in, std::next(cuts_in.begin(), 2));
+
+		EXPECT_EQ(expected_results.size(), cuts_in.size());
+		for (auto& exp_result : expected_results) {
+			CutStuff* exp_cut_stuff = CutStuffFromCutInfo(exp_result);
+			bool exists_in_results(false);
+			for (auto& it : cuts_in) {
+				//it->Print();
+				if (CutIsEqual(*exp_cut_stuff, *it, 0.00001)) {
+					exists_in_results = true;
+					break;
+				}
+			}
+
 			EXPECT_TRUE(exists_in_results);
 			if (!exists_in_results) {
 				LOG(WARNING) << "Expected cut is not found in results:\n";
