@@ -1,0 +1,77 @@
+// cor;tim;sto or cor_tim;sto or cor_tim_sto
+//ntaimo/sslp-ntaimo/sslp_10_50_100 - sslp-ntaimo w/o suffix are the same instances as the original ones
+ntaimo/sslp-ntaimo/sslp_10_50_1000a
+ntaimo/sslp-ntaimo/sslp_10_50_1000b
+ntaimo/sslp-ntaimo/sslp_10_50_1000c
+ntaimo/sslp-ntaimo/sslp_10_50_1000d
+ntaimo/sslp-ntaimo/sslp_10_50_1000e
+ntaimo/sslp-ntaimo/sslp_10_50_100a
+ntaimo/sslp-ntaimo/sslp_10_50_100b
+ntaimo/sslp-ntaimo/sslp_10_50_100c
+ntaimo/sslp-ntaimo/sslp_10_50_100d
+ntaimo/sslp-ntaimo/sslp_10_50_100e
+ntaimo/sslp-ntaimo/sslp_10_50_2000a
+ntaimo/sslp-ntaimo/sslp_10_50_2000b
+ntaimo/sslp-ntaimo/sslp_10_50_2000c
+ntaimo/sslp-ntaimo/sslp_10_50_2000d
+ntaimo/sslp-ntaimo/sslp_10_50_2000e
+ntaimo/sslp-ntaimo/sslp_10_50_500a
+ntaimo/sslp-ntaimo/sslp_10_50_500b
+ntaimo/sslp-ntaimo/sslp_10_50_500c
+ntaimo/sslp-ntaimo/sslp_10_50_500d
+ntaimo/sslp-ntaimo/sslp_10_50_500e
+ntaimo/sslp-ntaimo/sslp_10_50_50a
+ntaimo/sslp-ntaimo/sslp_10_50_50b
+ntaimo/sslp-ntaimo/sslp_10_50_50c
+ntaimo/sslp-ntaimo/sslp_10_50_50d
+ntaimo/sslp-ntaimo/sslp_10_50_50e
+//ntaimo/sslp-ntaimo/sslp_15_45_10 - sslp-ntaimo w/o suffix are the same instances as the original ones
+ntaimo/sslp-ntaimo/sslp_15_45_10a
+ntaimo/sslp-ntaimo/sslp_15_45_10b
+ntaimo/sslp-ntaimo/sslp_15_45_10c
+ntaimo/sslp-ntaimo/sslp_15_45_10d
+ntaimo/sslp-ntaimo/sslp_15_45_10e
+//ntaimo/sslp-ntaimo/sslp_15_45_15 - sslp-ntaimo w/o suffix are the same instances as the original ones
+ntaimo/sslp-ntaimo/sslp_15_45_15a
+ntaimo/sslp-ntaimo/sslp_15_45_15b
+ntaimo/sslp-ntaimo/sslp_15_45_15c
+ntaimo/sslp-ntaimo/sslp_15_45_15d
+ntaimo/sslp-ntaimo/sslp_15_45_15e
+//ntaimo/sslp-ntaimo/sslp_15_45_20 - sslp-ntaimo w/o suffix are the same instances as the original ones
+ntaimo/sslp-ntaimo/sslp_15_45_20a
+ntaimo/sslp-ntaimo/sslp_15_45_20b
+ntaimo/sslp-ntaimo/sslp_15_45_20c
+ntaimo/sslp-ntaimo/sslp_15_45_20d
+ntaimo/sslp-ntaimo/sslp_15_45_20e
+//ntaimo/sslp-ntaimo/sslp_15_45_25 - sslp-ntaimo w/o suffix are the same instances as the original ones
+ntaimo/sslp-ntaimo/sslp_15_45_25a
+ntaimo/sslp-ntaimo/sslp_15_45_25b
+ntaimo/sslp-ntaimo/sslp_15_45_25c
+ntaimo/sslp-ntaimo/sslp_15_45_25d
+ntaimo/sslp-ntaimo/sslp_15_45_25e
+//ntaimo/sslp-ntaimo/sslp_15_45_5 - sslp-ntaimo w/o suffix are the same instances as the original ones
+ntaimo/sslp-ntaimo/sslp_15_45_5a
+ntaimo/sslp-ntaimo/sslp_15_45_5b
+ntaimo/sslp-ntaimo/sslp_15_45_5c
+ntaimo/sslp-ntaimo/sslp_15_45_5d
+ntaimo/sslp-ntaimo/sslp_15_45_5e
+ntaimo/sslp-ntaimo/sslp_5_25_100a
+ntaimo/sslp-ntaimo/sslp_5_25_100b
+ntaimo/sslp-ntaimo/sslp_5_25_100c
+ntaimo/sslp-ntaimo/sslp_5_25_100d
+ntaimo/sslp-ntaimo/sslp_5_25_100e
+ntaimo/sslp-ntaimo/sslp_5_25_50a
+ntaimo/sslp-ntaimo/sslp_5_25_50b
+ntaimo/sslp-ntaimo/sslp_5_25_50c
+ntaimo/sslp-ntaimo/sslp_5_25_50d
+ntaimo/sslp-ntaimo/sslp_5_25_50e
+ntaimo/sslp-ntaimo/sslp_5_50_100a
+ntaimo/sslp-ntaimo/sslp_5_50_100b
+ntaimo/sslp-ntaimo/sslp_5_50_100c
+ntaimo/sslp-ntaimo/sslp_5_50_100d
+ntaimo/sslp-ntaimo/sslp_5_50_100e
+ntaimo/sslp-ntaimo/sslp_5_50_50a
+ntaimo/sslp-ntaimo/sslp_5_50_50b
+ntaimo/sslp-ntaimo/sslp_5_50_50c
+ntaimo/sslp-ntaimo/sslp_5_50_50d
+ntaimo/sslp-ntaimo/sslp_5_50_50e
