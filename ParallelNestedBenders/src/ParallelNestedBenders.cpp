@@ -4586,7 +4586,7 @@ namespace parallel_benders {
 #ifdef LOAD_DUMP_CUTS
 			std::stringstream cut_filename;
             cut_filename << instance_name_ << "_optimality_cut_it_" << current_iteration_ << "_aggregate_" << i << ".txt";
-            cut_stuff->DumpCutStuff(cut_filename.str());
+            cut_stuff->Dump(cut_filename.str());
 #endif
             AddCutToContainer(benders_tree_node_pointer,cut_stuff);
             /************************************************************************/
@@ -5524,11 +5524,11 @@ namespace parallel_benders {
 
 #ifdef LOAD_DUMP_CUTS
                 if (load_cut_stuff) {
-                    cut_stuff->LoadCutStuff(cut_filename.str());
+                    cut_stuff = LoadCutStuff(cut_filename.str());
                 }
                 else {
                     //For testing we might want to dump and/or load the cuts
-                    cut_stuff->DumpCutStuff(cut_filename.str());
+                    cut_stuff->Dump(cut_filename.str());
                 } 
 #endif
 
@@ -9425,11 +9425,8 @@ namespace parallel_benders {
                     file.open(cut_filename.str());
                     if (file.is_open()) {
                         file.close();
-                        OsiRowCut* cut = new OsiRowCut();
-                        std::unique_ptr<OsiRowCut> cut_pointer(cut);
-                        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY,stage_data_[0]->num_columns_,stage_data_[0]->num_thetas_));
+                        std::shared_ptr<CutStuff> cut_stuff = LoadCutStuff(cut_filename.str());
                         assert(cut_stuff->isAggregate(aggregate_number));
-                        cut_stuff->LoadCutStuff(cut_filename.str());
                         AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);  
                     }
                     else {

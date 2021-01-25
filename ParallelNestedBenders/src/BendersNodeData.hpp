@@ -237,8 +237,7 @@ namespace parallel_benders{
         int num_cols_; // number of columns w/o theta (cut_ does not provide this information)
         int current_index_in_solver_; // Needs to be updated at each run to be meaningful
 
-		void DumpCutStuff(const std::string& fname) const;
-		void LoadCutStuff(const std::string& fname);
+		void Dump(const std::string& fname) const;
         void Print() const;
 
         bool is_consistent() const;
@@ -262,6 +261,8 @@ namespace parallel_benders{
         boost::dynamic_bitset<> aggregates_;
         std::unique_ptr<OsiRowCut> cut_;
     };
+
+    std::shared_ptr<CutStuff> LoadCutStuff(const std::string& fname);
 
     // To be able to use find_if on std::list< std::shared_ptr<CutStuff> > in conjunction with active values
     struct CutStuffComparison: public std::binary_function< std::shared_ptr<CutStuff>, int, bool > {
