@@ -909,28 +909,23 @@ void CutStuff::setCut(std::unique_ptr<OsiRowCut>& new_cut)
     updateAggregData(getNumTheta());
 }
 
-void CutStuff::DumpCutStuff(const std::string& fname) const
+void CutStuff::Dump(const std::string& fname) const
 {
-    // we export sparse vector (row) as a full storage vector
-    // file will have five rows: indices (0,1,2), values (0,-1,10.5), ub and lb, num_cols (w/o theta)
-    // since we cannot know number of elements in full storage vector from sparse vector, we end up export on the last non-zero element
     const CoinPackedVector& row = getCut().row();
-	int num_elements = row.getMaxIndex() + 1; // last non-zero element
-    assert(num_elements >= num_cols_);
-
-	std::ofstream file_out;
+	
+    std::ofstream file_out;
 	file_out.open(fname.c_str(), ios::trunc);
 	// indices
-    file_out << 0;
-	for (int index = 1; index < num_elements; index++) {
-		file_out << "," << index;
+    file_out << row.getIndices()[0];
+	for (int i = 1; i < row.getNumElements(); i++) {
+		file_out << "," << row.getIndices()[i];
 	}
     file_out << '\n';
 
-    // elements incl. 0 values
-    file_out << std::setprecision(20) << row[0];
-    for (int index = 1; index < num_elements; index++) {
-        file_out << "," << std::setprecision(20) << row[index];
+    // elements
+    file_out << std::setprecision(20) << row.getElements()[0];
+    for (int i = 1; i < row.getNumElements(); i++) {
+        file_out << "," << std::setprecision(20) << row.getElements()[i];
     }
     file_out << '\n';
 	
@@ -938,67 +933,9 @@ void CutStuff::DumpCutStuff(const std::string& fname) const
 	file_out << std::setprecision(20) << getCut().ub() << '\n';
 	file_out << std::setprecision(20) << getCut().lb() << '\n';
 
-    // num_cols
-    file_out << num_cols_ << '\n';
+    // num_cols, num_thetas, iteration, type
+    file_out << num_cols_ << '\n' << getNumTheta() << '\n' << cut_creation_iteration_ << '\n' << type_ << '\n';
 	file_out.close();
-}
-
-void CutStuff::LoadCutStuff(const std::string& fname)
-{
-	std::fstream file;
-	file.open(fname.c_str()); // should be the list of relative paths to .sto (.stoch) files
-	LOG_IF(FATAL, !file.is_open()) << "Could not open " << fname;
-
-	std::string line;
-	int line_number = 0;
-	std::vector<int> cut_indices{};
-	std::vector<double> cut_elements{};
-	double ub(0);
-	double lb(0);
-    int num_cols(0);
-	while (getline(file, line, '\n')) {
-		assert(line_number < 4); // indices, coefs, ub, lb
-		int from = 0;
-		int to = 0;
-		int len = 0;
-		if (line_number == 0) { // indices
-			std::stringstream ss(line);
-			for (int i; ss >> i;) {
-				cut_indices.push_back(i);
-				if (ss.peek() == ',')
-					ss.ignore();
-			}
-		}
-		else if (line_number == 1) { // coefs
-			std::stringstream ss(line);
-			for (double i; ss >> i;) {
-				cut_elements.push_back(i);
-				if (ss.peek() == ',')
-					ss.ignore();
-			}
-		}
-		else if (line_number == 2) { // ub
-			ub = std::stod(line);
-		}
-		else if (line_number == 3) { // lb
-			lb = std::stod(line);
-		}
-        else if (line_number == 4) { // num_cols
-            num_cols = std::stoi(line);
-            assert(num_cols == num_cols_);
-        }
-		++line_number;
-	}
-	file.close();
-
-	OsiRowCut* cut = new OsiRowCut();
-	cut->setLb(lb);
-	cut->setUb(ub);
-	cut->setRow(cut_indices.size(), cut_indices.data(), cut_elements.data(), false);
-    std::unique_ptr<OsiRowCut> cut_pointer(cut);
-    setCut(cut_pointer);
-
-    LOG_IF(FATAL, !is_consistent());
 }
 
 void CutStuff::Print() const
@@ -1052,6 +989,8 @@ bool CutStuff::is_consistent() const
     if (!cut.consistent()) {
         return false;
     }
+    
+    int num_theta = getNumTheta();
   
     //Check the cut values
     std::vector<int> calculated_aggregates(0);
@@ -1085,7 +1024,7 @@ bool CutStuff::is_consistent() const
     if (calculated_aggregates != getAggregates()) {
         return false;
     }
-    if (getNumberAggregates() > getNumTheta()) {
+    if (getNumberAggregates() > num_theta) {
         return false;
     }
     if (cut_creation_iteration_ < 0) {
@@ -1111,8 +1050,11 @@ bool CutStuff::is_consistent() const
     else if (type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY && aggregate_type == CutStuff::AGGREGATE_OVER_NONE) {
         return false;
     }
-    else if (type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH && aggregate_type != CutStuff::AGGREGATE_OVER_ALL) {
-        return false;
+    else if (type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH) {
+        if (num_theta == 1 && aggregate_type != CutStuff::AGGREGATE_OVER_ONE)
+            return false;
+        if (num_theta > 1 && aggregate_type != CutStuff::AGGREGATE_OVER_ALL)
+            return false;
     }
     else if (type_ == parallel_benders::PNB_CUT_TYPE_CVAR) {
         throw runtime_error("Not implemented.");
@@ -1203,6 +1145,75 @@ void CutStuff::resetAggregates(int num_theta /* = -1*/ )
         num_theta = getNumTheta();
     }
     updateAggregData(num_theta);
+}
+
+std::shared_ptr<CutStuff> LoadCutStuff(const std::string& fname)
+{
+    std::fstream file;
+    file.open(fname.c_str()); // should be the list of relative paths to .sto (.stoch) files
+    LOG_IF(FATAL, !file.is_open()) << "Could not open " << fname;
+
+    std::string line;
+    int line_number = 0;
+    std::vector<int> cut_indices{};
+    std::vector<double> cut_elements{};
+    double ub(0);
+    double lb(0);
+    int num_cols(0), num_thetas(0), iteration(-1), cut_type(-1);
+    while (getline(file, line, '\n')) {
+        assert(line_number < 8); // indices, coefs, ub, lb, num_cols, num_thetas, iteration, type
+        int from = 0;
+        int to = 0;
+        int len = 0;
+        if (line_number == 0) { // indices
+            std::stringstream ss(line);
+            for (int i; ss >> i;) {
+                cut_indices.push_back(i);
+                if (ss.peek() == ',')
+                    ss.ignore();
+            }
+        }
+        else if (line_number == 1) { // coefs
+            std::stringstream ss(line);
+            for (double i; ss >> i;) {
+                cut_elements.push_back(i);
+                if (ss.peek() == ',')
+                    ss.ignore();
+            }
+        }
+        else if (line_number == 2) { // ub
+            ub = std::stod(line);
+        }
+        else if (line_number == 3) { // lb
+            lb = std::stod(line);
+        }
+        else if (line_number == 4) { // num_cols
+            num_cols = std::stoi(line);
+        }
+        else if (line_number == 5) { // num_thetas
+            num_thetas = std::stoi(line);
+        }
+        else if (line_number == 6) { // iteration
+            iteration = std::stoi(line);
+        }
+        else if (line_number == 7) { // type
+            cut_type = std::stoi(line);
+        }
+        ++line_number;
+    }
+    file.close();
+
+    OsiRowCut* cut = new OsiRowCut();
+    cut->setLb(lb);
+    cut->setUb(ub);
+    cut->setRow(cut_indices.size(), cut_indices.data(), cut_elements.data(), false);
+    std::unique_ptr<OsiRowCut> cut_pointer(cut);
+
+    std::shared_ptr<CutStuff> cut_stuff(new CutStuff(iteration, cut_pointer, cut_type, num_cols, num_thetas));
+
+    LOG_IF(FATAL, !cut_stuff->is_consistent());
+
+    return cut_stuff;
 }
 
 bool is_active( const std::shared_ptr<CutStuff>& value )
