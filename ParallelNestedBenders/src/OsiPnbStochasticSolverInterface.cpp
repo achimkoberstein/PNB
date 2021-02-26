@@ -154,10 +154,13 @@ double OsiStochasticParallelNestedBendersSolverInterface::getIntegerGap() const
 
 void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 {
-    if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ || nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK ){
+    if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ 
+		|| nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK
+		|| nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_SOLVER_BENDERS){
 
         bool deteq_risk = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK;
-        parallel_benders::Timer solution_time(2);
+		bool solver_benders = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_SOLVER_BENDERS;
+		parallel_benders::Timer solution_time(2);
         solution_time.Start(1);
         if ( osi_ != nullptr ){
             delete osi_;
@@ -223,7 +226,10 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 
 			// We need to differentiate between integer and not
 			int num_ints = nested_benders_->smi_->getIntegerLen();
-			if (num_ints && (!relaxation || relaxation > nested_benders_->core_->getNumStages() )){ // no relaxation
+			if (num_ints && (!relaxation || relaxation > nested_benders_->core_->getNumStages()) && solver_benders) { // no relaxation
+				osi_->benders(false);
+			}
+			else if (num_ints && (!relaxation || relaxation > nested_benders_->core_->getNumStages() )){ // no relaxation
 				osi_->branchAndBound();
 			}
 			else if ( num_ints && relaxation > 1) { // relax integers for stages starting from PNB_RELAXATION stage			
@@ -237,7 +243,12 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 					osi_->setContinuous(&int_indices[relaxation_int_start], int_indices.size() - relaxation_int_start);
 					LOG(INFO) << "We solve the LP relaxation for stages starting from stage " << relaxation << ".";
 				}
-				osi_->branchAndBound();
+				if (solver_benders) {
+					osi_->benders(false);
+				}
+				else {
+					osi_->branchAndBound();
+				}				
 			}
 			else { // not integer (nor binary) or we relax all stages
 				int lp_method = nested_benders_->parameter_.GetIntParamValue(parallel_benders::PNB_LP_METHOD);
@@ -314,7 +325,10 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         }
         else{
 #endif
-            if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
+			if (nested_benders_->smi_->getIntegerLen() && relaxation != 0 && solver_benders) {
+				osi_->benders(false);
+			}
+			else if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
                 osi_->branchAndBound();
             }
             else {

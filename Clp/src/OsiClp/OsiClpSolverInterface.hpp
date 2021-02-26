@@ -55,6 +55,9 @@ public:
   /// Invoke solver's built-in enumeration algorithm
   virtual void branchAndBound();
 
+  /// Invoke solver's built-in Benders decomposition algorithm
+  virtual void benders(bool use_annotation );
+
   /** Solve when primal column and dual row solutions are near-optimal
       options - 0 no presolve (use primal and dual)
                 1 presolve (just use primal)

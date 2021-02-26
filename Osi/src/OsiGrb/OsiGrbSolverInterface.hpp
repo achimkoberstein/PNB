@@ -44,6 +44,9 @@ public:
 	virtual void branchAndBound();
 	//@}
 
+	/// Invoke solver's built-in Benders decomposition algorithm
+	virtual void benders(bool use_annotation);
+
 	//---------------------------------------------------------------------------
 	/**@name Parameter set/get methods
 

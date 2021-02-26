@@ -168,6 +168,9 @@ public:
     /// Invoke solver's built-in enumeration algorithm
     virtual void branchAndBound() = 0;
 
+	/// Invoke solver's built-in Benders decomposition algorithm
+	virtual void benders(bool use_annotation) = 0;
+
 #ifdef CBC_NEXT_VERSION
     /*
       Would it make sense to collect all of these routines in a `MIP Helper'

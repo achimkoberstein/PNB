@@ -7971,6 +7971,11 @@ OsiClpSolverInterface::branchAndBound() {
     //"branchAndBound", "OsiClpSolverInterface");
   }
 }
+void
+OsiClpSolverInterface::benders(bool use_annotation)
+{
+	throw std::logic_error("Benders not implemented in solver and/or not referenced via API.");
+}
 void 
 OsiClpSolverInterface::setSpecialOptions(unsigned int value)
 { 
