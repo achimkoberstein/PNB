@@ -214,7 +214,10 @@ namespace parallel_benders{
 
     struct CutStuff
     {
-        const static int AGGREGATE_OVER_ONE = 0;
+		//Types of cut inconsistency
+		const static enum InconsistencyType { InconstRow, TooManyElems, ZeroRowElems, ThetaNotOne, ThetaBeforeCoef, WrongAggreg, TooManyAggreg, InvalidCutCreation, InvalidColumnSet, InvalidCutType, WrongColumnSet, WrongAggregateFeasDomain, WrongAggregateOpt, WrongAggregateEpigr, Count };
+		
+		const static int AGGREGATE_OVER_ONE = 0;
         const static int AGGREGATE_OVER_ALL = -1;
         const static int AGGREGATE_OVER_PARTIAL = -2;
         const static int AGGREGATE_OVER_NONE = -3; // feasibility or domain cuts

@@ -983,11 +983,13 @@ void CutStuff::Print() const
 
 bool CutStuff::is_consistent() const
 {
-    //The row element vector does not have duplicate indices
+	std::bitset<CutStuff::InconsistencyType::Count> inconsistencies;
+	
+	//The row element vector does not have duplicate indices
     //The row element vector indices are >= 0
     const OsiRowCut& cut = getCut();
     if (!cut.consistent()) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::InconstRow);
     }
     
     int num_theta = getNumTheta();
@@ -995,71 +997,74 @@ bool CutStuff::is_consistent() const
     //Check the cut values
     std::vector<int> calculated_aggregates(0);
     if (cut.row().getNumElements() > num_cols_ + getNumberAggregates()) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::TooManyElems);
     }
     bool started_theta(false);
     for (int i = 0; i < cut.row().getNumElements(); i++) {
         double val = cut.row().getElements()[i];
         int ind = cut.row().getIndices()[i];
         if (val == 0.0) { //no zero elements in row PackedVector
-            return false;
+			inconsistencies.set(CutStuff::InconsistencyType::ZeroRowElems);
         }
         if (ind >= num_cols_) { // it is theta
             calculated_aggregates.push_back(ind-num_cols_);
             if (val != 1.0) { //thetas should have 1.0 value or be ommited in the PackedVector
-                return false;
+				inconsistencies.set(CutStuff::InconsistencyType::ThetaNotOne);
             }
             started_theta = true;
         }
         else if (started_theta) { // thetas should go after other coefs
-            return false;
+			inconsistencies.set(CutStuff::InconsistencyType::ThetaBeforeCoef);
         }
     }
     std::sort(calculated_aggregates.begin(), calculated_aggregates.end());
 
     //Error in members
     if (calculated_aggregates.size() != getNumberAggregates()) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::WrongAggreg);
     }
     if (calculated_aggregates != getAggregates()) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::WrongAggreg);
     }
     if (getNumberAggregates() > num_theta) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::TooManyAggreg);
     }
     if (cut_creation_iteration_ < 0) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::InvalidCutCreation);
     }
     if (column_set_ < PNB_COL_SET_NONE || column_set_ > PNB_COL_SET_DOUBLE_PRIME) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::InvalidColumnSet);
     }
     if (type_ < parallel_benders::PNB_CUT_TYPE_OPTIMALITY || type_ > PNB_CUT_TYPE_CVAR) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::InvalidCutType);
     }
 
     //Epigraph and Domain cuts are always PNB_COL_SET_NONE
     if ((type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH || type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN) && column_set_ != PNB_COL_SET_NONE) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::WrongColumnSet);
     }
     
     //Aggregate type
     int aggregate_type = getAggregateType();
     if ((type_ == parallel_benders::PNB_CUT_TYPE_FEASIBILITY || type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN) && aggregate_type != CutStuff::AGGREGATE_OVER_NONE) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::WrongAggregateFeasDomain);
     }
     else if (type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY && aggregate_type == CutStuff::AGGREGATE_OVER_NONE) {
-        return false;
+		inconsistencies.set(CutStuff::InconsistencyType::WrongAggregateOpt);
     }
     else if (type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH) {
         if (num_theta == 1 && aggregate_type != CutStuff::AGGREGATE_OVER_ONE)
-            return false;
+			inconsistencies.set(CutStuff::InconsistencyType::WrongAggregateEpigr);
         if (num_theta > 1 && aggregate_type != CutStuff::AGGREGATE_OVER_ALL)
-            return false;
+			inconsistencies.set(CutStuff::InconsistencyType::WrongAggregateEpigr);
     }
     else if (type_ == parallel_benders::PNB_CUT_TYPE_CVAR) {
         throw runtime_error("Not implemented.");
     }
 
+	bool consistent = inconsistencies.none();
+
+	return consistent;
 }
 
 double CutStuff::AbsoluteViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values)
