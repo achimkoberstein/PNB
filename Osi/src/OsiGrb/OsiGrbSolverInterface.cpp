@@ -388,6 +388,11 @@ void OsiGrbSolverInterface::branchAndBound()
 
   GUROBI_CALL( "branchAndBound", GRBoptimize( lp ) );
 }
+//-----------------------------------------------------------------------------
+void OsiGrbSolverInterface::benders(bool use_annotation)
+{
+	throw std::logic_error("Benders not implemented in solver and/or not referenced via API.");
+}
 
 //#############################################################################
 // Parameter related methods

@@ -595,6 +595,92 @@ void OsiCpxSolverInterface::branchAndBound()
       CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
 }
+//-----------------------------------------------------------------------------
+void OsiCpxSolverInterface::benders(bool use_annotation)
+{
+#if CPX_VERSION < 12070000 // impemented starting from v12.7
+	throw std::logic_error("Benders is not implemented in CPLEX before v12.7.");
+#endif;
+
+	int term;
+
+	debugMessage("OsiCpxSolverInterface::benders()\n");
+
+	int presolve = 1;
+	bool gotHint, takeHint;
+	OsiHintStrength strength;
+	gotHint = (getHintParam(OsiDoPresolveInInitial, takeHint, strength));
+	assert(gotHint);
+	if (strength != OsiHintIgnore)
+		presolve = takeHint ? 1 : 0;
+
+	switchToMIP();
+
+	if (colsol_ != NULL && domipstart)
+	{
+		int ncols = getNumCols();
+		int* ind = new int[ncols];
+
+		CoinIotaN(ind, ncols, 0);
+#if 1
+		int zero = 0;
+		term = CPXaddmipstarts(env_, getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL), 1, ncols, &zero, ind, colsol_, NULL, NULL);
+		checkCPXerror(term, "CPXaddmipstarts", "benders");
+#else
+		/* deprecated, taken from the newer version of Osi */
+		term = CPXcopymipstart(env_, getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL), ncols, ind, colsol_);
+		checkCPXerror(term, "CPXcopymipstart", "benders");
+#endif
+
+		delete[] ind;
+
+		//CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_ON );
+	}
+	//else
+	  //CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_OFF ); // Why should ADVIND be turned of completely?
+
+	CPXLPptr lp = getLpPtr(OsiCpxSolverInterface::FREECACHED_RESULTS);
+
+
+
+	if (messageHandler()->logLevel() == 0)
+		CPXsetintparam(env_, CPX_PARAM_SCRIND, CPX_OFF);
+	else
+		CPXsetintparam(env_, CPX_PARAM_SCRIND, CPX_ON);
+
+	if (messageHandler()->logLevel() == 0)
+		CPXsetintparam(env_, CPX_PARAM_MIPDISPLAY, 0);
+	else if (messageHandler()->logLevel() == 1)
+		CPXsetintparam(env_, CPX_PARAM_MIPDISPLAY, 1);
+	else if (messageHandler()->logLevel() > 1)
+		CPXsetintparam(env_, CPX_PARAM_MIPDISPLAY, 2);
+
+	if (presolve)
+		CPXsetintparam(env_, CPX_PARAM_PREIND, CPX_ON);
+	else
+		CPXsetintparam(env_, CPX_PARAM_PREIND, CPX_OFF);
+	
+	if (use_annotation)
+		throw std::logic_error("Usage of annotation is not implemented.");
+	else
+		CPXsetintparam(env_, CPXPARAM_Benders_Strategy, CPX_BENDERSSTRATEGY_FULL);
+
+	term = CPXbendersopt(env_, lp);
+	checkCPXerror(term, "CPXbendersopt", "benders");
+	term = CPXgetsubstat(env_, getMutableLpPtr());
+	checkCPXerror(term, "CPXbendersopt", "benders");
+	int stat = CPXgetstat(env_, getMutableLpPtr());
+	if (stat == CPXMIP_INForUNBD && presolve) {
+		CPXsetintparam(env_, CPX_PARAM_PREIND, CPX_OFF);
+		// In CPLEX 9, this is a way to discard the presolve information: 
+		int objsen = CPXgetobjsen(env_, lp);
+		CPXchgobjsen(env_, lp, -objsen);
+		CPXchgobjsen(env_, lp, objsen);
+		term = CPXmipopt(env_, lp);
+		checkCPXerror(term, "CPXlpopt", "initialSolve");
+		CPXsetintparam(env_, CPX_PARAM_PREIND, CPX_ON);
+	}
+}
 
 //#############################################################################
 // Parameter related methods
