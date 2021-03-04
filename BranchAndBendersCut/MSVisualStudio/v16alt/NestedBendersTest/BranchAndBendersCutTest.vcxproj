@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1C32EF62-CDF2-44EC-A0B9-A89155606034}</ProjectGuid>
-    <RootNamespace>NestedBendersTest</RootNamespace>
+    <ProjectGuid>{AE526612-F58D-49FF-AB5B-4D208D5E15D6}</ProjectGuid>
+    <RootNamespace>BranchAndBendersCutTest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
