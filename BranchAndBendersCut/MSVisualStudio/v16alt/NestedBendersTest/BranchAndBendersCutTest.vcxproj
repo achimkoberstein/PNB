@@ -220,7 +220,7 @@
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\test\NestedBendersTest.cpp" />
+    <ClCompile Include="..\..\..\test\BranchAndBendersCutTest.cpp" />
     <ClCompile Include="..\..\..\test\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
