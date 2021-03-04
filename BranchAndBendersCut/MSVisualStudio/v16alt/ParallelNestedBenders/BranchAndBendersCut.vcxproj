@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3B3EF83A-DC3D-45E8-B93F-2BDC8B557992}</ProjectGuid>
-    <RootNamespace>ParallelNestedBenders</RootNamespace>
+    <ProjectGuid>{4AB6D83A-C965-48B3-A57A-5FA772CE70C6}</ProjectGuid>
+    <RootNamespace>BranchAndBendersCut</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
