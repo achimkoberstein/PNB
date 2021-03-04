@@ -159,7 +159,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\BendersNodeData.cpp" />
     <ClCompile Include="..\..\..\src\OsiPnbStochasticSolverInterface.cpp" />
     <ClCompile Include="..\..\..\src\OsiStochasticSolverInterface.cpp" />
     <ClCompile Include="..\..\..\src\ParallelNestedBenders.cpp" />
@@ -169,7 +168,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\BendersNodeData.hpp" />
     <ClInclude Include="..\..\..\src\OsiPnbStochasticSolverInterface.hpp" />
     <ClInclude Include="..\..\..\src\OsiStochasticSolverInterface.hpp" />
     <ClInclude Include="..\..\..\src\ParallelNestedBenders.hpp" />
