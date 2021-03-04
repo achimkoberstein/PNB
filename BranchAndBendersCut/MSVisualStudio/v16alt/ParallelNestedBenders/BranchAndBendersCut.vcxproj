@@ -160,19 +160,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\OsiPnbStochasticSolverInterface.cpp" />
-    <ClCompile Include="..\..\..\src\OsiStochasticSolverInterface.cpp" />
-    <ClCompile Include="..\..\..\src\ParallelNestedBenders.cpp" />
+    <ClCompile Include="..\..\..\src\OsiBbcStochasticSolverInterface.cpp" />
+    <ClCompile Include="..\..\..\src\BranchAndBendersCut.cpp" />
     <ClCompile Include="..\..\..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\OsiPnbStochasticSolverInterface.hpp" />
-    <ClInclude Include="..\..\..\src\OsiStochasticSolverInterface.hpp" />
-    <ClInclude Include="..\..\..\src\ParallelNestedBenders.hpp" />
+    <ClInclude Include="..\..\..\src\OsiBbcStochasticSolverInterface.hpp" />
+    <ClInclude Include="..\..\..\src\BranchAndBendersCut.hpp" />
     <ClInclude Include="..\..\..\src\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+  	<ProjectReference Include="..\..\..\..\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
+      <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>    
     <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v16\libCoinUtils\libCoinUtils.vcxproj">
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

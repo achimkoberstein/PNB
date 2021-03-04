@@ -251,8 +251,11 @@
     <ProjectReference Include="..\..\..\..\ThirdParty\gtest\msvc\v16\gtest.vcxproj">
       <Project>{c8f6c172-56f2-4e76-b5fa-c3b423b31be7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
+    <ProjectReference Include="..\..\..\..\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
       <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\BranchAndBendersCut\BranchAndBendersCut.vcxproj">
+     <Project>{4AB6D83A-C965-48B3-A57A-5FA772CE70C6}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
