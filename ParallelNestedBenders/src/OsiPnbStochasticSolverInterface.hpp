@@ -76,8 +76,10 @@ public:
 
     int getSolutionCode() const;
 
-private:
+protected:
     parallel_benders::ParallelNestedBenders* nested_benders_;
+
+private:
     OsiSolverInterface * osi_;
 
 };

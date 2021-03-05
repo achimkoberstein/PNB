@@ -48,7 +48,7 @@ class ParallelNestedBenders {
 public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
     ParallelNestedBenders(const ParallelNestedBenders& pnb) = delete;
-    ~ParallelNestedBenders();
+    virtual ~ParallelNestedBenders();
     void Init();
     void Solve();
     ParallelNestedBenders& operator= (const ParallelNestedBenders& pnb) = delete;
