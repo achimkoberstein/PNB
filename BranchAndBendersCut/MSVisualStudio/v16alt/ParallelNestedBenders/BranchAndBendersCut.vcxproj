@@ -172,14 +172,16 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v16\libCoinUtils\libCoinUtils.vcxproj">
-      <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Project>{e1245c46-cda8-4b60-aa71-578a0ddb8ea6}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16\libOsiCpx\libOsiCpx.vcxproj">
       <Project>{d984cc99-8a07-4ee0-8654-5c03459b2b37}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16\libOsi\libOsi.vcxproj">
       <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\ParallelNestedBenders\MSVisualStudio\v16alt\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
+      <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v16\libSmi\libSmi.vcxproj">
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
