@@ -45,6 +45,9 @@ class BranchAndBendersCut : public parallel_benders::ParallelNestedBenders {
 public:
 	BranchAndBendersCut(SmiScnModel* smi_model_ptr);
 	BranchAndBendersCut(const BranchAndBendersCut& bbc) = delete;
+	~BranchAndBendersCut();
+
+	BranchAndBendersCut* clone() = delete;
 };
 
 } // end namespace branch_and_benders_cut
