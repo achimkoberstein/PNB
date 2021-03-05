@@ -66,4 +66,8 @@ namespace branch_and_benders_cut {
 	{
 	}
 
+	BranchAndBendersCut::~BranchAndBendersCut()
+	{
+	}
+
 } // end namespace parallel_benders

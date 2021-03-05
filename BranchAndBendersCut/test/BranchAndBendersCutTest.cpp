@@ -156,20 +156,6 @@ TEST(BranchAndBendersTest, unitTest) {
 
 	bbc->Reset(-1, true);
 
-	boost::threadpool::pool thread_pool_(10);
-	std::vector<parallel_benders::ParallelNestedBenders*> thread_pnbs;
-	thread_pnbs.reserve(thread_pool_.size());
-	for (int i = 0; i < thread_pool_.size(); i++) {
-		parallel_benders::ParallelNestedBenders* thread_pnb = bbc->clone();
-		thread_pnbs.push_back(thread_pnb);
-		thread_pool_.schedule(boost::bind(&parallel_benders::ParallelNestedBenders::Solve, thread_pnb));
-	}
-	thread_pool_.wait(0);
-
-	for (auto thread_pnb : thread_pnbs) {
-		delete thread_pnb;
-	}
-	thread_pnbs.clear();
 	delete osi_solver;
 }
 
