@@ -69,7 +69,7 @@ public:
     void setWarmUpSolution( const double* solution, int num_cols_given = 0);
     void unfixFirstStageVariables();
 
-private:
+protected:
     
     void SetLnPCGPRoundSpecifics(ParallelNestedBenders& cgp_pnb, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     ParallelNestedBenders* GetLnP_PNB_CGP_ByThread();

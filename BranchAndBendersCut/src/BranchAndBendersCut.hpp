@@ -47,7 +47,12 @@ public:
 	BranchAndBendersCut(const BranchAndBendersCut& bbc) = delete;
 	~BranchAndBendersCut();
 
+	void Solve();
+
 	BranchAndBendersCut* clone() = delete;
+
+private:
+	void SetUpMPSolver(OsiCpxSolverInterface* cpx_solver);
 };
 
 } // end namespace branch_and_benders_cut
