@@ -70,4 +70,92 @@ namespace branch_and_benders_cut {
 	{
 	}
 
+	void BranchAndBendersCut::Solve()
+	{
+		smi_->writeSmps("modeloutput");
+
+		if (solution_code_ == parallel_benders::PNB_SOLUTION_PARAMETER_PROBLEM) {
+			LOG_IF(ERROR, log_level_ <= google::ERROR) << "Cannot solve because of the problem in parameters.";
+			return;
+		}
+		if (thread_pool_.size() == 0) {
+			solution_code_ = parallel_benders::PNB_SOLUTION_PARAMETER_PROBLEM;
+			solved_counter_++;
+			return;
+		}
+
+		int setup_timer = num_stages_;
+		timer_.Start(setup_timer);
+
+		bool made_one_turn = false;
+
+		//TODO: temp parameters
+		print_subproblems_ = true;
+		cont_phase_it_limit_ = 100;
+
+		HandleContinuousPhase();
+
+		timer_.Stop(setup_timer);
+		wall_clock_solution_time_.Start(0);
+		// Print initial solution line
+		LOG_IF(INFO, log_level_ <= google::INFO) << left << std::setw(7) << "It." << std::setw(16) << "Lower Bound: " << std::setw(16) << "Upper Bound: " << std::setw(16) << "Relative Gap: ";
+		// Do initialization stuff necessary for solve process
+		bool not_stop_loop = false;
+
+		// ------------------ Here comes the solution process itself
+
+		// Solve MP
+		OsiSolverInterface* osi_solver = GetSolverByThread();
+		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver); //TODO: from the very beginning it should be cpx solver
+		SetUpMPSolver(cpx_solver); //TODO: add callbacks
+		PrintSubproblem(cpx_solver, 0, "MP");
+		SolveSolverInterface(cpx_solver);
+		StoreData(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
+
+		// ------------------ Here ends solution process
+		
+
+		if (pretty_printing_)
+			std::cout << "\n";
+		// Output the final values once again!
+		if (log_level_ <= google::INFO) {
+			LOG(INFO) << "Algorithm finished with status code " << solution_code_ << ", final values below.";
+			LOG(INFO) << "Lower Bound:  " << (regularization_ ? regularized_solution_value_ : lower_bound_) << "\n" << "Upper Bound:  " << upper_bound_ << "\n" << "Relative Gap: " << parallel_benders::ComputeRelativeGap(upper_bound_, lower_bound_);
+			LOG(INFO) << "Major Iterations: " << major_iteration_ << "\n" << "Overall Iterations: " << current_iteration_;
+			if (insubstantial_iteration_ > 0)
+				LOG(INFO) << "Insubstantial Iterations: " << insubstantial_iteration_;
+			int cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += stage_data_[i]->added_optimality_cuts_;
+			}
+			LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
+			cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += stage_data_[i]->added_feasibility_cuts_;
+			}
+			LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
+			if (lp_rounds_limit_) { // if we use L&P cuts
+				cut_counter = 0;
+				for (int i = 0; i < num_stages_; i++) {
+					cut_counter += stage_data_[i]->added_epigraph_cuts_;
+				}
+				LOG(INFO) << "Added " << cut_counter << " L&P epigraph cuts.";
+				cut_counter = 0;
+				for (int i = 0; i < num_stages_; i++) {
+					cut_counter += stage_data_[i]->added_domain_cuts_;
+				}
+				LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
+			}
+		}
+
+	}
+
+	void BranchAndBendersCut::SetUpMPSolver(OsiCpxSolverInterface* cpx_solver)
+	{
+		cpx_solver->messageHandler()->setLogLevel(4); // Log nothing
+		BuildSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
+		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
+		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]); //TODO: these are probably lazy cuts added via call back
+	}
+
 } // end namespace parallel_benders
