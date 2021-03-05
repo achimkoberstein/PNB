@@ -30,10 +30,10 @@
 #include "SmiScnModel.hpp"
 #include "flopc.hpp"
 
-#include "BendersNodeData.hpp"
+//#include "BendersNodeData.hpp"
 #include "ParallelNestedBenders.hpp"
-#include "OsiPnbStochasticSolverInterface.hpp"
-//#include "OsiBenStochasticSolverInterface.hpp"
+#include "BranchAndBendersCut.hpp"
+#include "OsiBbcStochasticSolverInterface.hpp"
 
 //#include "fortsp.h"
 #include "ilcplex/cplex.h"
@@ -117,6 +117,60 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 
 TEST(BranchAndBendersTest, unitTest) {
 	
+	//SmiScnModel smi;
+	std::string folder("../../../../Data/Benders/");
+	std::string core_name;
+	std::string time_name;
+	std::string stoch_name;
+	std::string total_core_string;
+	std::string total_time_string;
+	std::string total_stoch_string;
+
+	// Parameter file
+	parallel_benders::Parameter param;
+	param.init();
+
+	core_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
+	time_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
+	stoch_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
+	total_core_string = folder + core_name;
+	total_time_string = folder + time_name;
+	total_stoch_string = folder + stoch_name;
+
+	int smps_read_in = 0;
+	SmiScnModel smi_model;
+	smps_read_in = smi_model.readSmps(total_core_string.c_str(), total_time_string.c_str(), total_stoch_string.c_str());
+
+	if (smps_read_in != 0) {
+		LOG(ERROR) << "Reading in your SMPS file failed.";
+	}
+
+	// Create a new OsiStochasticPNB interface
+	OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
+	OsiStochasticBranchAndBendersCutSolverInterface bbc_interface(osi_solver, &smi_model);
+	bbc_interface.setParameters(param);
+
+	branch_and_benders_cut::BranchAndBendersCut* bbc = bbc_interface.getBBC();
+	bbc->Init();
+	bbc->Solve();
+
+	bbc->Reset(-1, true);
+
+	boost::threadpool::pool thread_pool_(10);
+	std::vector<parallel_benders::ParallelNestedBenders*> thread_pnbs;
+	thread_pnbs.reserve(thread_pool_.size());
+	for (int i = 0; i < thread_pool_.size(); i++) {
+		parallel_benders::ParallelNestedBenders* thread_pnb = bbc->clone();
+		thread_pnbs.push_back(thread_pnb);
+		thread_pool_.schedule(boost::bind(&parallel_benders::ParallelNestedBenders::Solve, thread_pnb));
+	}
+	thread_pool_.wait(0);
+
+	for (auto thread_pnb : thread_pnbs) {
+		delete thread_pnb;
+	}
+	thread_pnbs.clear();
+	delete osi_solver;
 }
 
 //TODO: Write Tests for right-hand-side with RV and constant term

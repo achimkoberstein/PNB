@@ -1,21 +1,20 @@
 //#include "OsiStochasticSolverInterface.hpp"
 #include "OsiBbcStochasticSolverInterface.hpp"
 #include "BendersNodeData.hpp"
+#include "BranchAndBendersCut.hpp"
 
-#include "OsiSolverInterface.hpp"
+#include "OsiPnbStochasticSolverInterface.hpp"
 #include "SmiScnModel.hpp"
 
 // Files necessary for cplex
 #include "ilcplex/cplex.h"
 
-
-OsiBbcStochasticSolverInterface::OsiBbcStochasticSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
-: OsiStochasticDetEqSolverInterface(osiSolver,smiModel)
+OsiStochasticBranchAndBendersCutSolverInterface::OsiStochasticBranchAndBendersCutSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model)
+	: OsiStochasticParallelNestedBendersSolverInterface(osi_solver, smi_model), bbc_(dynamic_cast<branch_and_benders_cut::BranchAndBendersCut*>(nested_benders_))
 {
-	
 }
 
-OsiStochasticDetEqSolverInterface::~OsiStochasticDetEqSolverInterface()
+branch_and_benders_cut::BranchAndBendersCut* OsiStochasticBranchAndBendersCutSolverInterface::getBBC()
 {
-
+	return bbc_;
 }

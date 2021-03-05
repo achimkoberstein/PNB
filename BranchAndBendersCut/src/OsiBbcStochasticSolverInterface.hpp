@@ -1,11 +1,11 @@
 #ifndef OsiBbcStochasticSolverInterface_h__
 #define OsiBbcStochasticSolverInterface_h__
 
-#include "OsiStochasticSolverInterface.hpp" // OsiStochasticDetEqSolverInterface
+#include "OsiPnbStochasticSolverInterface.hpp" // OsiStochasticParallelNestedBendersSolverInterface
 #include "BendersNodeData.hpp"
 
-namespace parallel_benders {
-    class ParallelNestedBenders;
+namespace branch_and_benders_cut {
+    class BranchAndBendersCut;
     struct Parameter;
 }
 
@@ -13,22 +13,14 @@ namespace parallel_benders {
 //class SmiScnModel;
 //class OsiSolverInterface;
 
-class OsiBbcStochasticSolverInterface : public OsiStochasticDetEqSolverInterface {
+class OsiStochasticBranchAndBendersCutSolverInterface : public OsiStochasticParallelNestedBendersSolverInterface {
 public:
+	OsiStochasticBranchAndBendersCutSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
 
-	OsiBbcStochasticSolverInterface(OsiSolverInterface* osiSolver,SmiScnModel* smiModel);
-    ~OsiBbcStochasticSolverInterface();
+	branch_and_benders_cut::BranchAndBendersCut* getBBC();
 
-    //parallel_benders::Parameter param_;
-
-    //void initialSolve();
-    //double getObjValue() const;
-
-    //void printSolutionToFile(const char* filename) const;
-    
-    //void setParameters(const parallel_benders::Parameter& parameters);
-
-    //int getSolutionCode() const;
+private:
+	branch_and_benders_cut::BranchAndBendersCut* bbc_;
 };
 
 #endif // OsiBbcStochasticSolverInterface_h__
