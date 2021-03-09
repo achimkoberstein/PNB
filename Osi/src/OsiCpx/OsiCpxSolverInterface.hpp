@@ -748,6 +748,9 @@ public:
   /// switches CPLEX to prob type MIP
   void switchToMIP();
 
+  /// Add a lazy row cut. Return true if cut was applied.
+  virtual void addLazyRowCut(const OsiRowCut& rowCut);
+
   //@}
 /***************************************************************************/
 
@@ -757,7 +760,7 @@ protected:
   //@{
   /// Apply a row cut. Return true if cut was applied.
   virtual void applyRowCut( const OsiRowCut & rc );
-  
+ 
   /** Apply a column cut (bound adjustment). 
       Return true if cut was applied.
   */

@@ -3336,6 +3336,54 @@ void OsiCpxSolverInterface::applyRowCut( const OsiRowCut & rowCut )
     }
 }
 
+void OsiCpxSolverInterface::addLazyRowCut(const OsiRowCut& rowCut )
+{
+	debugMessage("OsiCpxSolverInterface::addLazyRowCut(%p)\n", (void*)&rowCut);
+
+	int err = 0;
+	double rhs = 0.0;
+	double rng = 0.0;
+	char sns;
+	double lb = rowCut.lb();
+	double ub = rowCut.ub();
+	if (lb <= -getInfinity() && ub >= getInfinity())   // free constraint
+	{
+		rhs = -getInfinity();
+		rng = 2 * getInfinity();  // CPLEX doesn't support free constraints
+		sns = 'R';           // -> implement them as ranged rows with infinite bounds
+		throw CoinError("CPLEX does not accept ranged rows as lazy constraints", "addLazyRowCut", "OsiCpxSolverInterface");
+	}
+	else if (lb <= -getInfinity())  // <= constraint
+	{
+		rhs = ub;
+		sns = 'L';
+	}
+	else if (ub >= getInfinity())  // >= constraint
+	{
+		rhs = lb;
+		sns = 'G';
+	}
+	else if (ub == lb)  // = constraint
+	{
+		rhs = ub;
+		sns = 'E';
+	}
+	else  // range constraint
+	{
+		rhs = lb;
+		rng = ub - lb;
+		sns = 'R';
+		throw CoinError("CPLEX does not accept ranged rows as lazy constraints", "addLazyRowCut", "OsiCpxSolverInterface");
+	}
+	int rmatbeg = 0;
+	err = CPXaddlazyconstraints(env_, getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL), 1, rowCut.row().getNumElements(),
+		&rhs, &sns, &rmatbeg,
+		const_cast<int*>(rowCut.row().getIndices()),
+		const_cast<double*>(rowCut.row().getElements()),
+		NULL);
+	checkCPXerror(err, "CPXaddlazyconstraints", "addLazyRowCut");
+}
+
 //#############################################################################
 // Private methods (non-static and static) and static data
 //#############################################################################
