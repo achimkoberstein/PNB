@@ -41,7 +41,7 @@ void OsiStochasticBranchAndBendersCutSolverInterface::printSolutionToFile(const 
 
 void OsiStochasticBranchAndBendersCutSolverInterface::setParameters(const parallel_benders::Parameter& parameters)
 {
-
+	bbc_->parameter_ = parameters;
 }
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getSolutionCode() const

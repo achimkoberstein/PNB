@@ -105,12 +105,17 @@ namespace branch_and_benders_cut {
 		// ------------------ Here comes the solution process itself
 
 		// Solve MP
-		OsiSolverInterface* osi_solver = GetSolverByThread();
-		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver); //TODO: from the very beginning it should be cpx solver
+		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_); //TODO: from the very beginning it should be cpx solver
 		SetUpMPSolver(cpx_solver); //TODO: add callbacks
 		PrintSubproblem(cpx_solver, 0, "MP");
 		SolveSolverInterface(cpx_solver);
 		StoreData(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
+		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[current_stage_][0]->getDataPtr();
+		mp_node_pointer->col_solution_;
+		mp_node_pointer->next_stage_approximation_;
+		mp_node_pointer->solution_value_;
+		mp_node_pointer->lower_bound_;
+
 
 		// ------------------ Here ends solution process
 		
@@ -155,7 +160,8 @@ namespace branch_and_benders_cut {
 		cpx_solver->messageHandler()->setLogLevel(4); // Log nothing
 		BuildSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
 		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
-		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]); //TODO: these are probably lazy cuts added via call back
+		//TODO: The CPLEX parameter that controls primaland dual reduction type(CPXPARAM_Preprocessing_Reduce) should be set to CPX_PREREDUCE_NOPRIMALORDUAL(0) or to CPX_PREREDUCE_PRIMALONLY(1) in order to turn off dual reductions.
+		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); //TODO: these are probably lazy cuts added via call back
 	}
 
 } // end namespace parallel_benders
