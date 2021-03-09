@@ -89,7 +89,7 @@ protected:
     
     void BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void AppendColsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
-	void AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+	void AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, int append_type = PNB_CUT_APPEND_TYPE_CONSTRAINTS);
     void SolveSubproblem( OsiSolverInterface* osi_solver ,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -100,7 +100,7 @@ protected:
 
 	bool GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
-	int ApplyCut(OsiSolverInterface* osi_solver, const CutStuff& cut_stuff);
+	int ApplyCut(OsiSolverInterface* osi_solver, const CutStuff& cut_stuff, int append_type = PNB_CUT_APPEND_TYPE_CONSTRAINTS);
     void ApplyCutToLnPCGP(OsiSolverInterface* osi_solver, const CutStuff& cut_stuff, BendersNodeData* benders_node_data);
 	void GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable);
 	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
