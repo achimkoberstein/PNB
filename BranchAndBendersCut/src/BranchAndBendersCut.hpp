@@ -35,13 +35,14 @@
 class OsiSolverInterface;
 class SmiCoreData;
 class SmiNodeData;
-class OsiStochasticParallelNestedBendersSolverInterface;
+class OsiStochasticBranchAndBendersCutSolverInterface;
 
 
 namespace branch_and_benders_cut {
 
 
 class BranchAndBendersCut : public parallel_benders::ParallelNestedBenders {
+	friend class ::OsiStochasticBranchAndBendersCutSolverInterface;
 public:
 	BranchAndBendersCut(SmiScnModel* smi_model_ptr);
 	BranchAndBendersCut(const BranchAndBendersCut& bbc) = delete;

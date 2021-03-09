@@ -129,10 +129,11 @@ TEST(BranchAndBendersTest, unitTest) {
 	// Parameter file
 	parallel_benders::Parameter param;
 	param.init();
+	param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 
-	core_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
-	time_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
-	stoch_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
+	core_name = "glushko/sndp_mini_tests/SNDP_TestCase_17"; // 14 and 17 have different solution: Benders vs MP+LP opt cuts
+	time_name = "glushko/sndp_mini_tests/SNDP_TestCase_17";
+	stoch_name = "glushko/sndp_mini_tests/SNDP_TestCase_17";
 	total_core_string = folder + core_name;
 	total_time_string = folder + time_name;
 	total_stoch_string = folder + stoch_name;
@@ -154,7 +155,7 @@ TEST(BranchAndBendersTest, unitTest) {
 	bbc->Init();
 	bbc->Solve();
 
-	bbc->Reset(-1, true);
+	//bbc->Reset(-1, true);
 
 	delete osi_solver;
 }
