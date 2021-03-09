@@ -206,6 +206,11 @@ namespace parallel_benders{
 	const int PNB_CUT_TYPE_DOMAIN = 3; // for x only
 	const int PNB_CUT_TYPE_CVAR = 4;
 
+	// Cut Appending Type
+	const int PNB_CUT_APPEND_TYPE_CONSTRAINTS = 0; // add cuts as constraints (default)
+	const int PNB_CUT_APPEND_TYPE_LAZY = 1; // add cuts as lazy cuts (valid only for OsiCpxSolverInterface)
+	const int PNB_CUT_APPEND_TYPE_USER = 2; // add cuts as user cuts (valid only for OsiCpxSolverInterface)
+
 	// What to do when L&P PNB CGP is not feasible in the 1st iteration
 	const int PNB_CGP_STOP_WHEN_INFEASIBLE = 0; // we immediately quit when cgp is infeasible in the first iteration
 	const int PNB_CGP_ALPHA_AND_STOP_WHEN_INFEASIBLE = 1; // we apply Alpha-Normalization, solve it and quit. It can be used to double check the solution of DAN 

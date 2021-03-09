@@ -4317,7 +4317,7 @@ namespace parallel_benders {
 
     }
 
-	int ParallelNestedBenders::ApplyCut(OsiSolverInterface* osi_solver, const CutStuff& cut_stuff) {
+	int ParallelNestedBenders::ApplyCut(OsiSolverInterface* osi_solver, const CutStuff& cut_stuff, int append_type/* = PNB_CUT_APPEND_TYPE_CONSTRAINTS*/) {
         const OsiRowCut& original_cut = cut_stuff.getCut();
 
         int num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
@@ -4325,7 +4325,17 @@ namespace parallel_benders {
         LOG_IF(FATAL, (cut_stuff.type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff.type_ == PNB_CUT_TYPE_EPIGRAPH) && num_theta != cut_stuff.getNumTheta());
 		
 		if (!lp_main_loop_iteration_round_) {
-			osi_solver->applyRowCuts(1, &original_cut);
+			if (append_type == PNB_CUT_APPEND_TYPE_CONSTRAINTS) {
+				osi_solver->applyRowCuts(1, &original_cut);
+			}
+			else if (append_type == PNB_CUT_APPEND_TYPE_LAZY) {
+				OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+				assert(cpx_solver != nullptr);
+				cpx_solver->addLazyRowCut(original_cut);
+			}
+			else if (append_type == PNB_CUT_APPEND_TYPE_USER) {
+				assert(false && "Not implemented.");
+			}
 			return 1;
 		}
 		else { // apply cuts to prime and double-prime sides in PNB CGP
@@ -4354,7 +4364,20 @@ namespace parallel_benders {
                     row.getIndices()[row.getNumElements() - 1 - aggregate_index] += stage_data_[current_stage_]->num_columns_ + num_theta; // shift theta
 				}
 			}
-            osi_solver->applyRowCuts(cuts.size(), cuts.data());
+            
+			if (append_type == PNB_CUT_APPEND_TYPE_CONSTRAINTS) {
+				osi_solver->applyRowCuts(cuts.size(), cuts.data());
+			}
+			else if (append_type == PNB_CUT_APPEND_TYPE_LAZY) {
+				OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+				assert(cpx_solver != nullptr);
+				for (const OsiRowCut& cut : cuts) {
+					cpx_solver->addLazyRowCut(cut);
+				}				
+			}
+			else if (append_type == PNB_CUT_APPEND_TYPE_USER) {
+				assert(false && "Not implemented.");
+			}
 
 			return cuts.size();
 		}
@@ -6376,7 +6399,7 @@ namespace parallel_benders {
         return std::abs(value) <= zero_tolerance_; // True, if zero
     }
 
-    void ParallelNestedBenders::AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    void ParallelNestedBenders::AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, int append_type/*=PNB_CUT_APPEND_TYPE_CONSTRAINTS*/ )
     {
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         BendersNodeData::cut_container::const_iterator feas_it = benders_node_pointer->feasibility_cuts_.begin();
@@ -6471,7 +6494,7 @@ namespace parallel_benders {
 						}
 					}
                     assert( (*feas_it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
-					ApplyCut(osi_solver, **feas_it);
+					ApplyCut(osi_solver, **feas_it, append_type);
 				}
 			}
         }
@@ -6502,7 +6525,7 @@ namespace parallel_benders {
 							}
 						}
 					}
-					ApplyCut(osi_solver, **domain_it);
+					ApplyCut(osi_solver, **domain_it, append_type);
 				}
 			}
 		}
@@ -6544,7 +6567,7 @@ namespace parallel_benders {
                 }
                 if ( (*it)->to_use_ ){
                     assert( (*it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
-					ApplyCut(osi_solver, **it);
+					ApplyCut(osi_solver, **it, append_type);
                 }
             }
         }
@@ -6574,13 +6597,13 @@ namespace parallel_benders {
 
 				if ((*it)->to_use_) {
 					assert( (*it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
-                    ApplyCut(osi_solver, **it);
+                    ApplyCut(osi_solver, **it, append_type);
 				}
 			}
 			benders_node_pointer->last_round_start_epigraph_ = benders_node_pointer->epigraph_cuts_.end();
         }
         
-// Add risk constraints to problem ( they get deleted at the start of this method!)
+		// Add risk constraints to problem ( they get deleted at the start of this method!)
 		if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty() ){
             assert(lp_main_loop_iteration_round_ == nullptr && "Modify ApplyCut() for cvar_cuts and use it here");
             // Simple addition without consideration of warm start behavior
