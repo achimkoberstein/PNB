@@ -46,9 +46,11 @@ class OsiStochasticBranchAndBendersCutSolverInterface;
 
 namespace branch_and_benders_cut {
 
+	int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
 
 class BranchAndBendersCut : public parallel_benders::ParallelNestedBenders {
 	friend class ::OsiStochasticBranchAndBendersCutSolverInterface;
+	friend int CPXPUBLIC branch_and_benders_cut::benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
 public:
 	BranchAndBendersCut(SmiScnModel* smi_model_ptr);
 	BranchAndBendersCut(const BranchAndBendersCut& bbc) = delete;
@@ -61,8 +63,6 @@ public:
 private:
 	void SetUpMPSolver(OsiCpxSolverInterface* cpx_solver);
 };
-
-static int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
 
 } // end namespace branch_and_benders_cut
 #endif // BranchAndBendersCut_h__
