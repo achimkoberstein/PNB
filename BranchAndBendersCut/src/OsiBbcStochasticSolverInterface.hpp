@@ -7,6 +7,7 @@
 namespace branch_and_benders_cut {
     class BranchAndBendersCut;
     struct Parameter;
+	int test();
 }
 
 //Forward declaration.
@@ -14,6 +15,8 @@ namespace branch_and_benders_cut {
 //class OsiSolverInterface;
 
 class OsiStochasticBranchAndBendersCutSolverInterface : public OsiStochasticSolverInterface {
+	friend int branch_and_benders_cut::test();
+
 public:
 	OsiStochasticBranchAndBendersCutSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
 	~OsiStochasticBranchAndBendersCutSolverInterface();

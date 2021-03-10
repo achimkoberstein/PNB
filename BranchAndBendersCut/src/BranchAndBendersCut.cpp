@@ -89,9 +89,14 @@ namespace branch_and_benders_cut {
 
 		bool made_one_turn = false;
 
+		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_); //TODO: from the very beginning it should be cpx solver
+
 		//TODO: temp parameters
 		print_subproblems_ = true;
 		cont_phase_it_limit_ = 100;
+		//TODO: for testing set one thread for CPLEX: for a means to force deterministic parallel optimization, see the parallel mode switch (ParallelMode, CPX_PRAM_PARALLELMODE) in the CPLEX Parameters Reference Manual.
+		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
+		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 1); // Should be set to 1 usually!
 
 		HandleContinuousPhase();
 
@@ -105,7 +110,6 @@ namespace branch_and_benders_cut {
 		// ------------------ Here comes the solution process itself
 
 		// Solve MP
-		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_); //TODO: from the very beginning it should be cpx solver
 		SetUpMPSolver(cpx_solver); //TODO: add callbacks
 		PrintSubproblem(cpx_solver, 0, "MP");
 		SolveSolverInterface(cpx_solver);
@@ -162,6 +166,79 @@ namespace branch_and_benders_cut {
 		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
 		//TODO: The CPLEX parameter that controls primaland dual reduction type(CPXPARAM_Preprocessing_Reduce) should be set to CPX_PREREDUCE_NOPRIMALORDUAL(0) or to CPX_PREREDUCE_PRIMALONLY(1) in order to turn off dual reductions.
 		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); //TODO: these are probably lazy cuts added via call back
+		
+		BranchAndBendersCut* user_data = this;
+		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
+		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, CPX_CALLBACKCONTEXT_CANDIDATE, benders_callback, &user_data);
+		if (status) {
+			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
+		}
 	}
 
+	static int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle)
+	{
+		/*int status = 0;
+		int me;*/
+		BranchAndBendersCut* globaldata = (BranchAndBendersCut*)cbhandle;
+		//USERLOCALDATA* localdata = NULL;
+
+
+		/* Data structures to add the Benders' cut */
+
+		//int k, nzcnt, cur_x_col, cur_v_col, cur_u_col, num_x_cols, num_nodes;
+		//int beg = 0;
+		//int worker_lp_sol_stat, purgeable, local, point;
+		//double rhs;
+		//double eps_ray = 1e-03;
+		//char sense;
+
+		////num_x_cols = globaldata->num_x_cols;
+		////num_nodes = globaldata->num_nodes;
+
+		//status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &me);
+		//if (status) {
+		//	fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
+		//	return status;
+		//}
+
+		//status = CPXcallbackcandidateispoint(context, &point);
+		//if (status) {
+		//	fprintf(stderr, "Error in CPXXcallbackcandidateispoint: status = %d\n", status);
+		//	return status;
+		//}
+		//if (!point) {
+		//	/* The model is bounded, so this cannot happen. */
+		//	fprintf(stderr, "Unbounded solution");
+		//	status = CPXERR_UNSUPPORTED_OPERATION;
+		//	return status;
+		//}
+		////status = CPXcallbackgetcandidatepoint(context, localdata->x, 0, num_x_cols - 1, NULL);
+		//if (status) {
+		//	fprintf(stderr, "Error in CPXcallbackgetcandidate: status = %d\n", status);
+		//	return status;
+		//}
+		
+		std::cout << "Hello, Hello, Hello!" << std::endl;
+
+		//int num_nodes = globaldata->tree_nodes_by_stage_[1].size();
+		// Do some kind of shuffling!
+		//std::vector<int> test_vector(num_nodes);
+		//std::iota(test_vector.begin(),test_vector.end(),0);
+		//std::random_shuffle(test_vector.begin(),test_vector.end());
+		//for ( int i : test_vector ){
+		//for (int i = 0; i < num_nodes; i++) {
+		//	// Schedule the tasks for this stage
+		//	//thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem, this, tree_nodes_by_stage_[current_stage_][i]));
+		//	HandleSubproblem(tree_nodes_by_stage_[current_stage_][i]);
+		//}
+		//thread_pool_.wait(0); // We wait until all threads are done
+
+		//return status;
+		return 0;
+	} /* END benders_callback */
+	
+	int test() {
+		return 1;
+	}
 } // end namespace parallel_benders
