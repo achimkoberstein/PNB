@@ -15,11 +15,6 @@
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 
-// Files necessary for cplex
-#include "ilcplex/cplex.h"
-#include "ilcplex/cpxconst.h"
-//#include "ilcplex/cplexcheck.h"
-//#include "check.c"
 
 class CoinPackedMatrix;
 class CoinPackedVector;
