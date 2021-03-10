@@ -7,7 +7,7 @@
 namespace branch_and_benders_cut {
     class BranchAndBendersCut;
     struct Parameter;
-	int test();
+	static int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
 }
 
 //Forward declaration.
@@ -15,7 +15,7 @@ namespace branch_and_benders_cut {
 //class OsiSolverInterface;
 
 class OsiStochasticBranchAndBendersCutSolverInterface : public OsiStochasticSolverInterface {
-	friend int branch_and_benders_cut::test();
+	friend static int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
 
 public:
 	OsiStochasticBranchAndBendersCutSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);

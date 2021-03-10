@@ -46,6 +46,7 @@ class OsiStochasticBranchAndBendersCutSolverInterface;
 
 namespace branch_and_benders_cut {
 
+
 class BranchAndBendersCut : public parallel_benders::ParallelNestedBenders {
 	friend class ::OsiStochasticBranchAndBendersCutSolverInterface;
 public:
@@ -62,8 +63,6 @@ private:
 };
 
 static int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
-
-int test();
 
 } // end namespace branch_and_benders_cut
 #endif // BranchAndBendersCut_h__

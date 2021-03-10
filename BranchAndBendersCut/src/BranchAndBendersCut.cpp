@@ -237,8 +237,5 @@ namespace branch_and_benders_cut {
 		//return status;
 		return 0;
 	} /* END benders_callback */
-	
-	int test() {
-		return 1;
-	}
+
 } // end namespace parallel_benders
