@@ -21,6 +21,12 @@
 #include "SmiScenarioTree.hpp" 
 #include "BendersNodeData.hpp"
 
+// Files necessary for cplex
+#include "ilcplex/cplex.h"
+#include "ilcplex/cpxconst.h"
+//#include "ilcplex/cplexcheck.h"
+//#include "check.c"
+
 /************************************************************************/
 /* This class implements the nested benders decomposition in parallelized fashion, for multiple cores.
  * We need the following classes
@@ -40,7 +46,6 @@ class OsiStochasticBranchAndBendersCutSolverInterface;
 
 namespace branch_and_benders_cut {
 
-
 class BranchAndBendersCut : public parallel_benders::ParallelNestedBenders {
 	friend class ::OsiStochasticBranchAndBendersCutSolverInterface;
 public:
@@ -55,6 +60,10 @@ public:
 private:
 	void SetUpMPSolver(OsiCpxSolverInterface* cpx_solver);
 };
+
+static int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
+
+int test();
 
 } // end namespace branch_and_benders_cut
 #endif // BranchAndBendersCut_h__
