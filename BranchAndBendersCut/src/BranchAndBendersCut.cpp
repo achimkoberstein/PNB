@@ -63,6 +63,8 @@ namespace branch_and_benders_cut {
 
 	int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle)
 	{
+		// see bendersatsp2.c in CPLEX examples
+
 		int status = 0;
 		/*int me;*/
 		BranchAndBendersCut* globaldata = static_cast<BranchAndBendersCut*>(cbhandle);
@@ -140,14 +142,17 @@ namespace branch_and_benders_cut {
 		}
 		//thread_pool_.wait(0); // We wait until all threads are done
 
-		//handle bounds here
+		//------ handle bounds here?
 
 		//if (infeasible_problems_.none() && (!infeasible_problem_)) { // TODO: if generate_feas_and_opt_cuts we need to change this
 		// We need to aggregate optimality cuts for the parent node
-		for (int i = 0; i < globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1].size(); i++) {
-			//thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts, this, tree_nodes_by_stage_[current_stage_ - 1][i]));
-			//globaldata->AggregateOptimalityCuts(globaldata->tree_nodes_by_stage_[globaldata->current_stage_-1][i]);
-		}
+		globaldata->AggregateOptimalityCuts(globaldata->tree_nodes_by_stage_[globaldata->current_stage_-1][0]);
+
+		//------ Add lazy cuts
+		//If found Benders cuts - not necessary because we will do nothing in method below
+		//TODO: we should somewhere reset the pointer to the last optimality cut
+		globaldata->AppendCutsToNode(context, globaldata->tree_nodes_by_stage_[globaldata->current_stage_-1][0]);
+		globaldata->DeleteSubproblem(nullptr, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
 
 		for (auto id_solver_pair : globaldata->osi_solver_map_) {
 			//id_solver_pair.second->reset(); // This method throws exception with Cplex
@@ -157,7 +162,7 @@ namespace branch_and_benders_cut {
 		}
 
 		for (auto node : globaldata->tree_nodes_by_stage_[globaldata->current_stage_]) {
-			node->getDataPtr()->CleanUnusedMemory(globaldata->forward_);
+			node->getDataPtr()->CleanUnusedMemory(globaldata->forward_); // TODO: do it in SetUpMP() ?
 		}
 
 		//return status;
@@ -188,11 +193,6 @@ namespace branch_and_benders_cut {
 			return;
 		}
 
-		int setup_timer = num_stages_;
-		timer_.Start(setup_timer);
-
-		bool made_one_turn = false;
-
 		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_); //TODO: from the very beginning it should be cpx solver
 
 		//TODO: temp parameters
@@ -202,33 +202,22 @@ namespace branch_and_benders_cut {
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 1); // Should be set to 1 usually!
 
+		// First Phase: construct Linear optimality cuts
 		HandleContinuousPhase();
 
-		timer_.Stop(setup_timer);
-		wall_clock_solution_time_.Start(0);
-		// Print initial solution line
-		LOG_IF(INFO, log_level_ <= google::INFO) << left << std::setw(7) << "It." << std::setw(16) << "Lower Bound: " << std::setw(16) << "Upper Bound: " << std::setw(16) << "Relative Gap: ";
-		// Do initialization stuff necessary for solve process
-		bool not_stop_loop = false;
-
-		// ------------------ Here comes the solution process itself
-
-		// Solve MP
-		SetUpMPSolver(cpx_solver); //TODO: add callbacks
+		// Second Phase: Branch-And-Benders-Cut
+		SetUpMPSolver(cpx_solver);
 		PrintSubproblem(cpx_solver, 0, "MP");
 		SolveSolverInterface(cpx_solver);
-		assert(current_stage_ == 1 && "Benders callback changes the stage to second-stage ()");
+		assert(current_stage_ == 1);
 		current_stage_ = 0;
+		PrintSubproblem(cpx_solver, 0, "MP_final");
 		StoreData(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
 		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[current_stage_][0]->getDataPtr();
 		mp_node_pointer->col_solution_;
 		mp_node_pointer->next_stage_approximation_;
 		mp_node_pointer->solution_value_;
-		mp_node_pointer->lower_bound_;
-
-
-		// ------------------ Here ends solution process
-		
+		mp_node_pointer->lower_bound_;		
 
 		if (pretty_printing_)
 			std::cout << "\n";
@@ -262,17 +251,204 @@ namespace branch_and_benders_cut {
 				LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
 			}
 		}
+	}
 
+	int BranchAndBendersCut::AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
+	{
+		//based on OsiCpxSolverInterface::addLazyRowCut
+
+		const OsiRowCut& rowCut = cut_stuff.getCut();
+
+		int status = 0;
+		double rhs = 0.0;
+		double rng = 0.0;
+		char sns;
+		double lb = rowCut.lb();
+		double ub = rowCut.ub();
+		if (lb <= -infinity_ && ub >= infinity_)   // free constraint
+		{
+			rhs = -infinity_;
+			rng = 2 * infinity_;  // CPLEX doesn't support free constraints
+			sns = 'R';           // -> implement them as ranged rows with infinite bounds
+			LOG(FATAL) << "CPLEX does not accept ranged rows as lazy constraints";
+		}
+		else if (lb <= -infinity_)  // <= constraint
+		{
+			rhs = ub;
+			sns = 'L';
+		}
+		else if (ub >= infinity_)  // >= constraint
+		{
+			rhs = lb;
+			sns = 'G';
+		}
+		else if (ub == lb)  // = constraint
+		{
+			rhs = ub;
+			sns = 'E';
+		}
+		else  // range constraint
+		{
+			rhs = lb;
+			rng = ub - lb;
+			sns = 'R';
+			LOG(FATAL) << "CPLEX does not accept ranged rows as lazy constraints";
+		}
+		int rmatbeg = 0;
+
+		status = CPXcallbackrejectcandidate(context, 1, rowCut.row().getNumElements(), 
+			&rhs, &sns, &rmatbeg, 
+			const_cast<int*>(rowCut.row().getIndices()),
+			const_cast<double*>(rowCut.row().getElements()));
+		
+		LOG_IF(WARNING, status) << "Error in CPXcallbackrejectcandidate: status = " << status;
+
+		return status;
+	}
+
+	int BranchAndBendersCut::AppendCutsToNode(CPXCALLBACKCONTEXTptr context, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer)
+	{
+		//based on AppendCutsToSubproblem
+
+		int status = 0;
+
+		parallel_benders::BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
+		parallel_benders::BendersNodeData::cut_container::const_iterator feas_it = benders_node_pointer->feasibility_cuts_.begin();
+		parallel_benders::BendersNodeData::cut_container::const_iterator domain_it = benders_node_pointer->domain_cuts_.begin();
+
+		if (!benders_node_pointer->feasibility_cuts_.empty()) {
+			LOG(FATAL) << "Never tested";
+			// Add the cuts
+			//if (seperate_first_stage_solver_ && current_stage_ == 0) {
+			//	feas_it = benders_node_pointer->last_iteration_start_feasibility_;
+			//	benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
+			//}
+			//if (feas_it != benders_node_pointer->feasibility_cuts_.end()) {
+			//	// TODO: This can be changed to addRows
+			//	for (; feas_it != benders_node_pointer->feasibility_cuts_.end(); ++feas_it) {
+			//		assert((*feas_it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
+
+			//		if (!benders_node_pointer->warm_start_added_ && ((*feas_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*feas_it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
+			//			// Add warm start
+			//			SetWarmStart(osi_solver, benders_tree_node_pointer);
+			//			benders_node_pointer->warm_start_added_ = true;
+			//			if (level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false) {
+			//				OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+			//				if (osi_cpx != nullptr && level_cstat_ != nullptr) {
+			//					CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+			//					CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+			//					if (level_length_ == osi_cpx->getNumRows())
+			//						CPXcopybasednorms(env_ptr, lp_ptr, level_cstat_.get(), level_rstat_.get(), level_dnorm_.get());
+			//					else
+			//						LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+			//				}
+			//			}
+			//		}
+			//		assert((*feas_it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
+			//		ApplyCut(osi_solver, **feas_it, append_type);
+			//	}
+			//}
+		}
+
+		if (!benders_node_pointer->domain_cuts_.empty()) {
+			LOG(FATAL) << "Never tested";
+			// Add the cuts
+			//if (seperate_first_stage_solver_ && current_stage_ == 0) {
+			//	domain_it = benders_node_pointer->last_round_start_domain_;
+			//	benders_node_pointer->last_round_start_domain_ = benders_node_pointer->domain_cuts_.end();
+			//}
+			//if (domain_it != benders_node_pointer->domain_cuts_.end()) {
+			//	for (; domain_it != benders_node_pointer->domain_cuts_.end(); ++domain_it) {
+			//		assert((*domain_it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
+
+			//		if (!benders_node_pointer->warm_start_added_ && ((*domain_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*domain_it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
+			//			// Add warm start
+			//			SetWarmStart(osi_solver, benders_tree_node_pointer);
+			//			benders_node_pointer->warm_start_added_ = true;
+			//			if (level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false) {
+			//				OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+			//				if (osi_cpx != nullptr && level_cstat_ != nullptr) {
+			//					CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+			//					CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+			//					if (level_length_ == osi_cpx->getNumRows())
+			//						CPXcopybasednorms(env_ptr, lp_ptr, level_cstat_.get(), level_rstat_.get(), level_dnorm_.get());
+			//					else
+			//						LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+			//				}
+			//			}
+			//		}
+			//		ApplyCut(osi_solver, **domain_it, append_type);
+			//	}
+			//}
+		}
+
+		if (!benders_node_pointer->optimality_cuts_.empty()) {
+			// Add the cuts
+			parallel_benders::BendersNodeData::cut_container::const_iterator it = benders_node_pointer->optimality_cuts_.begin();
+			if (benders_node_pointer->last_iteration_start_optimality_ != benders_node_pointer->optimality_cuts_.end()) {
+				it = benders_node_pointer->last_iteration_start_optimality_;
+			}
+			else
+				it = benders_node_pointer->optimality_cuts_.end();
+
+			benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
+
+			for (; it != benders_node_pointer->optimality_cuts_.end(); ++it) {
+				if ((*it)->to_use_) {
+					status = BranchAndBendersCut::AddLazyCutToNode(context, **it);
+					if (status) {
+						LOG(WARNING) << "Error in CPXcallbackrejectcandidate: status = " << status;
+						return status;
+					}
+				}
+			}
+		}
+
+		if (!benders_node_pointer->epigraph_cuts_.empty()) {
+			LOG(FATAL) << "Never tested";
+			// Add the cuts
+			//BendersNodeData::cut_container::const_iterator it = benders_node_pointer->epigraph_cuts_.begin();
+			//if (seperate_first_stage_solver_ && current_stage_ == 0) {
+			//	if (benders_node_pointer->last_round_start_epigraph_ != benders_node_pointer->epigraph_cuts_.end()) {
+			//		it = benders_node_pointer->last_round_start_epigraph_;
+			//		if (current_stage_ > 0) // In non-first-stage nodes we must read all optimality cuts!
+			//			//it = benders_node_pointer->optimality_cuts_.end();
+			//			assert(false);
+			//	}
+			//	else
+			//		it = benders_node_pointer->epigraph_cuts_.end();
+			//}
+			//LOG_IF(FATAL, current_iteration_ == 1 && generate_lp_cuts_ && !cont_phase_it_limit_ && !use_first_phase_) << "Is it a problem?";  //changed_aggregation_level_ should be changed if we build lp cut in 1st iteration. Right?
+			//benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
+
+			//for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
+			//	if (!benders_node_pointer->warm_start_added_ && ((*it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*it)->cut_creation_iteration_ == current_iteration_ - 1 && current_stage_ == 0)) {
+			//		// Add warm start
+			//		SetWarmStart(osi_solver, benders_tree_node_pointer);
+			//		benders_node_pointer->warm_start_added_ = true;
+			//	}
+
+			//	if ((*it)->to_use_) {
+			//		assert((*it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
+			//		ApplyCut(osi_solver, **it, append_type);
+			//	}
+			//}
+			//benders_node_pointer->last_round_start_epigraph_ = benders_node_pointer->epigraph_cuts_.end();
+		}
+
+		return 0;
 	}
 
 	void BranchAndBendersCut::SetUpMPSolver(OsiCpxSolverInterface* cpx_solver)
 	{
+		assert(current_stage_ == 0);
 		cpx_solver->messageHandler()->setLogLevel(4); // Log nothing
 		BuildSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
 		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
-		//TODO: The CPLEX parameter that controls primaland dual reduction type(CPXPARAM_Preprocessing_Reduce) should be set to CPX_PREREDUCE_NOPRIMALORDUAL(0) or to CPX_PREREDUCE_PRIMALONLY(1) in order to turn off dual reductions.
-		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); //TODO: these are probably lazy cuts added via call back
-		
+		//TODO: The CPLEX parameter that controls primal and dual reduction type(CPXPARAM_Preprocessing_Reduce) should be set to CPX_PREREDUCE_NOPRIMALORDUAL(0) or to CPX_PREREDUCE_PRIMALONLY(1) in order to turn off dual reductions.
+		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); // add Continuous optimality cuts (if any) as lazy cuts
+		DeleteSubproblem(nullptr, tree_nodes_by_stage_[current_stage_][0]);
+
 		BranchAndBendersCut* user_data = this;
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
