@@ -57,6 +57,8 @@ public:
 	~BranchAndBendersCut();
 
 	void Solve();
+	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
+	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
 
 	BranchAndBendersCut* clone() = delete;
 
