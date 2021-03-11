@@ -10,12 +10,8 @@
 #include "ilcplex/cplex.h"
 
 OsiStochasticBranchAndBendersCutSolverInterface::OsiStochasticBranchAndBendersCutSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model)
-: OsiStochasticSolverInterface(osi_solver, smi_model), bbc_(nullptr), osi_(nullptr)
+: OsiStochasticParallelNestedBendersSolverInterface(osi_solver, smi_model), bbc_(nullptr), osi_(nullptr)
 {
-	if (smi_model == nullptr)
-		assert(false);
-	//this->smi_model_->releaseSolver(); // Forget about previous solver, we do not care about it!
-	this->smi_model_->setOsiSolverHandle(this->osi_solver_);
 	bbc_ = new branch_and_benders_cut::BranchAndBendersCut(smi_model_);
 }
 
@@ -26,17 +22,18 @@ OsiStochasticBranchAndBendersCutSolverInterface::~OsiStochasticBranchAndBendersC
 
 void OsiStochasticBranchAndBendersCutSolverInterface::initialSolve()
 {
-
+	assert(false);
 }
 
 double OsiStochasticBranchAndBendersCutSolverInterface::getObjValue() const
 {
+	assert(false);
 	return 1.0;
 }
 
 void OsiStochasticBranchAndBendersCutSolverInterface::printSolutionToFile(const char* filename) const
 {
-
+	assert(false);
 }
 
 void OsiStochasticBranchAndBendersCutSolverInterface::setParameters(const parallel_benders::Parameter& parameters)
@@ -46,23 +43,24 @@ void OsiStochasticBranchAndBendersCutSolverInterface::setParameters(const parall
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getSolutionCode() const
 {
+	assert(false);
 	return 1;
 }
 
 //virtual void setLogFile(std::string filename) = 0;
 void OsiStochasticBranchAndBendersCutSolverInterface::setInstanceSpecsFile(const std::string& filename)
 {
-
+	assert(false);
 }
 
 void OsiStochasticBranchAndBendersCutSolverInterface::setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance)
 {
-
+	assert(false);
 }
 
 void OsiStochasticBranchAndBendersCutSolverInterface::setTestsetProblemInstanceNames(std::string path)
 {
-
+	assert(false);
 }
 
 branch_and_benders_cut::BranchAndBendersCut* OsiStochasticBranchAndBendersCutSolverInterface::getBBC()

@@ -13,7 +13,7 @@ namespace branch_and_benders_cut {
 //class SmiScnModel;
 //class OsiSolverInterface;
 
-class OsiStochasticBranchAndBendersCutSolverInterface : public OsiStochasticSolverInterface {
+class OsiStochasticBranchAndBendersCutSolverInterface : public OsiStochasticParallelNestedBendersSolverInterface {
 public:
 	OsiStochasticBranchAndBendersCutSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
 	~OsiStochasticBranchAndBendersCutSolverInterface();
