@@ -27,8 +27,6 @@ public:
 
 	double getLB() const override;
 
-	double getRelativeGap() const override;
-
 	double getIntegerGap() const override;
 
 	const parallel_benders::Timer& getTimer() const override;
@@ -48,8 +46,6 @@ public:
 	void setParameters(const parallel_benders::Parameter& parameters) override;
 
 	int getSolutionCode() const override;
-
-	int getNumInfeasibilityIterations() const override;
 
 	void fixFirstStageVariables(const double* solution) override;
 

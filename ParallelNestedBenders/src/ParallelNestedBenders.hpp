@@ -63,6 +63,7 @@ public:
     double computeScenarioValue(int scenario);
     void fixFirstStageVariables(const double* solution);
 	int getNumContPhasePnbIterations() const;
+	int getNumContinuousOptimalityCuts() const;
 
     /************************************************************************/
     /* Takes ownership of solution                                          */

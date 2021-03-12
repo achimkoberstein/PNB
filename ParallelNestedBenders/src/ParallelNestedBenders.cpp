@@ -6326,7 +6326,6 @@ namespace parallel_benders {
 				cpx_solver->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 				SetSolverOptions(cpx_solver);
                 osi_solver_map_[boost::this_thread::get_id()] = cpx_solver;
-				cpx_solver->messageHandler()->setLogLevel(4); // TODO: temp
 				return cpx_solver;
             }
 			else {
@@ -8013,6 +8012,17 @@ namespace parallel_benders {
 			value = cont_phase_pnb_->current_iteration_;
 		}
 		return value;
+	}
+
+	int  ParallelNestedBenders::getNumContinuousOptimalityCuts() const
+	{
+		assert(!cont_phase_it_limit_ && "If we use continuous phase (not only first phase) we need to excluded opt cuts that were taken from the main loop");
+		int cut_counter = 0;
+		if (cont_phase_pnb_ && !cont_phase_pnb_->stage_data_.empty())
+			for (int i = 0; i < cont_phase_pnb_->num_stages_; i++) {
+				cut_counter += cont_phase_pnb_->stage_data_[i]->added_optimality_cuts_;
+			}
+		return cut_counter;
 	}
 
     void ParallelNestedBenders::setWarmUpSolution( const double* solution, int num_cols_given )
