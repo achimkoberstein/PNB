@@ -2892,13 +2892,6 @@ namespace parallel_benders {
         if ( current_stage_ == 0){
             detailed_timer_.Start(0);
         }
-
-		//----- BBC breaks
-		if (lp_main_loop_iteration_round_) {
-			std::cout << 1 << std::endl;
-			//return;
-		}
-
 #ifdef COMPUTING_TIMER
         double current_time = timer_.Now();
         double elapsed_build_time = 0;
@@ -2923,8 +2916,6 @@ namespace parallel_benders {
             assert(seperate_first_stage_solver_ && "osi_solver_->getNumCols() == 0 might work wrong here.");
             build_subproblem = true;
         }
-
-		//----- BBC breaks
         
         if (build_subproblem)
             BuildSubproblem(osi_solver, benders_tree_node_pointer);
@@ -6322,9 +6313,9 @@ namespace parallel_benders {
 					cpx_solver = new OsiCpxSolverInterface();
 				}
 				// Reset the solver
+				SetSolverOptions(cpx_solver);
 				cpx_solver->initialSolve();
 				cpx_solver->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-				SetSolverOptions(cpx_solver);
                 osi_solver_map_[boost::this_thread::get_id()] = cpx_solver;
 				return cpx_solver;
             }
