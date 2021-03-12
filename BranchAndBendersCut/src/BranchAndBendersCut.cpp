@@ -207,15 +207,34 @@ namespace branch_and_benders_cut {
 		SolveSolverInterface(cpx_solver);
 		current_stage_ = 0;
 		PrintSubproblem(cpx_solver, 0, "MP_final");
-		//StoreData(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
-		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[current_stage_][0]->getDataPtr();
-		mp_node_pointer->col_solution_;
-		mp_node_pointer->next_stage_approximation_; //?
-		mp_node_pointer->solution_value_; // w/o theta
-		mp_node_pointer->upper_bound_; // best integer found so far
-		mp_node_pointer->lower_bound_; // best cont solution (when not candidate)
-		upper_bound_;
-		lower_bound_;
+		
+		if (cpx_solver->isProvenOptimal()) {
+			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
+			//sometimes bounds are not updated to the newest ones in callback
+			upper_bound_ = cpx_solver->getObjValue();
+			lower_bound_ = cpx_solver->getObjValue();
+		}
+		else if (cpx_solver->isProvenPrimalInfeasible()) {
+			solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
+		}
+		else if (cpx_solver->isProvenDualInfeasible()) {
+			solution_code_ = parallel_benders::PNB_SOLUTION_UNBOUNDED;
+		}
+		else if (cpx_solver->isPrimalObjectiveLimitReached()) {
+			LOG(FATAL) << "Unknown solution code";
+		}
+		else if (cpx_solver->isDualObjectiveLimitReached()) {
+			LOG(FATAL) << "Unknown solution code";
+		}
+		else if (cpx_solver->isIterationLimitReached()) {
+			solution_code_ = parallel_benders::PNB_SOLUTION_ITERATION_LIMIT;
+		}
+		else if (cpx_solver->isTimeLimitReached()) {
+			solution_code_ = parallel_benders::PNB_SOLUTION_TIME_LIMIT;
+		}
+		else {
+			LOG(FATAL) << "Unknown solution code";
+		}
 
 		if (pretty_printing_)
 			std::cout << "\n";
