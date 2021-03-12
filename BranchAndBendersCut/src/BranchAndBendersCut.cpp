@@ -66,7 +66,7 @@ namespace branch_and_benders_cut {
 		// see bendersatsp2.c in CPLEX examples
 
 		int status = 0;
-		/*int me;*/
+		int thread_id;
 		BranchAndBendersCut* globaldata = static_cast<BranchAndBendersCut*>(cbhandle);
 		//USERLOCALDATA* localdata = NULL;
 
@@ -87,79 +87,79 @@ namespace branch_and_benders_cut {
 		////num_x_cols = globaldata->num_x_cols;
 		////num_nodes = globaldata->num_nodes;
 
-		//status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &me);
-		//if (status) {
-		//	fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
-		//	return status;
-		//}
-
-		assert(contextid == CPX_CALLBACKCONTEXT_CANDIDATE);
-		// Check if solution is bounded
-		status = CPXcallbackcandidateispoint(context, &integer_feasible);
+		status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &thread_id);
 		if (status) {
-			fprintf(stderr, "Error in CPXXcallbackcandidateispoint: status = %d\n", status);
-			return status;
-		}
-		if (!integer_feasible) {
-			/* The model is bounded, so this cannot happen. */
-			fprintf(stderr, "Unbounded solution");
-			status = CPXERR_UNSUPPORTED_OPERATION;
-			return 0; //TODO: what do we do when MP is unbounded?
-		}
-
-		//Store Data
-		parallel_benders::BendersNodeData* benders_node_pointer = globaldata->tree_nodes_by_stage_[globaldata->current_stage_][0]->getDataPtr();
-		int num_theta = 1; //TODO: correctly identify the number of theta
-		
-		benders_node_pointer->col_solution_.resize(num_x_cols);
-		status = CPXcallbackgetcandidatepoint(context, benders_node_pointer->col_solution_.data(), 0, num_x_cols - num_theta, NULL);
-		if (status) {
-			fprintf(stderr, "Error in CPXcallbackgetcandidate: status = %d\n", status);
+			fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
 			return status;
 		}
 
-		benders_node_pointer->next_stage_approximation_.resize(num_theta);
-		status = CPXcallbackgetcandidatepoint(context, benders_node_pointer->next_stage_approximation_.data(), num_x_cols, num_x_cols + num_theta - 1, NULL);
-		if (status) {
-			fprintf(stderr, "Error in CPXcallbackgetcandidate: status = %d\n", status);
-			return status;
+		if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) 
+		{		
+			// Check if solution is bounded
+			status = CPXcallbackcandidateispoint(context, &integer_feasible);
+			if (status) {
+				fprintf(stderr, "Error in CPXXcallbackcandidateispoint: status = %d\n", status);
+				return status;
+			}
+			if (!integer_feasible) {
+				/* The model is bounded, so this cannot happen. */
+				fprintf(stderr, "Unbounded solution");
+				status = CPXERR_UNSUPPORTED_OPERATION;
+				return 0; //TODO: what do we do when MP is unbounded?
+			}
+
+			//Store Data
+			status = globaldata->StoreNodeData(context, contextid);
+			if (status) {
+				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
+				return status;
+			}
+
+			std::cout << "Hello, Hello, Hello!" << std::endl;
+
+			globaldata->current_stage_ = 1;
+			globaldata->forward_ = false;
+			int num_nodes = globaldata->tree_nodes_by_stage_[globaldata->current_stage_].size();
+			// Do some kind of shuffling!
+			//std::vector<int> test_vector(num_nodes);
+			//std::iota(test_vector.begin(),test_vector.end(),0);
+			//std::random_shuffle(test_vector.begin(),test_vector.end());
+			//for ( int i : test_vector ){
+			for (int i = 0; i < num_nodes; i++) {
+				//thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem, this, tree_nodes_by_stage_[current_stage_][i]));
+				globaldata->HandleSubproblem(globaldata->tree_nodes_by_stage_[globaldata->current_stage_][i]);
+			}
+			//thread_pool_.wait(0); // We wait until all threads are done
+
+			//------ handle bounds here?
+
+			// We need to aggregate optimality cuts for the parent node
+			globaldata->AggregateOptimalityCuts(globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
+
+			//------ Add lazy cuts
+			//If found Benders cuts - not necessary because we will do nothing in method below
+			globaldata->AppendCutsToNode(context, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
+			globaldata->DeleteSubproblem(nullptr, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
+
+			for (auto id_solver_pair : globaldata->osi_solver_map_) {
+				//id_solver_pair.second->reset(); // This method throws exception with Cplex
+				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+				// Workaround: Load empty problem. 
+				assert(id_solver_pair.second->getNumCols() == 0);
+			}
+
+			for (auto node : globaldata->tree_nodes_by_stage_[globaldata->current_stage_]) {
+				node->getDataPtr()->CleanUnusedMemory(globaldata->forward_);
+			}
 		}
-
-		std::cout << "Hello, Hello, Hello!" << std::endl;
-
-		globaldata->current_stage_ = 1;
-		globaldata->forward_ = false;
-		int num_nodes = globaldata->tree_nodes_by_stage_[globaldata->current_stage_].size();
-		// Do some kind of shuffling!
-		//std::vector<int> test_vector(num_nodes);
-		//std::iota(test_vector.begin(),test_vector.end(),0);
-		//std::random_shuffle(test_vector.begin(),test_vector.end());
-		//for ( int i : test_vector ){
-		for (int i = 0; i < num_nodes; i++) {
-			//thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem, this, tree_nodes_by_stage_[current_stage_][i]));
-			globaldata->HandleSubproblem(globaldata->tree_nodes_by_stage_[globaldata->current_stage_][i]);
-		}
-		//thread_pool_.wait(0); // We wait until all threads are done
-
-		//------ handle bounds here?
-
-		// We need to aggregate optimality cuts for the parent node
-		globaldata->AggregateOptimalityCuts(globaldata->tree_nodes_by_stage_[globaldata->current_stage_-1][0]);
-
-		//------ Add lazy cuts
-		//If found Benders cuts - not necessary because we will do nothing in method below
-		globaldata->AppendCutsToNode(context, globaldata->tree_nodes_by_stage_[globaldata->current_stage_-1][0]);
-		globaldata->DeleteSubproblem(nullptr, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
-
-		for (auto id_solver_pair : globaldata->osi_solver_map_) {
-			//id_solver_pair.second->reset(); // This method throws exception with Cplex
-			id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-			// Workaround: Load empty problem. 
-			assert(id_solver_pair.second->getNumCols() == 0);
-		}
-
-		for (auto node : globaldata->tree_nodes_by_stage_[globaldata->current_stage_]) {
-			node->getDataPtr()->CleanUnusedMemory(globaldata->forward_);
+		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
+		{
+			//Store Data
+			status = globaldata->StoreNodeData(context, contextid);
+			if (status) {
+				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
+				return status;
+			}
 		}
 
 		//return status;
@@ -193,27 +193,29 @@ namespace branch_and_benders_cut {
 
 		//TODO: temp parameters
 		print_subproblems_ = true;
-		cont_phase_it_limit_ = 100;
 		//TODO: for testing set one thread for CPLEX: for a means to force deterministic parallel optimization, see the parallel mode switch (ParallelMode, CPX_PRAM_PARALLELMODE) in the CPLEX Parameters Reference Manual.
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 1); // Should be set to 1 usually!
 
 		// First Phase: construct Linear optimality cuts
+		current_iteration_ = 1;
 		HandleContinuousPhase();
 
 		// Second Phase: Branch-And-Benders-Cut
 		SetUpMPSolver(cpx_solver);
 		PrintSubproblem(cpx_solver, 0, "MP");
 		SolveSolverInterface(cpx_solver);
-		assert(current_stage_ == 1);
 		current_stage_ = 0;
 		PrintSubproblem(cpx_solver, 0, "MP_final");
-		StoreData(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
+		//StoreData(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
 		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[current_stage_][0]->getDataPtr();
 		mp_node_pointer->col_solution_;
-		mp_node_pointer->next_stage_approximation_;
-		mp_node_pointer->solution_value_;
-		mp_node_pointer->lower_bound_;		
+		mp_node_pointer->next_stage_approximation_; //?
+		mp_node_pointer->solution_value_; // w/o theta
+		mp_node_pointer->upper_bound_; // best integer found so far
+		mp_node_pointer->lower_bound_; // best cont solution (when not candidate)
+		upper_bound_;
+		lower_bound_;
 
 		if (pretty_printing_)
 			std::cout << "\n";
@@ -247,6 +249,59 @@ namespace branch_and_benders_cut {
 				LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
 			}
 		}
+	}
+
+	int BranchAndBendersCut::StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid)
+	{
+		int status = 0;
+
+		parallel_benders::BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
+		int num_x_cols = benders_node_pointer->cols_;
+		int num_theta = benders_node_pointer->num_thetas_;
+		assert(num_theta == 1);//TODO: correctly identify the number of theta
+		//TODO: assert num cols in node == num_x_cols + num_theta
+
+		std::vector<double> solution(num_x_cols + num_theta);
+
+		if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {
+			status = CPXcallbackgetcandidatepoint(context, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetcandidate: status = %d\n", status);
+				return status;
+			}
+		}
+		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
+			status = CPXcallbackgetrelaxationpoint(context, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetrelaxationpoint: status = %d\n", status);
+				return status;
+			}
+		}
+
+		benders_node_pointer->col_solution_.resize(num_x_cols);
+		benders_node_pointer->col_solution_.assign(solution.begin(), solution.begin()+ num_x_cols);
+		benders_node_pointer->next_stage_approximation_.resize(num_theta);
+		benders_node_pointer->next_stage_approximation_.assign(solution.begin() + num_x_cols, solution.end());
+
+		double thread_upper_bound;
+		status = CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &thread_upper_bound);
+		if (status) {
+			fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
+			return status;
+		}
+
+		double thread_lower_bound;
+		status = CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_BND, &thread_lower_bound);
+		if (status) {
+			fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
+			return status;
+		}
+
+		// TODO: mutex needed
+		lower_bound_ =  max(thread_lower_bound, lower_bound_);
+		upper_bound_ = min(thread_upper_bound, upper_bound_);
+
+		return status;
 	}
 
 	int BranchAndBendersCut::AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
@@ -447,7 +502,7 @@ namespace branch_and_benders_cut {
 		BranchAndBendersCut* user_data = this;
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, CPX_CALLBACKCONTEXT_CANDIDATE, benders_callback, user_data);
+		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION, benders_callback, user_data);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
 		}
