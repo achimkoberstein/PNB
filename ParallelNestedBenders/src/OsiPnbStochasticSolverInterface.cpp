@@ -94,14 +94,12 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations() const
 {
     return nested_benders_->current_iteration_;
 }
+
 int OsiStochasticParallelNestedBendersSolverInterface::getNumContPhasePnbIterations() const
 {   
-    int num_iter = 0;
-    if (nested_benders_->cont_phase_pnb_) {
-        num_iter = nested_benders_->cont_phase_pnb_->current_iteration_;
-    }
-    return num_iter;
+	return nested_benders_->getNumContPhasePnbIterations();
 }
+
 int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterations() const
 {
     return nested_benders_->insubstantial_iteration_;

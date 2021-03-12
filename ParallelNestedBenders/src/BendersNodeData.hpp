@@ -133,6 +133,7 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_LEVEL_INFINITY = 9;
     const int PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA = 10;
 	const int PNB_INT_ALGORITHM_SOLVER_BENDERS = 11; // use build in Benders algorithm in solver (available in CPLEX)
+	const int PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT = 12;
 
 	// Variants with CVaR risk constraint
 	const int PNB_INT_ALGORITHM_DETEQ_RISK = 11;
