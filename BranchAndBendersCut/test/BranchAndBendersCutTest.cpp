@@ -314,8 +314,11 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			// BENDERS CPLEX
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_SOLVER_BENDERS\", \"PNB_NUM_CPU\" : 0 }");
 
+			// BRANCH AND BENDERS
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true }");
+
 			// BENDERS
-			parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true }");
 
 			// DZN problem - plain Epigraph cut (w/o 2nd stage info)
 			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10, \"PNB_CGP_EPSILON_RELATIVE\" : 0.01  }");
@@ -790,10 +793,11 @@ TEST_F(BranchAndBendersTest, unitTest) {
 	parallel_benders::Parameter param;
 	param.init();
 	param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+	param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, true);
 
-	core_name = "glushko/sndp_mini_tests/SNDP_TestCase_17";
-	time_name = "glushko/sndp_mini_tests/SNDP_TestCase_17";
-	stoch_name = "glushko/sndp_mini_tests/SNDP_TestCase_17";
+	core_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
+	time_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
+	stoch_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
 	total_core_string = folder + core_name;
 	total_time_string = folder + time_name;
 	total_stoch_string = folder + stoch_name;
@@ -823,8 +827,8 @@ TEST_F(BranchAndBendersTest, unitTest) {
 TEST_F(BranchAndBendersTest, fast) {
 	// Binary 1st stage
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 0);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 0);
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.3); // same characteristics as SNDP_TestCase_0
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_2"), -54250.00, 0.1); // 3 bin vars on 1st stage (in standard there are 2)
@@ -836,7 +840,7 @@ TEST_F(BranchAndBendersTest, fast) {
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_4_4"), -15000, 0.1); // domain cuts
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_1"), -15000, 0.1); // domain cuts // relaxation solution == MIP
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_6_2"), -1000, 0.1); // domain cuts
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1); // feasibility cuts
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_12"), -15250, 0.1); // feasibility cuts
 
 	// Integer 2 stages
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relaxation for the 2nd stage, ERROR otherwise
@@ -849,9 +853,9 @@ TEST_F(BranchAndBendersTest, fast) {
 	EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224444.4, 0.1); // same characteristics as SNDP_TestCase_17, CGP MP is always infeasible due to some reason
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 882.615, 0.1); // 1834.87 for MIP
 	EXPECT_NEAR(solveSMPS("han/dcap/dcap468_50"), 1401.06, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/smkp/smkp_11"), 9415.88, 0.1);
+	//EXPECT_NEAR(solveSMPS("siplib/smkp/smkp_11"), 9415.88, 0.1);
 	// generate feasibility cuts
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_15"), -10750, 0.1); // feasibility cuts, similar characteristics to ssch/c...
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_15"), -10750, 0.1); // feasibility cuts, similar characteristics to ssch/c...
 }
 
 TEST_F(BranchAndBendersTest, slow) {

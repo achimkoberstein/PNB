@@ -41,7 +41,7 @@ double OsiStochasticBranchAndBendersCutSolverInterface::getObjValue() const
 	double value = 0.0;
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		assert(bbc_);
-		value = bbc_->upper_bound_; // TODO: updated UB in Solve()
+		value = bbc_->upper_bound_;
 	}
 	else {
 		value = OsiStochasticParallelNestedBendersSolverInterface::getObjValue();
@@ -54,7 +54,7 @@ void OsiStochasticBranchAndBendersCutSolverInterface::printSolutionToFile(const 
 {
 	assertTriedToSolve();
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
-		assert(false && "Not implemented.");
+		LOG(WARNING) << "printSolutionToFile() not implemented for BBC";
 	}
 	else {
 		OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile(filename);
@@ -159,7 +159,8 @@ double OsiStochasticBranchAndBendersCutSolverInterface::getIntegerGap() const
 			return 0.0;
 		}
 		else if (true) {
-			assert(false);
+			LOG(WARNING) << "getIntegerGap() not implemented for BBC";
+			return -1.0;
 		}
 		//else if (cont_phase_pnb && cont_phase_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL && bbc_->solved_counter_ > 0 && bbc_->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) {
 		//	assert(cont_phase_pnb->solved_counter_ == 1); // should be solved at least but not more than once
