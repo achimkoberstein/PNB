@@ -60,7 +60,7 @@ public:
     SmiScnModel* getSmiModel();
 	parallel_benders::ParallelNestedBenders* getPNB();
     int getNumInsubstantialIterations() const;
-    virtual int getNumInfeasibilityIterations() const;
+    int getNumInfeasibilityIterations() const;
 
 	double getUBForIteration(int iteration) const;
 	double getLBForIteration(int iteration) const;
@@ -68,7 +68,7 @@ public:
 	virtual double getUB() const;
 	virtual double getLB() const;
 
-	virtual double getRelativeGap() const;
+	double getRelativeGap() const;
     virtual double getIntegerGap() const;
 
     int getNumCriticalIteration() const ;

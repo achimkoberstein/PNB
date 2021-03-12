@@ -22,8 +22,6 @@ OsiStochasticBranchAndBendersCutSolverInterface::~OsiStochasticBranchAndBendersC
 
 void OsiStochasticBranchAndBendersCutSolverInterface::initialSolve()
 {
-	assert(false && "Never tested");
-	//TODO: default algorithm should be bbc
 	last_used_algorithm_ = getParameters().GetIntParamValue(parallel_benders::PNB_BENDERS);
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		if (getParameters().GetBoolParamValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS)) {
@@ -39,7 +37,6 @@ void OsiStochasticBranchAndBendersCutSolverInterface::initialSolve()
 
 double OsiStochasticBranchAndBendersCutSolverInterface::getObjValue() const
 {
-	assert(false && "Never tested");
 	assertTriedToSolve();
 	double value = 0.0;
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
@@ -55,46 +52,13 @@ double OsiStochasticBranchAndBendersCutSolverInterface::getObjValue() const
 
 void OsiStochasticBranchAndBendersCutSolverInterface::printSolutionToFile(const char* filename) const
 {
-	assert(false);
-	//if (nested_benders_->compute_primal_solutions_for_stage_ < 0)
-	//	return;
-	//if (nested_benders_->solution_code_ != 0) {
-	//	LOG(ERROR) << "Solution can not be printed, because algorithm did not ended with optimality.";
-	//	return;
-	//}
-	//// We want to print the solution we got by solving the model, to the file! Therefore we need a solved problem first!
-	//std::ofstream solution_file(filename, fstream::out | fstream::trunc); // Open the file, regardless if it exists or not!
-	//LOG_IF(ERROR, !solution_file.is_open()) << "Solution file " << filename << " could not be opened to write.";
-	//// Get the values for which we actually want to store the solution from the param file
-	//assert(nested_benders_->compute_primal_solutions_for_stage_ >= 0);
-	//assert(nested_benders_->compute_primal_solutions_for_stage_ <= nested_benders_->num_stages_);
-	//// At first, print a summary of the solution value
-	//solution_file << "Objective Value : " << nested_benders_->upper_bound_ << "\n";
-	//for (int i = 0; i < nested_benders_->num_stages_; i++) {
-	//	// Sum over all nodes at this stage!
-	//	double obj_value = 0.0;
-	//	for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[i].size(); scen++) {
-	//		obj_value += nested_benders_->tree_nodes_by_stage_[i][scen]->getDataPtr()->incumbent_solution_value_;
-	//	}
-	//	solution_file << "Objective Value Stage " << i << " : " << obj_value << "\n";
-	//}
-	//solution_file << "Column Values sorted by Stage and Scenario" << "\n";
-	//for (int stage = 0; stage < nested_benders_->compute_primal_solutions_for_stage_; stage++) {
-	//	for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[stage].size(); scen++) {
-	//		solution_file << "Objective Value Stage-Scenario=" << stage << "-" << scen << " : " << nested_benders_->tree_nodes_by_stage_[stage][scen]->getDataPtr()->incumbent_solution_value_ << "\n";
-	//		const double* primal_solution = getSolutionByNodeAndStage(scen, stage);
-	//		assert(primal_solution != nullptr);
-	//		// Write out objective value for stage and scenario wise (probability discounted)
-	//		// Get the correct name for the variable in question via smi!
-	//		int column_offset = smi_model_->getCore()->getColStart(stage);
-	//		for (int current_column = 0; current_column < nested_benders_->stage_data_[stage]->num_columns_; current_column++) {
-	//			if (abs(primal_solution[current_column]) >= nested_benders_->zero_tolerance_)
-	//				solution_file << "Stage-Scenario=" << stage << "-" << scen << " : " << smi_model_->getColumnName(current_column + column_offset) << " : " << primal_solution[current_column] << "\n";
-	//		}
-
-	//	}
-	//}
-	//solution_file.close();
+	assertTriedToSolve();
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(false && "Not implemented.");
+	}
+	else {
+		OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile(filename);
+	}
 }
 
 void OsiStochasticBranchAndBendersCutSolverInterface::setParameters(const parallel_benders::Parameter& parameters)
@@ -105,7 +69,6 @@ void OsiStochasticBranchAndBendersCutSolverInterface::setParameters(const parall
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getSolutionCode() const
 {
-	assert(false && "Never tested");
 	assertTriedToSolve();
 	double value = 0.0;
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
@@ -142,7 +105,6 @@ void OsiStochasticBranchAndBendersCutSolverInterface::setTestsetProblemInstanceN
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getNumContPhasePnbIterations() const
 {
-	assert(false && "Never tested");
 	assertTriedToSolve();
 	int value = 0;
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
@@ -158,47 +120,65 @@ int OsiStochasticBranchAndBendersCutSolverInterface::getNumContPhasePnbIteration
 
 double OsiStochasticBranchAndBendersCutSolverInterface::getUB() const
 {
-	assert(false);
-	//return nested_benders_->upper_bound_;
-	return 0.0;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		value = bbc_->upper_bound_;
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getUB();
+	}
+
+	return value;
 }
 double OsiStochasticBranchAndBendersCutSolverInterface::getLB() const
 {
-	assert(false);
-	//return nested_benders_->lower_bound_;
-	return 0.0;
-}
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		value = bbc_->lower_bound_;
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getLB();
+	}
 
-double OsiStochasticBranchAndBendersCutSolverInterface::getRelativeGap() const
-{
-	assert(false);
-	//return parallel_benders::ComputeRelativeGap(nested_benders_->upper_bound_, nested_benders_->lower_bound_, 1e-10);
-	return 0.0;
+	return value;
 }
 
 double OsiStochasticBranchAndBendersCutSolverInterface::getIntegerGap() const
 {
-	assert(false);
-	//parallel_benders::ParallelNestedBenders* cont_phase_pnb = nested_benders_->cont_phase_pnb_;
+	assertTriedToSolve();
+	int value = 0.0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		parallel_benders::ParallelNestedBenders* cont_phase_pnb = bbc_->cont_phase_pnb_;
 
-	//assert(nested_benders_->cont_phase_it_limit_ == 0 && "We cannot take the solution of cont_phase_pnb_ in this case");
-	//if (nested_benders_->integer_problems_.none()) {
-	//	return 0.0;
-	//}
-	//else if (cont_phase_pnb && cont_phase_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL && nested_benders_->solved_counter_ > 0 && nested_benders_->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) {
-	//	assert(cont_phase_pnb->solved_counter_ == 1); // should be solved at least but not more than once
-		// if we used cont phase, we could take UB from the first iteration, since it will be the relaxation solution
-	//	return parallel_benders::ComputeRelativeGap(nested_benders_->upper_bound_, cont_phase_pnb->upper_bound_, 1e-10);
-	//}
-	//else {
-	//	return -1.0;
-	//}
-	return 0.0;
+		assert(bbc_->cont_phase_it_limit_ == 0 && "We cannot take the solution of cont_phase_pnb_ in this case");
+		if (bbc_->integer_problems_.none()) {
+			return 0.0;
+		}
+		else if (true) {
+			assert(false);
+		}
+		//else if (cont_phase_pnb && cont_phase_pnb->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL && bbc_->solved_counter_ > 0 && bbc_->solution_code_ == parallel_benders::PNB_SOLUTION_OPTIMAL) {
+		//	assert(cont_phase_pnb->solved_counter_ == 1); // should be solved at least but not more than once
+		//	if we used cont phase, we could take UB from the first iteration, since it will be the relaxation solution
+		//		return parallel_benders::ComputeRelativeGap(bbc_->upper_bound_, cont_phase_pnb->upper_bound_, 1e-10);
+		//}
+		else {
+			return -1.0;
+		}
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getIntegerGap();
+	}
+
+	return value;
 }
 
 const parallel_benders::Timer& OsiStochasticBranchAndBendersCutSolverInterface::getTimer() const
 {
-	assert(false && "Never tested");
 	assertTriedToSolve();
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		assert(bbc_);
@@ -211,7 +191,6 @@ const parallel_benders::Timer& OsiStochasticBranchAndBendersCutSolverInterface::
 
 const parallel_benders::Timer& OsiStochasticBranchAndBendersCutSolverInterface::getBuildTimer() const
 {
-	assert(false && "Never tested");
 	assertTriedToSolve();
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		assert(bbc_);
@@ -224,7 +203,6 @@ const parallel_benders::Timer& OsiStochasticBranchAndBendersCutSolverInterface::
 
 const parallel_benders::Timer& OsiStochasticBranchAndBendersCutSolverInterface::getComputingTimer() const
 {
-	assert(false && "Never tested");
 	assertTriedToSolve();
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		assert(bbc_);
@@ -237,7 +215,6 @@ const parallel_benders::Timer& OsiStochasticBranchAndBendersCutSolverInterface::
 
 const parallel_benders::Timer& OsiStochasticBranchAndBendersCutSolverInterface::getLiftAndProjectCutsTimer() const
 {
-	assert(false && "Never tested");
 	assertTriedToSolve();
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		assert(bbc_);
@@ -250,56 +227,143 @@ const parallel_benders::Timer& OsiStochasticBranchAndBendersCutSolverInterface::
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getNumOptimalityCuts() const
 {
-	assert(false);
-	assert(nested_benders_);
-	int cut_counter = 0;
-	//if (!nested_benders_->stage_data_.empty())
-	//	for (int i = 0; i < nested_benders_->num_stages_; i++) {
-	//		cut_counter += nested_benders_->stage_data_[i]->added_optimality_cuts_;
-	//	}
-	return cut_counter;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		if (!bbc_->stage_data_.empty())
+			for (int i = 0; i < bbc_->num_stages_; i++) {
+				value += bbc_->stage_data_[i]->added_optimality_cuts_;
+			}
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts();
+	}
+
+	return value;
 }
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getNumContinuousOptimalityCuts() const
 {
-	assert(false);
-	return 0;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		value = bbc_->getNumContinuousOptimalityCuts();
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getNumContinuousOptimalityCuts();
+	}
+
+	return value;
 }
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getNumFeasibilityCuts() const
 {
-	assert(false);
-	return 0;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		if (!bbc_->stage_data_.empty())
+			for (int i = 0; i < bbc_->num_stages_; i++) {
+				value += bbc_->stage_data_[i]->added_feasibility_cuts_;
+			}
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts();
+	}
+
+	return value;
 }
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getNumEpigraphCuts() const
 {
-	assert(false);
-	return 0;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		if (!bbc_->stage_data_.empty())
+			for (int i = 0; i < bbc_->num_stages_; i++) {
+				value += bbc_->stage_data_[i]->added_epigraph_cuts_;
+			}
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getNumEpigraphCuts();
+	}
+
+	return value;
 }
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getNumStrengthenedEpigraphCuts() const
 {
-	assert(false);
-	return 0;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		if (!bbc_->stage_data_.empty())
+			for (int i = 0; i < bbc_->num_stages_; i++) {
+				value += bbc_->stage_data_[i]->added_str_epigraph_cuts_;
+			}
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getNumStrengthenedEpigraphCuts();
+	}
+
+	return value;
 }
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getNumPlainEpigraphCuts() const
 {
-	assert(false);
-	return 0;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		if (!bbc_->stage_data_.empty())
+			for (int i = 0; i < bbc_->num_stages_; i++) {
+				value += bbc_->stage_data_[i]->added_plain_epigraph_cuts_;
+			}
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getNumPlainEpigraphCuts();
+	}
+
+	return value;
 }
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getNumDomainCuts() const
 {
-	assert(false);
-	return 0;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		if (!bbc_->stage_data_.empty())
+			for (int i = 0; i < bbc_->num_stages_; i++) {
+				value += bbc_->stage_data_[i]->added_domain_cuts_;
+			}
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getNumDomainCuts();
+	}
+
+	return value;
 }
 
 int OsiStochasticBranchAndBendersCutSolverInterface::getLpCgpCounter() const
 {
-	assert(false);
-	return 0;
+	assertTriedToSolve();
+	int value = 0;
+	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		assert(bbc_);
+		if (!bbc_->stage_data_.empty())
+			for (int i = 0; i < bbc_->num_stages_; i++) {
+				value += bbc_->stage_data_[i]->lp_cgp_counter_;
+			}
+	}
+	else {
+		value = OsiStochasticParallelNestedBendersSolverInterface::getLpCgpCounter();
+	}
+
+	return value;
 }
 
 
@@ -334,14 +398,6 @@ void OsiStochasticBranchAndBendersCutSolverInterface::assertTriedToSolve() const
 	if (last_used_algorithm_ == -1) {
 		LOG(FATAL) << "Never called initialSolve() for this interface.";
 	}
-}
-
-int OsiStochasticBranchAndBendersCutSolverInterface::getNumInfeasibilityIterations() const
-{
-	assert(false);
-	assert(nested_benders_);
-	//return getNumIterations() - nested_benders_->feasible_iteration_; // Feasible Iterations
-	return 0;
 }
 
 void OsiStochasticBranchAndBendersCutSolverInterface::fixFirstStageVariables(const double* solution)

@@ -123,9 +123,6 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 		std::string parameter_name_string_;
 		static const int max_stages_ = 11; // This can be set differently
 
-		bool compute_statistics_;
-		bool generate_initial_solution_;
-
 		double solveSMPS(const char* name) {
 			return solveSMPS(name, name, name);
 		}
@@ -172,8 +169,6 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			for (int i = 0; i < num_stages_ - 1; i++)
 				num_single_scenario_cols_ += smi_model->getCore()->getNumCols(i);
 
-			special_case_solution_length_ = num_single_scenario_cols_;
-			
 			std::vector<int> aggregates;
 			aggregates.push_back(1);
 			
@@ -306,32 +301,52 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 		}
 
 	protected:
-		BranchAndBendersTest() { // this is the fixture that is called for every test, e.g., TEST(BranchAndBendersTest, test)
+		BranchAndBendersTest(): num_single_scenario_cols_(0), num_stages_(0) { // this is the fixture that is called for every test, e.g., TEST(BranchAndBendersTest, test)
 			bbc_parameter_.init();
 			write_xml("../../../../Data/Benders/default_param.xml", bbc_parameter_.parameter_);
 			repetitions_ = 1;
 			
-			assert(false && "Update these stuff, initialize stats");
-			parameter_strings_.push_back("{}"); // default parameters - single-cut
-			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1 }"); // single cut
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0 }"); // multi cut
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0 }"); // hybrid 
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // warm-start scenario-wise
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_STAGE_WISE\" }"); // warm-start stage-wise
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 1 }"); // warm-start
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : 2 }"); // warm-start
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_USE_START_SOLUTION\" : 2, \"PNB_NUM_CPU\" : 0 }"); // multi cut, PNB_INT_USE_EV_SOLUTION start solution
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 1 }"); // multi cut single core
-			//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_CUT_CONSOLIDATION\" : true, \"PNB_WARM_START\" : 1 }");
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
-			parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }"); // crashes for some instances
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\" }"); // ODA crashes and not working for multi stage
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\" }"); // crashes and not working for some problems
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\" }"); // crashes and not working for some problems
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\" }"); // crashes and not working for some problems
+			//parameter_strings_.push_back("{}"); // default parameters
+
+			// DETEQ
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
+
+			// BENDERS CPLEX
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_SOLVER_BENDERS\", \"PNB_NUM_CPU\" : 0 }");
+
+			// BENDERS
+			parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true }");
+
+			// DZN problem - plain Epigraph cut (w/o 2nd stage info)
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 1, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10, \"PNB_CGP_EPSILON_RELATIVE\" : 0.01  }");
+
+			// DZN problem - strengthened Epigraph cut (with 2nd stage info)
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+
+			//PNB_CGP_EPSILON_RELATIVE
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.5 }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }");
+			//default: parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.0001 }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.000001 }");
+
+			//PNB_LP_CUTS_FOR_FRACT
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 5  , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+			//default: parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 20 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 100, \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+
+			//PNB_LP_ROUNDS_LIMIT
+			//default: parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20 , \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 40 , \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01 }");
+
+			//PNB_LP_USE_CGP_PNB_CUTS
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_NONE\" }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE\" }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_EFFICIENT\" }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_CONSOLIDATE\" }");
+			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20, \"PNB_LP_SWITCHES_LIMIT\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LP_CUTS_FOR_FRACT\" : 10 , \"PNB_CGP_EPSILON_RELATIVE\" : 0.01, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\" }");
 		}
 		virtual ~BranchAndBendersTest() {}
 		virtual void SetUp() { // this is also the fixture that is called for every test, e.g., TEST(NestedBendersTest, test)
@@ -345,7 +360,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			// We need to write the header line for this file
 			s << "Testset;Problem;Instance;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Return Code;Cont Phase Iterations;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
 			s << "Created Optimality Cuts;Created Continuous Optimality Cuts;Created Feasibility Cuts;Created Epigraph Cuts;Created Strengthened Epigraph Cuts;Created Plain Epigraph Cuts;Created Domain Cuts;Solved L&P CGPs;Integer Gap;";
-			// //TODO: Iterate over property tree
+			
 			BOOST_FOREACH(boost::property_tree::ptree::value_type & v, bbc_parameter_.parameter_)
 			{
 				std::string name = v.first;
@@ -506,7 +521,8 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 				bbc_interface.setParameters(bbc_parameter_);
 				if (bbc_parameter_.parameter_.get(parallel_benders::PNB_USE_START_SOLUTION, 0) == parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION) {
 					assert(current_start_solution_.get() != nullptr);
-					bbc_interface.giveStartSolution(current_start_solution_.get(), num_single_scenario_cols_); //TODO: it should work
+					assert(false);
+					bbc_interface.giveStartSolution(current_start_solution_.get(), num_single_scenario_cols_);
 				}
 				bbc_interface.initialSolve();
 				overall_and_solver_timer.Stop(0);
@@ -572,7 +588,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 				values_map[solver_time_string] += solver_time;
 				values_map[iterations_string] += bbc_interface.getNumIterations();
 				values_map[insubstantial_iterations_string] += bbc_interface.getNumInsubstantialIterations();
-				values_map[substantial_iterations_string] += bbc_interface.getNumIterations() - bbc_interface.getNumInsubstantialIterations();
+				values_map[substantial_iterations_string] += (bbc_interface.getNumIterations() - bbc_interface.getNumInsubstantialIterations());
 				values_map[infeasibility_iterations_string] += bbc_interface.getNumInfeasibilityIterations();
 				values_map[objective_value_string] += bbc_interface.getObjValue();
 				values_map[ub_string] += bbc_interface.getUB();
@@ -756,11 +772,10 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 		std::vector<double> lb_for_iteration_;
 		int num_stages_;
 		int num_single_scenario_cols_;
-		int special_case_solution_length_;
 		int repetitions_;
 };
 
-TEST(BranchAndBendersTest, unitTest) {
+TEST_F(BranchAndBendersTest, unitTest) {
 	
 	//SmiScnModel smi;
 	std::string folder("../../../../Data/Benders/");
@@ -941,7 +956,6 @@ TEST_F(BranchAndBendersTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r05_1_0_16_cr"), 25765.8, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r06_1_0_16_cr"), 25765.8, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r07_1_0_16_cr"), 25765.8, 0.1);
-	//TODO: more r instances here
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_1_0-2_64_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_1_0-2_32_cr"), 0.0, 0.1); // obj value?
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r08_1_0-2_64_cr"), 0.0, 0.1); // obj value?

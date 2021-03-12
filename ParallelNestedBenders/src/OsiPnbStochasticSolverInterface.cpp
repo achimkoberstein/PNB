@@ -129,7 +129,7 @@ double OsiStochasticParallelNestedBendersSolverInterface::getLB() const
 
 double OsiStochasticParallelNestedBendersSolverInterface::getRelativeGap() const
 {
-	return parallel_benders::ComputeRelativeGap(nested_benders_->upper_bound_, nested_benders_->lower_bound_, 1e-10);
+	return parallel_benders::ComputeRelativeGap(getUB(), getLB(), 1e-10);
 }
 
 double OsiStochasticParallelNestedBendersSolverInterface::getIntegerGap() const
@@ -401,13 +401,7 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts() co
 int OsiStochasticParallelNestedBendersSolverInterface::getNumContinuousOptimalityCuts() const
 {
     assert(nested_benders_);
-    assert(!nested_benders_->cont_phase_it_limit_ && "If we use continuous phase (not only first phase) we need to excluded opt cuts that were taken from the main loop");
-    int cut_counter = 0;
-    if (nested_benders_->cont_phase_pnb_ && !nested_benders_->cont_phase_pnb_->stage_data_.empty())
-        for (int i = 0; i < nested_benders_->cont_phase_pnb_->num_stages_; i++) {
-            cut_counter += nested_benders_->cont_phase_pnb_->stage_data_[i]->added_optimality_cuts_;
-        }
-    return cut_counter;
+    return nested_benders_->getNumContinuousOptimalityCuts();
 }
 
 int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts() const 
@@ -415,9 +409,9 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts() c
     assert(nested_benders_);
     int cut_counter = 0;
     if ( !nested_benders_->stage_data_.empty())
-    for (int i = 0; i < nested_benders_->num_stages_; i++){
-        cut_counter += nested_benders_->stage_data_[i]->added_feasibility_cuts_;
-    }
+		for (int i = 0; i < nested_benders_->num_stages_; i++){
+			cut_counter += nested_benders_->stage_data_[i]->added_feasibility_cuts_;
+		}
     return cut_counter;
 }
 

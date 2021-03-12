@@ -70,7 +70,6 @@ namespace branch_and_benders_cut {
 		BranchAndBendersCut* globaldata = static_cast<BranchAndBendersCut*>(cbhandle);
 		//USERLOCALDATA* localdata = NULL;
 
-		globaldata->lp_main_loop_iteration_round_ = make_unique<std::pair<int, int>>(1,1); //TODO: temp
 		globaldata->current_stage_ = 0;
 		globaldata->forward_ = true;
 
@@ -144,13 +143,11 @@ namespace branch_and_benders_cut {
 
 		//------ handle bounds here?
 
-		//if (infeasible_problems_.none() && (!infeasible_problem_)) { // TODO: if generate_feas_and_opt_cuts we need to change this
 		// We need to aggregate optimality cuts for the parent node
 		globaldata->AggregateOptimalityCuts(globaldata->tree_nodes_by_stage_[globaldata->current_stage_-1][0]);
 
 		//------ Add lazy cuts
 		//If found Benders cuts - not necessary because we will do nothing in method below
-		//TODO: we should somewhere reset the pointer to the last optimality cut
 		globaldata->AppendCutsToNode(context, globaldata->tree_nodes_by_stage_[globaldata->current_stage_-1][0]);
 		globaldata->DeleteSubproblem(nullptr, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
 
@@ -162,11 +159,10 @@ namespace branch_and_benders_cut {
 		}
 
 		for (auto node : globaldata->tree_nodes_by_stage_[globaldata->current_stage_]) {
-			node->getDataPtr()->CleanUnusedMemory(globaldata->forward_); // TODO: do it in SetUpMP() ?
+			node->getDataPtr()->CleanUnusedMemory(globaldata->forward_);
 		}
 
 		//return status;
-		globaldata->lp_main_loop_iteration_round_.reset(); //TODO: temp
 		return 0;
 	} /* END benders_callback */
 	
@@ -324,7 +320,6 @@ namespace branch_and_benders_cut {
 			//	benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
 			//}
 			//if (feas_it != benders_node_pointer->feasibility_cuts_.end()) {
-			//	// TODO: This can be changed to addRows
 			//	for (; feas_it != benders_node_pointer->feasibility_cuts_.end(); ++feas_it) {
 			//		assert((*feas_it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
 
