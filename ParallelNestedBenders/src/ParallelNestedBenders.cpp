@@ -8006,6 +8006,15 @@ namespace parallel_benders {
 
     }
 
+	int ParallelNestedBenders::getNumContPhasePnbIterations() const
+	{
+		int value = 0;
+		if (cont_phase_pnb_) {
+			value = cont_phase_pnb_->current_iteration_;
+		}
+		return value;
+	}
+
     void ParallelNestedBenders::setWarmUpSolution( const double* solution, int num_cols_given )
     {
         start_solution_ = PNB_INT_USE_SUPPLIED_SOLUTION; 

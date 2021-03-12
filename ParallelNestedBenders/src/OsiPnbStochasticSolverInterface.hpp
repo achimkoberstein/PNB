@@ -18,65 +18,65 @@ public:
     //OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model, BendersParameter& params);
     ~OsiStochasticParallelNestedBendersSolverInterface();
 
-    void initialSolve();
+    virtual void initialSolve();
     void printProblemCharacteristics() const ;
 
-    double getObjValue() const;
+    virtual double getObjValue() const;
 	
     const double * getFirstStageSolution();
-    const double * getSolutionByNodeAndStage(int node_number, int stage) const;
+    virtual const double * getSolutionByNodeAndStage(int node_number, int stage) const;
 
     //const double * getFirstStageDuals();
     //const double * getDualsByNodeAndStage(int node_number, int stage) const;
 
-	void printSolutionToFile(const char* filename) const;
-	void setInstanceSpecsFile(const std::string& filename); //create if not exists
-	void setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance); // strings will be transformed to lower case
-	std::vector<std::string> getTestsetProblemInstanceNames() const;
+	virtual void printSolutionToFile(const char* filename) const;
+	virtual void setInstanceSpecsFile(const std::string& filename); //create if not exists
+	virtual void setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance); // strings will be transformed to lower case
 	void setTestsetProblemInstanceNames(std::string path); // use path to the .sto file
+	std::vector<std::string> getTestsetProblemInstanceNames() const;	
 
-    void fixFirstStageVariables(const double* solution);
-    void giveStartSolution(const double* solution, int num_cols_given = 0);
+    virtual void fixFirstStageVariables(const double* solution);
+	virtual void giveStartSolution(const double* solution, int num_cols_given = 0);
 
-    double getSolutionValueForScenario(int scenario);
+    virtual double getSolutionValueForScenario(int scenario);
 
-    int getNumOptimalityCuts() const;
-    int getNumContinuousOptimalityCuts() const;
-    int getNumFeasibilityCuts() const;
-	int getNumEpigraphCuts() const;
-    int getNumStrengthenedEpigraphCuts() const;
-    int getNumPlainEpigraphCuts() const;
-	int getNumDomainCuts() const;
-    int getLpCgpCounter() const;
-    void setParameters(const parallel_benders::Parameter& parameters);
+    virtual int getNumOptimalityCuts() const;
+	virtual int getNumContinuousOptimalityCuts() const;
+	virtual int getNumFeasibilityCuts() const;
+	virtual int getNumEpigraphCuts() const;
+	virtual int getNumStrengthenedEpigraphCuts() const;
+	virtual int getNumPlainEpigraphCuts() const;
+	virtual int getNumDomainCuts() const;
+	virtual int getLpCgpCounter() const;
+    virtual void setParameters(const parallel_benders::Parameter& parameters);
     int getNumIterations() const;
-    int getNumContPhasePnbIterations() const;
+    virtual int getNumContPhasePnbIterations() const;
 	const parallel_benders::Parameter& getParameters() const;
-    const parallel_benders::Timer& getTimer() const;
-    const parallel_benders::Timer& getBuildTimer() const;
-    const parallel_benders::Timer& getComputingTimer() const;
-    const parallel_benders::Timer& getLiftAndProjectCutsTimer() const;
+    virtual const parallel_benders::Timer& getTimer() const;
+    virtual const parallel_benders::Timer& getBuildTimer() const;
+    virtual const parallel_benders::Timer& getComputingTimer() const;
+    virtual const parallel_benders::Timer& getLiftAndProjectCutsTimer() const;
 
     SmiScnModel* getSmiModel();
 	parallel_benders::ParallelNestedBenders* getPNB();
     int getNumInsubstantialIterations() const;
-    int getNumInfeasibilityIterations() const;
+    virtual int getNumInfeasibilityIterations() const;
 
 	double getUBForIteration(int iteration) const;
 	double getLBForIteration(int iteration) const;
 
-	double getUB() const;
-	double getLB() const;
+	virtual double getUB() const;
+	virtual double getLB() const;
 
-	double getRelativeGap() const;
-    double getIntegerGap() const;
+	virtual double getRelativeGap() const;
+    virtual double getIntegerGap() const;
 
     int getNumCriticalIteration() const ;
     int getMaximalLengthOfCriticalIterationSequence() const;
 
-    int getSolutionCode() const;
+    virtual int getSolutionCode() const;
 
-private:
+protected:
     parallel_benders::ParallelNestedBenders* nested_benders_;
     OsiSolverInterface * osi_;
 

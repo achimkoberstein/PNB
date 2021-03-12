@@ -50,7 +50,7 @@ public:
     ParallelNestedBenders(const ParallelNestedBenders& pnb) = delete;
     virtual ~ParallelNestedBenders();
     void Init();
-    void Solve();
+    virtual void Solve();
     ParallelNestedBenders& operator= (const ParallelNestedBenders& pnb) = delete;
     ParallelNestedBenders* clone();
     /*! Clear all solution process information and reset to the after Init() state.
@@ -62,6 +62,7 @@ public:
     // Access solution methods
     double computeScenarioValue(int scenario);
     void fixFirstStageVariables(const double* solution);
+	int getNumContPhasePnbIterations() const;
 
     /************************************************************************/
     /* Takes ownership of solution                                          */
