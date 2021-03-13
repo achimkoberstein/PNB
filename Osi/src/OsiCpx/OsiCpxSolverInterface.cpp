@@ -3384,6 +3384,15 @@ void OsiCpxSolverInterface::addLazyRowCut(const OsiRowCut& rowCut )
 	checkCPXerror(err, "CPXaddlazyconstraints", "addLazyRowCut");
 }
 
+void OsiCpxSolverInterface::deleteLazyCuts()
+{
+	debugMessage("OsiCpxSolverInterface::deleteLazyCuts(%p)\n", NULL);
+
+	int err = 0;
+	err = CPXfreelazyconstraints(env_, getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL));
+	checkCPXerror(err, "CPXfreelazyconstraints", "deleteLazyCuts");
+}
+
 //#############################################################################
 // Private methods (non-static and static) and static data
 //#############################################################################
