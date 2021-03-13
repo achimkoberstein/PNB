@@ -190,6 +190,7 @@ namespace branch_and_benders_cut {
 		}
 
 		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_); //TODO: from the very beginning it should be cpx solver
+		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 
 		//TODO: temp parameters
 		print_subproblems_ = true;
@@ -200,6 +201,21 @@ namespace branch_and_benders_cut {
 		// First Phase: construct Linear optimality cuts
 		current_iteration_ = 1;
 		HandleContinuousPhase();
+		if (mp_node_pointer->optimality_cuts_.empty() && mp_node_pointer->epigraph_cuts_.empty()) {
+			//MP will be unbounded, add one dummy optimality cut
+			assert(false && "it will not work because we cannot delete lazy cuts in callback");
+			int num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
+			assert(num_theta == 1);
+			int num_cols = mp_node_pointer->cols_;
+			OsiRowCut* cut = new OsiRowCut();
+			cut->setLb(0.0);
+			cut->setUb(0.0);
+			std::vector<int>cut_indices(num_theta);
+			std::iota(cut_indices.begin(), cut_indices.end(), num_cols);
+			std::vector<double>cut_elements(num_theta, 1.0);
+			cut->setRow(num_theta, cut_indices.data(), cut_elements.data(), debug_test_duplicate_indices_);
+			cpx_solver->addLazyRowCut(*cut);
+		}
 
 		// Second Phase: Branch-And-Benders-Cut
 		SetUpMPSolver(cpx_solver);
@@ -274,10 +290,15 @@ namespace branch_and_benders_cut {
 	{
 		int status = 0;
 
-		parallel_benders::BendersNodeData* benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
-		int num_x_cols = benders_node_pointer->cols_;
-		int num_theta = benders_node_pointer->num_thetas_;
-		assert(num_theta == 1);//TODO: correctly identify the number of theta
+		//CPXcallbackgetlocalub...
+
+		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
+		int num_x_cols = mp_node_pointer->cols_;
+		int num_theta = mp_node_pointer->num_thetas_;
+		if (!num_theta) {
+			num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
+		}
+		assert(num_theta == 1);//TODO: correctly identify the number of theta, where do we set mp_node_pointer->num_thetas_
 		//TODO: assert num cols in node == num_x_cols + num_theta
 
 		std::vector<double> solution(num_x_cols + num_theta);
@@ -297,10 +318,10 @@ namespace branch_and_benders_cut {
 			}
 		}
 
-		benders_node_pointer->col_solution_.resize(num_x_cols);
-		benders_node_pointer->col_solution_.assign(solution.begin(), solution.begin()+ num_x_cols);
-		benders_node_pointer->next_stage_approximation_.resize(num_theta);
-		benders_node_pointer->next_stage_approximation_.assign(solution.begin() + num_x_cols, solution.end());
+		mp_node_pointer->col_solution_.resize(num_x_cols);
+		mp_node_pointer->col_solution_.assign(solution.begin(), solution.begin()+ num_x_cols);
+		mp_node_pointer->next_stage_approximation_.resize(num_theta);
+		mp_node_pointer->next_stage_approximation_.assign(solution.begin() + num_x_cols, solution.end());
 
 		double thread_upper_bound;
 		status = CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &thread_upper_bound);
@@ -316,10 +337,27 @@ namespace branch_and_benders_cut {
 			return status;
 		}
 
-		// TODO: mutex needed
-		lower_bound_ =  max(thread_lower_bound, lower_bound_);
-		upper_bound_ = min(thread_upper_bound, upper_bound_);
+		
+		// Delete the dummy optimality cut that we applied due to absence of theta cuts
+		if (mp_node_pointer->optimality_cuts_.empty() && mp_node_pointer->epigraph_cuts_.empty()) {
+			int processed_nodes;
+			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &processed_nodes);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
+				return status;
+			}
 
+			if (processed_nodes == 0) {
+				dynamic_cast<OsiCpxSolverInterface*>(osi_solver_)->deleteLazyCuts();
+			}
+		}
+
+		// TODO: mutex needed
+		{
+			lower_bound_ = max(thread_lower_bound, lower_bound_);
+			upper_bound_ = min(thread_upper_bound, upper_bound_);
+		}		
+		
 		return status;
 	}
 
@@ -512,11 +550,15 @@ namespace branch_and_benders_cut {
 	{
 		assert(current_stage_ == 0);
 		cpx_solver->messageHandler()->setLogLevel(4); // Log nothing
-		BuildSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
-		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0]);
+		BuildSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
+
+		tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.emplace_back(); // to create column for theta
+		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
+		tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.pop_back();
+
 		//TODO: The CPLEX parameter that controls primal and dual reduction type(CPXPARAM_Preprocessing_Reduce) should be set to CPX_PREREDUCE_NOPRIMALORDUAL(0) or to CPX_PREREDUCE_PRIMALONLY(1) in order to turn off dual reductions.
-		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[current_stage_][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); // add Continuous optimality cuts (if any) as lazy cuts
-		DeleteSubproblem(nullptr, tree_nodes_by_stage_[current_stage_][0]);
+		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); // add Continuous optimality cuts (if any) as lazy cuts
+		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
 
 		BranchAndBendersCut* user_data = this;
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
