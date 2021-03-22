@@ -1,0 +1,6 @@
+TIME   sslp_5_50_2000b
+PERIODS	 LP
+     x_1   c1  STAGE-1
+     y_1_1 c2  STAGE-2
+ENDATA
+    
