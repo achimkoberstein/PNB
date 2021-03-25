@@ -58,6 +58,7 @@ public:
 
 	void Solve() override;
 	int StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
+	void ConstructOptimalityCuts();
 	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
 	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
 
