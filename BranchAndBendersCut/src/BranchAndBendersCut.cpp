@@ -115,29 +115,8 @@ namespace branch_and_benders_cut {
 				return status;
 			}
 
-			std::cout << "Hello, Hello, Hello!" << std::endl;
-
-			globaldata->current_stage_ = 1;
-			globaldata->forward_ = false;
-			int num_nodes = globaldata->tree_nodes_by_stage_[globaldata->current_stage_].size();
-			// Do some kind of shuffling!
-			//std::vector<int> test_vector(num_nodes);
-			//std::iota(test_vector.begin(),test_vector.end(),0);
-			//std::random_shuffle(test_vector.begin(),test_vector.end());
-			//for ( int i : test_vector ){
-			for (int i = 0; i < num_nodes; i++) {
-				//thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem, this, tree_nodes_by_stage_[current_stage_][i]));
-				globaldata->HandleSubproblem(globaldata->tree_nodes_by_stage_[globaldata->current_stage_][i]);
-			}
-			//thread_pool_.wait(0); // We wait until all threads are done
-
-			//------ handle bounds here?
-
-			// We need to aggregate optimality cuts for the parent node
-			globaldata->AggregateOptimalityCuts(globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
-
-			//------ Add lazy cuts
-			//If found Benders cuts - not necessary because we will do nothing in method below
+			// Generate optimality cuts and add them as lazy cuts
+			globaldata->ConstructOptimalityCuts();
 			globaldata->AppendCutsToNode(context, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
 			globaldata->DeleteSubproblem(nullptr, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
 
@@ -201,25 +180,11 @@ namespace branch_and_benders_cut {
 		// First Phase: construct Linear optimality cuts
 		current_iteration_ = 1;
 		HandleContinuousPhase();
-		if (mp_node_pointer->optimality_cuts_.empty() && mp_node_pointer->epigraph_cuts_.empty()) {
-			//MP will be unbounded, add one dummy optimality cut
-			assert(false && "it will not work because we cannot delete lazy cuts in callback");
-			int num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
-			assert(num_theta == 1);
-			int num_cols = mp_node_pointer->cols_;
-			OsiRowCut* cut = new OsiRowCut();
-			cut->setLb(0.0);
-			cut->setUb(0.0);
-			std::vector<int>cut_indices(num_theta);
-			std::iota(cut_indices.begin(), cut_indices.end(), num_cols);
-			std::vector<double>cut_elements(num_theta, 1.0);
-			cut->setRow(num_theta, cut_indices.data(), cut_elements.data(), debug_test_duplicate_indices_);
-			cpx_solver->addLazyRowCut(*cut);
-		}
 
 		// Second Phase: Branch-And-Benders-Cut
 		SetUpMPSolver(cpx_solver);
 		PrintSubproblem(cpx_solver, 0, "MP");
+		LOG_IF(FATAL, mp_node_pointer->optimality_cuts_.empty() && mp_node_pointer->epigraph_cuts_.empty()) << "Cannot start B&B when problem has not cuts for theta";
 		SolveSolverInterface(cpx_solver);
 		current_stage_ = 0;
 		PrintSubproblem(cpx_solver, 0, "MP_final");
@@ -338,20 +303,6 @@ namespace branch_and_benders_cut {
 		}
 
 		
-		// Delete the dummy optimality cut that we applied due to absence of theta cuts
-		if (mp_node_pointer->optimality_cuts_.empty() && mp_node_pointer->epigraph_cuts_.empty()) {
-			int processed_nodes;
-			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &processed_nodes);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
-				return status;
-			}
-
-			if (processed_nodes == 0) {
-				dynamic_cast<OsiCpxSolverInterface*>(osi_solver_)->deleteLazyCuts();
-			}
-		}
-
 		// TODO: mutex needed
 		{
 			lower_bound_ = max(thread_lower_bound, lower_bound_);
@@ -359,6 +310,22 @@ namespace branch_and_benders_cut {
 		}		
 		
 		return status;
+	}
+
+	void BranchAndBendersCut::ConstructOptimalityCuts()
+	{
+		current_stage_ = 1;
+		forward_ = false;
+		int num_nodes = tree_nodes_by_stage_[current_stage_].size();
+		
+		for (int i = 0; i < num_nodes; i++) {
+			//thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem, this, tree_nodes_by_stage_[current_stage_][i]));
+			HandleSubproblem(tree_nodes_by_stage_[current_stage_][i]);
+		}
+		//thread_pool_.wait(0); // We wait until all threads are done
+
+		// We need to aggregate optimality cuts for the parent node
+		AggregateOptimalityCuts(tree_nodes_by_stage_[current_stage_ - 1][0]);
 	}
 
 	int BranchAndBendersCut::AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
@@ -551,10 +518,15 @@ namespace branch_and_benders_cut {
 		assert(current_stage_ == 0);
 		cpx_solver->messageHandler()->setLogLevel(4); // Log nothing
 		BuildSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
-
-		tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.emplace_back(); // to create column for theta
 		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
-		tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.pop_back();
+
+		if (tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() && tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.empty()) {
+			cpx_solver->initialSolve();
+			StoreData(cpx_solver, tree_nodes_by_stage_[0][0]);
+			ConstructOptimalityCuts();
+			current_stage_ = 0;
+			AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]); //to activate thetas
+		}		
 
 		//TODO: The CPLEX parameter that controls primal and dual reduction type(CPXPARAM_Preprocessing_Reduce) should be set to CPX_PREREDUCE_NOPRIMALORDUAL(0) or to CPX_PREREDUCE_PRIMALONLY(1) in order to turn off dual reductions.
 		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); // add Continuous optimality cuts (if any) as lazy cuts
