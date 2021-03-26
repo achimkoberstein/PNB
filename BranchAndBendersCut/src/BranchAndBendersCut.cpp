@@ -68,25 +68,13 @@ namespace branch_and_benders_cut {
 		int status = 0;
 		int thread_id;
 		BranchAndBendersCut* globaldata = static_cast<BranchAndBendersCut*>(cbhandle);
-		//USERLOCALDATA* localdata = NULL;
 
 		globaldata->current_stage_ = 0;
 		globaldata->forward_ = true;
 
-		/* Data structures to add the Benders' cut */
-
-		//int k, nzcnt, cur_x_col, cur_v_col, cur_u_col, num_x_cols, num_nodes;
 		int num_x_cols = globaldata->stage_data_[0]->num_columns_;
-		//int beg = 0;
-		//int worker_lp_sol_stat, purgeable, local, point;
 		int integer_feasible;
-		//double rhs;
-		//double eps_ray = 1e-03;
-		//char sense;
-
-		////num_x_cols = globaldata->num_x_cols;
-		////num_nodes = globaldata->num_nodes;
-
+		
 		status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &thread_id);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
@@ -105,7 +93,7 @@ namespace branch_and_benders_cut {
 				/* The model is bounded, so this cannot happen. */
 				fprintf(stderr, "Unbounded solution");
 				status = CPXERR_UNSUPPORTED_OPERATION;
-				return 0; //TODO: what do we do when MP is unbounded?
+				return 0; //TODO: some of the nodes are sometimes unbounded? How can it be? What should we do with them?
 			}
 
 			//Store Data
@@ -141,7 +129,6 @@ namespace branch_and_benders_cut {
 			}
 		}
 
-		//return status;
 		return 0;
 	} /* END benders_callback */
 	
@@ -183,7 +170,7 @@ namespace branch_and_benders_cut {
 
 		// Second Phase: Branch-And-Benders-Cut
 		SetUpMPSolver(cpx_solver);
-		PrintSubproblem(cpx_solver, 0, "MP");
+		//PrintSubproblem(cpx_solver, 0, "MP_with_cont_cuts");
 		LOG_IF(FATAL, mp_node_pointer->optimality_cuts_.empty() && mp_node_pointer->epigraph_cuts_.empty()) << "Cannot start B&B when problem has not cuts for theta";
 		SolveSolverInterface(cpx_solver);
 		current_stage_ = 0;
@@ -255,7 +242,7 @@ namespace branch_and_benders_cut {
 	{
 		int status = 0;
 
-		//CPXcallbackgetlocalub...
+		//TODO: CPXcallbackgetlocalub...
 
 		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		int num_x_cols = mp_node_pointer->cols_;
@@ -301,9 +288,8 @@ namespace branch_and_benders_cut {
 			fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
 			return status;
 		}
-
 		
-		// TODO: mutex needed
+		// TODO: mutex needed (or try some other approach - global progress)
 		{
 			lower_bound_ = max(thread_lower_bound, lower_bound_);
 			upper_bound_ = min(thread_upper_bound, upper_bound_);
