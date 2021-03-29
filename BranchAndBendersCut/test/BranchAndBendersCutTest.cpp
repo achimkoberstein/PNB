@@ -828,7 +828,7 @@ TEST_F(BranchAndBendersTest, unitTest) {
 
 TEST_F(BranchAndBendersTest, fast) {
 	// Binary 1st stage
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
 	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
 	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 0);
 	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
@@ -861,8 +861,9 @@ TEST_F(BranchAndBendersTest, fast) {
 }
 
 TEST_F(BranchAndBendersTest, slow) {
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/SNDP_20_4_2_1"), -87272, 0.1);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.5);
@@ -896,10 +897,10 @@ TEST_F(BranchAndBendersTest, for_LP) {
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_EPSILON_RELATIVE, 0.000001);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 10800);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_WARM_START, parallel_benders::PNB_INT_WARM_START_SCENARIO_WISE);
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_PARALLEL_MODE, parallel_benders::PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_WARM_START, parallel_benders::PNB_INT_WARM_START_SCENARIO_WISE);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_PARALLEL_MODE, parallel_benders::PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS);
 
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 0);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 0);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_USE_CGP_PNB_CUTS, parallel_benders::PNB_CGP_CUTS_NONE);
 
 	//sndp_mini_tests
