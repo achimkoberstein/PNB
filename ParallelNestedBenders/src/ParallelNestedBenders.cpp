@@ -1839,7 +1839,7 @@ namespace parallel_benders {
 				temporary_stage_upper_bound += ub_base*prime_multiplier; // for CGP PNB it is 0 += smth
 			}
 			else {
-				temporary_stage_upper_bound += expected_stage_solution_value;
+				temporary_stage_upper_bound = expected_stage_solution_value;
 			}
 
             bool can_update_upper_bound = !warm_up_;
@@ -3129,6 +3129,18 @@ namespace parallel_benders {
 		else if (lp_main_loop_iteration_round_ && current_stage_ > 0) {// subproblems in CGP
 			suffix = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME ? "prime" : "double_prime");
 		}
+        //TODO: temp
+        /*if (current_stage_ == 1) {
+            std::vector<double>& first_stage_solution = tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
+            for (double& var_val : first_stage_solution) {
+                std::string var_val_str = std::to_string(abs(var_val));
+                std::size_t pos = var_val_str.find(".");
+                suffix += var_val_str.substr(0, pos + 3) + ",";
+            }
+            std::string theta_str = std::to_string(tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_[0]);
+            std::size_t pos = theta_str.find(".");
+            suffix += theta_str.substr(0, pos + 3);
+        }*/
 		PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), suffix);
         DeleteSubproblem(osi_solver,benders_tree_node_pointer);
 
@@ -3870,9 +3882,10 @@ namespace parallel_benders {
                     offset_warmup += stage_data_[i]->num_columns_;
                 column_solution = warm_up_solution_.get()+offset_warmup;
             }
-            if ( benders_node_pointer->unbounded_problem_ )
-				assert(!lp_main_loop_iteration_round_ && "Never tested for cgp");
+            if (benders_node_pointer->unbounded_problem_) {
+                assert(!lp_main_loop_iteration_round_ && "Never tested for cgp");
                 unbounded_rhs = benders_tree_node_pointer->getParent()->getDataPtr()->unbounded_extreme_ray_.get();
+            }				
 
             if ( column_solution != nullptr){
                 // Add T-matrix together with stochastic entries to the problem if there are any
@@ -4603,13 +4616,30 @@ namespace parallel_benders {
 			}
 
 #ifndef NDEBUG
-            LogSpecialCase(lp_main_loop_iteration_round_ != nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for L&P PNB CGP.");
-            LogSpecialCase(lp_main_loop_iteration_round_ == nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for main loop.");
+            //LogSpecialCase(lp_main_loop_iteration_round_ != nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for L&P PNB CGP.");
+            //LogSpecialCase(lp_main_loop_iteration_round_ == nullptr && CheckForSameCut(*cut_stuff, benders_tree_node_pointer->getDataPtr()->optimality_cuts_), "Optimality cut is already present in the problem for main loop.");
 #endif
 #ifdef LOAD_DUMP_CUTS
 			std::stringstream cut_filename;
-            cut_filename << instance_name_ << "_optimality_cut_it_" << current_iteration_ << "_aggregate_" << i << ".txt";
-            cut_stuff->Dump(cut_filename.str());
+            //TODO: temp
+            static int iteration = 1;
+            std::string name_str("sndp_20_4_2_1_FIRST_PHASE_optimality_cut_it_");
+            if (current_stage_ == 1) {
+                //std::vector<double>& first_stage_solution = tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
+                //for (double& var_val : first_stage_solution) {
+                //    std::string var_val_str = std::to_string(abs(var_val));
+                //    std::size_t pos = var_val_str.find(".");
+                //    name_str += var_val_str.substr(0, pos + 3) + ",";
+                //}
+                //std::string theta_str = std::to_string(tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_[0]);
+                //std::size_t pos = theta_str.find(".");
+                //name_str += theta_str.substr(0, pos + 3);
+                name_str += std::to_string(iteration) + "_aggregate_0";
+            }
+            //cut_filename << instance_name_ << "_optimality_cut_it_" << current_iteration_ << "_aggregate_" << i << ".txt";
+            cut_filename << name_str << ".txt";
+            //cut_stuff->Dump(cut_filename.str());
+            iteration++;
 #endif
             AddCutToContainer(benders_tree_node_pointer,cut_stuff);
             /************************************************************************/
@@ -8096,6 +8126,15 @@ namespace parallel_benders {
 			// Set zero tolerances and feasibility tolerances, that we got from our user!
 			CPXsetdblparam(env_ptr,CPX_PARAM_EPRHS,zero_tolerance_);
 
+            //TODO: temp
+            // Display the detailed solution log
+            CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 1); // detailed log
+            CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 5); // display all the information from the log
+            CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF); // no presolve
+            CPXsetdblparam(env_ptr, CPX_PARAM_CUTSFACTOR, 1.0); // not cuts
+            CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_HeuristicFreq, -1); // turn off periodic node heuristic
+            CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_RINSHeur, -1); // turn off RINS heuristic
+
         }
         // We need gurobi options, just in case..
         //OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
@@ -9785,8 +9824,8 @@ namespace parallel_benders {
 			if (lp_main_loop_iteration_round_) { // prefix for L&P CGP (main loop iteration info)
 				stream << "stage_" << 0 << "_F_" << lp_main_loop_iteration_round_->first << "_0_round_" << lp_main_loop_iteration_round_->second << "_fract_" << lp_main_loop_fract_var_value_ << "-";
 			}
-            stream << "stage_" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;			
-            if ( append != "")
+                stream << "stage_" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
+            if (append != "")
                 stream << "_" << append;
             // we could use two lines below but than for L&P MP relaxation integer vars are printed as ints
 			//std::lock_guard<std::mutex> lock(*console_mutex_ptr_);

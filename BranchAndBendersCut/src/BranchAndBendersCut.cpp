@@ -104,9 +104,11 @@ namespace branch_and_benders_cut {
 			}
 
 			// Generate optimality cuts and add them as lazy cuts
+			int num_theta_cuts = globaldata->stage_data_[0]->added_optimality_cuts_ + globaldata->stage_data_[0]->added_epigraph_cuts_;
 			globaldata->ConstructOptimalityCuts();
+			int added_theta_cuts = globaldata->stage_data_[0]->added_optimality_cuts_ + globaldata->stage_data_[0]->added_epigraph_cuts_ - num_theta_cuts;
 			globaldata->AppendCutsToNode(context, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
-			globaldata->DeleteSubproblem(nullptr, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);
+			globaldata->DeleteSubproblem(nullptr, globaldata->tree_nodes_by_stage_[globaldata->current_stage_ - 1][0]);			
 
 			for (auto id_solver_pair : globaldata->osi_solver_map_) {
 				//id_solver_pair.second->reset(); // This method throws exception with Cplex
@@ -122,11 +124,22 @@ namespace branch_and_benders_cut {
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
 		{
 			//Store Data
-			status = globaldata->StoreNodeData(context, contextid);
+			/*status = globaldata->StoreNodeData(context, contextid);
 			if (status) {
 				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
 				return status;
-			}
+			}*/
+		}
+		else {
+			/*
+			CPX_CALLBACKCONTEXT_CANDIDATE 20
+			CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS 10
+			CPX_CALLBACKCONTEXT_LOCAL_PROGRESS 8
+			CPX_CALLBACKCONTEXT_RELAXATION 40
+			CPX_CALLBACKCONTEXT_THREAD_DOWN 4
+			CPX_CALLBACKCONTEXT_THREAD_UP 2
+			*/
+			//status = globaldata->StoreNodeData(context, contextid);
 		}
 
 		return 0;
@@ -170,7 +183,7 @@ namespace branch_and_benders_cut {
 
 		// Second Phase: Branch-And-Benders-Cut
 		SetUpMPSolver(cpx_solver);
-		//PrintSubproblem(cpx_solver, 0, "MP_with_cont_cuts");
+		PrintSubproblem(cpx_solver, 0, "MP_with_cont_cuts");
 		LOG_IF(FATAL, mp_node_pointer->optimality_cuts_.empty() && mp_node_pointer->epigraph_cuts_.empty()) << "Cannot start B&B when problem has not cuts for theta";
 		SolveSolverInterface(cpx_solver);
 		current_stage_ = 0;
@@ -178,7 +191,6 @@ namespace branch_and_benders_cut {
 		
 		if (cpx_solver->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
-			//sometimes bounds are not updated to the newest ones in callback
 			upper_bound_ = cpx_solver->getObjValue();
 			lower_bound_ = cpx_solver->getObjValue();
 		}
@@ -275,14 +287,40 @@ namespace branch_and_benders_cut {
 		mp_node_pointer->next_stage_approximation_.resize(num_theta);
 		mp_node_pointer->next_stage_approximation_.assign(solution.begin() + num_x_cols, solution.end());
 
-		double thread_upper_bound;
+		double solution_value = 0;
+
+		if (mp_node_pointer->smi_node_data_->getObjectiveLength()) {
+			mp_node_pointer->objective_ = new double[stage_data_[0]->num_columns_];
+			memcpy(mp_node_pointer->objective_, core_->getDenseObjCoefficients(0), stage_data_[0]->num_columns_ * sizeof(double));
+			if (stage_data_[0]->stochastic_objective_)
+				for (int i = 0; i < mp_node_pointer->smi_node_data_->getObjectiveLength(); i++) {
+					mp_node_pointer->objective_[mp_node_pointer->smi_node_data_->getObjectiveIndices()[i] - core_->getColStart(0)] = mp_node_pointer->smi_node_data_->getObjectiveElements()[i];
+				}
+		}
+		else
+			mp_node_pointer->objective_ = const_cast<double*> (core_->getDenseObjCoefficients(0));
+		const double* obj_coefs = mp_node_pointer->objective_;
+
+		int i = 0;
+		for (; i < mp_node_pointer->cols_; i++) {
+			solution_value += mp_node_pointer->col_solution_[i] * obj_coefs[i];
+		}
+		mp_node_pointer->solution_value_ = solution_value;
+
+		for (double& theta_value : mp_node_pointer->next_stage_approximation_) { // Add all thetas to the c*x solution to get lower bound for node at this stage
+			solution_value += theta_value;
+			i++;
+		}
+		mp_node_pointer->lower_bound_ = solution_value;
+
+		double thread_upper_bound; // Objective value of the best known feasible solution
 		status = CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &thread_upper_bound);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
 			return status;
 		}
 
-		double thread_lower_bound;
+		double thread_lower_bound; //  the objective value of the best open node
 		status = CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_BND, &thread_lower_bound);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
@@ -291,8 +329,9 @@ namespace branch_and_benders_cut {
 		
 		// TODO: mutex needed (or try some other approach - global progress)
 		{
-			lower_bound_ = max(thread_lower_bound, lower_bound_);
-			upper_bound_ = min(thread_upper_bound, upper_bound_);
+			//lower_bound_ = max(mp_node_pointer->lower_bound_, lower_bound_);
+			lower_bound_ = mp_node_pointer->lower_bound_;
+			//upper_bound_ = min(thread_upper_bound, upper_bound_);
 		}		
 		
 		return status;
@@ -310,8 +349,25 @@ namespace branch_and_benders_cut {
 		}
 		//thread_pool_.wait(0); // We wait until all threads are done
 
+		// TODO: Simplify it, compare with pnb, calculate this stuff before we start B&B
+		double temporary_stage_upper_bound(0.0);
+		for (auto node : tree_nodes_by_stage_[1]) {
+			temporary_stage_upper_bound += node->getDataPtr()->solution_value_ * node->getDataPtr()->probability_; // q(x): solution w/o thetas (if any) * prob
+		}
+		stage_lower_upper_bounds_[1].second = temporary_stage_upper_bound;
+		double sum_stage_solutions = 0;
+		sum_stage_solutions = tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_ + stage_lower_upper_bounds_[1].second;
+		/*if (upper_bound_ > sum_stage_solutions) {
+			upper_bound_ = sum_stage_solutions;
+		}*/
+		upper_bound_ = sum_stage_solutions;
+		bool benders_not_optimal = parallel_benders::RelativeGapLargerEpsilon(upper_bound_, lower_bound_, infinity_, relative_epsilon_);
+		if (!benders_not_optimal) {
+			return; // and do not aggregate cuts (therefore, lazy cuts are not added and the current integer B&B node is accepted)
+		}
+
 		// We need to aggregate optimality cuts for the parent node
-		AggregateOptimalityCuts(tree_nodes_by_stage_[current_stage_ - 1][0]);
+		AggregateOptimalityCuts(tree_nodes_by_stage_[current_stage_ - 1][0]);		
 	}
 
 	int BranchAndBendersCut::AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
@@ -510,6 +566,9 @@ namespace branch_and_benders_cut {
 			cpx_solver->initialSolve();
 			StoreData(cpx_solver, tree_nodes_by_stage_[0][0]);
 			ConstructOptimalityCuts();
+			for (auto id_solver_pair : osi_solver_map_) {
+				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+			}
 			current_stage_ = 0;
 			AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]); //to activate thetas
 		}		
@@ -521,7 +580,9 @@ namespace branch_and_benders_cut {
 		BranchAndBendersCut* user_data = this;
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION, benders_callback, user_data);
+		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION
+			//| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS | CPX_CALLBACKCONTEXT_LOCAL_PROGRESS | CPX_CALLBACKCONTEXT_THREAD_DOWN | CPX_CALLBACKCONTEXT_THREAD_UP
+			, benders_callback, user_data);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
 		}
