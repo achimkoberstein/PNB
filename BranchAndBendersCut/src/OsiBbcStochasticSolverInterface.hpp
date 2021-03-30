@@ -73,6 +73,8 @@ private:
 	branch_and_benders_cut::BranchAndBendersCut* bbc_;
 	OsiSolverInterface* osi_;
 	int last_used_algorithm_;
+
+	// Checks if initialSolve() was already called
 	void assertTriedToSolve() const;
 };
 

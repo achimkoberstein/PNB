@@ -28,14 +28,7 @@
 //#include "check.c"
 
 /************************************************************************/
-/* This class implements the nested benders decomposition in parallelized fashion, for multiple cores.
- * We need the following classes
- * Scenario Tree Storage Classes: Smi for the problem data and BendersNodeData for solver data
- * Algorithmic Logic
- * Parallelizing structures
- * Aggregation techniques
- * Problem scanning for fixed and stochastic matrices, RHS, objective, bounds to avoid unnecessary work (e.g. recreate matrices)
- * Goal: Subproblem solving and cut generation should be parallelized. Have a number of subproblems ( can be given by scenario tree ), assign a stage and a number to a thread and let it solve the corresponding subproblem.
+/* This class implements the single tree Branch-and-Benders-cut algorithm
 /************************************************************************/
 
 class OsiSolverInterface;
@@ -46,6 +39,7 @@ class OsiStochasticBranchAndBendersCutSolverInterface;
 
 namespace branch_and_benders_cut {
 
+	// 
 	int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
 
 class BranchAndBendersCut : public parallel_benders::ParallelNestedBenders {
@@ -57,14 +51,32 @@ public:
 	~BranchAndBendersCut();
 
 	void Solve() override;
+	
+	/* Store solution, theta and 
+	LB of the B&B node
+	*/
 	int StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
+	
+	/* Solve subproblems, update UB
+	and aggregate new cuts if UB != LB
+	*/
 	void ConstructOptimalityCuts();
+
+	/* Reject current candidate B&B node
+	and add lazy cuts
+	*/
 	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
 	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
 
 	BranchAndBendersCut* clone() = delete;
 
 private:
+	/* Prepare MP for the B&B execution in CPLEX
+	- append continuous Benders and/or L&P cuts (if any)
+	or
+	- generate Benders cut(s) to avoid unboundness
+	- set up CPLEX callback
+	*/
 	void SetUpMPSolver(OsiCpxSolverInterface* cpx_solver);
 };
 
