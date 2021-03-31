@@ -50,6 +50,7 @@ public:
 	BranchAndBendersCut(const BranchAndBendersCut& bbc) = delete;
 	~BranchAndBendersCut();
 
+	void Init() override;
 	void Solve() override;
 	
 	/* Store solution, theta and 
@@ -78,6 +79,13 @@ private:
 	- set up CPLEX callback
 	*/
 	void SetUpMPSolver(OsiCpxSolverInterface* cpx_solver);
+	
+	// obj values of integer feasible node solutions
+	// for which Benders UB == LB
+	std::deque<double> benders_optimal_incumbents_;
+
+	// best bounds of B&B, i.e., lower bounds
+	std::deque<double> best_bounds_;
 };
 
 } // end namespace branch_and_benders_cut

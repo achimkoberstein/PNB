@@ -49,7 +49,7 @@ public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
     ParallelNestedBenders(const ParallelNestedBenders& pnb) = delete;
     virtual ~ParallelNestedBenders();
-    void Init();
+    virtual void Init();
     virtual void Solve();
     ParallelNestedBenders& operator= (const ParallelNestedBenders& pnb) = delete;
     ParallelNestedBenders* clone();

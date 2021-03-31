@@ -19,7 +19,6 @@ public:
 	~OsiStochasticBranchAndBendersCutSolverInterface();
 
 	void initialSolve() override;
-	double getObjValue() const override;
 
 	int getNumContPhasePnbIterations() const override;
 

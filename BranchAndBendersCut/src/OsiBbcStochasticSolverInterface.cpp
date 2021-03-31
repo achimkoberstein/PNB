@@ -35,21 +35,6 @@ void OsiStochasticBranchAndBendersCutSolverInterface::initialSolve()
 	}
 }
 
-double OsiStochasticBranchAndBendersCutSolverInterface::getObjValue() const
-{
-	assertTriedToSolve();
-	double value = 0.0;
-	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
-		assert(bbc_);
-		value = bbc_->upper_bound_;
-	}
-	else {
-		value = OsiStochasticParallelNestedBendersSolverInterface::getObjValue();
-	}
-
-	return value;
-}
-
 void OsiStochasticBranchAndBendersCutSolverInterface::printSolutionToFile(const char* filename) const
 {
 	assertTriedToSolve();
@@ -73,7 +58,7 @@ int OsiStochasticBranchAndBendersCutSolverInterface::getSolutionCode() const
 	double value = 0.0;
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		assert(bbc_);
-		value = bbc_->solution_code_; // TODO: updated solution code in Solve()
+		value = bbc_->solution_code_;
 	}
 	else {
 		value = OsiStochasticParallelNestedBendersSolverInterface::getSolutionCode();
@@ -121,10 +106,15 @@ int OsiStochasticBranchAndBendersCutSolverInterface::getNumContPhasePnbIteration
 double OsiStochasticBranchAndBendersCutSolverInterface::getUB() const
 {
 	assertTriedToSolve();
-	int value = 0;
+	double value = 0.0;
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		assert(bbc_);
-		value = bbc_->upper_bound_;
+		// UB of the Branch-and-Benders is the best (lowest for MIN problem) 
+		// therefore, the last incumbent solution optimal for Benders
+		assert(bbc_->num_cpu_ == 1 && "The logic below will probably be wrong for multithread." 
+									  "Try using CPXcallbackgetglobalub and/or CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS + CPXcallbackgetinfodbl");
+		value = bbc_->benders_optimal_incumbents_.back();
+		assert(value == *std::min_element(bbc_->benders_optimal_incumbents_.begin(), bbc_->benders_optimal_incumbents_.end()));
 	}
 	else {
 		value = OsiStochasticParallelNestedBendersSolverInterface::getUB();
@@ -135,10 +125,13 @@ double OsiStochasticBranchAndBendersCutSolverInterface::getUB() const
 double OsiStochasticBranchAndBendersCutSolverInterface::getLB() const
 {
 	assertTriedToSolve();
-	int value = 0;
+	double value = 0.0;
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
 		assert(bbc_);
-		value = bbc_->lower_bound_;
+		// LB of the Branch-and-Benders is the best (lowest for MIN problem), 
+		// integer infeasible solution of opened nodes, i.e., min(LB_n) for n in opened nodes
+		value = bbc_->best_bounds_.back();
+		assert(value == *std::max_element(bbc_->best_bounds_.begin(), bbc_->best_bounds_.end()));
 	}
 	else {
 		value = OsiStochasticParallelNestedBendersSolverInterface::getLB();

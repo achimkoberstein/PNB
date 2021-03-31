@@ -689,8 +689,13 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			BOOST_FOREACH(double& value, values_map | boost::adaptors::map_values) {
 				value /= repetitions_;
 			}
-			// Prepare outputstring, according to ordering from above (bad coding..)
-			aggregated_s << testset_problem_instance.str() << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";" << values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";" << values_map[relative_gap_string] << ";" << values_map[return_code_string] << ";" << values_map[cont_phase_iterations_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << ";" << values_map[solver_time_string] << ";" << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
+			// Prepare output string, according to ordering from above (bad coding..)
+			aggregated_s << testset_problem_instance.str() << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";"
+				<< values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";"
+				<< values_map[relative_gap_string] << ";" << values_map[return_code_string] << ";" << values_map[cont_phase_iterations_string] << ";"
+				<< values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";"
+				<< values_map[insubstantial_iterations_string] << ";" << values_map[solver_time_string] << ";"
+				<< values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
 			// Write num cuts
 			aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[cont_optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";" << values_map[epigraph_cuts_string] << ";" << values_map[epigraph_str_cuts_string] << ";" << values_map[epigraph_plain_cuts_string] << ";" << values_map[domain_cuts_string] << ";" << values_map[lp_cgp_problems_string] << ";" << values_map[integer_gap_string] << ";";
 
@@ -886,7 +891,7 @@ TEST_F(BranchAndBendersTest, slow) {
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION, true);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION_START, 1); // from the 2nd stage
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION_END, -1); // till the last stage
-	EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-1024"), -6301005010, 10);
+	//EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-1024"), -6301005010, 10);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION, false);
 }
 
