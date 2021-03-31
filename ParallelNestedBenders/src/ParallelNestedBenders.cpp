@@ -504,7 +504,7 @@ namespace parallel_benders {
         }
         if ( oda_method_ ){
             if ( level_decomp_ ){
-				// TODO: Reenable after first test set run, see if anything breaks..
+				// TODO_CHRISTIAN: Reenable after first test set run, see if anything breaks..
                 //if ( oda_kappa_ <= 0 || oda_kappa_ >= (1-level_lambda_)*(1-level_lambda_))
                 //    LOG(FATAL) << "Level parameter are wrong. 0 < lambda < 1, 0 < kappa < (1-lambda)^2.";
             }
@@ -545,7 +545,7 @@ namespace parallel_benders {
             }
             else
                 param.put(PNB_TREE_WALK_STRATEGY_STAGE,second_iteration_stage_); // Update parameter to reflect that we care.
-            // TODO: If we aggregate stages, we do not care about second_iteration_stage!
+            // TODO_CHRISTIAN: If we aggregate stages, we do not care about second_iteration_stage!
         }
         strategy_epsilon_ = param.get(PNB_TREE_WALK_STRATEGY_EPSILON,0.0); // Needed for epsilon-variants!
         if ( strategy_epsilon_ < relative_epsilon_ )
@@ -738,7 +738,7 @@ namespace parallel_benders {
                 LOG_IF(INFO, log_level_ <= google::INFO) << "We solve the LP relaxation for stage " << i + 1 << ".";
             }
 
-            // TODO: If we want D_square_ we have to remove the && false statement
+            // TODO_CHRISTIAN: If we want D_square_ we have to remove the && false statement
             if (integer_problems_[i]) { // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
                 // We could enable the D^2 algorithm (with LaporteLouveaux Cuts) only if we have no mixed-integer first stage!
                 const std::vector<int>& binary_cols(core_->getBinaryCols(0)); // Get binary cols of first stage!
@@ -1039,7 +1039,6 @@ namespace parallel_benders {
         CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
         int status = CPXchgcoeflist(env_ptr, lp_ptr, values.size(), rows.data(), cols.data(), values.data()); // use CPLEX API since there is not OSI method
         assert(status == 0);
-        // TODO: get rid of direct Cplex interface call
 
         // modify column ub and lb
         assert(first_stage_osi != nullptr);
@@ -2122,7 +2121,6 @@ namespace parallel_benders {
             else {
                 if ( regularization_ ){
                     if ( current_stage_ == num_stages_-1 ){
-                        // TODO: use LOG_IF here for efficiency
                         std::cout << "Current Incumbent solution " << regularized_solution_value_ << "\n";
                         double current_solution = 0;
                         for (int i = 0; i < num_stages_; i++)
@@ -2196,7 +2194,7 @@ namespace parallel_benders {
             /*******************************************************************************/
             /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
             /*******************************************************************************/
-            if ( !forward_ && infeasible_problems_.none() && (!infeasible_problem_ )){ // TODO: if generate_feas_and_opt_cuts we need to change this
+            if ( !forward_ && infeasible_problems_.none() && (!infeasible_problem_ )){ // TODO_CHRISTIAN: if generate_feas_and_opt_cuts we need to change this
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
@@ -2216,7 +2214,7 @@ namespace parallel_benders {
             //*******************************************************************************/
             //*  Aggregate cvar cuts for nodes at the stage before the current stage  */
             //*******************************************************************************/
-            if ( cvar_constr_decomp_ && !forward_ && infeasible_problems_.none() && (!infeasible_problem_ )){ // TODO: if generate_feas_and_opt_cuts we need to change this
+            if ( cvar_constr_decomp_ && !forward_ && infeasible_problems_.none() && (!infeasible_problem_ )){ // TODO_CHRISTIAN: if generate_feas_and_opt_cuts we need to change this
                 AggregateCVaRCuts(tree_nodes_by_stage_[current_stage_-1][0]);
 			}
 
@@ -2788,7 +2786,6 @@ namespace parallel_benders {
             std::vector<int> rows_delete(osi_cpx->getNumRows() - cuts_start_row);
             std::iota(rows_delete.begin(), rows_delete.end(), cuts_start_row);
             osi_cpx->deleteRows(rows_delete.size(), rows_delete.data());
-            // TODO: get rid of direct Cplex interface call
 
             // move last iteration iterations to start so that all cuts reapplied on AppendCutsToSubproblem()
             first_stage_node->last_iteration_start_optimality_ = first_stage_node->optimality_cuts_.begin();
@@ -3129,19 +3126,7 @@ namespace parallel_benders {
 		else if (lp_main_loop_iteration_round_ && current_stage_ > 0) {// subproblems in CGP
 			suffix = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME ? "prime" : "double_prime");
 		}
-        //TODO: temp
-        /*if (current_stage_ == 1) {
-            std::vector<double>& first_stage_solution = tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
-            for (double& var_val : first_stage_solution) {
-                std::string var_val_str = std::to_string(abs(var_val));
-                std::size_t pos = var_val_str.find(".");
-                suffix += var_val_str.substr(0, pos + 3) + ",";
-            }
-            std::string theta_str = std::to_string(tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_[0]);
-            std::size_t pos = theta_str.find(".");
-            suffix += theta_str.substr(0, pos + 3);
-        }*/
-		PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), suffix);
+        PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), suffix);
         DeleteSubproblem(osi_solver,benders_tree_node_pointer);
 
         //Move CGP cuts to the main loop
@@ -3285,7 +3270,7 @@ namespace parallel_benders {
 						num_thetas *= 2; // prime and double prime
 					}
                     if ( num_thetas && unbounded_theta){
-                        // TODO Inspect the unbounded extreme ray to see if we need this extra row!
+                        // TODO_CHRISTIAN Inspect the unbounded extreme ray to see if we need this extra row!
                         std::vector<double> extra_elements(num_thetas,1.0);
                         std::vector<int> extra_indices(num_thetas);
                         std::iota(extra_indices.begin(), extra_indices.end(), benders_tree_node_pointer->getDataPtr()->cols_); // correct for CGp PNB
@@ -3646,7 +3631,7 @@ namespace parallel_benders {
                     // Mark as failing!
                     std::lock_guard<std::mutex> unique_lock(misc_mutex_);
                     stage_data_[current_stage_]->non_integer_scenarios.push_back(benders_tree_node_pointer->scenario());
-                    if ( stage_data_[current_stage_]->violated_index_ < 0) //TODO: Beware, magic number
+                    if ( stage_data_[current_stage_]->violated_index_ < 0) //TODO_CHRISTIAN: Beware, magic number
                         stage_data_[current_stage_]->violated_index_ = fractional_variables[index_for_fractional_max].first; // should be index_for_fractional_max
                 }
             }
@@ -3746,7 +3731,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        // TODO: Store not only rhs_upper and rhs_lower but also row sense, so we can call OsiCpx chgrhs instead of setRowSetBounds (Minor performance TODO)
+        // TODO_CHRISTIAN: Store not only rhs_upper and rhs_lower but also row sense, so we can call OsiCpx chgrhs instead of setRowSetBounds (Minor performance TODO)
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         BendersStageData* stage_pointer = stage_data_[current_stage_];
         SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_; // Stochastic node pointer
@@ -3942,7 +3927,7 @@ namespace parallel_benders {
                     if ( node_pointer->hasMatrix())
                         assert( stochastic_column_index == stochastic_matrix.start_[row+1]); // We added all stochastic elements of this row
                     // Substract from rlo or rup or even the solver interface.. depends on what we are doing
-                    // TODO: Equality constraints.. 
+                    // TODO_CHRISTIAN: Equality constraints.. 
                     if ( benders_node_pointer->row_lower_[row] <= -infinity_ ){// 
                         if ( benders_node_pointer->row_upper_[row] >= infinity_)
                             assert(false);
@@ -3957,7 +3942,7 @@ namespace parallel_benders {
                         benders_node_pointer->row_lower_[row] -= value; // lb == row == ub, we can not handle lb <= row <= ub with one real inequality ( have to split up to two rows somewhere..
                         benders_node_pointer->row_upper_[row] -= value;
                     }
-                    // TODO: reenable if necessary
+                    // TODO_CHRISTIAN: reenable if necessary
                     //if ( unbounded_rhs != nullptr ){
                     //    benders_node_pointer->unbounded_right_hand_side_[row] -= unbounded_value;
                     //}
@@ -4621,22 +4606,7 @@ namespace parallel_benders {
 #endif
 #ifdef LOAD_DUMP_CUTS
 			std::stringstream cut_filename;
-            //TODO: temp
-            static int iteration = 1;
-            std::string name_str("sndp_20_4_2_1_FIRST_PHASE_optimality_cut_it_");
-            if (current_stage_ == 1) {
-                //std::vector<double>& first_stage_solution = tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
-                //for (double& var_val : first_stage_solution) {
-                //    std::string var_val_str = std::to_string(abs(var_val));
-                //    std::size_t pos = var_val_str.find(".");
-                //    name_str += var_val_str.substr(0, pos + 3) + ",";
-                //}
-                //std::string theta_str = std::to_string(tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_[0]);
-                //std::size_t pos = theta_str.find(".");
-                //name_str += theta_str.substr(0, pos + 3);
-                name_str += std::to_string(iteration) + "_aggregate_0";
-            }
-            //cut_filename << instance_name_ << "_optimality_cut_it_" << current_iteration_ << "_aggregate_" << i << ".txt";
+            cut_filename << instance_name_ << "_optimality_cut_it_" << current_iteration_ << "_aggregate_" << i << ".txt";
             cut_filename << name_str << ".txt";
             //cut_stuff->Dump(cut_filename.str());
             iteration++;
@@ -5657,7 +5627,6 @@ namespace parallel_benders {
 
             vallist = { 0.0, 0.0 };
             CPXchgcoeflist(env_ptr, lp_ptr, 2, rowlist.data(), collist.data(), vallist.data());
-            // TODO: get rid of direct Cplex interface call
             lp_cuts_timer_.AddTime(2, timer_.Now() - start_time);
         }
 	}
@@ -5784,7 +5753,6 @@ namespace parallel_benders {
                     }
 
                     // Lines 2 and 5: A*z - b*z_0 >= 0 and A*y - b*y_0 >= 0
-                    // TODO: do we need bounds in matrix A?		
                     // A matrix -> A' and A"
                     if (num_rows) {
                         
@@ -5980,7 +5948,6 @@ namespace parallel_benders {
         std::array<int, 2> collist = { fractional_variable.first, num_cols + fractional_variable.first };
         std::array<double, 2> vallist = { -1.0, 1.0 };
         CPXchgcoeflist(env_ptr, lp_ptr, 2, rowlist.data(), collist.data(), vallist.data());
-        // TODO: get rid of direct Cplex interface call
     }
 
 	void ParallelNestedBenders::SetAlphaNormalization(OsiSolverInterface* osi_solver, bool set)
@@ -6500,7 +6467,6 @@ namespace parallel_benders {
                 benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
             }
 			if ( feas_it != benders_node_pointer->feasibility_cuts_.end()){
-				// TODO: This can be changed to addRows
 				for (; feas_it != benders_node_pointer->feasibility_cuts_.end();++feas_it) {
 					assert( (*feas_it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
 
@@ -6913,9 +6879,9 @@ namespace parallel_benders {
                 intra_aggregate_threshold = zero_tolerance_*2;
 
             assert(false && "It will not work after we decided to add optimality and feasibility cuts in the order of their creation.");
-            int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
+            int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size();
 
-            // TODO: If we have any more cuts expect of these, we need to be careful here! (i.e. level decomp or regularization )
+            // TODO_CHRISTIAN: If we have any more cuts expect of these, we need to be careful here! (i.e. level decomp or regularization )
             // Store the number of rows/columns
 
             /************************************************************************/
@@ -7124,7 +7090,7 @@ namespace parallel_benders {
                 if ( !to_remove_from_solver.empty()){
 
 
-                    // TODO: Implementation issue: we can also delete the cuts from the container with the classical list.erase function and begin-iterator to end_iterator that we also store. Only feasible if it holds that alls cuts we remove are also fulfill the CutStuffComparison operator(), i.e. should be aggregated!
+                    // TODO_CHRISTIAN: Implementation issue: we can also delete the cuts from the container with the classical list.erase function and begin-iterator to end_iterator that we also store. Only feasible if it holds that alls cuts we remove are also fulfill the CutStuffComparison operator(), i.e. should be aggregated!
 
                     // Remove old cuts from container
                     for ( std::list<BendersNodeData::cut_container::iterator>::iterator list_it = to_remove_from_optimality_cuts.begin();list_it != to_remove_from_optimality_cuts.end(); ++list_it )
@@ -7230,7 +7196,7 @@ namespace parallel_benders {
         LOG_IF(WARNING, log_level_ <= google::WARNING && benders_node_pointer->dual_solution_.empty()) << "You tried to analyse optimality cuts without dual information.";
         // Optimality cuts start after normal rows and feasibility cuts
         assert(false && "It will not work after we decided to add optimality and feasibility cuts in the order of their creation.");
-        int optimality_cut_start = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Performance issues may arise here
+        int optimality_cut_start = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO_CHRISTIAN: Performance issues may arise here
 
         int number_of_aggregates = benders_node_pointer->num_thetas_;
         if ( number_of_aggregates <= 3)
@@ -7525,7 +7491,7 @@ namespace parallel_benders {
                         }
 
                     }
-                    // TODO: Sparsify existing cuts!
+                    // TODO_CHRISTIAN: Sparsify existing cuts!
                     // Delete the iterator_to_cuts vector
                     pointer_to_cuts.clear();
                     pointer_to_cuts.resize(new_thetas);
@@ -7659,7 +7625,6 @@ namespace parallel_benders {
         time = timer_.Now()-time;
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
         adaptive_cut_time_ += time;
-        //TODO: When code is really used, store time in a node-wise variable
 
     }
 
@@ -7927,7 +7892,7 @@ namespace parallel_benders {
             }
         }
         benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
-        if ( current_stage_ == 0 && level_decomp_ && integer_problems_[current_stage_] == false ){ // TODO: Store Warm Start via tree nodes! Set a boolean to indicate if we solve projection problem or benders type problem
+        if ( current_stage_ == 0 && level_decomp_ && integer_problems_[current_stage_] == false ){ // TODO_CHRISTIAN: Store Warm Start via tree nodes! Set a boolean to indicate if we solve projection problem or benders type problem
             assert(lp_rounds_limit_ == 0 && "Never tested with L&P cuts");
 			if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX ){
 				// Store warm start for first stage
@@ -8145,7 +8110,7 @@ namespace parallel_benders {
     }
 
     int ParallelNestedBenders::getNumRowsProblem()
-    { // TODO: If we want to solve level method in a later stage, we need a modifier that tells us what we want to know!
+    { // TODO_CHRISTIAN: If we want to solve level method in a later stage, we need a modifier that tells us what we want to know!
         if ( level_decomp_ && (level_manhattan_ || level_infinity_)&& current_stage_ <= level_stage_ && current_stage_ < num_stages_-1)
             return stage_data_[current_stage_]->num_rows_+2*stage_data_[current_stage_]->num_columns_;
 		else if (lp_main_loop_iteration_round_ && current_stage_ == 0) { // MP of PNB CGP for L&P cuts
@@ -8376,7 +8341,7 @@ namespace parallel_benders {
         if ( old_number_of_thetas == 0 ){
             // We assume the caller knows what he is doing and tells us the number of theta variables!
             // We need to find the index, from which we need to copy
-            // TODO:
+            // TODO_CHRISTIAN:
             assert(false);
         }
         int new_cols_in_row = first_index_of_theta+number_of_variables;
@@ -8500,7 +8465,7 @@ namespace parallel_benders {
         assert( regularized_gamma_ > 0.5 && regularized_gamma_ < 1.0);
         double old_sigma = regularized_sigma_;
         
-        // TODO: Test values of Vladimirou! When no new cut was added, set *= 100
+        // TODO_CHRISTIAN: Test values of Vladimirou! When no new cut was added, set *= 100
         // Test if we should update the regularized solution
         if ( regularization_ && approximation_solution > -infinity_  && change_sigma){
             // Otherwise we have not yet added theta variables
@@ -8511,13 +8476,13 @@ namespace parallel_benders {
                 // Update the solution value
                 regularized_solution_value_ = solution_qx;
                 regularized_update_incumbent_ = true;
-                if ( 1.0/regularized_sigma_ > 0.0125 ) // TODO: Hard-fixed value, should be replaced by something else!
+                if ( 1.0/regularized_sigma_ > 0.0125 ) // TODO_CHRISTIAN: Hard-fixed value, should be replaced by something else!
                     regularized_sigma_ *= 2; // Vladimirou: *= 10;
                 LOG(INFO) << "Exact serious step";
 
             }
             else if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution ){
-                if ( 1.0/regularized_sigma_ < 1024 ) // TODO: Hard-fixed value, should be replaced by something else!
+                if ( 1.0/regularized_sigma_ < 1024 ) // TODO_CHRISTIAN: Hard-fixed value, should be replaced by something else!
                     regularized_sigma_ *= 0.5; // Vladimirou: *= 0.25
                 LOG_IF(INFO, log_level_ <= google::INFO) << "Null Step";
 
@@ -8775,7 +8740,7 @@ namespace parallel_benders {
     {
         double start_time = timer_.Now();
         assert(d_square_);
-        // TODO: Put problem description here for C^3-SLP
+        // TODO_CHRISTIAN: Put problem description here for C^3-SLP
         //
         // 
         //
@@ -8802,7 +8767,7 @@ namespace parallel_benders {
         // We need this matrix two times, and transposed. Transpose without reverseOrdering just swaps rowOrdered to colOrdered matrices!
         CoinPackedMatrix* w_matrix = deterministic_node_pointer->generateCoinPackedWMatrix();
 
-        // TODO: We must take care what kind of PI-elements we actually add to this problem, to assure convergence, see paper of Higle/Sen for that.
+        // TODO_CHRISTIAN: We must take care what kind of PI-elements we actually add to this problem, to assure convergence, see paper of Higle/Sen for that.
         int removed_rows = 0;
         LOG_IF(INFO, log_level_ <= google::INFO) << "DI : " << disjunctive_variable_index;
         std::vector<int> active_lambda(stage_pointer->num_d_square_cuts_,0); // Can be a bitset!
@@ -9072,7 +9037,7 @@ namespace parallel_benders {
 
         int num_cols_first_stage = stage_data_[0]->num_columns_;
         int num_rows_first_stage = stage_data_[0]->num_rows_;  
-        // TODO: Describe RHS-problem!
+        // TODO_CHRISTIAN: Describe RHS-problem!
 
         //
 
@@ -9351,7 +9316,7 @@ namespace parallel_benders {
             delete [] temp_solution;
         }
 
-        // TODO: WarmStart-Handling
+        // TODO_CHRISTIAN: WarmStart-Handling
         start_time = timer_.Now()-start_time;
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
         d_square_c_rhs_timer_ += start_time;
@@ -9567,7 +9532,7 @@ namespace parallel_benders {
 				ev_smi->loadStoredDataInSolver();
 				//ev_smi->loadOsiSolverData(); TODO: it was here before, what is the difference
 				// We need to differentiate between integer and not
-				// TODO: why not simply start here a PNB interface?
+				// why not simply start here a PNB interface?
 				int num_ints = ev_smi->getIntegerLen();
 				if (num_ints && (!solve_relaxation_ || solve_relaxation_ > core_->getNumStages())) { // no relaxation
 					osi_solver_->branchAndBound();
@@ -10012,7 +9977,7 @@ namespace parallel_benders {
         int num_columns = stage_data_[0]->num_columns_+1;
         std::vector<int> cvar_cut_indices(num_columns);
         std::iota(cvar_cut_indices.begin(),cvar_cut_indices.end(),0); 
-        // TODO-CVAR
+        // TODO_CHRISTIAN-CVAR
         cvar_cut_indices[num_columns-1] = stage_data_[0]->num_columns_+getNumThetasByStage(benders_tree_node_pointer); //+(level_infinity_?1:0)+(level_manhattan_?stage_data_[0]->num_columns_:0);
         //assert( cvar_cut_indices[num_columns-1] == stage_data_[0]->num_columns_+stage_data_[0]->num_thetas_+(level_infinity_?1:0)+(level_manhattan_?stage_data_[0]->num_columns_:0));
 
@@ -10088,7 +10053,7 @@ namespace parallel_benders {
                         max_value = cvar_approximation_value;
                 }
             }
-            cvar_approximation[i] = max_value; // TODO: do we need to subtract cvar_beta*cvar_rho also? is already contained in the cut_rhs!
+            cvar_approximation[i] = max_value; // TODO_CHRISTIAN: do we need to subtract cvar_beta*cvar_rho also? is already contained in the cut_rhs!
 
         }
         // Current approximation to cvar approximation problem is akin to lower_bound
@@ -10178,7 +10143,7 @@ namespace parallel_benders {
         osi_stopping_criterion_solver_->initialSolve();
         if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
             cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
-            // TODO: Reenable for level!
+            // TODO_CHRISTIAN: Reenable for level!
             if ( !change_alpha ){// Only set cvar_alpha if we do not change it with the more sophisticated procedure shown above!
                 cvar_alpha_ = osi_stopping_criterion_solver_->getColSolution()[0];
                 cvar_h_i_ = cvar_H_;
@@ -10195,7 +10160,7 @@ namespace parallel_benders {
             LOG_IF(INFO, log_level_ <= google::INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
         }
 
-        //TODO Tuning the dual variable (alpha) and get solution value for the chosen (alpha)
+        //TODO_CHRISTIAN Tuning the dual variable (alpha) and get solution value for the chosen (alpha)
 
         // Determine interval lower_alpha,upper_alpha \in [0,1] on which \bar h takes non-negative values
         // \bar h = alpha( recourse_approximation ) + (1-alpha)cvar_approximation | for every substantial point!
@@ -10463,7 +10428,7 @@ namespace parallel_benders {
             // CPXmipopt(env_ptr,lp_ptr);
             // CPXgetobjval(env_ptr,lp_ptr,&objective);
             // LOG(INFO) << "MIP: " << objective;
-            // TODO: Ask for status codes
+            // TODO_CHRISTIAN: Ask for status codes
         }
 
     }

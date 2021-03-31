@@ -21,7 +21,7 @@ public:
     virtual void initialSolve();
     void printProblemCharacteristics() const ;
 
-    virtual double getObjValue() const;
+    double getObjValue() const;
 	
     const double * getFirstStageSolution();
     virtual const double * getSolutionByNodeAndStage(int node_number, int stage) const;

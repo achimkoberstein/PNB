@@ -87,7 +87,7 @@ double OsiStochasticParallelNestedBendersSolverInterface::getObjValue() const
 {
     if ( nested_benders_->cvar_constr_decomp_ )
         return nested_benders_->cvar_problem_lower_bound_; // Is equal to normal lower bound
-    return nested_benders_->upper_bound_; // Depending on the solution status code, this might be appropriate!
+    return getUB(); // Depending on the solution status code, this might be appropriate!
 }
 
 int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations() const
@@ -702,7 +702,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             *it += *it;
         // Solve a candidate problem
 		current_time = CoinCpuTime();
-        smi_model->sampleScenarioTree(candidate_samples,0, get_latin_hypercube_random_01_variates ); // TODO: Is this allowed here?
+        smi_model->sampleScenarioTree(candidate_samples,0, get_latin_hypercube_random_01_variates ); // TODO_CHRISTIAN: Is this allowed here?
 		time_sampling += CoinCpuTime()-current_time;
 
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
