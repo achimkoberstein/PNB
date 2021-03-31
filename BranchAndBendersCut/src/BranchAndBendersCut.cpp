@@ -84,9 +84,13 @@ namespace branch_and_benders_cut {
 			}
 			if (!integer_feasible) {
 				/* The model is bounded, so this cannot happen. */
-				fprintf(stderr, "Unbounded solution");
+				fprintf(stderr, "Unbounded solution\n");
 				status = CPXERR_UNSUPPORTED_OPERATION;
-				return 0; //TODO: some of the nodes are sometimes unbounded? How can it be? What should we do with them?
+				// TODO: some of the nodes are unbounded
+				// at the start of the algorithm
+				// How can it be? What should we do with them?
+				// it seems that the number unbounded nodes = num_thetas
+				return 0; 
 			}
 
 			//Store Data
@@ -128,6 +132,7 @@ namespace branch_and_benders_cut {
 		else if (contextid == CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS) {
 			//this context locks all threads, be fast!
 			//results of CPXcallbackgetinfo___ are global here
+			//TODO: probably we do not need to return the status here because CPLEX will not consider it due to the contextid
 
 			int ub_available;
 			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_FEASIBLE, &ub_available);
@@ -283,7 +288,7 @@ namespace branch_and_benders_cut {
 		if (!num_theta) {
 			num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
 		}
-		assert(num_theta == 1); //TODO: correctly identify the number of theta, where do we set mp_node_pointer->num_thetas_
+		assert(mp_node_pointer->num_thetas_ == getNumThetasByStage(tree_nodes_by_stage_[0][0]));
 
 		std::vector<double> solution(num_x_cols + num_theta);
 
