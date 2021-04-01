@@ -109,13 +109,6 @@ namespace branch_and_benders_cut {
 			thread_data->AppendCutsToNode(context, thread_data->tree_nodes_by_stage_[thread_data->current_stage_ - 1][0]);
 			thread_data->DeleteSubproblem(nullptr, thread_data->tree_nodes_by_stage_[thread_data->current_stage_ - 1][0]);			
 
-			for (auto id_solver_pair : thread_data->osi_solver_map_) {
-				//id_solver_pair.second->reset(); // This method throws exception with Cplex
-				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-				// Workaround: Load empty problem. 
-				assert(id_solver_pair.second->getNumCols() == 0);
-			}
-
 			for (auto node : thread_data->tree_nodes_by_stage_[thread_data->current_stage_]) {
 				node->getDataPtr()->CleanUnusedMemory(thread_data->forward_);
 			}
@@ -148,7 +141,7 @@ namespace branch_and_benders_cut {
 					fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
 					return status;
 				}
-				assert(parallel_benders::CompareForEquality(global_upper_bound, thread_data->benders_optimal_incumbents_.back(), thread_data->zero_tolerance_));
+				assert(parallel_benders::CompareForEquality(global_upper_bound, thread_data->benders_optimal_incumbents_.back(), 0.001));
 			}			
 
 			double global_lower_bound;
@@ -158,6 +151,12 @@ namespace branch_and_benders_cut {
 				return status;
 			}
 			thread_data->best_bounds_.push_back(global_lower_bound);
+		}
+		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {			
+			// TODO: are other threads locked?
+			// copy cuts and whatever else to the global_data
+
+			//delete thread_data;			
 		}
 
 		return 0;
@@ -219,7 +218,7 @@ namespace branch_and_benders_cut {
 		if (cpx_solver->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
 			assert(num_cpu_ == 1 && "For multithread the assertion below will probably fail");
-			assert(parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), cpx_solver->getObjValue(), zero_tolerance_));
+			assert(parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), cpx_solver->getObjValue(), 0.001));
 		}
 		else if (cpx_solver->isProvenPrimalInfeasible()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
@@ -594,9 +593,6 @@ namespace branch_and_benders_cut {
 			cpx_solver->initialSolve();
 			StoreData(cpx_solver, tree_nodes_by_stage_[0][0]);
 			ConstructOptimalityCuts();
-			for (auto id_solver_pair : osi_solver_map_) {
-				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-			}
 			current_stage_ = 0;
 			// call this method to activate thetas,
 			// i.e., set their coef to 1
@@ -616,7 +612,8 @@ namespace branch_and_benders_cut {
 		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, CPX_CALLBACKCONTEXT_CANDIDATE
 			//| CPX_CALLBACKCONTEXT_RELAXATION
 			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS
-			//| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS | CPX_CALLBACKCONTEXT_THREAD_DOWN | CPX_CALLBACKCONTEXT_THREAD_UP
+			//| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS | CPX_CALLBACKCONTEXT_THREAD_UP
+			| CPX_CALLBACKCONTEXT_THREAD_DOWN
 			, benders_callback, user_data);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
