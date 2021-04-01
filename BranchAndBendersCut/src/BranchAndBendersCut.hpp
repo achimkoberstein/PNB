@@ -54,20 +54,21 @@ public:
 	void Solve() override;
 	
 	/* Store solution, theta and 
-	LB of the B&B node
-	*/
+	LB of the B&B node */
 	int StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
 	
 	/* Solve subproblems, update UB
-	and aggregate new cuts if UB != LB
-	*/
+	and aggregate new cuts if UB != LB	*/
 	void ConstructOptimalityCuts();
 
 	/* Reject current candidate B&B node
-	and add lazy cuts
-	*/
+	and add lazy cuts */
 	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
 	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
+	
+	// In parallel CPLEX B&B we want to have the copy of problem data in each thread
+	BranchAndBendersCut* getCopyForThread(int thread_id);
+	void createCopyForThread(int thread_id);
 
 	BranchAndBendersCut* clone() = delete;
 
@@ -86,6 +87,9 @@ private:
 
 	// best bounds of B&B, i.e., lower bounds
 	std::deque<double> best_bounds_;
+
+	std::map<int, BranchAndBendersCut*> thread_copy_map_; // TODO: unique ptr?
+	std::mutex thread_copy_map_mutex_; // std::mutex for accessing copies of this
 };
 
 } // end namespace branch_and_benders_cut

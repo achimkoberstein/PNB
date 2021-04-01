@@ -6314,13 +6314,13 @@ namespace parallel_benders {
 				cpx_solver->initialSolve();
 				cpx_solver->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                 osi_solver_map_[boost::this_thread::get_id()] = cpx_solver;
+                boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 				return cpx_solver;
             }
 			else {
 				return it->second;
 			}
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 		return nullptr;
     }
 
