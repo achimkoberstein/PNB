@@ -236,13 +236,6 @@ namespace branch_and_benders_cut {
 
 		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		
-		//TODO: temp parameters
-		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
-		// value 0 has the same meaning as in our implementation
-		// TODO: do we set it for DETEQ and CPLEX_BENDERS?
-		// TODO: set value from the parameters
-		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 0); 
-
 		// First Phase: construct Linear optimality cuts
 		current_iteration_ = 1;
 		HandleContinuousPhase();
@@ -629,12 +622,12 @@ namespace branch_and_benders_cut {
 	void BranchAndBendersCut::SetUpMPSolver(OsiCpxSolverInterface* cpx_solver)
 	{
 		assert(current_stage_ == 0);
-		cpx_solver->messageHandler()->setLogLevel(4); // Log nothing
+		cpx_solver->messageHandler()->setLogLevel(4); // Log nothing // TODO: change it
 		BuildSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
 		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
 
-		// Generate optimality cuts
-		// because without theta cuts the problem will be unbounded
+		// In no theta cuts, generate them.
+		// Without theta cuts the problem will be unbounded.
 		if (tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() && tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.empty()) {
 			cpx_solver->initialSolve();
 			StoreData(cpx_solver, tree_nodes_by_stage_[0][0]);
@@ -647,7 +640,7 @@ namespace branch_and_benders_cut {
 
 		LOG_IF(FATAL, !tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.empty()) << "Feasibility cuts not implemented (not tested)";
 
-		// add Continuous and/or L&P cuts
+		// Add cuts from above, Continuous, and/or L&P cuts
 		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); 
 		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
 
@@ -667,6 +660,11 @@ namespace branch_and_benders_cut {
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
 		}
+
+		// Set threads number for B&B
+		// for CPLEX in Benders it was always mutlithread
+		// value 0 in CPLEX has the same meaning as in our implementation
+		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, num_cpu_);
 	}
 
 	BranchAndBendersCut* BranchAndBendersCut::getCopyForThread(int thread_id)
