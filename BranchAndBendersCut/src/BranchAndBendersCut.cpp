@@ -57,26 +57,29 @@ namespace branch_and_benders_cut {
 	int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle)
 	{
 		// see bendersatsp2.c in CPLEX examples
-
+	
+		BranchAndBendersCut* global_data = static_cast<BranchAndBendersCut*>(cbhandle);		
+		
 		int status = 0;
 		int thread_id;
-		BranchAndBendersCut* thread_data = static_cast<BranchAndBendersCut*>(cbhandle);
-
-		thread_data->current_stage_ = 0;
-		thread_data->forward_ = true;
-
-		int num_x_cols = thread_data->stage_data_[0]->num_columns_;
-		int integer_feasible;
-		
 		status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &thread_id);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
 			return status;
 		}
 
-		if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) 
-		{		
+		BranchAndBendersCut* thread_data = global_data->getCopyForThread(thread_id);
+
+		if (contextid == CPX_CALLBACKCONTEXT_THREAD_UP) {
+			global_data->createCopyForThread(thread_id);
+		}
+		else if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) 
+		{	
+			thread_data->current_stage_ = 0;
+			thread_data->forward_ = true;
+
 			// Check if solution is bounded
+			int integer_feasible;
 			status = CPXcallbackcandidateispoint(context, &integer_feasible);
 			if (status) {
 				fprintf(stderr, "Error in CPXXcallbackcandidateispoint: status = %d\n", status);
@@ -107,22 +110,57 @@ namespace branch_and_benders_cut {
 			// if violated cuts are found: add them and reject the integer candidate solution
 			// if no violated cuts found (or ub = lb), no cuts are appended and candidate is excepted
 			thread_data->AppendCutsToNode(context, thread_data->tree_nodes_by_stage_[thread_data->current_stage_ - 1][0]);
-			thread_data->DeleteSubproblem(nullptr, thread_data->tree_nodes_by_stage_[thread_data->current_stage_ - 1][0]);			
+			thread_data->DeleteSubproblem(nullptr, thread_data->tree_nodes_by_stage_[thread_data->current_stage_ - 1][0]);
+
+			// Root node is never solved in parallel - its data is "global"
+			// If root is integer right away,
+			// context CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS might never be called.
+			// We need to set UB here
+			// TODO: distinguish between root is integer vs root is integer + Benders optimal
+			int node_id;
+			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &node_id);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
+				return status;
+			}
+			if (node_id == 0 && !added_theta_cuts)
+			{
+				assert(thread_id == 0);
+				global_data->benders_optimal_incumbents_.push_back(thread_data->benders_optimal_incumbents_.back());
+			}
+			// TODO: what is with LB - should we store it in CPX_CALLBACKCONTEXT_RELAXATION. It seems to be wrong when relaxation solution == MIP
+			// try to get it using branching context https://www.ibm.com/docs/en/icos/20.1.0?topic=context-cpx-callbackcontext-branching in addition to relaxation context
 
 			for (auto node : thread_data->tree_nodes_by_stage_[thread_data->current_stage_]) {
 				node->getDataPtr()->CleanUnusedMemory(thread_data->forward_);
 			}
 		}
-		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
+		/*else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
+		// Do not forget to set this context for callback
 		{
+			thread_data->current_stage_ = 0;
+			thread_data->forward_ = true;
 			//Store Data
 			status = thread_data->StoreNodeData(context, contextid);
 			if (status) {
 				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
 				return status;
 			}
+
+			// TODO: L&P cuts here
+		}*/
+		else if (contextid == CPX_CALLBACKCONTEXT_LOCAL_PROGRESS) {
+			double thread_lower_bound;
+			status = CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_BND, &thread_lower_bound);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
+				return status;
+			}
+			// TOOD: collect them somewhere for local_data, is not it here?
+			thread_data->best_bounds_.push_back(thread_lower_bound);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS) {
+			// TODO: is it so important for us. Maybe do not gather this data or gather it in THREAD_DOWN
 			//this context locks all threads, be fast!
 			//results of CPXcallbackgetinfo___ are global here
 			//TODO: probably we do not need to return the status here because CPLEX will not consider it due to the contextid
@@ -141,7 +179,7 @@ namespace branch_and_benders_cut {
 					fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
 					return status;
 				}
-				assert(parallel_benders::CompareForEquality(global_upper_bound, thread_data->benders_optimal_incumbents_.back(), 0.001));
+				global_data->benders_optimal_incumbents_.push_back(global_upper_bound);
 			}			
 
 			double global_lower_bound;
@@ -150,20 +188,21 @@ namespace branch_and_benders_cut {
 				fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
 				return status;
 			}
-			thread_data->best_bounds_.push_back(global_lower_bound);
+			global_data->best_bounds_.push_back(global_lower_bound);
 		}
-		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {			
+		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
 			// TODO: are other threads locked?
 			// copy cuts and whatever else to the global_data
 
-			//delete thread_data;			
+			delete thread_data;
+			thread_data = nullptr;
 		}
 
 		return 0;
 	} /* END benders_callback */
 	
 	BranchAndBendersCut::BranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: parallel_benders::ParallelNestedBenders(smi_model_ptr), benders_optimal_incumbents_(), best_bounds_()
+		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(),best_bounds_(),thread_copy_map_(),thread_copy_map_mutex_()
 	{
 	}
 
@@ -201,7 +240,8 @@ namespace branch_and_benders_cut {
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		// value 0 has the same meaning as in our implementation
 		// TODO: do we set it for DETEQ and CPLEX_BENDERS?
-		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 1); 
+		// TODO: set value from the parameters
+		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 0); 
 
 		// First Phase: construct Linear optimality cuts
 		current_iteration_ = 1;
@@ -219,8 +259,13 @@ namespace branch_and_benders_cut {
 		
 		if (cpx_solver->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
-			// TODO: assert(num_cpu_ == 1 && "For multithread the assertion below will probably fail");
 			assert(parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), cpx_solver->getObjValue(), 0.001));
+			// TODO: not sure why, but sometimes LB is -infinity
+			if (!parallel_benders::CompareForEquality(best_bounds_.back(), benders_optimal_incumbents_.back(), relative_epsilon_) &&
+				benders_optimal_incumbents_.back() > best_bounds_.back())
+			{
+				best_bounds_.push_back(benders_optimal_incumbents_.back());
+			}			
 		}
 		else if (cpx_solver->isProvenPrimalInfeasible()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
@@ -249,14 +294,14 @@ namespace branch_and_benders_cut {
 		// Output the final values once again!
 		if (log_level_ <= google::INFO) {
 			LOG(INFO) << "Algorithm finished with status code " << solution_code_ << ", final values below.";
-			LOG(INFO) << "Lower Bound:  " << (regularization_ ? regularized_solution_value_ : lower_bound_) << "\n" << "Upper Bound:  " << upper_bound_ << "\n" << "Relative Gap: " << parallel_benders::ComputeRelativeGap(upper_bound_, lower_bound_);
-			LOG(INFO) << "Major Iterations: " << major_iteration_ << "\n" << "Overall Iterations: " << current_iteration_;
-			if (insubstantial_iteration_ > 0)
-				LOG(INFO) << "Insubstantial Iterations: " << insubstantial_iteration_;
+			LOG(INFO) << "Lower Bound:  " << best_bounds_.back() << "\n" << "Upper Bound:  " << benders_optimal_incumbents_.back() << "\n" << "Relative Gap: " << parallel_benders::ComputeRelativeGap(benders_optimal_incumbents_.back(), best_bounds_.back());
+			//LOG(INFO) << "Major Iterations: " << major_iteration_ << "\n" << "Overall Iterations: " << current_iteration_;
 			int cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
 				cut_counter += stage_data_[i]->added_optimality_cuts_;
 			}
+			// TODO: we need to calculate here cuts for continuous phase
+			// TODO: we need to calculate here cuts for all bbc copies
 			LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
 			cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
@@ -382,7 +427,8 @@ namespace branch_and_benders_cut {
 		
 		// Compare UB and LB for Benders optimality
 		bool benders_not_optimal = parallel_benders::RelativeGapLargerEpsilon(upper_bound_, lower_bound_, infinity_, relative_epsilon_) &&
-			lower_bound_ < upper_bound_;
+			lower_bound_ < upper_bound_ &&
+			upper_bound_ - lower_bound_ >= absolute_epsilon_;
 		if (!benders_not_optimal) {
 			// Do not aggregate cuts
 			// as a result, no new cuts constructed
@@ -609,14 +655,85 @@ namespace branch_and_benders_cut {
 		BranchAndBendersCut* user_data = this;
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, CPX_CALLBACKCONTEXT_CANDIDATE
-			//| CPX_CALLBACKCONTEXT_RELAXATION
+		// TODO: do we need all of them
+		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, 
+			CPX_CALLBACKCONTEXT_CANDIDATE
+			// | CPX_CALLBACKCONTEXT_RELAXATION
 			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS
-			//| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS | CPX_CALLBACKCONTEXT_THREAD_UP
+			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS
+			| CPX_CALLBACKCONTEXT_THREAD_UP
 			| CPX_CALLBACKCONTEXT_THREAD_DOWN
 			, benders_callback, user_data);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
+		}
+	}
+
+	BranchAndBendersCut* BranchAndBendersCut::getCopyForThread(int thread_id)
+	{
+		// TODO: delete the pointers of thread_copy_map_mutex_ destruction.
+		// Just in case because we delete them anyways when thread goes down.
+
+		{
+			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_);
+			std::map<int, BranchAndBendersCut*>::iterator it = thread_copy_map_.find(thread_id);
+			
+			if (it != thread_copy_map_.end())
+				return (*it).second;
+			else {
+				return nullptr;
+			}		
+		}		
+	}
+
+	void BranchAndBendersCut::createCopyForThread(int thread_id)
+	{
+		BranchAndBendersCut* thread_copy = nullptr;
+		int num_theta = 0;
+		std::vector< std::vector<int> > nodes_in_cut;
+		{
+			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_);
+			LOG_IF(FATAL, thread_copy_map_.find(thread_id) != thread_copy_map_.end()) << "bbc copy for thread " << thread_id << " already exists.";
+
+			// Initialize new bbc from current data
+			thread_copy = new BranchAndBendersCut(smi_);
+			thread_copy_map_.emplace(thread_id, thread_copy);
+			thread_copy->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
+			thread_copy->parameter_ = parameter_;
+			thread_copy->testset_name_ = testset_name_;
+			thread_copy->problem_name_ = problem_name_;
+			thread_copy->instance_name_ = instance_name_ + "_thread_" + std::to_string(thread_id);
+			
+			// The data below was set when we built theta cuts.
+			// We could copy the nodes but do not need so much data.
+			num_theta = tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_;
+			nodes_in_cut = tree_nodes_by_stage_[0][0]->getDataPtr()->nodes_in_cut_;
+		}
+		thread_copy->Init();
+		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_ = num_theta;
+		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->nodes_in_cut_ = std::move(nodes_in_cut);
+		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
+		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
+					
+		// Copy warm start
+		if (warm_start_) {
+			assert(false && "Not tested");
+			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_); //TODO: or warm start mutex?
+			assert(num_stages_ == 2 && "Never tested for multistage");
+			for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
+				CoinWarmStart* ws;
+				std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
+				if (stage_data_[stage]->warm_start_) {
+					ws = (stage_data_[stage]->warm_start_.get())->clone();
+					thread_copy->stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
+				}
+				for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
+					if (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
+						ws = (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
+						thread_copy->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
+					}
+				}
+			}
 		}
 	}
 

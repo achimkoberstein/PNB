@@ -315,12 +315,20 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_SOLVER_BENDERS\", \"PNB_NUM_CPU\" : 0 }");
 
 			// BRANCH AND BENDERS
+			// single-cut
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true }");
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false }");
 
+			// multi-cut
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : true }");
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : true }");
 
+			//multithread
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
+			
 			// BENDERS
 			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true }");
 			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false }");
