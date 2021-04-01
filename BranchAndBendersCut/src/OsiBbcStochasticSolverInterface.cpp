@@ -130,7 +130,7 @@ double OsiStochasticBranchAndBendersCutSolverInterface::getLB() const
 		// LB of the Branch-and-Benders is the best (lowest for MIN problem), 
 		// integer infeasible solution of opened nodes, i.e., min(LB_n) for n in opened nodes
 		value = bbc_->best_bounds_.back();
-		assert(value == *std::max_element(bbc_->best_bounds_.begin(), bbc_->best_bounds_.end()));
+		assert(parallel_benders::CompareForEquality(value, *std::max_element(bbc_->best_bounds_.begin(), bbc_->best_bounds_.end()), 0.001));
 	}
 	else {
 		value = OsiStochasticParallelNestedBendersSolverInterface::getLB();
