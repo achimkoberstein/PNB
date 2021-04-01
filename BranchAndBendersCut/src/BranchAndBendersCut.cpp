@@ -199,7 +199,9 @@ namespace branch_and_benders_cut {
 		
 		//TODO: temp parameters
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
-		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 1);
+		// value 0 has the same meaning as in our implementation
+		// TODO: do we set it for DETEQ and CPLEX_BENDERS?
+		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 1); 
 
 		// First Phase: construct Linear optimality cuts
 		current_iteration_ = 1;
@@ -217,7 +219,7 @@ namespace branch_and_benders_cut {
 		
 		if (cpx_solver->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
-			assert(num_cpu_ == 1 && "For multithread the assertion below will probably fail");
+			// TODO: assert(num_cpu_ == 1 && "For multithread the assertion below will probably fail");
 			assert(parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), cpx_solver->getObjValue(), 0.001));
 		}
 		else if (cpx_solver->isProvenPrimalInfeasible()) {
@@ -356,14 +358,12 @@ namespace branch_and_benders_cut {
 		int num_nodes = tree_nodes_by_stage_[current_stage_].size();
 		
 		for (int i = 0; i < num_nodes; i++) {
-			//thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem, this, tree_nodes_by_stage_[current_stage_][i]));
-			HandleSubproblem(tree_nodes_by_stage_[current_stage_][i]);
-
-			LOG_IF(FATAL, num_added_feasibility_cuts_) << "Feasibility cuts not implemented (not tested)";
-			stage_data_[current_stage_ - 1]->added_feasibility_cuts_ += num_added_feasibility_cuts_;
-			num_added_feasibility_cuts_ = 0;
+			thread_pool_.schedule(boost::bind(&BranchAndBendersCut::HandleSubproblem, this, tree_nodes_by_stage_[current_stage_][i]));
+			//HandleSubproblem(tree_nodes_by_stage_[current_stage_][i]);
 		}
-		//thread_pool_.wait(0); // We wait until all threads are done
+		thread_pool_.wait(0); // We wait until all threads are done
+
+		LOG_IF(FATAL, num_added_feasibility_cuts_) << "Feasibility cuts not implemented (not tested)";
 
 		// Calculate UB
 		// Could be simpler but let us keep it similar to pnb

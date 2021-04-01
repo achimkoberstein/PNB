@@ -111,8 +111,8 @@ double OsiStochasticBranchAndBendersCutSolverInterface::getUB() const
 		assert(bbc_);
 		// UB of the Branch-and-Benders is the best (lowest for MIN problem) 
 		// therefore, the last incumbent solution optimal for Benders
-		assert(bbc_->num_cpu_ == 1 && "The logic below will probably be wrong for multithread." 
-									  "Try using CPXcallbackgetglobalub and/or CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS + CPXcallbackgetinfodbl");
+		// TODO: assert(bbc_->num_cpu_ == 1 && "The logic below will probably be wrong for multithread." 
+		//							  "Try using CPXcallbackgetglobalub and/or CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS + CPXcallbackgetinfodbl");
 		value = bbc_->benders_optimal_incumbents_.back();
 		assert(value == *std::min_element(bbc_->benders_optimal_incumbents_.begin(), bbc_->benders_optimal_incumbents_.end()));
 	}
