@@ -70,7 +70,7 @@ namespace branch_and_benders_cut {
 
 		BranchAndBendersCut* thread_data = global_data->getCopyForThread(thread_id);
 
-		if (contextid == CPX_CALLBACKCONTEXT_THREAD_UP) {
+		if (contextid == CPX_CALLBACKCONTEXT_THREAD_UP && !thread_data) {
 			global_data->createCopyForThread(thread_id);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) 
@@ -190,13 +190,13 @@ namespace branch_and_benders_cut {
 			}
 			global_data->best_bounds_.push_back(global_lower_bound);
 		}
-		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
+		/*else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
 			// TODO: are other threads locked?
 			// copy cuts and whatever else to the global_data
 
-			delete thread_data;
-			thread_data = nullptr;
-		}
+			// We delete thread_data in destructor because the thread with the same id
+			// can be up and down multiple times. Choose time efficiency for memory efficiency.
+		}*/
 
 		return 0;
 	} /* END benders_callback */
@@ -208,6 +208,10 @@ namespace branch_and_benders_cut {
 
 	BranchAndBendersCut::~BranchAndBendersCut()
 	{
+		for (auto id_copy_pair : thread_copy_map_) {
+			delete id_copy_pair.second;
+			id_copy_pair.second = nullptr;
+		}
 	}
 
 	void BranchAndBendersCut::Init()
@@ -655,7 +659,7 @@ namespace branch_and_benders_cut {
 			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS
 			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS
 			| CPX_CALLBACKCONTEXT_THREAD_UP
-			| CPX_CALLBACKCONTEXT_THREAD_DOWN
+			// | CPX_CALLBACKCONTEXT_THREAD_DOWN
 			, benders_callback, user_data);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
@@ -691,7 +695,6 @@ namespace branch_and_benders_cut {
 		std::vector< std::vector<int> > nodes_in_cut;
 		{
 			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_);
-			LOG_IF(FATAL, thread_copy_map_.find(thread_id) != thread_copy_map_.end()) << "bbc copy for thread " << thread_id << " already exists.";
 
 			// Initialize new bbc from current data
 			thread_copy = new BranchAndBendersCut(smi_);
@@ -730,6 +733,8 @@ namespace branch_and_benders_cut {
 				}
 			}
 		}
+
+		// TODO: probably we need to copy cuts from the main bbc to avoid duplicate cuts. Move them to the main bbc in thread down and delete from here
 	}
 
 } // end namespace branch_and_benders_cut
