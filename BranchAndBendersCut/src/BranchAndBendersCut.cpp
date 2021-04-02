@@ -715,9 +715,6 @@ namespace branch_and_benders_cut {
 					
 		// Copy warm start
 		if (warm_start_) {
-			assert(false && "Not tested");
-			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_); //TODO: or warm start mutex?
-			assert(num_stages_ == 2 && "Never tested for multistage");
 			for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
 				CoinWarmStart* ws;
 				std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
