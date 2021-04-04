@@ -53,17 +53,31 @@ public:
     virtual void Solve();
     ParallelNestedBenders& operator= (const ParallelNestedBenders& pnb) = delete;
     ParallelNestedBenders* clone();
+
+    void setParameters(parallel_benders::Parameter& params);
+    void setTestsetProblemInstanceNames(std::string& testset_name, std::string& problem_name, std::string& instance_name);
+
     /*! Clear all solution process information and reset to the after Init() state.
      Optionally new parameter can be supplied.
      The aim of Reset() is to clear the pnb and prepare it for one more Solve() but avoid reinitialization of all the internal structures.
      We keep solvers
     */
 	void Reset(int delete_cuts_start_it = -1, bool keep_warm_start = false, Parameter* parameter = nullptr);
+    
     // Access solution methods
     double computeScenarioValue(int scenario);
     void fixFirstStageVariables(const double* solution);
 	int getNumContPhasePnbIterations() const;
 	int getNumContinuousOptimalityCuts() const;
+    
+
+    // Access data
+    const SmiTreeNode<BendersNodeData*>* getTreeNode(int stage, int scenario) const;
+    SmiTreeNode<BendersNodeData*>* getMutableTreeNode(int stage, int scenario);
+    const BendersStageData* getStageData(int stage) const;
+    BendersStageData* getMutableStageData(int stage);
+
+    std::shared_ptr<std::mutex> getMutableConsoleMutex();
 
     /************************************************************************/
     /* Takes ownership of solution                                          */
