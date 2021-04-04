@@ -504,7 +504,6 @@ namespace branch_and_benders_cut {
 			cut_containers.push_back(&lift_and_project_pnb->getTreeNode(0,0)->getDataPtr()->feasibility_cuts_);
 			assert(lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.empty() && "Not tested");
 			cut_containers.push_back(&lift_and_project_pnb->getTreeNode(0,0)->getDataPtr()->epigraph_cuts_);
-			assert(!lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty() && "Why we have no epigraph L&P cuts?");
 			cut_containers.push_back(&lift_and_project_pnb->getTreeNode(0,0)->getDataPtr()->domain_cuts_);
 			assert(lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->domain_cuts_.empty() && "Not tested");
 			for (auto& cut_container : cut_containers) {
@@ -527,6 +526,14 @@ namespace branch_and_benders_cut {
 						tree_nodes_by_stage_[1][scenario]->getDataPtr()->warm_start_.reset(ws);
 					}
 				}
+			}
+			if (!lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.empty() || !lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) {
+				getTreeNode(0, 0)->getDataPtr()->num_thetas_ = stage_data_[0]->num_thetas_;
+				getTreeNode(0, 0)->getDataPtr()->changed_aggregation_level_ = true;
+				createRoundRobinAggregation(tree_nodes_by_stage_[0][0]->getDataPtr(), tree_nodes_by_stage_[0][0]->numChildren(), getTreeNode(0, 0)->getDataPtr()->num_thetas_, (int)std::ceil((double)tree_nodes_by_stage_[0][0]->numChildren() / getTreeNode(0, 0)->getDataPtr()->num_thetas_), num_oda_aggregates_);
+				getTreeNode(0, 0)->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>((getTreeNode(0, 0)->getDataPtr()->num_thetas_)); // Gets initialized with 0
+				getTreeNode(0, 0)->getDataPtr()->active_aggregates_.set();
+				getTreeNode(0, 0)->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(getTreeNode(0, 0)->getDataPtr()->num_thetas_); // Gets initialized with 0
 			}
 		}
 		// *****************
@@ -904,6 +911,7 @@ namespace branch_and_benders_cut {
 	void BranchAndBendersCut::SetUpMPSolver(OsiCpxSolverInterface* cpx_solver)
 	{
 		assert(current_stage_ == 0);
+		cpx_solver->messageHandler()->setLogLevel(4); // Log everything // TODO: change it
 		LOG_IF(FATAL, getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) << "When problem has no theta cuts, it is unbounded when B&B started as theta is not bounded.";
 		
 		// Set the CPLEX callback

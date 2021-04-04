@@ -113,7 +113,7 @@ double OsiStochasticBranchAndBendersCutSolverInterface::getUB() const
 		// therefore, the last incumbent solution optimal for Benders
 		// TODO: The logic below will probably be wrong (for multithread), e.g., SNDP_TestCase_9.
 		value = bbc_->benders_optimal_incumbents_.back();
-		assert(value == *std::min_element(bbc_->benders_optimal_incumbents_.begin(), bbc_->benders_optimal_incumbents_.end()));
+		assert(parallel_benders::CompareForEquality(value, *std::min_element(bbc_->benders_optimal_incumbents_.begin(), bbc_->benders_optimal_incumbents_.end()), 0.00001));
 	}
 	else {
 		value = OsiStochasticParallelNestedBendersSolverInterface::getUB();
