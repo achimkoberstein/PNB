@@ -61,6 +61,10 @@ public:
 	and aggregate new cuts if UB != LB	*/
 	void ConstructOptimalityCuts();
 
+	/* Solve subproblems, update UB // TODO: do we updated bound?
+	and solve CGPs	*/
+	void ConstructLiftAndProjectCuts();
+
 	/* Reject current candidate B&B node
 	and add lazy cuts */
 	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
@@ -73,10 +77,14 @@ public:
 	BranchAndBendersCut* clone() = delete;
 
 private:
-	/* Prepare MP for the B&B execution in CPLEX
+	/* Add Continuous and/or L&P cuts to root node
 	- append continuous Benders and/or L&P cuts (if any)
 	or
 	- generate Benders cut(s) to avoid unboundness
+	*/
+	void ConstructRootNodeCuts();
+	
+	/* Prepare MP for the B&B execution in CPLEX
 	- set up CPLEX callback
 	*/
 	void SetUpMPSolver(OsiCpxSolverInterface* cpx_solver);

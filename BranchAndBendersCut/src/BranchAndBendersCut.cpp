@@ -86,14 +86,12 @@ namespace branch_and_benders_cut {
 				return status;
 			}
 			if (!integer_feasible) {
-				/* The model is bounded, so this cannot happen. */
+				/* The model is bounded, so this can only happend 
+				if theta cuts were not added to the model formulation.
+				They were probably added as lazy cuts.*/ // TODO: is it also true for user cuts
 				fprintf(stderr, "Unbounded solution\n");
 				status = CPXERR_UNSUPPORTED_OPERATION;
-				// TODO: some of the nodes are unbounded
-				// at the start of the algorithm
-				// How can it be? What should we do with them?
-				// it seems that the number unbounded nodes = num_thetas
-				return 0; 
+				return status;
 			}
 
 			//Store Data
@@ -147,7 +145,31 @@ namespace branch_and_benders_cut {
 				return status;
 			}
 
-			// TODO: L&P cuts here
+			// Generate L&P cuts
+			assert(lp_round_ == 0);
+			assert(current_stage_ == 0); // TODO: which stage do we need here?
+			// TODO: temp
+			lp_rounds_limit_ = 1;
+			for (lp_round_ = 1; lp_round_ <= lp_rounds_limit_; lp_round_++) {
+				osi_solver_->initialSolve();
+				if (osi_solver_->isProvenOptimal()) {
+					std::cout << "Optimal" << std::endl;
+				}
+				else if (osi_solver_->isProvenDualInfeasible()) {
+					std::cout << "Unbounded" << std::endl;
+				}
+				generate_lp_cuts_ = true;
+				StoreData(osi_solver_, tree_nodes_by_stage_[0][0]);
+
+				if (!generate_lp_cuts_) {
+					// solution was integer
+					return;
+				}
+				ConstructLiftAndProjectCuts();
+				current_stage_ = 0;
+				assert(false && "Should it be parallel_benders::PNB_CUT_APPEND_TYPE_USER? or add to model formulation");
+				AppendCutsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY);
+			}
 		}*/
 		else if (contextid == CPX_CALLBACKCONTEXT_LOCAL_PROGRESS) {
 			double thread_lower_bound;
@@ -240,16 +262,17 @@ namespace branch_and_benders_cut {
 
 		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		
-		// First Phase: construct Linear optimality cuts
-		current_iteration_ = 1;
-		HandleContinuousPhase();
 
-		// TODO: probably here we will start L&P rounds for root node
+		// Construct continuous optimality, L&P cuts or
+		// one round of Benders cuts (to avoid unboundness)
+		assert(current_stage_ == 0);
+		BuildSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
+		AppendColsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
+		ConstructRootNodeCuts();
 
 		// Second Phase: Branch-And-Benders-Cut
 		SetUpMPSolver(cpx_solver);
 		PrintSubproblem(cpx_solver, 0, "MP_before");
-		LOG_IF(FATAL, mp_node_pointer->optimality_cuts_.empty() && mp_node_pointer->epigraph_cuts_.empty()) << "Cannot start B&B when problem has not cuts for theta";
 		SolveSolverInterface(cpx_solver);
 		current_stage_ = 0;
 		PrintSubproblem(cpx_solver, 0, "MP_after");
@@ -436,6 +459,261 @@ namespace branch_and_benders_cut {
 
 		// We need to aggregate optimality cuts for the parent node
 		AggregateOptimalityCuts(tree_nodes_by_stage_[current_stage_ - 1][0]);		
+	}
+
+	void BranchAndBendersCut::ConstructRootNodeCuts()
+	{
+		assert(current_stage_ == 0);  // TODO: which stage do we need here?
+
+		// *****************
+		// Generate L&P cuts
+		// *****************
+		if (lp_rounds_limit_) {
+			// Prepare parameters
+			parallel_benders::Parameter lift_and_project_param = parallel_benders::Parameter(parameter_);
+			lift_and_project_param.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
+			lift_and_project_param.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
+
+			// Create pnb for L&P cuts
+			ParallelNestedBenders* lift_and_project_pnb = new ParallelNestedBenders(smi_);
+			lift_and_project_pnb->setParameters(lift_and_project_param);
+			lift_and_project_pnb->setTestsetProblemInstanceNames(testset_name_, problem_name_, instance_name_ + "_ROOT_LP_CUTS");
+			lift_and_project_pnb->getMutableConsoleMutex() = console_mutex_ptr_; // we share the console as the resource
+			lift_and_project_pnb->Init();
+
+#ifdef NDEBUG
+			lift_and_project_pnb->log_level_ = google::WARNING; // no INFO output for cont phase in release
+#endif
+			// Find solution
+			// We stop the process after the total number of L&P rounds
+			// reaches lp_rounds_limit_ (PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT status)
+			lift_and_project_pnb->Solve();
+
+			//parallel_benders::PNB_SOLUTION_OPTIMAL, "PNB_SOLUTION_OPTIMAL" - this is optimal for our bbc too. See HandleContinuousPhase
+			// TODO: implement status PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT, we should only solve LP MP to get to it here
+			//any other status is an error			
+
+			// Move cuts to bbc:
+			// - optimality (incl. PNB CGP cuts)
+			// - feasibility
+			// - epigraph
+			// - domain
+			// - continuous optimality cuts if use_first_phase_
+			std::vector<parallel_benders::BendersNodeData::cut_container*> cut_containers;
+			cut_containers.push_back(&lift_and_project_pnb->getTreeNode(0,0)->getDataPtr()->optimality_cuts_);					
+			cut_containers.push_back(&lift_and_project_pnb->getTreeNode(0,0)->getDataPtr()->feasibility_cuts_);
+			assert(lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.empty() && "Not tested");
+			cut_containers.push_back(&lift_and_project_pnb->getTreeNode(0,0)->getDataPtr()->epigraph_cuts_);
+			assert(!lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty() && "Why we have no epigraph L&P cuts?");
+			cut_containers.push_back(&lift_and_project_pnb->getTreeNode(0,0)->getDataPtr()->domain_cuts_);
+			assert(lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->domain_cuts_.empty() && "Not tested");
+			for (auto& cut_container : cut_containers) {
+				for (auto& cut_stuff : *cut_container) {
+					cut_stuff->cut_creation_iteration_ = 0;
+					AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);
+				}
+			}
+			
+			// Copy warm start of the 2nd stage
+			if (warm_start_) {
+				CoinWarmStart* ws;
+				if (lift_and_project_pnb->getStageData(1)->warm_start_) {
+					ws = (lift_and_project_pnb->getStageData(1)->warm_start_.get())->clone();
+					stage_data_[1]->warm_start_.reset(ws); // deep copy of warm start
+				}
+				for (int scenario = 0; scenario < tree_nodes_by_stage_[0].size(); scenario++) {
+					if (lift_and_project_pnb->getTreeNode(1, scenario)->getDataPtr()->warm_start_) {
+						ws = (lift_and_project_pnb->getTreeNode(1, scenario)->getDataPtr()->warm_start_.get())->clone(); // deep copy
+						tree_nodes_by_stage_[1][scenario]->getDataPtr()->warm_start_.reset(ws);
+					}
+				}
+			}
+		}
+		// *****************
+		// Generate continuous optimality cuts
+		// *****************
+		// If we use L&P rounds,
+		// cont. optimality cuts will be constructed in lift_and_project_pnb above
+		else if (use_first_phase_)
+		{
+			// TODO: should we add Cont cuts as user cuts?
+			current_iteration_ = 1;
+			HandleContinuousPhase();
+		}
+
+		// If no theta cuts are present, generate them.
+		// Without theta cuts the problem is unbounded as theta is unbounded.
+		if (getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) {
+			osi_solver_->initialSolve();
+			assert(osi_solver_->isProvenOptimal());
+			StoreData(osi_solver_, getMutableTreeNode(0, 0));
+			ConstructOptimalityCuts();
+		}
+
+		LOG_IF(FATAL, !getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.empty()) << "Feasibility cuts not implemented (not tested)";
+		LOG_IF(FATAL, !getTreeNode(0,0)->getDataPtr()->domain_cuts_.empty()) << "Domain cuts not implemented (not tested)";
+
+		// Add all cuts from above
+		current_stage_ = 0;
+		// call this method to activate thetas,
+		// i.e., set their coef to 1
+		AppendColsToSubproblem(osi_solver_, getMutableTreeNode(0, 0));
+		// add cuts from containers to the formulation of the MP
+		// TODO: add them as user cuts? Lazy cuts lead to unboundness for root node
+		AppendCutsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
+		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
+	}
+
+	void BranchAndBendersCut::ConstructLiftAndProjectCuts()
+	{
+		assert(false && "not tested");
+		current_stage_ = 0;
+		forward_ = false;
+		int num_nodes = tree_nodes_by_stage_[current_stage_].size();
+
+		int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
+		assert(num_cuts > 0 && num_cuts <= fractional_variables_.size());
+		stage_data_[current_stage_]->lp_cgp_counter_ += num_cuts; // every cut requires CGP to solve
+
+		double theta_sum = std::accumulate(tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_.begin(), tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_.end(), 0.0);
+		LOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate.";
+
+		assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
+		// Set round specifics to all dual cgp
+		lp_cuts_timer_.Start(2);
+		for (auto id_solver_pair : osi_solver_map_) {
+			assert(!(lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
+			if (id_solver_pair.second->getNumCols() > 0) { // if solver is not empty
+				if (num_cpu_ > 1) {
+					thread_pool_.schedule(boost::bind(&BranchAndBendersCut::SetDualCGPRoundSpecifics, this, boost::ref(*id_solver_pair.second), tree_nodes_by_stage_[0][0]));
+				}
+				else {
+					SetDualCGPRoundSpecifics(*id_solver_pair.second, tree_nodes_by_stage_[0][0]);
+				}
+			}
+		}
+		thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
+		lp_cuts_timer_.Stop(2);
+
+		// Set round specifics to all existing cgp pnb
+		lp_cuts_timer_.Start(1);
+		for (auto id_pnb_pair : cgp_pnb_map_) {
+			if (num_cpu_ > 1) {
+				thread_pool_.schedule(boost::bind(&BranchAndBendersCut::SetLnPCGPRoundSpecifics, this, boost::ref(*id_pnb_pair.second), tree_nodes_by_stage_[0][0]));
+			}
+			else {
+				SetLnPCGPRoundSpecifics(*id_pnb_pair.second, tree_nodes_by_stage_[0][0]);
+			}
+		}
+		thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
+		lp_cuts_timer_.Stop(1);
+
+		std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values
+		for (int i = 0; i < num_cuts; i++) {
+			if (num_cpu_ > 1 && num_cuts > 1 && lp_parallel_mode_ >= parallel_benders::PNB_PARAL_FRACTS) {
+				thread_pool_.schedule(boost::bind(&BranchAndBendersCut::GenerateLiftAndProjectCut, this, i, rit->second));
+			}
+			else { // use the current thread
+				GenerateLiftAndProjectCut(i, rit->second);
+			}
+			++rit; // goes backwards
+		}
+		thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
+
+		tree_nodes_by_stage_[0][0]->getDataPtr()->last_in_lp_cgp_problem_start_feasibility_ = tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.end();
+		tree_nodes_by_stage_[0][0]->getDataPtr()->last_in_lp_cgp_problem_start_domain_ = tree_nodes_by_stage_[0][0]->getDataPtr()->domain_cuts_.end();
+		tree_nodes_by_stage_[0][0]->getDataPtr()->last_in_lp_cgp_start_optimality_ = tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end();
+		tree_nodes_by_stage_[0][0]->getDataPtr()->last_in_lp_cgp_start_epigraph_ = tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.end();
+
+		//Move L&P cuts to the main loop
+		if (!tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_epigraph_cuts_.empty() || !tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_domain_cuts_.empty()) {
+			stage_data_[current_stage_]->added_epigraph_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_epigraph_cuts_.size();
+			stage_data_[current_stage_]->added_str_epigraph_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_str_epigraph_cuts_counter_;
+			stage_data_[current_stage_]->added_plain_epigraph_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_plain_epigraph_cuts_counter_;
+			assert(stage_data_[current_stage_]->added_epigraph_cuts_ == (stage_data_[current_stage_]->added_str_epigraph_cuts_ + stage_data_[current_stage_]->added_plain_epigraph_cuts_));
+			stage_data_[current_stage_]->added_domain_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_domain_cuts_.size();
+
+			bool change_aggregation_level = tree_nodes_by_stage_[0][0]->getDataPtr()->changed_aggregation_level_;
+			assert(!change_aggregation_level && "Not tested when aggreg level changes before L&P round. Probably it is the first iteration.");
+			assert(!adaptive_ && "W/o adaptive in the statement below we assume change 0 -> 1 and not in another direction");
+			if (!tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_epigraph_cuts_.empty() && tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_ == 0) { // we need to change the aggreation level here
+				assert(false && "Not tested when aggreg level changed during L&P round.");
+				change_aggregation_level = true;
+				tree_nodes_by_stage_[0][0]->getDataPtr()->changed_aggregation_level_ = true;
+				// Set new values
+				assert(false && "Do we need to uncomment the values below");
+				//benders_node_pointer->num_thetas_ = num_theta;
+				assert(!(lp_main_loop_iteration_round_ && adaptive_) && "Never tested. Activate_aggregates should probably have size num_theta*2 etc.");
+				//benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
+				//benders_node_pointer->was_under_threshold_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
+			}
+			for (auto& cut_container : { &tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_epigraph_cuts_, &tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_domain_cuts_ }) {
+				for (auto& cut_stuff : *cut_container) {
+					assert(!CheckForSameCut(*cut_stuff, tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_) &&
+						!CheckForSameCut(*cut_stuff, tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_) &&
+						!CheckForSameCut(*cut_stuff, tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_) &&
+						!CheckForSameCut(*cut_stuff, tree_nodes_by_stage_[0][0]->getDataPtr()->domain_cuts_) && "It cannot be a duplicate since we checked before.");
+					cut_stuff->cut_creation_iteration_ = current_iteration_;
+					AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);
+				}
+			}
+
+			tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_epigraph_cuts_.clear();
+			tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_str_epigraph_cuts_counter_ = 0;
+			tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_plain_epigraph_cuts_counter_ = 0;
+			tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_domain_cuts_.clear();
+
+			LogSpecialCase(current_iteration_ == 1, "Wanted and built L&P cuts in first iteration");
+		}
+		else { // if no L&P cuts build - we can switch
+			LOG_IF(WARNING, log_level_ <= google::WARNING) << "No L&P cuts build in this round. Switching to minor iteration." << std::endl;
+			if (lp_round_ == 1) {
+				lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
+			}
+			lp_round_ = lp_rounds_limit_;
+			// we will switch osi to MIP in Solve() when switch to minor iteration
+			// if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
+		}
+
+		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
+
+		//Move CGP cuts to the main loop
+		if (!tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_optimality_cuts_.empty() || !tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.empty()) {
+			assert(tree_nodes_by_stage_[0][0]->getDataPtr()->last_iteration_start_optimality_ == tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
+			assert(tree_nodes_by_stage_[0][0]->getDataPtr()->last_iteration_start_feasibility_ == tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.end());
+			stage_data_[current_stage_]->added_feasibility_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.size(); // we always add feas cuts
+
+			int added_opt_cuts = 0;
+			bool evaluated_violation(false);
+			for (auto& cut_container : { &tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_optimality_cuts_, &tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_ }) {
+				for (auto& cut_stuff : *cut_container) {
+					if ((lp_use_cgp_pnb_cuts_ == parallel_benders::PNB_CGP_CUTS_EFFICIENT || lp_use_cgp_pnb_cuts_ == parallel_benders::PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE) && cut_stuff->type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY) {  // feas cuts are always efficient
+						double dist_violation = cut_stuff->DistanceViolation(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_, tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_);
+						if (dist_violation <= 0.0001) { // in Bodur 0.00001 is the violation for Benders (lazy) cuts. For user (L&P) cuts it is 0.0001 in root node and 0.001 for other nodes 
+							continue;
+						}
+					}
+					added_opt_cuts += cut_stuff->type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY ? 1 : 0;
+					assert(!CheckForSameCut(*cut_stuff, tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_) &&
+						!CheckForSameCut(*cut_stuff, tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_) &&
+						!CheckForSameCut(*cut_stuff, tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_) &&
+						!CheckForSameCut(*cut_stuff, tree_nodes_by_stage_[0][0]->getDataPtr()->domain_cuts_) && "It cannot be a duplicate since we checked before.");
+					cut_stuff->cut_creation_iteration_ = current_iteration_;
+					AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);
+				}
+			}
+
+			stage_data_[current_stage_]->added_optimality_cuts_ += added_opt_cuts;
+			LOG_IF(INFO, log_level_ <= google::INFO && evaluated_violation) << "Added " << added_opt_cuts << "/" << tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_optimality_cuts_.size() << " CGP optimality cuts and " << tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts (considering DistanceViolation).";
+			LOG_IF(INFO, log_level_ <= google::INFO && !evaluated_violation) << "Added " << added_opt_cuts << " CGP optimality cuts and " << tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts.";
+
+			tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_optimality_cuts_.clear();
+			tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.clear();
+		}
+
+		LOG_IF(FATAL, num_added_feasibility_cuts_) << "Feasibility cuts not implemented (not tested)";
+
+		// TODO: clear cgp_pnb_map_
 	}
 
 	int BranchAndBendersCut::AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
@@ -626,40 +904,20 @@ namespace branch_and_benders_cut {
 	void BranchAndBendersCut::SetUpMPSolver(OsiCpxSolverInterface* cpx_solver)
 	{
 		assert(current_stage_ == 0);
-		cpx_solver->messageHandler()->setLogLevel(4); // Log nothing // TODO: change it
-		BuildSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
-		AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
-
-		// In no theta cuts, generate them.
-		// Without theta cuts the problem will be unbounded.
-		if (tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() && tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.empty()) {
-			cpx_solver->initialSolve();
-			StoreData(cpx_solver, tree_nodes_by_stage_[0][0]);
-			ConstructOptimalityCuts();
-			current_stage_ = 0;
-			// call this method to activate thetas,
-			// i.e., set their coef to 1
-			AppendColsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0]);
-		}
-
-		LOG_IF(FATAL, !tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.empty()) << "Feasibility cuts not implemented (not tested)";
-
-		// Add cuts from above, Continuous, and/or L&P cuts
-		AppendCutsToSubproblem(cpx_solver, tree_nodes_by_stage_[0][0], parallel_benders::PNB_CUT_APPEND_TYPE_LAZY); 
-		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
-
+		LOG_IF(FATAL, getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) << "When problem has no theta cuts, it is unbounded when B&B started as theta is not bounded.";
+		
 		// Set the CPLEX callback
 		BranchAndBendersCut* user_data = this;
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
 		// TODO: do we need all of them
 		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, 
-			CPX_CALLBACKCONTEXT_CANDIDATE
-			// | CPX_CALLBACKCONTEXT_RELAXATION
-			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS
-			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS
-			| CPX_CALLBACKCONTEXT_THREAD_UP
-			// | CPX_CALLBACKCONTEXT_THREAD_DOWN
+			CPX_CALLBACKCONTEXT_CANDIDATE // - found integer solution
+			// | CPX_CALLBACKCONTEXT_RELAXATION // - found infeasible (some int vars have non-int solution)
+			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS // - update global UB (LB - ?). Locks other threads
+			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS // - update thread UB (LB - ?)
+			| CPX_CALLBACKCONTEXT_THREAD_UP // - activate thread, is different to thread creation and might happen several times for one thread
+			// | CPX_CALLBACKCONTEXT_THREAD_DOWN  // - deactivate thread, is different to thread creation and might happen several times for one thread
 			, benders_callback, user_data);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
@@ -667,7 +925,8 @@ namespace branch_and_benders_cut {
 
 		// Set threads number for B&B
 		// for CPLEX in Benders it was always mutlithread
-		// value 0 in CPLEX has the same meaning as in our implementation
+		// value 0 in CPLEX has the same meaning as in our implementation -- use all CPUs
+		// TODO: parameter to set num_cpu for B&B specifically (explicitely or parallel_mode)
 		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, num_cpu_);
 	}
 
@@ -700,7 +959,7 @@ namespace branch_and_benders_cut {
 			thread_copy = new BranchAndBendersCut(smi_);
 			thread_copy_map_.emplace(thread_id, thread_copy);
 			thread_copy->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
-			thread_copy->parameter_ = parameter_;
+			thread_copy->parameter_ = parallel_benders::Parameter(parameter_);
 			thread_copy->testset_name_ = testset_name_;
 			thread_copy->problem_name_ = problem_name_;
 			thread_copy->instance_name_ = instance_name_ + "_thread_" + std::to_string(thread_id);
