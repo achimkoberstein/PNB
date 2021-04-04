@@ -2716,6 +2716,18 @@ namespace parallel_benders {
         return other;
     }
 
+    void ParallelNestedBenders::setParameters(parallel_benders::Parameter& params)
+    {
+        parameter_ = params;
+    }
+
+    void ParallelNestedBenders::setTestsetProblemInstanceNames(std::string& testset_name, std::string& problem_name, std::string& instance_name)
+    {
+        testset_name_ = testset_name;
+        problem_name_ = problem_name;
+        instance_name_ = instance_name;
+    }
+
     void ParallelNestedBenders::Reset(int delete_cuts_start_it, bool keep_warm_start, Parameter* parameter) {
         assert(parameter == nullptr && "Not implemented for supplied parameter. Compare the changes in parameter_ and supplied parameter and see which changes should be done.");
         LOG_IF(FATAL, solved_counter_ < 1) << "Call ParallelNestedBenders::Solve() at least once before Reset()";
@@ -8011,6 +8023,31 @@ namespace parallel_benders {
 		return cut_counter;
 	}
 
+    const SmiTreeNode<BendersNodeData*>* ParallelNestedBenders::getTreeNode(int stage, int scenario) const
+    {
+        return tree_nodes_by_stage_[stage][scenario];
+    }
+
+    SmiTreeNode<BendersNodeData*>* ParallelNestedBenders::getMutableTreeNode(int stage, int scenario)
+    {
+        return tree_nodes_by_stage_[stage][scenario];
+    }
+
+    const BendersStageData* ParallelNestedBenders::getStageData(int stage) const
+    {
+        return stage_data_[stage];
+    }
+
+    BendersStageData* ParallelNestedBenders::getMutableStageData(int stage)
+    {
+        return stage_data_[stage];
+    }
+
+    std::shared_ptr<std::mutex> ParallelNestedBenders::getMutableConsoleMutex()
+    {
+        return console_mutex_ptr_;
+    }
+
     void ParallelNestedBenders::setWarmUpSolution( const double* solution, int num_cols_given )
     {
         start_solution_ = PNB_INT_USE_SUPPLIED_SOLUTION; 
@@ -8096,7 +8133,7 @@ namespace parallel_benders {
             CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 1); // detailed log
             CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 5); // display all the information from the log
             CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF); // no presolve
-            CPXsetdblparam(env_ptr, CPX_PARAM_CUTSFACTOR, 1.0); // not cuts
+            CPXsetdblparam(env_ptr, CPX_PARAM_CUTSFACTOR, 1.0); // no cuts
             CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_HeuristicFreq, -1); // turn off periodic node heuristic
             CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_RINSHeur, -1); // turn off RINS heuristic
 

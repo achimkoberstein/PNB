@@ -122,6 +122,10 @@ public:
         return ptr_;
     }
 
+    const T getDataPtr() const {
+        return ptr_;
+    }
+
     //--------------------------------------------------------------------------
     /**@name Constructors, destructors and major modifying methods*/
     //@{
