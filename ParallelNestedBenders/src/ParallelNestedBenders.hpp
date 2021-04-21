@@ -51,11 +51,13 @@ public:
     virtual ~ParallelNestedBenders();
     virtual void Init();
     virtual void Solve();
+    int getSolutionCode() const;
     ParallelNestedBenders& operator= (const ParallelNestedBenders& pnb) = delete;
     ParallelNestedBenders* clone();
 
     void setParameters(parallel_benders::Parameter& params);
     void setTestsetProblemInstanceNames(std::string& testset_name, std::string& problem_name, std::string& instance_name);
+    void setGlobalLPRoundsLimit(int limit);
 
     /*! Clear all solution process information and reset to the after Init() state.
      Optionally new parameter can be supplied.
@@ -68,8 +70,7 @@ public:
     double computeScenarioValue(int scenario);
     void fixFirstStageVariables(const double* solution);
 	int getNumContPhasePnbIterations() const;
-	int getNumContinuousOptimalityCuts() const;
-    
+	int getNumContinuousOptimalityCuts() const;    
 
     // Access data
     const SmiTreeNode<BendersNodeData*>* getTreeNode(int stage, int scenario) const;
@@ -473,6 +474,7 @@ protected:
     
 	int lift_and_p_method_;
 	int lp_rounds_limit_;
+    int global_lp_rounds_limit_; // used to build L&P rounds in B&B
 	int lp_switches_limit_;
 	int lp_major_it_limit_;
     int lp_parallel_mode_;
@@ -480,7 +482,8 @@ protected:
 	int cuts_for_fract_vars_;
 	double cgp_relative_epsilon_;
 	int cgp_do_when_infeasible_; // whether we quit OR apply Alpha-Normalization and solve OR apply Alpha-Normalization and continue when L&P CGP PNB is infeasible
-	int lp_round_; // get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
+	int current_lp_round_; // get rid of these variable and count them based on L&P cuts added or next_lp_rounds_iteration_ from cut container
+    int lp_rounds_counter_;
 	int lp_switch_counter_;
 	bool generate_lp_cuts_;
 	int next_lp_rounds_iteration_;

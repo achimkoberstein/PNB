@@ -295,7 +295,7 @@ namespace parallel_benders {
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(5),lp_cuts_timer_(10),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_dual_cgp_node_data_mutex_(),lp_round_cuts_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
-		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(PNB_CGP_CUTS_NONE),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),lp_round_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
+		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),global_lp_rounds_limit_(10000),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(PNB_CGP_CUTS_NONE),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),current_lp_round_(0),lp_rounds_counter_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
@@ -843,7 +843,7 @@ namespace parallel_benders {
         SmiTreeNode<BendersNodeData*>* cgp_first_stage = cgp_pnb.tree_nodes_by_stage_[0][0];
                
         // Set for current round
-        cgp_pnb.lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_);
+        cgp_pnb.lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, current_lp_round_);
 
         // modify first num_cols elements of rhs
         OsiSolverInterface* first_stage_osi = cgp_pnb.osi_solver_;
@@ -967,7 +967,7 @@ namespace parallel_benders {
             cgp_pnb_map_[boost::this_thread::get_id()] = cgp_pnb;
         }
         // load data to the 1st stage solver. We will apply Round and Fract var specifics to it before Solve()
-        cgp_pnb->lp_main_loop_iteration_round_.reset(new std::pair<int, int>(current_iteration_, lp_round_)); // we can use any values - need for BuildSubproblem() and SetLnPCGPRoundSpecifics()
+        cgp_pnb->lp_main_loop_iteration_round_.reset(new std::pair<int, int>(current_iteration_, current_lp_round_)); // we can use any values - need for BuildSubproblem() and SetLnPCGPRoundSpecifics()
         assert(cgp_pnb->current_stage_ == 0);
         cgp_pnb->BuildSubproblem(cgp_pnb->osi_solver_, cgp_pnb->tree_nodes_by_stage_[0][0]);
         cgp_pnb->AppendColsToSubproblem(cgp_pnb->osi_solver_, cgp_pnb->tree_nodes_by_stage_[0][0]);
@@ -1070,7 +1070,7 @@ namespace parallel_benders {
             if (lp_main_loop_iteration_round_ == nullptr) {
                 //It: 3 L&P round: 18 Fract: 0.38888
                 DLOG_IF(WARNING, condition) << instance_name_
-                    << " - It: " << current_iteration_ << " L&P round: " << lp_round_ << " Fract: " << fract_var_value
+                    << " - It: " << current_iteration_ << " L&P round: " << current_lp_round_ << " Fract: " << fract_var_value
                     << ": " << log_message << std::endl;
             }
             else {
@@ -1141,7 +1141,8 @@ namespace parallel_benders {
                 std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
                 RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
                 current_iteration_-insubstantial_iteration_ < max_iteration_ &&
-                solution_similiarity_counter_ < max_similarity_iteration_;
+                solution_similiarity_counter_ < max_similarity_iteration_ &&
+                lp_rounds_counter_ < global_lp_rounds_limit_;
             else if ( !regularization_ && cvar_constr_decomp_ ){ // We only test for stopping criterion in first iteration! 
                 not_stop_loop = cvar_H_ > relative_epsilon_ &&
                     current_iteration_-insubstantial_iteration_ < max_iteration_ &&
@@ -1201,6 +1202,9 @@ namespace parallel_benders {
                 if (!cvar_constr_decomp_ && upper_bound_ < lower_bound_ - zero_tolerance_ && std::abs(upper_bound_ - lower_bound_) > absolute_epsilon_ &&
                     RelativeGapLargerEpsilon(upper_bound_, lower_bound_, infinity_, relative_epsilon_)) {
                     solution_code_ = PNB_SOLUTION_UPPER_LESS_LOWER_BOUND;
+                }
+                if (lp_rounds_counter_ >= global_lp_rounds_limit_) {
+                    solution_code_ = PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT;
                 }
                 solved_counter_++;
                 break;// We stop solving the problem
@@ -1271,7 +1275,7 @@ namespace parallel_benders {
 
             if ( current_stage_ == 0 ){ // Things to do if we are in the first stage
 				warm_up_ = false; // We do not need it anymore, when we reached the first stage!
-				if (lp_round_ == 0) {
+				if (current_lp_round_ == 0) {
 					current_iteration_++;
 					minor_iteration_++;
 					uncritical_iteration_counter_++;
@@ -1283,15 +1287,15 @@ namespace parallel_benders {
 					fractional_variables_.clear();
 					if (lp_switch_counter_ < lp_switches_limit_ && current_iteration_ == next_lp_rounds_iteration_) {
                         lp_cuts_timer_.Stop(3);
-						if (lp_round_ < lp_rounds_limit_) {
+						if (current_lp_round_ < lp_rounds_limit_) {
 							generate_lp_cuts_ = true;
-							lp_round_++;
+							current_lp_round_++;
                             lp_cuts_timer_.Start(3);
 						}
 						else {
                             StoreWarmStart(osi_solver_, tree_nodes_by_stage_[0][0]); // we will solve MP as MIP and want to store the LP warm start
 							generate_lp_cuts_ = false;
-							lp_round_ = 0;
+							current_lp_round_ = 0;
 							lp_switch_counter_++;
 							next_lp_rounds_iteration_ = current_iteration_ + lp_major_it_limit_;
                             OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
@@ -1389,7 +1393,7 @@ namespace parallel_benders {
             //    std::cout << "sampled";
             //}
 
-            if ( !pretty_printing_ && lp_round_ <= 1){
+            if ( !pretty_printing_ && current_lp_round_ <= 1){
                 std::string direction(forward_ ? "F " : "B ");
                 std::string side("");
                 if (current_stage_ > 0 && lp_main_loop_iteration_round_) {
@@ -2453,6 +2457,10 @@ namespace parallel_benders {
 #endif
     }
     
+    int ParallelNestedBenders::getSolutionCode() const {
+        return solution_code_;
+    }
+
     /*
     contents of smi_ pointer are not copied
     all solvers in ParallelNestedBenders are cloned
@@ -2625,6 +2633,7 @@ namespace parallel_benders {
         other->generate_feasibility_and_optimality_cuts_ = generate_feasibility_and_optimality_cuts_;
         other->lift_and_p_method_ = lift_and_p_method_;
         other->lp_rounds_limit_ = lp_rounds_limit_;
+        other->global_lp_rounds_limit_ = global_lp_rounds_limit_;
         other->lp_switches_limit_ = lp_switches_limit_;
         other->lp_major_it_limit_ = lp_major_it_limit_;
         other->lp_use_cgp_pnb_cuts_ = lp_use_cgp_pnb_cuts_;
@@ -2632,7 +2641,8 @@ namespace parallel_benders {
         other->cuts_for_fract_vars_ = cuts_for_fract_vars_;
         other->cgp_relative_epsilon_ = cgp_relative_epsilon_;
         other->cgp_do_when_infeasible_ = cgp_do_when_infeasible_;
-        other->lp_round_ = lp_round_;
+        other->current_lp_round_ = current_lp_round_;
+        other->lp_rounds_counter_ = lp_rounds_counter_;
         other->lp_switch_counter_ = lp_switch_counter_;
         other->generate_lp_cuts_ = generate_lp_cuts_;
         other->next_lp_rounds_iteration_ = next_lp_rounds_iteration_;
@@ -2726,6 +2736,11 @@ namespace parallel_benders {
         testset_name_ = testset_name;
         problem_name_ = problem_name;
         instance_name_ = instance_name;
+    }
+
+    void ParallelNestedBenders::setGlobalLPRoundsLimit(int limit)
+    {
+        global_lp_rounds_limit_ = limit;
     }
 
     void ParallelNestedBenders::Reset(int delete_cuts_start_it, bool keep_warm_start, Parameter* parameter) {
@@ -2849,7 +2864,8 @@ namespace parallel_benders {
         num_added_feasibility_cuts_ = 0;
         regularized_solution_value_ = infinity_;
         solution_code_ = PNB_SOLUTION_OPTIMAL;
-        lp_round_ = 0;
+        current_lp_round_ = 0;
+        lp_rounds_counter_ = 0;
         lp_switch_counter_ = 0;
         generate_lp_cuts_ = false;
         next_lp_rounds_iteration_ = 1;
@@ -2921,7 +2937,7 @@ namespace parallel_benders {
         }
         // we do not need to rebuild MP in first iteration for LnP rounds
         // osi_solver_->getNumCols() == 0 is necessary for the case when we tried to build L&P cuts in first iteration but could not (lp_round will be 1 onr MP is already built)
-        else if (current_stage_ == 0 && current_iteration_ == 1 && lp_round_ < 2 && osi_solver_->getNumCols() == 0) {
+        else if (current_stage_ == 0 && current_iteration_ == 1 && current_lp_round_ < 2 && osi_solver_->getNumCols() == 0) {
             assert(seperate_first_stage_solver_ && "osi_solver_->getNumCols() == 0 might work wrong here.");
             build_subproblem = true;
         }
@@ -2983,7 +2999,7 @@ namespace parallel_benders {
 
         // We only need to store data if we have a feasible solution for the subproblem.
 		bool old_generate_lp_cuts = generate_lp_cuts_;
-		int old_lp_round = lp_round_;
+		int old_lp_round = current_lp_round_;
         if ( !infeasible_problems_[benders_tree_node_pointer->scenario()] ){
             StoreData(osi_solver,benders_tree_node_pointer);
 
@@ -3005,15 +3021,16 @@ namespace parallel_benders {
 				int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
 				assert(num_cuts > 0 && num_cuts <= fractional_variables_.size());
                 stage_data_[current_stage_]->lp_cgp_counter_ += num_cuts; // every cut requires CGP to solve
+                lp_rounds_counter_++;
 				
 				double theta_sum = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(), benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(), 0.0);
-                LOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate.";
+                LOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << current_lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate.";
 
                 assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
                 // Set round specifics to all dual cgp
                 lp_cuts_timer_.Start(2);
                 for (auto id_solver_pair : osi_solver_map_) {
-                    assert(!(lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
+                    assert(!(current_lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
                     if (id_solver_pair.second->getNumCols() > 0) { // if solver is not empty
                         if (num_cpu_ > 1){
                             thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetDualCGPRoundSpecifics, this, boost::ref(*id_solver_pair.second), tree_nodes_by_stage_[0][0]));
@@ -3098,10 +3115,10 @@ namespace parallel_benders {
                 }
                 else { // if no L&P cuts build - we can switch
                     LOG_IF(WARNING, log_level_ <= google::WARNING) << "No L&P cuts build in this round. Switching to minor iteration." << std::endl;
-                    if (lp_round_ == 1) {
+                    if (current_lp_round_ == 1) {
                         lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
                     }
-                    lp_round_ = lp_rounds_limit_;
+                    current_lp_round_ = lp_rounds_limit_;
                     // we will switch osi to MIP in Solve() when switch to minor iteration
                     // if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
                 }
@@ -3133,7 +3150,7 @@ namespace parallel_benders {
 			suffix = "round_" + std::to_string(old_lp_round) + "_feasible_relaxation";
 		}	
         else if (generate_lp_cuts_) {// we have MP relaxation with fractional variables and: build an L&P cuts or all cuts were not efficient
-			suffix = "round_" + std::to_string(lp_round_) + "_relaxation";
+			suffix = "round_" + std::to_string(current_lp_round_) + "_relaxation";
 		}
 		else if (lp_main_loop_iteration_round_ && current_stage_ > 0) {// subproblems in CGP
 			suffix = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME ? "prime" : "double_prime");
@@ -3518,7 +3535,7 @@ namespace parallel_benders {
 		StoreValuesFromSolverInVector(benders_node_pointer->col_solution_, osi_solver->getColSolution(), benders_node_pointer->cols_);
 
 		if (generate_lp_cuts_) { // thread safe because we build L&P only on the first stage that has one thread
-			assert(current_stage_ == 0 && lp_round_ > 0);
+			assert(current_stage_ == 0 && current_lp_round_ > 0);
 			//Check for integrality
 			for (int index : core_->getBinaryCols(current_stage_)) {
 				double value = benders_node_pointer->col_solution_[index];
@@ -3535,25 +3552,25 @@ namespace parallel_benders {
 			}
 
 			if (fractional_variables_.empty()) {
-                LOG_IF(INFO, log_level_ <= google::INFO) << "Iteration " << current_iteration_ << " - L&P round " << lp_round_ << ": no fractional variables in MP relaxation and no L&P cuts to generate." << std::endl;
+                LOG_IF(INFO, log_level_ <= google::INFO) << "Iteration " << current_iteration_ << " - L&P round " << current_lp_round_ << ": no fractional variables in MP relaxation and no L&P cuts to generate." << std::endl;
 
 				generate_lp_cuts_ = false;
-				if (lp_round_ > 1) { // we do not count as a switch the L&P rounds session in which no cuts were build
+				if (current_lp_round_ > 1) { // we do not count as a switch the L&P rounds session in which no cuts were build
 					lp_switch_counter_++;
 					next_lp_rounds_iteration_ = current_iteration_ + lp_major_it_limit_;
                     
-                    if (lp_major_it_limit_ > 1) { // lp_round_ == lp_rounds_limit_ => StoreWarmStart() really stores LP WS. Do it only if we solve MP in the next iteration as MIP
-                        lp_round_ = lp_rounds_limit_;
+                    if (lp_major_it_limit_ > 1) { // current_lp_round_ == lp_rounds_limit_ => StoreWarmStart() really stores LP WS. Do it only if we solve MP in the next iteration as MIP
+                        current_lp_round_ = lp_rounds_limit_;
                         StoreWarmStart(osi_solver, benders_tree_node_pointer); // we will solve it as MIP and want to store the LP warm start
                     } 
 				}
 				else {
 					next_lp_rounds_iteration_ = current_iteration_ + 1;
 				}
-                lp_round_ = 2; // lp_round_ == lp_rounds_limit_ => StoreWarmStart() stores LP WS instead of MIP WS
+                current_lp_round_ = 2; // current_lp_round_ == lp_rounds_limit_ => StoreWarmStart() stores LP WS instead of MIP WS
                 StoreWarmStart(osi_solver, benders_tree_node_pointer); // store this solution as MIP WS (since it is valid for MIP MP)
 				
-                lp_round_ = 0;
+                current_lp_round_ = 0;
                 // we will switch osi to MIP in HandleSubproblem() after problem is printed
                 // if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
                 lp_cuts_timer_.Stop(3);
@@ -5058,7 +5075,7 @@ namespace parallel_benders {
         bool load_cut_stuff = false;
 #ifdef LOAD_DUMP_CUTS
         std::stringstream cut_filename;
-        cut_filename << instance_name_ << "cut_stuff_" << current_iteration_ << "_" << lp_round_ << "_" << fractional_variable.first << ".txt";
+        cut_filename << instance_name_ << "cut_stuff_" << current_iteration_ << "_" << current_lp_round_ << "_" << fractional_variable.first << ".txt";
         std::fstream file;
         file.open(cut_filename.str());
         if (file.is_open()) {
@@ -5128,7 +5145,7 @@ namespace parallel_benders {
 
         {
             int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
-            DLOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << lp_round_ << ": fractional variable " << lp_cut_index + 1 << "/" << num_cuts;
+            DLOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << current_lp_round_ << ": fractional variable " << lp_cut_index + 1 << "/" << num_cuts;
             DLOG_IF(INFO, log_level_ <= google::INFO && lift_and_project_cut_type == PNB_CUT_TYPE_EPIGRAPH) << "Generating " << (use_2nd_stage_info ? "strengthened" : "plain") << " Epigraph L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
             DLOG_IF(INFO, log_level_ <= google::INFO && lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN) << "Generating Domain L&P cut for var with index " << fractional_variable.first << " and value " << fractional_variable.second;
         }
@@ -5210,7 +5227,7 @@ namespace parallel_benders {
                         SetAlphaNormalization(cgp_pnb->osi_solver_, false);
                     }
                     cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
-                    cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
+                    cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, current_lp_round_); // we want to keep it after reset
                     return;
                 }
                 else {
@@ -5368,7 +5385,7 @@ namespace parallel_benders {
 
                 std::stringstream suffix;
                 suffix << "l&p_cut_index_" << lp_cut_index;
-                PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
+                PrintSubproblem(dual_cgp_solver, current_lp_round_, suffix.str());
 
                 // if infeasible -> DZN unbounded (DAN should be always solvable) -> AddAlphaNormalization and resolve
                 bool terminate_cut_generation = false;
@@ -5384,7 +5401,7 @@ namespace parallel_benders {
 
                         LogSpecialCase(CompareWithZero(dual_cgp_solver->getObjValue()), "DZN infeasible <=> DAN > 0. It is not", fractional_variable.second); // whether it is not smaller 0 we check below
                         suffix << "_with_Alpha_Normalization";
-                        PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
+                        PrintSubproblem(dual_cgp_solver, current_lp_round_, suffix.str());
 
                         DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is infeasible." << std::endl;
                         DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
@@ -5407,7 +5424,7 @@ namespace parallel_benders {
                         SolveSolverInterface(dual_cgp_solver);
 
                         suffix << "_with_Alpha_Normalization";
-                        PrintSubproblem(dual_cgp_solver, lp_round_, suffix.str());
+                        PrintSubproblem(dual_cgp_solver, current_lp_round_, suffix.str());
 
                         DLOG(WARNING) << "Fract var with index " << fractional_variable.first << ": Set Alpha-Normalization and generate L&P Domain cut. Reason: Zeta-normalized Dual L&P Cut Generation Problem is unbounded." << std::endl;
                         DLOG(INFO) << "Fract var with index " << fractional_variable.first << ": Solution of Alpha-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue() << std::endl;
@@ -5430,7 +5447,7 @@ namespace parallel_benders {
                             SetAlphaNormalization(cgp_pnb->osi_solver_, false);
                         }
                         cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
-                        cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
+                        cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, current_lp_round_); // we want to keep it after reset
                     }
                     return;
                 }
@@ -5614,7 +5631,7 @@ namespace parallel_benders {
                 SetAlphaNormalization(cgp_pnb->osi_solver_, false);
             }
             cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
-            cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, lp_round_); // we want to keep it after reset
+            cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, current_lp_round_); // we want to keep it after reset
             lp_cuts_timer_.AddTime(1, timer_.Now() - start_time);
         }
 
@@ -7801,7 +7818,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::SetWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         if ( !integer_problems_[current_stage_] || generate_lp_cuts_){
-            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_ || lp_round_ == 1)){ // We add a warm_start if configured and first stage solver is not seperate!
+            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_ || current_lp_round_ == 1)){ // We add a warm_start if configured and first stage solver is not seperate!
                 if ( warm_start_scenarios_ ){
                     if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ){ // If we have a warm start object, we tell the solver to use it
                         osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_.get());
@@ -7864,7 +7881,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::StoreWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_ || lp_round_ == lp_rounds_limit_)){ // Store WarmStart Information, otherwise we reuse the old one..
+        if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_ || current_lp_round_ == lp_rounds_limit_)){ // Store WarmStart Information, otherwise we reuse the old one..
             if ( warm_start_scenarios_ ){
                 if ( benders_tree_node_pointer->getDataPtr()->warm_start_ == nullptr && !stage_data_[current_stage_]->problem_was_solved_in_this_iteration_){
                     std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
