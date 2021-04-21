@@ -146,11 +146,11 @@ namespace branch_and_benders_cut {
 			}
 
 			// Generate L&P cuts
-			assert(lp_round_ == 0);
+			assert(current_lp_round_ == 0);
 			assert(current_stage_ == 0); // TODO: which stage do we need here?
 			// TODO: temp
 			lp_rounds_limit_ = 1;
-			for (lp_round_ = 1; lp_round_ <= lp_rounds_limit_; lp_round_++) {
+			for (current_lp_round_ = 1; current_lp_round_ <= lp_rounds_limit_; current_lp_round_++) {
 				osi_solver_->initialSolve();
 				if (osi_solver_->isProvenOptimal()) {
 					std::cout << "Optimal" << std::endl;
@@ -262,7 +262,6 @@ namespace branch_and_benders_cut {
 
 		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		
-
 		// Construct continuous optimality, L&P cuts or
 		// one round of Benders cuts (to avoid unboundness)
 		assert(current_stage_ == 0);
@@ -473,6 +472,10 @@ namespace branch_and_benders_cut {
 			parallel_benders::Parameter lift_and_project_param = parallel_benders::Parameter(parameter_);
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
+			lift_and_project_param.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
+			lift_and_project_param.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
+			lift_and_project_param.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, lp_rounds_limit_); // will anyways be < global_lp_rounds_limit_
+			lift_and_project_param.SetParameterValue(parallel_benders::PNB_LP_SWITCHES_LIMIT, lp_rounds_limit_); // if cont solution is found, we construct opt cuts and continue
 
 			// Create pnb for L&P cuts
 			ParallelNestedBenders* lift_and_project_pnb = new ParallelNestedBenders(smi_);
@@ -480,18 +483,19 @@ namespace branch_and_benders_cut {
 			lift_and_project_pnb->setTestsetProblemInstanceNames(testset_name_, problem_name_, instance_name_ + "_ROOT_LP_CUTS");
 			lift_and_project_pnb->getMutableConsoleMutex() = console_mutex_ptr_; // we share the console as the resource
 			lift_and_project_pnb->Init();
+			lift_and_project_pnb->setGlobalLPRoundsLimit(lp_rounds_limit_);
 
 #ifdef NDEBUG
-			lift_and_project_pnb->log_level_ = google::WARNING; // no INFO output for cont phase in release
+			lift_and_project_pnb->log_level_ = google::WARNING; // TODO: it will crash, no INFO output for cont phase in release
 #endif
 			// Find solution
 			// We stop the process after the total number of L&P rounds
 			// reaches lp_rounds_limit_ (PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT status)
 			lift_and_project_pnb->Solve();
-
-			//parallel_benders::PNB_SOLUTION_OPTIMAL, "PNB_SOLUTION_OPTIMAL" - this is optimal for our bbc too. See HandleContinuousPhase
-			// TODO: implement status PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT, we should only solve LP MP to get to it here
-			//any other status is an error			
+			
+			LOG_IF(FATAL, lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT &&
+				lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_OPTIMAL);
+			// TODO: we can stop here if the solution is optimal. It will be optimal for B&B
 
 			// Move cuts to bbc:
 			// - optimality (incl. PNB CGP cuts)
@@ -583,13 +587,13 @@ namespace branch_and_benders_cut {
 		stage_data_[current_stage_]->lp_cgp_counter_ += num_cuts; // every cut requires CGP to solve
 
 		double theta_sum = std::accumulate(tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_.begin(), tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_.end(), 0.0);
-		LOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate.";
+		LOG_IF(INFO, log_level_ <= google::INFO) << current_iteration_ << " Iteration - L&P Switch " << lp_switch_counter_ << "/" << lp_switches_limit_ << " - L&P round " << current_lp_round_ << "/" << lp_rounds_limit_ << ": " << fractional_variables_.size() << " fractional variables, " << num_cuts << " L&P cuts to generate.";
 
 		assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
 		// Set round specifics to all dual cgp
 		lp_cuts_timer_.Start(2);
 		for (auto id_solver_pair : osi_solver_map_) {
-			assert(!(lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
+			assert(!(current_lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
 			if (id_solver_pair.second->getNumCols() > 0) { // if solver is not empty
 				if (num_cpu_ > 1) {
 					thread_pool_.schedule(boost::bind(&BranchAndBendersCut::SetDualCGPRoundSpecifics, this, boost::ref(*id_solver_pair.second), tree_nodes_by_stage_[0][0]));
@@ -674,10 +678,10 @@ namespace branch_and_benders_cut {
 		}
 		else { // if no L&P cuts build - we can switch
 			LOG_IF(WARNING, log_level_ <= google::WARNING) << "No L&P cuts build in this round. Switching to minor iteration." << std::endl;
-			if (lp_round_ == 1) {
+			if (current_lp_round_ == 1) {
 				lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
 			}
-			lp_round_ = lp_rounds_limit_;
+			current_lp_round_ = lp_rounds_limit_;
 			// we will switch osi to MIP in Solve() when switch to minor iteration
 			// if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
 		}

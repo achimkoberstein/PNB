@@ -172,6 +172,7 @@ namespace parallel_benders{
     const int PNB_SOLUTION_PARAMETER_PROBLEM = 8;
     const int PNB_SOLUTION_UPPER_LESS_LOWER_BOUND = 9;
     const int PNB_SOLUTION_CVAR_H_NEGATIVE = 10;
+    const int PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT = 11; // we need it when apply L&P cuts to root node in bbc
 
 	// L&P CGP PNB master problem sides (column sets)
 	const int PNB_COL_SET_NONE = 0;
