@@ -68,7 +68,10 @@ public:
 	/* Reject current candidate B&B node
 	and add lazy cuts */
 	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
-	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
+	/* Add user cuts after continuous solution
+	was found */
+	int AddUserCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
+	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
 	
 	// In parallel CPLEX B&B we want to have the copy of problem data in each thread
 	BranchAndBendersCut* getCopyForThread(int thread_id);
@@ -98,6 +101,10 @@ private:
 
 	std::map<int, BranchAndBendersCut*> thread_copy_map_; // TODO: unique ptr?
 	std::mutex thread_copy_map_mutex_; // std::mutex for accessing copies of this
+
+	int current_node_depth_; // how deep the thread is in B&B
+	int current_node_id_;
+	// TODO: create smth like a thread_BBB subclass
 };
 
 } // end namespace branch_and_benders_cut
