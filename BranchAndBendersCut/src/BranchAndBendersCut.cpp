@@ -86,8 +86,8 @@ namespace branch_and_benders_cut {
 			}
 			if (!integer_feasible) {
 				/* The model is bounded, so this can only happend 
-				if theta cuts were not added to the model formulation.
-				They were probably added as lazy cuts.*/ // TODO: is it also true for user cuts
+				if theta cuts were not added to the model formulation
+				or as user cuts.*/
 				fprintf(stderr, "Unbounded solution\n");
 				status = CPXERR_UNSUPPORTED_OPERATION;
 				return status;
@@ -131,7 +131,6 @@ namespace branch_and_benders_cut {
 			}
 			if (node_id == 0 && !added_theta_cuts)
 			{
-				assert(thread_id == 0);
 				global_data->benders_optimal_incumbents_.push_back(thread_data->benders_optimal_incumbents_.back());
 			}
 			// TODO: what is with LB - should we store it in CPX_CALLBACKCONTEXT_RELAXATION. It seems to be wrong when relaxation solution == MIP
@@ -172,9 +171,8 @@ namespace branch_and_benders_cut {
 			}			
 
 			// Generate L&P cuts			
-			assert(thread_data->current_stage_ == 0); // TODO: which stage do we need here?
+			assert(thread_data->current_stage_ == 0);
 			thread_data->ConstructLiftAndProjectCuts();
-			// TODO: Should it be PNB_CUT_APPEND_TYPE_LAZY
 			status = thread_data->AppendCutsToNode(context, contextid, thread_data->tree_nodes_by_stage_[0][0]);
 			if (status) {
 				fprintf(stderr, "Error in bbc_->AppendCutsToNode(): status = %d\n", status);
@@ -630,7 +628,7 @@ namespace branch_and_benders_cut {
 		// i.e., set their coef to 1
 		AppendColsToSubproblem(osi_solver_, getMutableTreeNode(0, 0));
 		// add cuts from containers to the formulation of the MP
-		// TODO: add them as user cuts? Lazy cuts lead to unboundness for root node
+		// TODO: add them as user cuts?
 		AppendCutsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
 		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
 	}
@@ -872,8 +870,6 @@ namespace branch_and_benders_cut {
 		}
 		int rmatbeg = 0;
 
-		//lazy cut
-		
 		int purgeable = CPX_USECUT_FORCE;
 		int is_local = 1;
 		status = CPXcallbackaddusercuts(context, 1, rowCut.row().getNumElements(),
@@ -1112,7 +1108,41 @@ namespace branch_and_benders_cut {
 			}
 		}
 
-		// TODO: probably we need to copy cuts from the main bbc to avoid duplicate cuts. Move them to the main bbc in thread down and delete from here
+		// Add new Benders and L&P cuts from the main loop
+		// TODO: move these to the main bbc in thread down and delete from here, we could distinguish them by iteration != 0
+		// Here we deep copy the cuts since their attribs might be changed during the PNB Solve()        
+		assert(num_stages_ == 2 && "We copy cuts only from the first stage");
+		parallel_benders::BendersNodeData::cut_container::const_iterator it = getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.begin();
+		for (; it != getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end(); ++it) {
+			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+			cut_pointer->cut_creation_iteration_ = 0;
+			cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE; // it will be added to both - prime and double-prime - sides of MP CGP
+			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+		}
+
+		it = getTreeNode(0, 0)->getDataPtr()->domain_cuts_.begin();
+		for (; it != getTreeNode(0, 0)->getDataPtr()->domain_cuts_.end(); ++it) {
+			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+			cut_pointer->cut_creation_iteration_ = 0;
+			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
+			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+		}
+
+		it = getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
+		for (; it != getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end(); ++it) {
+			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+			cut_pointer->cut_creation_iteration_ = 0;
+			cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE;
+			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+		}
+
+		it = getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.begin();
+		for (; it != getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end(); ++it) {
+			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+			cut_pointer->cut_creation_iteration_ = 0;
+			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
+			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+		}
 	}
 
 } // end namespace branch_and_benders_cut
