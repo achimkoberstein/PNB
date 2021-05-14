@@ -323,7 +323,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
 
-			//multithread
+			// multithread
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true }");
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false }");
 			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
@@ -334,8 +334,14 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_STAGE_WISE\" }");
 
 			//L&P cuts
-			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20 }");
-			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 2 }");
+				// multithread, multi-cut
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
+				// multithread, multi-cut, use CGP cuts
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\" }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\" }");
 
 			// BENDERS
 			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true }");

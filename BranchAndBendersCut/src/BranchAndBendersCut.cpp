@@ -56,6 +56,11 @@ namespace branch_and_benders_cut {
 
 	int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle)
 	{
+		/*This is the implementation with new generic CPLEX callbacks. 
+		It is not possible to get the fixed node vars which are necessary for L&P cuts lifting.
+		We use legacy callbacks therefore.
+		*/
+		
 		// see bendersatsp2.c in CPLEX examples
 	
 		BranchAndBendersCut* global_data = static_cast<BranchAndBendersCut*>(cbhandle);		
@@ -1042,7 +1047,8 @@ namespace branch_and_benders_cut {
 		// for CPLEX in Benders it was always mutlithread
 		// value 0 in CPLEX has the same meaning as in our implementation -- use all CPUs
 		// TODO: parameter to set num_cpu for B&B specifically (explicitely or parallel_mode)
-		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, num_cpu_);
+		// TODO: how to implement multithread for legacy callbacks
+		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 1);
 	}
 
 	BranchAndBendersCut* BranchAndBendersCut::getCopyForThread(int thread_id)
@@ -1143,6 +1149,16 @@ namespace branch_and_benders_cut {
 			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
 			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
 		}
+
+		// reset all cut pointers
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_epigraph_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_epigraph_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_domain_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_domain_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
 	}
 
 } // end namespace branch_and_benders_cut
