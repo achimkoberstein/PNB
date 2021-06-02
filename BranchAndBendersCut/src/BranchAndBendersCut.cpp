@@ -159,7 +159,8 @@ namespace branch_and_benders_cut {
 				}
 			}
 			// quit if reached the L&P rounds limit
-			else if (thread_data->current_lp_round_ == thread_data->lp_rounds_limit_) {
+			// TODO: check if the logic above + below is correct
+			if (thread_data->current_lp_round_ == thread_data->lp_rounds_limit_) {
 				thread_data->current_lp_round_ = 0;
 				return 0;
 			}
