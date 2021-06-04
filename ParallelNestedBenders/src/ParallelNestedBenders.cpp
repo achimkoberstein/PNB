@@ -647,6 +647,25 @@ namespace parallel_benders {
                 LOG_IF(ERROR, log_level_ <= google::ERROR) << "You specified stage aggregation that would result in the deterministic equivalent. We therefore disable stage aggregation for this run!";
             }
             aggregate_from_start_ = param.get(PNB_STAGE_AGGREGATION_DIRECTION,true);
+
+            // check size overflow
+            // TODO: check if what we do here is correct, e.g., for SCDP
+            std::vector<SmiTreeNode<SmiScnNode*>*> smi_tree_vector{};
+            std::size_t max_size = smi_tree_vector.max_size();
+            int a = tree_nodes_by_stage_[begin_aggregation_stage_].size();
+            for (int pow = begin_aggregation_stage_; pow < end_aggregation_stage_ + 1; pow++) {
+                int b = tree_nodes_by_stage_[pow].size();
+                if (a > INT_MAX / b || a > max_size) {
+                    LOG_IF(ERROR, log_level_ <= google::ERROR) << "We cannot aggregate " << num_stages_ << " stages. "
+                        "Integer overflow will happen or data cannot be stored in smi tree because of the final number of the scenarios.";
+                    solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
+                    solved_counter_++;
+                    return;
+                }
+                else {
+                    a *= b;
+                }
+            }
         }
 
         // Initialize all upper and lower bounds
