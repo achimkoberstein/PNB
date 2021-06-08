@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets">
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
-    <CplexVersion>1290</CplexVersion>
+    <CplexVersion>2010</CplexVersion>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
@@ -12,11 +12,11 @@
   <ItemDefinitionGroup>
     <ClCompile>
     <!--$(CplexVersion) is not supported in ItemDefinitionGroup-->
-      <AdditionalIncludeDirectories>../../../../ThirdParty/cplex/cplex1290/include/;../../../../ThirdParty/gurobi/gurobi501/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../ThirdParty/cplex/cplex2010/include/;../../../../ThirdParty/gurobi/gurobi501/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cplex1290.lib;gurobi50.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../../../../ThirdParty/cplex/cplex1290/lib/x64;../../../../ThirdParty/gurobi/gurobi501/win64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cplex2010.lib;gurobi50.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../../../ThirdParty/cplex/cplex2010/lib/x64;../../../../ThirdParty/gurobi/gurobi501/win64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
