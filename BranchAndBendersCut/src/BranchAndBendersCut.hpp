@@ -39,7 +39,6 @@ class OsiStochasticBranchAndBendersCutSolverInterface;
 
 namespace branch_and_benders_cut {
 
-	// 
 	int CPXPUBLIC benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
 
 class BranchAndBendersCut : public parallel_benders::ParallelNestedBenders {
