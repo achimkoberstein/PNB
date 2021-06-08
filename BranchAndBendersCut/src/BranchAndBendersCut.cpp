@@ -149,6 +149,7 @@ namespace branch_and_benders_cut {
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
 			// TODO: control the depth of the nodes
 			// TODO: maybe generate root node L&P cuts here???
+			// TODO: L&P cuts can be added as local cuts
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;			
 
@@ -284,7 +285,7 @@ namespace branch_and_benders_cut {
 		ConstructRootNodeCuts();
 
 		// Second Phase: Branch-And-Benders-Cut
-		SetUpMPSolver(cpx_solver);
+		SetUpMPSolver(cpx_solver); //TODO: the argument is not needed in this function
 		PrintSubproblem(cpx_solver, 0, "MP_before");
 		SolveSolverInterface(cpx_solver);
 		current_stage_ = 0;
@@ -526,6 +527,7 @@ namespace branch_and_benders_cut {
 
 	void BranchAndBendersCut::ConstructRootNodeCuts()
 	{
+		// TODO: maybe add cuts through the pool https://www.ibm.com/docs/en/icos/12.8.0.0?topic=uclcp-what-are-pools-user-cuts-lazy-constraints
 		assert(current_stage_ == 0);  // TODO: which stage do we need here?
 
 		// *****************
@@ -876,7 +878,7 @@ namespace branch_and_benders_cut {
 		}
 		int rmatbeg = 0;
 
-		int purgeable = CPX_USECUT_FORCE;
+		int purgeable = CPX_USECUT_FORCE; // TODO: think about this https://www.ibm.com/docs/en/icos/12.8.0.0?topic=c-cpxxcutcallbackadd-cpxcutcallbackadd
 		int is_local = 1;
 		status = CPXcallbackaddusercuts(context, 1, rowCut.row().getNumElements(),
 			&rhs, &sns, &rmatbeg,
@@ -1027,12 +1029,14 @@ namespace branch_and_benders_cut {
 		cpx_solver->messageHandler()->setLogLevel(4); // Log everything // TODO: change it
 		LOG_IF(FATAL, getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) << "When problem has no theta cuts, it is unbounded when B&B started as theta is not bounded.";
 		
+		int status;
+
 		// Set the CPLEX callback
 		BranchAndBendersCut* user_data = this;
 		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
 		// TODO: do we need all of them
-		int status = CPXcallbacksetfunc(env_ptr, lp_ptr, 
+		status = CPXcallbacksetfunc(env_ptr, lp_ptr, 
 			CPX_CALLBACKCONTEXT_CANDIDATE // - found integer solution
 			| CPX_CALLBACKCONTEXT_RELAXATION // - found infeasible (some int vars have non-int solution)
 			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS // - update global UB (LB - ?). Locks other threads
@@ -1048,8 +1052,15 @@ namespace branch_and_benders_cut {
 		// for CPLEX in Benders it was always mutlithread
 		// value 0 in CPLEX has the same meaning as in our implementation -- use all CPUs
 		// TODO: parameter to set num_cpu for B&B specifically (explicitely or parallel_mode)
-		// TODO: how to implement multithread for legacy callbacks
-		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, 1);
+		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, num_cpu_);
+		//TODO: temp
+		// Display the detailed solution log
+		CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 1); // detailed log
+		CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 5); // display all the information from the log
+		CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF); // no presolve
+		CPXsetdblparam(env_ptr, CPX_PARAM_CUTSFACTOR, 1.0); // no cuts
+		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_HeuristicFreq, -1); // turn off periodic node heuristic
+		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_RINSHeur, -1); // turn off RINS heuristic
 	}
 
 	BranchAndBendersCut* BranchAndBendersCut::getCopyForThread(int thread_id)
