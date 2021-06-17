@@ -560,7 +560,7 @@ struct RowOrderedSparseMatrixPointer{
     const int* start_;
 };
 
-typedef chrono::high_resolution_clock wall_clock;
+typedef std::chrono::high_resolution_clock wall_clock;
 
 class Timer {
 public:
