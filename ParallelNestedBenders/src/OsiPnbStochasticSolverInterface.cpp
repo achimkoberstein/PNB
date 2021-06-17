@@ -276,6 +276,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 
 			if (nested_benders_->parameter_.GetBoolParamValue(parallel_benders::PNB_PRINT_SUBPROBLEMS)) {
 				CPXwriteprob(envPtr, lpPtr, "modeloutput.lp", "lp");
+                nested_benders_->smi_->writeSmps("modeloutput");
 			}
 
             // Check for errors

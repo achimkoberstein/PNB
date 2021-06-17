@@ -1103,8 +1103,10 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Solve()
     {
-        smi_->writeSmps("modeloutput");
-		
+        if (print_subproblems_) {
+            smi_->writeSmps("modeloutput");
+        }
+        		
         if (solution_code_ == PNB_SOLUTION_PARAMETER_PROBLEM) {
             LOG_IF(ERROR, log_level_ <= google::ERROR) << "Cannot solve because of the problem in parameters.";
             return;
