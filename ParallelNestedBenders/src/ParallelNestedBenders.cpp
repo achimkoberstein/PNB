@@ -5080,6 +5080,9 @@ namespace parallel_benders {
 
 	void ParallelNestedBenders::GenerateLiftAndProjectCut(int lp_cut_index, const std::pair<int, double>& fractional_variable) {
 		
+        assert(current_stage_ == 0);
+        assert(generate_lp_cuts_);
+        
         bool use_benders_cuts_intra_round(true);
         bool use_lp_cuts_intra_round(false); // seems that often leads to unboundess or infeasibility
         if (lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_NONE || lp_parallel_mode_ >= PNB_PARAL_FRACTS) { //only when fract are solved sequentially 
