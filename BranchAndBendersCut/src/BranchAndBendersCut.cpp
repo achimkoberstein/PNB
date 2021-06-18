@@ -128,13 +128,7 @@ namespace branch_and_benders_cut {
 			// context CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS might never be called.
 			// We need to set UB here
 			// TODO: distinguish between root is integer vs root is integer + Benders optimal
-			int node_id;
-			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &node_id);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
-				return status;
-			}
-			if (node_id == 0 && !added_theta_cuts)
+			if (thread_data->current_node_id_ == 0 && !added_theta_cuts)
 			{
 				global_data->benders_optimal_incumbents_.push_back(thread_data->benders_optimal_incumbents_.back());
 			}
@@ -144,6 +138,7 @@ namespace branch_and_benders_cut {
 			for (auto node : thread_data->tree_nodes_by_stage_[thread_data->current_stage_]) {
 				node->getDataPtr()->CleanUnusedMemory(thread_data->forward_);
 			}
+			// also can be set to -1 in StoreNodeData()
 			thread_data->current_node_id_ = -1;
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
@@ -160,7 +155,7 @@ namespace branch_and_benders_cut {
 				}
 			}
 			// quit if reached the L&P rounds limit
-			// TODO: check if the logic above + below is correct
+			// TODO: check if the logic above + below is correct, should it be for one specific node?
 			if (thread_data->current_lp_round_ == thread_data->lp_rounds_limit_) {
 				thread_data->current_lp_round_ = 0;
 				return 0;
@@ -170,12 +165,21 @@ namespace branch_and_benders_cut {
 			thread_data->current_lp_round_++;
 			
 			//Store Data
-			// TODO: do we need to come here when decide not to build L&P round cuts
+			// TODO: do we need to come here when decide not to build L&P round cuts?
 			status = thread_data->StoreNodeData(context, contextid);
 			if (status) {
 				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
 				return status;
-			}			
+			}
+
+			if (thread_data->current_node_id_ == 0) {
+				std::cout << "We are constructing L&P cuts for the root node." << std::endl;
+			}
+			else {
+				std::cout << "We do not construct L&P cuts for non-root node as lifting is not implemented." << std::endl;
+				thread_data->generate_lp_cuts_ = false;
+				return status;
+			}
 
 			// Generate L&P cuts			
 			assert(thread_data->current_stage_ == 0);
@@ -184,6 +188,14 @@ namespace branch_and_benders_cut {
 			if (status) {
 				fprintf(stderr, "Error in bbc_->AppendCutsToNode(): status = %d\n", status);
 				return status;
+			}
+
+			// TEMP: empty CPLEX, do we need it?
+			if (thread_data->current_node_id_ != -1) {
+				thread_data->current_lp_round_ = 0;
+				for (auto& id_solver_pair : thread_data->osi_solver_map_) {
+					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+				}
 			}
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_LOCAL_PROGRESS) {
@@ -363,15 +375,12 @@ namespace branch_and_benders_cut {
 		assert(contextid == CPX_CALLBACKCONTEXT_CANDIDATE || contextid == CPX_CALLBACKCONTEXT_RELAXATION);
 		int status = 0;
 
-		// TODO: CPXCALLBACKINFO_NODEDEPTH is not available in the current CPLEX version. Update it
-		status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &current_node_depth_);
-		if (status) {
-			fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
-			return status;
-		}
-
 		// TODO: do we need it
-		status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &current_node_id_);
+		/*
+		No limitations when it can be called.
+		*/
+		int num_processed_nodes;
+		status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &num_processed_nodes);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
 			return status;
@@ -385,28 +394,43 @@ namespace branch_and_benders_cut {
 		}
 		assert(mp_node_pointer->num_thetas_ == getNumThetasByStage(tree_nodes_by_stage_[0][0]));
 
-		std::vector<double> solution(num_x_cols + num_theta);
+		/*
+		Can query node data - CPXCALLBACKINFO_NODEDEPTH and CPXCALLBACKINFO_NODEUID when the context is:
+		CPX_CALLBACKCONTEXT_RELAXATION,
+		CPX_CALLBACKCONTEXT_BRANCHING,
+		CPX_CALLBACKCONTEXT_CANDIDATE but only if CPXCALLBACKINFO_CANDIDATE_SOURCE is CPX_LAZYCONSTRAINTCALLBACK_NODE.
+		*/
+		bool can_query_node_info = false;
 
+		std::vector<double> solution(num_x_cols + num_theta);
 		if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {
+			assert(!generate_lp_cuts_);
 			status = CPXcallbackgetcandidatepoint(context, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
 			if (status) {
 				fprintf(stderr, "Error in CPXcallbackgetcandidate: status = %d\n", status);
 				return status;
 			}
 
-#ifndef NDEBUG
-			/* TODO: CPXCALLBACKINFO_CANDIDATE_SOURCE not available in this CPLEX version. Update it
-			CPX_LAZYCONSTRAINTCALLBACK_MIPSTART, if the solution comes from a MIP start.
-			CPX_LAZYCONSTRAINTCALLBACK_HEUR, if the solution comes from a heuristic.
-			CPX_LAZYCONSTRAINTCALLBACK_USER, if the solution is provided by the user(via CPXXcallbackpostheursoln and CPXcallbackpostheursoln).
-			CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
-			int candidate_source(-1);
-			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_CANDIDATE_SOURCE, *candidate_source);
+			//Can be only called in CPX_CALLBACKCONTEXT_CANDIDATE
+			int candidate_source;
+			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_CANDIDATE_SOURCE, &candidate_source);
 			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
+				fprintf(stderr, "Error in CPXcallbackgetinfolong for CPXCALLBACKINFO_CANDIDATE_SOURCE: status = %d\n", status);
 				return status;
-			} */
-#endif
+			}
+			assert((candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE 
+				|| candidate_source == CPX_LAZYCONSTRAINTCALLBACK_HEUR) 
+				&& "Why would we have another source?");
+			/*
+			- CPX_LAZYCONSTRAINTCALLBACK_MIPSTART, if the solution comes from a MIP start.
+			- CPX_LAZYCONSTRAINTCALLBACK_HEUR, if the solution comes from a heuristic.
+			- CPX_LAZYCONSTRAINTCALLBACK_USER, if the solution is provided by the user(via CPXXcallbackpostheursoln and CPXcallbackpostheursoln).
+			- CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
+			*/
+
+			if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE) {
+				can_query_node_info = true;
+			}
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
 			status = CPXcallbackgetrelaxationpoint(context, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
@@ -414,6 +438,28 @@ namespace branch_and_benders_cut {
 				fprintf(stderr, "Error in CPXcallbackgetrelaxationpoint: status = %d\n", status);
 				return status;
 			}
+
+			can_query_node_info = true;
+		}
+
+		if (can_query_node_info) {
+			// TODO: do we need it
+			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEDEPTH, &current_node_depth_);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
+				return status;
+			}
+
+			// TODO: do we need it
+			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEUID, &current_node_id_);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
+				return status;
+			}
+		}
+		else {
+			current_node_depth_ = -1;
+			current_node_id_ = -1;
 		}
 
 		mp_node_pointer->col_solution_.resize(num_x_cols);
@@ -464,7 +510,8 @@ namespace branch_and_benders_cut {
 				}
 			}
 
-			assert(!fractional_variables_.empty());
+			assert(!fractional_variables_.empty() && "There must be fractional vars because we would not end up in CPX_CALLBACKCONTEXT_RELAXATION");
+			generate_lp_cuts_ = true;
 		}
 		
 		// TODO: do we do these stuff here or in CPX_CALLBACKCONTEXT_CANDIDATE block?
@@ -537,8 +584,6 @@ namespace branch_and_benders_cut {
 			// Prepare parameters
 			parallel_benders::Parameter lift_and_project_param = parallel_benders::Parameter(parameter_);
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
-			lift_and_project_param.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
-			lift_and_project_param.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, lp_rounds_limit_); // will anyways be < global_lp_rounds_limit_
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_LP_SWITCHES_LIMIT, lp_rounds_limit_); // if cont solution is found, we construct opt cuts and continue
@@ -644,6 +689,7 @@ namespace branch_and_benders_cut {
 	void BranchAndBendersCut::ConstructLiftAndProjectCuts()
 	{
 		current_stage_ = 0;
+		assert(generate_lp_cuts_);
 		forward_ = false;
 		int num_nodes = tree_nodes_by_stage_[current_stage_].size();
 
@@ -674,6 +720,7 @@ namespace branch_and_benders_cut {
 		thread_pool_.wait(0); // We wait until all threads except the current one (for MP) are finished
 		lp_cuts_timer_.Stop(1);
 
+		// Generate L&P cuts for all or some fract. variables
 		std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values
 		for (int i = 0; i < num_cuts; i++) {
 			thread_pool_.schedule(boost::bind(&BranchAndBendersCut::GenerateLiftAndProjectCut, this, i, rit->second));
@@ -780,6 +827,8 @@ namespace branch_and_benders_cut {
 		LOG_IF(FATAL, num_added_feasibility_cuts_) << "Feasibility cuts not implemented (not tested)";
 
 		// TODO: clear cgp_pnb_map_ or clear it when we find candidate (to spare space???)
+
+		generate_lp_cuts_ = false;
 	}
 
 	int BranchAndBendersCut::AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
