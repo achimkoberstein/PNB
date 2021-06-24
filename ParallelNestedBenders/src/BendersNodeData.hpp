@@ -509,12 +509,14 @@ struct BendersStageData {
     bool changed_aggregation_level_;
 
 	std::atomic_int added_optimality_cuts_;
+	std::atomic_int added_cgp_optimality_cuts_;
 	std::atomic_int added_epigraph_cuts_;
     std::atomic_int added_str_epigraph_cuts_;
     std::atomic_int added_plain_epigraph_cuts_;
     std::atomic_int lp_cgp_counter_; // number of Lift & Project CGp we tried to solve. Sometimes problems are infeasible etc. and no cut is built
 	std::atomic_int added_domain_cuts_;
 	std::atomic_int added_feasibility_cuts_;
+	std::atomic_int added_cgp_feasibility_cuts_;
 
     // D^2C^3 stuff
     int num_d_square_cuts_;

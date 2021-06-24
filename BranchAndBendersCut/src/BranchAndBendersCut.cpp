@@ -143,7 +143,6 @@ namespace branch_and_benders_cut {
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
 			// TODO: maybe generate root node L&P cuts here???
-			// TODO: L&P cuts can be added as local cuts
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;			
 
@@ -237,13 +236,13 @@ namespace branch_and_benders_cut {
 			}
 			global_data->best_bounds_.push_back(global_lower_bound);
 		}
-		/*else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
-			// TODO: are other threads locked?
+		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
 			// copy cuts and whatever else to the global_data
 
 			// We delete thread_data in destructor because the thread with the same id
 			// can be up and down multiple times. Choose time efficiency for memory efficiency.
-		}*/
+			return status;
+		}
 
 		return 0;
 	} /* END benders_callback */
@@ -338,14 +337,13 @@ namespace branch_and_benders_cut {
 		if (log_level_ <= google::INFO) {
 			LOG(INFO) << "Algorithm finished with status code " << solution_code_ << ", final values below.";
 			LOG(INFO) << "Lower Bound:  " << best_bounds_.back() << "\n" << "Upper Bound:  " << benders_optimal_incumbents_.back() << "\n" << "Relative Gap: " << parallel_benders::ComputeRelativeGap(benders_optimal_incumbents_.back(), best_bounds_.back());
-			//LOG(INFO) << "Major Iterations: " << major_iteration_ << "\n" << "Overall Iterations: " << current_iteration_;
 			int cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
 				cut_counter += stage_data_[i]->added_optimality_cuts_;
 			}
-			// TODO: we need to calculate here cuts for continuous phase
-			// TODO: we need to calculate here cuts for all bbc copies
+			// TODO: we need to calculate here cuts for all bbc thread copies
 			LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
+			LOG(INFO) << "Added " << getNumContinuousOptimalityCuts() << " continuous optimality cuts.";
 			cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
 				cut_counter += stage_data_[i]->added_feasibility_cuts_;
@@ -362,6 +360,16 @@ namespace branch_and_benders_cut {
 					cut_counter += stage_data_[i]->added_domain_cuts_;
 				}
 				LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
+				cut_counter = 0;
+				for (int i = 0; i < num_stages_; i++) {
+					cut_counter += stage_data_[i]->added_cgp_optimality_cuts_;
+				}
+				LOG(INFO) << "Added " << cut_counter << " optimality cuts from L&P CGP.";
+				cut_counter = 0;
+				for (int i = 0; i < num_stages_; i++) {
+					cut_counter += stage_data_[i]->added_cgp_feasibility_cuts_;
+				}
+				LOG(INFO) << "Added " << cut_counter << " feasibility cuts from L&P CGP.";
 			}
 		}
 	}
@@ -440,14 +448,12 @@ namespace branch_and_benders_cut {
 		}
 
 		if (can_query_node_info) {
-			// TODO: do we need it
 			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEDEPTH, &current_node_depth_);
 			if (status) {
 				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
 				return status;
 			}
 
-			// TODO: do we need it
 			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEUID, &current_node_id_);
 			if (status) {
 				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
@@ -649,6 +655,62 @@ namespace branch_and_benders_cut {
 				getTreeNode(0, 0)->getDataPtr()->active_aggregates_.set();
 				getTreeNode(0, 0)->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(getTreeNode(0, 0)->getDataPtr()->num_thetas_); // Gets initialized with 0
 			}
+
+			// Calculate number cuts
+			assert(false && "The block below was never tested");
+			// - optimality (w/o PNB CGP cuts)
+			int cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_optimality_cuts_;
+			}
+			stage_data_[current_stage_]->added_optimality_cuts_ += cut_counter;
+
+			// - optimality CGP cuts
+			cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_cgp_optimality_cuts_;
+			}
+			stage_data_[current_stage_]->added_cgp_optimality_cuts_ += cut_counter;
+
+			// - feasibility
+			cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_feasibility_cuts_;
+			}
+			stage_data_[current_stage_]->added_feasibility_cuts_ += cut_counter;
+
+			// - feasibility CGP cuts
+			cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_cgp_feasibility_cuts_;
+			}
+			stage_data_[current_stage_]->added_cgp_feasibility_cuts_ += cut_counter;
+
+			// - epigraph
+			stage_data_[current_stage_]->added_epigraph_cuts_ += getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.size();
+			cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_str_epigraph_cuts_;
+			}
+			stage_data_[current_stage_]->added_str_epigraph_cuts_ += cut_counter;
+			cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_plain_epigraph_cuts_;
+			}
+			stage_data_[current_stage_]->added_plain_epigraph_cuts_ += cut_counter;
+			assert(stage_data_[current_stage_]->added_epigraph_cuts_ == (stage_data_[current_stage_]->added_str_epigraph_cuts_ + stage_data_[current_stage_]->added_plain_epigraph_cuts_));
+			
+			// - domain
+			cut_counter = 0;
+			for (int i = 0; i < num_stages_; i++) {
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_domain_cuts_;
+			}
+			stage_data_[current_stage_]->added_domain_cuts_ += cut_counter;
+
+			// - continuous optimality cuts if use_first_phase_
+			cont_phase_pnb_ = lift_and_project_pnb->getContPhasePNB();
+
+			delete lift_and_project_pnb;
 		}
 		// *****************
 		// Generate continuous optimality cuts
@@ -657,7 +719,6 @@ namespace branch_and_benders_cut {
 		// cont. optimality cuts will be constructed in lift_and_project_pnb above
 		else if (use_first_phase_)
 		{
-			// TODO: should we add Cont cuts as user cuts?
 			current_iteration_ = 1;
 			HandleContinuousPhase();
 		}
@@ -669,6 +730,14 @@ namespace branch_and_benders_cut {
 			assert(osi_solver_->isProvenOptimal());
 			StoreData(osi_solver_, getMutableTreeNode(0, 0));
 			ConstructOptimalityCuts();
+
+			// Calculate these cuts as continuous cuts
+			// For that we creat the cont phase PNB,
+			cont_phase_pnb_ = std::make_shared<ParallelNestedBenders>(smi_);
+			// update the cut counter in it
+			cont_phase_pnb_->getMutableStageData(0)->added_optimality_cuts_.store(stage_data_[0]->added_optimality_cuts_.load());
+			// and reset the number of optimality cuts
+			stage_data_[0]->added_optimality_cuts_ = 0;
 		}
 
 		LOG_IF(FATAL, !getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.empty()) << "Feasibility cuts not implemented (not tested)";
@@ -680,7 +749,6 @@ namespace branch_and_benders_cut {
 		// i.e., set their coef to 1
 		AppendColsToSubproblem(osi_solver_, getMutableTreeNode(0, 0));
 		// add cuts from containers to the formulation of the MP
-		// TODO: add them as user cuts?
 		AppendCutsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
 		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
 	}
@@ -734,7 +802,6 @@ namespace branch_and_benders_cut {
 
 		//Move L&P cuts to the main loop
 		if (!tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_epigraph_cuts_.empty() || !tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_domain_cuts_.empty()) {
-			// TODO: we need to calculate it for root node as well
 			stage_data_[current_stage_]->added_epigraph_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_epigraph_cuts_.size();
 			stage_data_[current_stage_]->added_str_epigraph_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_str_epigraph_cuts_counter_;
 			stage_data_[current_stage_]->added_plain_epigraph_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_plain_epigraph_cuts_counter_;
@@ -793,7 +860,7 @@ namespace branch_and_benders_cut {
 			// TODO: the line below will probably fail because we do not execute delete now
 			assert(tree_nodes_by_stage_[0][0]->getDataPtr()->last_iteration_start_optimality_ == tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
 			assert(tree_nodes_by_stage_[0][0]->getDataPtr()->last_iteration_start_feasibility_ == tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.end());
-			stage_data_[current_stage_]->added_feasibility_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.size(); // we always add feas cuts
+			stage_data_[current_stage_]->added_cgp_feasibility_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.size(); // we always add feas cuts
 
 			int added_opt_cuts = 0;
 			bool evaluated_violation(false);
@@ -815,7 +882,7 @@ namespace branch_and_benders_cut {
 				}
 			}
 
-			stage_data_[current_stage_]->added_optimality_cuts_ += added_opt_cuts;
+			stage_data_[current_stage_]->added_cgp_optimality_cuts_ += added_opt_cuts;
 			LOG_IF(INFO, log_level_ <= google::INFO && evaluated_violation) << "Added " << added_opt_cuts << "/" << tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_optimality_cuts_.size() << " CGP optimality cuts and " << tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts (considering DistanceViolation).";
 			LOG_IF(INFO, log_level_ <= google::INFO && !evaluated_violation) << "Added " << added_opt_cuts << " CGP optimality cuts and " << tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts.";
 
@@ -1091,7 +1158,7 @@ namespace branch_and_benders_cut {
 			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS // - update global UB (LB - ?). Locks other threads
 			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS // - update thread UB (LB - ?)
 			| CPX_CALLBACKCONTEXT_THREAD_UP // - activate thread, is different to thread creation and might happen several times for one thread
-			// | CPX_CALLBACKCONTEXT_THREAD_DOWN  // - deactivate thread, is different to thread creation and might happen several times for one thread
+			| CPX_CALLBACKCONTEXT_THREAD_DOWN  // - deactivate thread, is different to thread creation and might happen several times for one thread
 			, benders_callback, user_data);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
