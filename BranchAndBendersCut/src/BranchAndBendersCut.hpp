@@ -89,7 +89,7 @@ private:
 	/* Prepare MP for the B&B execution in CPLEX
 	- set up CPLEX callback
 	*/
-	void SetUpMPSolver(OsiCpxSolverInterface* cpx_solver);
+	void SetUpMPSolver();
 	
 	// obj values of integer feasible node solutions
 	// for which Benders UB == LB
