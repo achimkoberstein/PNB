@@ -142,7 +142,6 @@ namespace branch_and_benders_cut {
 			thread_data->current_node_id_ = -1;
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
-			// TODO: control the depth of the nodes
 			// TODO: maybe generate root node L&P cuts here???
 			// TODO: L&P cuts can be added as local cuts
 			thread_data->current_stage_ = 0;
@@ -160,8 +159,6 @@ namespace branch_and_benders_cut {
 				thread_data->current_lp_round_ = 0;
 				return 0;
 			}
-			// TODO: check the depth of the node and quit if necessary
-
 			thread_data->current_lp_round_++;
 			
 			//Store Data
@@ -172,10 +169,12 @@ namespace branch_and_benders_cut {
 				return status;
 			}
 
-			if (thread_data->current_node_id_ == 0) {
+			if (thread_data->current_node_depth_ == 0) {
+				assert(thread_data->current_node_id_ == 0);
 				std::cout << "We are constructing L&P cuts for the root node." << std::endl;
 			}
 			else {
+				assert(thread_data->current_node_id_ != 0);
 				std::cout << "We do not construct L&P cuts for non-root node as lifting is not implemented." << std::endl;
 				thread_data->generate_lp_cuts_ = false;
 				return status;
@@ -212,7 +211,6 @@ namespace branch_and_benders_cut {
 			// TODO: is it so important for us. Maybe do not gather this data or gather it in THREAD_DOWN
 			//this context locks all threads, be fast!
 			//results of CPXcallbackgetinfo___ are global here
-			//TODO: probably we do not need to return the status here because CPLEX will not consider it due to the contextid
 
 			int ub_available;
 			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_FEASIBLE, &ub_available);
@@ -573,13 +571,14 @@ namespace branch_and_benders_cut {
 
 	void BranchAndBendersCut::ConstructRootNodeCuts()
 	{
-		// TODO: maybe add cuts through the pool https://www.ibm.com/docs/en/icos/12.8.0.0?topic=uclcp-what-are-pools-user-cuts-lazy-constraints
-		assert(current_stage_ == 0);  // TODO: which stage do we need here?
+		// TODO: maybe add cuts through the pool as user / lazy cuts https://www.ibm.com/docs/en/icos/12.8.0.0?topic=uclcp-what-are-pools-user-cuts-lazy-constraints
+		assert(current_stage_ == 0);
 
 		// *****************
-		// Generate L&P cuts
+		// Preprocess with L&P cuts
 		// *****************
-		if (lp_rounds_limit_) {
+		if (false) {
+			// TODO: implement parameter to start it. We can choose to construct cuts here or in B&B for node with depth 0
 			// Prepare parameters
 			parallel_benders::Parameter lift_and_project_param = parallel_benders::Parameter(parameter_);
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
@@ -605,7 +604,8 @@ namespace branch_and_benders_cut {
 			
 			LOG_IF(FATAL, lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT &&
 				lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_OPTIMAL);
-			// TODO: we can stop here if the solution is optimal. It will be optimal for B&B
+			LOG_IF(FATAL, lift_and_project_pnb->getSolutionCode() == parallel_benders::PNB_SOLUTION_OPTIMAL) 
+				<< "We can stop here if the solution is optimal. It will be optimal for B&B. Not implemented.";
 
 			// Move cuts to bbc:
 			// - optimality (incl. PNB CGP cuts)
