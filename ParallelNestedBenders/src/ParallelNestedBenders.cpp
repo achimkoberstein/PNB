@@ -2343,6 +2343,7 @@ namespace parallel_benders {
                 cut_counter += stage_data_[i]->added_optimality_cuts_;
             }
             LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
+			LOG(INFO) << "Added " << getNumContinuousOptimalityCuts() << " continuous optimality cuts.";
             cut_counter = 0;
             for (int i = 0; i < num_stages_; i++) {
                 cut_counter += stage_data_[i]->added_feasibility_cuts_;
@@ -2359,6 +2360,16 @@ namespace parallel_benders {
                     cut_counter += stage_data_[i]->added_domain_cuts_;
                 }
                 LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
+				cut_counter = 0;
+				for (int i = 0; i < num_stages_; i++) {
+					cut_counter += stage_data_[i]->added_cgp_optimality_cuts_;
+				}
+				LOG(INFO) << "Added " << cut_counter << " optimality cuts from L&P CGP.";
+				cut_counter = 0;
+				for (int i = 0; i < num_stages_; i++) {
+					cut_counter += stage_data_[i]->added_cgp_feasibility_cuts_;
+				}
+				LOG(INFO) << "Added " << cut_counter << " feasibility cuts from L&P CGP.";
             }
         }    
 
@@ -3183,7 +3194,7 @@ namespace parallel_benders {
         if (!benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.empty() || !benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.empty()) {
             assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ == benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
             assert(benders_tree_node_pointer->getDataPtr()->last_iteration_start_feasibility_ == benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.end());
-            stage_data_[current_stage_]->added_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size(); // we always add feas cuts
+            stage_data_[current_stage_]->added_cgp_feasibility_cuts_ += benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size(); // we always add feas cuts
 
             int added_opt_cuts = 0;
             bool evaluated_violation(false);
@@ -3205,7 +3216,7 @@ namespace parallel_benders {
                 }
             }
 
-            stage_data_[current_stage_]->added_optimality_cuts_ += added_opt_cuts;
+            stage_data_[current_stage_]->added_cgp_optimality_cuts_ += added_opt_cuts;
             LOG_IF(INFO, log_level_ <= google::INFO && evaluated_violation) << "Added " << added_opt_cuts << "/" << benders_tree_node_pointer->getDataPtr()->lp_round_optimality_cuts_.size() << " CGP optimality cuts and " << benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts (considering DistanceViolation).";
             LOG_IF(INFO, log_level_ <= google::INFO && !evaluated_violation) << "Added " << added_opt_cuts << " CGP optimality cuts and " << benders_tree_node_pointer->getDataPtr()->lp_round_feasibility_cuts_.size() << " CGP feasibility cuts.";
 
@@ -8075,11 +8086,25 @@ namespace parallel_benders {
 
     const BendersStageData* ParallelNestedBenders::getStageData(int stage) const
     {
+		assert(!stage_data_.empty());
         return stage_data_[stage];
     }
 
     BendersStageData* ParallelNestedBenders::getMutableStageData(int stage)
     {
+		LOG_IF(FATAL, stage >= num_stages_);
+		if (stage_data_.empty())
+		{
+			stage_data_.reserve(num_stages_);
+			// Create Benders Stage data
+			for (int i = 0; i < num_stages_; i++) {
+				stage_data_.push_back(new BendersStageData);
+				// Set empty warm start object
+				if (warm_start_ && warm_start_stage_)
+					stage_data_.back()->warm_start_.reset(osi_solver_->getEmptyWarmStart());
+			}
+		}
+		
         return stage_data_[stage];
     }
 
