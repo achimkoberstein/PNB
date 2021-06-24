@@ -134,7 +134,7 @@ double OsiStochasticParallelNestedBendersSolverInterface::getRelativeGap() const
 
 double OsiStochasticParallelNestedBendersSolverInterface::getIntegerGap() const
 {
-    parallel_benders::ParallelNestedBenders* cont_phase_pnb = nested_benders_->cont_phase_pnb_;
+    parallel_benders::ParallelNestedBenders* cont_phase_pnb = nested_benders_->cont_phase_pnb_.get();
     
     assert(nested_benders_->cont_phase_it_limit_ == 0 && "We cannot take the solution of cont_phase_pnb_ in this case");
     if (nested_benders_->integer_problems_.none()) {

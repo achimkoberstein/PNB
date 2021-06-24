@@ -77,6 +77,7 @@ public:
     SmiTreeNode<BendersNodeData*>* getMutableTreeNode(int stage, int scenario);
     const BendersStageData* getStageData(int stage) const;
     BendersStageData* getMutableStageData(int stage);
+	std::shared_ptr<ParallelNestedBenders> getContPhasePNB();
 
     std::shared_ptr<std::mutex> getMutableConsoleMutex();
 
@@ -201,7 +202,7 @@ protected:
     SmiCoreData* core_;
     OsiSolverInterface* osi_solver_;
     std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_;
-    ParallelNestedBenders* cont_phase_pnb_;
+    std::shared_ptr<ParallelNestedBenders> cont_phase_pnb_;
     // Scenario Tree that contains problem and solution data
     SmiScenarioTree<BendersNodeData*> tree_;
     std::vector<std::vector<SmiTreeNode<BendersNodeData*>* > > tree_nodes_by_stage_;
