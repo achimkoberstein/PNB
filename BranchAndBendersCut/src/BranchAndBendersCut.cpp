@@ -114,10 +114,10 @@ namespace branch_and_benders_cut {
 			}
 
 			// Generate optimality cuts and add them as lazy cuts
-			int num_theta_cuts = thread_data->stage_data_[0]->added_optimality_cuts_ + thread_data->stage_data_[0]->added_epigraph_cuts_;
+			int old_num_cuts = thread_data->stage_data_[0]->added_optimality_cuts_;
 			
 			thread_data->ConstructOptimalityCuts(); // and calculate Benders ub, lb
-			int added_theta_cuts = thread_data->stage_data_[0]->added_optimality_cuts_ + thread_data->stage_data_[0]->added_epigraph_cuts_ - num_theta_cuts;
+			int added_cuts = thread_data->stage_data_[0]->added_optimality_cuts_ - old_num_cuts;
 			// if violated cuts are found: add them and reject the integer candidate solution
 			// if no violated cuts found (or ub = lb), no cuts are appended and candidate is excepted
 			thread_data->AppendCutsToNode(context, contextid, thread_data->tree_nodes_by_stage_[thread_data->current_stage_ - 1][0]);
@@ -128,7 +128,7 @@ namespace branch_and_benders_cut {
 			// context CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS might never be called.
 			// We need to set UB here
 			// TODO: distinguish between root is integer vs root is integer + Benders optimal
-			if (thread_data->current_node_id_ == 0 && !added_theta_cuts)
+			if (thread_data->current_node_id_ == 0 && !added_cuts)
 			{
 				global_data->benders_optimal_incumbents_.push_back(thread_data->benders_optimal_incumbents_.back());
 			}
@@ -284,8 +284,7 @@ namespace branch_and_benders_cut {
 			return;
 		}
 
-		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-		LOG_IF(FATAL, !cpx_solver) << "osi_solver_ should be OsiCpxSolverInterface for BranchAndBendersCut";
+		LOG_IF(FATAL, !dynamic_cast<OsiCpxSolverInterface*>(osi_solver_)) << "osi_solver_ should be OsiCpxSolverInterface for BranchAndBendersCut";
 
 		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		
@@ -297,15 +296,15 @@ namespace branch_and_benders_cut {
 		ConstructRootNodeCuts();
 
 		// Second Phase: Branch-And-Benders-Cut
-		SetUpMPSolver(cpx_solver); //TODO: the argument is not needed in this function
-		PrintSubproblem(cpx_solver, 0, "MP_before");
-		SolveSolverInterface(cpx_solver);
+		SetUpMPSolver();
+		PrintSubproblem(osi_solver_, 0, "MP_before");
+		SolveSolverInterface(osi_solver_);
 		current_stage_ = 0;
-		PrintSubproblem(cpx_solver, 0, "MP_after");
+		PrintSubproblem(osi_solver_, 0, "MP_after");
 		
-		if (cpx_solver->isProvenOptimal()) {
+		if (osi_solver_->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
-			assert(parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), cpx_solver->getObjValue(), 0.001));
+			assert(parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), osi_solver_->getObjValue(), 0.001));
 			// TODO: not sure why, but sometimes LB is -infinity
 			if (!parallel_benders::CompareForEquality(best_bounds_.back(), benders_optimal_incumbents_.back(), relative_epsilon_) &&
 				benders_optimal_incumbents_.back() > best_bounds_.back())
@@ -313,22 +312,22 @@ namespace branch_and_benders_cut {
 				best_bounds_.push_back(benders_optimal_incumbents_.back());
 			}			
 		}
-		else if (cpx_solver->isProvenPrimalInfeasible()) {
+		else if (osi_solver_->isProvenPrimalInfeasible()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
 		}
-		else if (cpx_solver->isProvenDualInfeasible()) {
+		else if (osi_solver_->isProvenDualInfeasible()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_UNBOUNDED;
 		}
-		else if (cpx_solver->isPrimalObjectiveLimitReached()) {
+		else if (osi_solver_->isPrimalObjectiveLimitReached()) {
 			LOG(FATAL) << "Unknown solution code";
 		}
-		else if (cpx_solver->isDualObjectiveLimitReached()) {
+		else if (osi_solver_->isDualObjectiveLimitReached()) {
 			LOG(FATAL) << "Unknown solution code";
 		}
-		else if (cpx_solver->isIterationLimitReached()) {
+		else if (osi_solver_->isIterationLimitReached()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_ITERATION_LIMIT;
 		}
-		else if (cpx_solver->isTimeLimitReached()) {
+		else if (osi_solver_->isTimeLimitReached()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_TIME_LIMIT;
 		}
 		else {
@@ -1072,9 +1071,10 @@ namespace branch_and_benders_cut {
 		return 0;
 	}
 
-	void BranchAndBendersCut::SetUpMPSolver(OsiCpxSolverInterface* cpx_solver)
+	void BranchAndBendersCut::SetUpMPSolver()
 	{
 		assert(current_stage_ == 0);
+		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
 		cpx_solver->messageHandler()->setLogLevel(4); // Log everything // TODO: change it
 		LOG_IF(FATAL, getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) << "When problem has no theta cuts, it is unbounded when B&B started as theta is not bounded.";
 		
