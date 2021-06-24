@@ -2508,7 +2508,7 @@ namespace parallel_benders {
         other->osi_solver_ = osi_solver_->clone(true);
         if (cont_phase_pnb_) {
             assert(false && "Never tested");
-            other->cont_phase_pnb_ = cont_phase_pnb_->clone();
+            other->cont_phase_pnb_ = std::shared_ptr<ParallelNestedBenders>(cont_phase_pnb_->clone());
         }
         // clone thread solvers
         for (auto id_solver_pair : osi_solver_map_) {
@@ -4201,7 +4201,6 @@ namespace parallel_benders {
     {
         // Delete all solver instances 
         delete osi_solver_;
-        delete cont_phase_pnb_;
 		for( auto id_solver_pair: osi_solver_map_ ){
             delete id_solver_pair.second;
         }
@@ -8084,6 +8083,11 @@ namespace parallel_benders {
         return stage_data_[stage];
     }
 
+	std::shared_ptr<ParallelNestedBenders> ParallelNestedBenders::getContPhasePNB()
+	{
+		return cont_phase_pnb_;
+    }
+
     std::shared_ptr<std::mutex> ParallelNestedBenders::getMutableConsoleMutex()
     {
         return console_mutex_ptr_;
@@ -9437,7 +9441,7 @@ namespace parallel_benders {
 
             assert(cont_phase_pnb_ == nullptr && "Before relaxation phase is implemented it should be not initialized in FirstPhase");
             if (!cont_phase_pnb_) {
-                cont_phase_pnb_ = new ParallelNestedBenders(smi_);
+                cont_phase_pnb_ = std::make_shared<ParallelNestedBenders>(smi_);
                 cont_phase_pnb_->parameter_ = cont_phase_param;
                 cont_phase_pnb_->testset_name_ = testset_name_;
                 cont_phase_pnb_->problem_name_ = problem_name_;

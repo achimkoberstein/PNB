@@ -144,7 +144,7 @@ double OsiStochasticBranchAndBendersCutSolverInterface::getIntegerGap() const
 	assertTriedToSolve();
 	int value = 0.0;
 	if (last_used_algorithm_ == parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
-		parallel_benders::ParallelNestedBenders* cont_phase_pnb = bbc_->cont_phase_pnb_;
+		parallel_benders::ParallelNestedBenders* cont_phase_pnb = bbc_->cont_phase_pnb_.get();
 
 		assert(bbc_->cont_phase_it_limit_ == 0 && "We cannot take the solution of cont_phase_pnb_ in this case");
 		if (bbc_->integer_problems_.none()) {
