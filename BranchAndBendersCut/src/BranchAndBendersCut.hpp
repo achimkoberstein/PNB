@@ -18,7 +18,7 @@
 
 #include "ParallelNestedBenders.hpp"
 #include "SmiScnModel.hpp"
-#include "SmiScenarioTree.hpp" 
+#include "SmiScenarioTree.hpp"
 #include "BendersNodeData.hpp"
 
 // Files necessary for cplex
@@ -35,7 +35,9 @@ class OsiSolverInterface;
 class SmiCoreData;
 class SmiNodeData;
 class OsiStochasticBranchAndBendersCutSolverInterface;
-
+namespace branch_and_benders_cut {
+	class ThreadBranchAndBendersCut;
+}
 
 namespace branch_and_benders_cut {
 
@@ -49,31 +51,14 @@ public:
 	BranchAndBendersCut(const BranchAndBendersCut& bbc) = delete;
 	~BranchAndBendersCut();
 
-	void Init() override;
 	void Solve() override;
-	
-	/* Store solution, theta and 
-	LB of the B&B node */
-	int StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
 	
 	/* Solve subproblems, update UB
 	and aggregate new cuts if UB != LB	*/
 	void ConstructOptimalityCuts();
-
-	/* Solve subproblems, update UB // TODO: do we updated bound?
-	and solve CGPs	*/
-	void ConstructLiftAndProjectCuts();
-
-	/* Reject current candidate B&B node
-	and add lazy cuts */
-	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
-	/* Add user cuts after continuous solution
-	was found */
-	int AddUserCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
-	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
 	
 	// In parallel CPLEX B&B we want to have the copy of problem data in each thread
-	BranchAndBendersCut* getCopyForThread(int thread_id);
+	std::shared_ptr<branch_and_benders_cut::ThreadBranchAndBendersCut> getCopyForThread(int thread_id);
 	void createCopyForThread(int thread_id);
 
 	BranchAndBendersCut* clone() = delete;
@@ -95,15 +80,49 @@ private:
 	// for which Benders UB == LB
 	std::deque<double> benders_optimal_incumbents_;
 
-	// best bounds of B&B, i.e., lower bounds
+	// best global bounds of B&B, i.e., lower bounds
+	// updated during the GLOBAL PROGRESS context
 	std::deque<double> best_bounds_;
 
-	std::map<int, BranchAndBendersCut*> thread_copy_map_; // TODO: unique ptr?
+	std::map<int, std::shared_ptr<ThreadBranchAndBendersCut>> thread_copy_map_;
 	std::mutex thread_copy_map_mutex_; // std::mutex for accessing copies of this
+};
 
-	int current_node_depth_; // how deep the thread is in B&B
+class ThreadBranchAndBendersCut : public BranchAndBendersCut {
+	//friend class ::OsiStochasticBranchAndBendersCutSolverInterface;
+	//friend int CPXPUBLIC branch_and_benders_cut::benders_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* cbhandle);
+public:
+	ThreadBranchAndBendersCut(SmiScnModel* smi_model_ptr);
+	ThreadBranchAndBendersCut(const BranchAndBendersCut& bbc) = delete;
+	~ThreadBranchAndBendersCut();
+
+	/* Store solution, theta and
+	LB of the B&B node */
+	int StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
+
+	int getCurrentNodeDepth();
+	int getCurrentNodeId();
+
+	void setCurrentNodeDepth(int value);
+	void setCurrentNodeId(int value);
+
+	/* Solve subproblems, update UB // TODO: do we updated bound?
+	and solve CGPs	*/
+	void ConstructLiftAndProjectCuts();
+
+	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
+
+private:
+	int current_node_depth_; // how deep the thread is in B&B // TODO: initialize this and below in constructor
 	int current_node_id_;
-	// TODO: create smth like a thread_BBB subclass
+
+
+	/* Reject current candidate B&B node
+	and add lazy cuts */
+	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
+	/* Add user cuts after continuous solution
+	was found */
+	int AddUserCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
 };
 
 } // end namespace branch_and_benders_cut

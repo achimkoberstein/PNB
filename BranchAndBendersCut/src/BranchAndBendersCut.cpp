@@ -72,10 +72,11 @@ namespace branch_and_benders_cut {
 			fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
 			return status;
 		}
-
-		BranchAndBendersCut* thread_data = global_data->getCopyForThread(thread_id);
+		
+		std::shared_ptr<ThreadBranchAndBendersCut> thread_data = global_data->getCopyForThread(thread_id);
 
 		if (contextid == CPX_CALLBACKCONTEXT_THREAD_UP && !thread_data) {
+			assert(thread_data == nullptr);
 			global_data->createCopyForThread(thread_id);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {	
@@ -99,7 +100,7 @@ namespace branch_and_benders_cut {
 			}
 
 			// empty CPLEX (needed if we already built L&P cuts and used solvers)
-			if (thread_data->current_node_id_ != -1) {
+			if (thread_data->getCurrentNodeId() != -1) {
 				thread_data->current_lp_round_ = 0;
 				for (auto& id_solver_pair : thread_data->osi_solver_map_) {
 					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
@@ -128,7 +129,7 @@ namespace branch_and_benders_cut {
 			// context CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS might never be called.
 			// We need to set UB here
 			// TODO: distinguish between root is integer vs root is integer + Benders optimal
-			if (thread_data->current_node_id_ == 0 && !added_cuts)
+			if (thread_data->getCurrentNodeId() == 0 && !added_cuts)
 			{
 				global_data->benders_optimal_incumbents_.push_back(thread_data->benders_optimal_incumbents_.back());
 			}
@@ -139,15 +140,14 @@ namespace branch_and_benders_cut {
 				node->getDataPtr()->CleanUnusedMemory(thread_data->forward_);
 			}
 			// also can be set to -1 in StoreNodeData()
-			thread_data->current_node_id_ = -1;
+			thread_data->setCurrentNodeId(-1);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
-			// TODO: maybe generate root node L&P cuts here???
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;			
 
 			// If we come from contextid == CPX_CALLBACKCONTEXT_CANDIDATE
-			if (thread_data->current_node_id_ == -1) {
+			if (thread_data->getCurrentNodeId() == -1) {
 				for (auto& id_solver_pair : thread_data->osi_solver_map_) {
 					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 				}
@@ -161,19 +161,18 @@ namespace branch_and_benders_cut {
 			thread_data->current_lp_round_++;
 			
 			//Store Data
-			// TODO: do we need to come here when decide not to build L&P round cuts?
 			status = thread_data->StoreNodeData(context, contextid);
 			if (status) {
 				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
 				return status;
 			}
 
-			if (thread_data->current_node_depth_ == 0) {
-				assert(thread_data->current_node_id_ == 0);
+			if (thread_data->getCurrentNodeDepth() == 0) {
+				assert(thread_data->getCurrentNodeId() == 0);
 				std::cout << "We are constructing L&P cuts for the root node." << std::endl;
 			}
 			else {
-				assert(thread_data->current_node_id_ != 0);
+				assert(thread_data->getCurrentNodeId() != 0);
 				std::cout << "We do not construct L&P cuts for non-root node as lifting is not implemented." << std::endl;
 				thread_data->generate_lp_cuts_ = false;
 				return status;
@@ -189,7 +188,7 @@ namespace branch_and_benders_cut {
 			}
 
 			// TEMP: empty CPLEX, do we need it?
-			if (thread_data->current_node_id_ != -1) {
+			if (thread_data->getCurrentNodeId() != -1) {
 				thread_data->current_lp_round_ = 0;
 				for (auto& id_solver_pair : thread_data->osi_solver_map_) {
 					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
@@ -203,8 +202,6 @@ namespace branch_and_benders_cut {
 				fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
 				return status;
 			}
-			// TOOD: collect them somewhere for local_data, is not it here?
-			thread_data->best_bounds_.push_back(thread_lower_bound);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS) {
 			// TODO: is it so important for us. Maybe do not gather this data or gather it in THREAD_DOWN
@@ -237,7 +234,7 @@ namespace branch_and_benders_cut {
 			global_data->best_bounds_.push_back(global_lower_bound);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
-			// copy cuts and whatever else to the global_data
+			// TODO: copy cuts and whatever else to the global_data
 
 			// We delete thread_data in destructor because the thread with the same id
 			// can be up and down multiple times. Choose time efficiency for memory efficiency.
@@ -248,23 +245,12 @@ namespace branch_and_benders_cut {
 	} /* END benders_callback */
 	
 	BranchAndBendersCut::BranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(),best_bounds_(),thread_copy_map_(),thread_copy_map_mutex_(),current_node_depth_(-1),current_node_id_(-1)
+		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),best_bounds_(1,-infinity_),thread_copy_map_(),thread_copy_map_mutex_()
 	{
 	}
 
 	BranchAndBendersCut::~BranchAndBendersCut()
 	{
-		for (auto id_copy_pair : thread_copy_map_) {
-			delete id_copy_pair.second;
-			id_copy_pair.second = nullptr;
-		}
-	}
-
-	void BranchAndBendersCut::Init()
-	{
-		ParallelNestedBenders::Init();
-		benders_optimal_incumbents_.push_back(infinity_);
-		best_bounds_.push_back(-infinity_);
 	}
 
 	void BranchAndBendersCut::Solve()
@@ -372,162 +358,6 @@ namespace branch_and_benders_cut {
 				LOG(INFO) << "Added " << cut_counter << " feasibility cuts from L&P CGP.";
 			}
 		}
-	}
-
-	int BranchAndBendersCut::StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid)
-	{
-		assert(current_stage_ == 0);
-		assert(contextid == CPX_CALLBACKCONTEXT_CANDIDATE || contextid == CPX_CALLBACKCONTEXT_RELAXATION);
-		int status = 0;
-
-		// TODO: do we need it
-		/*
-		No limitations when it can be called.
-		*/
-		int num_processed_nodes;
-		status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &num_processed_nodes);
-		if (status) {
-			fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
-			return status;
-		}
-
-		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
-		int num_x_cols = mp_node_pointer->cols_;
-		int num_theta = mp_node_pointer->num_thetas_;
-		if (!num_theta) {
-			num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
-		}
-		assert(mp_node_pointer->num_thetas_ == getNumThetasByStage(tree_nodes_by_stage_[0][0]));
-
-		/*
-		Can query node data - CPXCALLBACKINFO_NODEDEPTH and CPXCALLBACKINFO_NODEUID when the context is:
-		CPX_CALLBACKCONTEXT_RELAXATION,
-		CPX_CALLBACKCONTEXT_BRANCHING,
-		CPX_CALLBACKCONTEXT_CANDIDATE but only if CPXCALLBACKINFO_CANDIDATE_SOURCE is CPX_LAZYCONSTRAINTCALLBACK_NODE.
-		*/
-		bool can_query_node_info = false;
-
-		std::vector<double> solution(num_x_cols + num_theta);
-		if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {
-			assert(!generate_lp_cuts_);
-			status = CPXcallbackgetcandidatepoint(context, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetcandidate: status = %d\n", status);
-				return status;
-			}
-
-			//Can be only called in CPX_CALLBACKCONTEXT_CANDIDATE
-			int candidate_source;
-			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_CANDIDATE_SOURCE, &candidate_source);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfolong for CPXCALLBACKINFO_CANDIDATE_SOURCE: status = %d\n", status);
-				return status;
-			}
-			assert((candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE 
-				|| candidate_source == CPX_LAZYCONSTRAINTCALLBACK_HEUR) 
-				&& "Why would we have another source?");
-			/*
-			- CPX_LAZYCONSTRAINTCALLBACK_MIPSTART, if the solution comes from a MIP start.
-			- CPX_LAZYCONSTRAINTCALLBACK_HEUR, if the solution comes from a heuristic.
-			- CPX_LAZYCONSTRAINTCALLBACK_USER, if the solution is provided by the user(via CPXXcallbackpostheursoln and CPXcallbackpostheursoln).
-			- CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
-			*/
-
-			if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE) {
-				can_query_node_info = true;
-			}
-		}
-		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
-			status = CPXcallbackgetrelaxationpoint(context, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetrelaxationpoint: status = %d\n", status);
-				return status;
-			}
-
-			can_query_node_info = true;
-		}
-
-		if (can_query_node_info) {
-			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEDEPTH, &current_node_depth_);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
-				return status;
-			}
-
-			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEUID, &current_node_id_);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
-				return status;
-			}
-		}
-		else {
-			current_node_depth_ = -1;
-			current_node_id_ = -1;
-		}
-
-		mp_node_pointer->col_solution_.resize(num_x_cols);
-		mp_node_pointer->col_solution_.assign(solution.begin(), solution.begin()+ num_x_cols);
-		mp_node_pointer->next_stage_approximation_.resize(num_theta);
-		mp_node_pointer->next_stage_approximation_.assign(solution.begin() + num_x_cols, solution.end());
-
-		double solution_value = 0;
-		if (mp_node_pointer->smi_node_data_->getObjectiveLength()) {
-			mp_node_pointer->objective_ = new double[stage_data_[0]->num_columns_];
-			memcpy(mp_node_pointer->objective_, core_->getDenseObjCoefficients(0), stage_data_[0]->num_columns_ * sizeof(double));
-			if (stage_data_[0]->stochastic_objective_)
-				for (int i = 0; i < mp_node_pointer->smi_node_data_->getObjectiveLength(); i++) {
-					mp_node_pointer->objective_[mp_node_pointer->smi_node_data_->getObjectiveIndices()[i] - core_->getColStart(0)] = mp_node_pointer->smi_node_data_->getObjectiveElements()[i];
-				}
-		}
-		else
-			mp_node_pointer->objective_ = const_cast<double*> (core_->getDenseObjCoefficients(0));
-		const double* obj_coefs = mp_node_pointer->objective_;
-
-		int i = 0;
-		for (; i < mp_node_pointer->cols_; i++) {
-			solution_value += mp_node_pointer->col_solution_[i] * obj_coefs[i];
-		}
-		mp_node_pointer->solution_value_ = solution_value; // q(x): solution w/o thetas
-
-		// Add all thetas to the c*x solution to get lower bound for node at this stage
-		for (double& theta_value : mp_node_pointer->next_stage_approximation_) { 
-			solution_value += theta_value;
-			i++;
-		}
-		mp_node_pointer->lower_bound_ = solution_value; //  q(x) + theta: solution with thetas
-
-		if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
-			assert(current_stage_ == 0 && current_lp_round_ > 0);
-			//Check for integrality
-			for (int index : core_->getBinaryCols(current_stage_)) {
-				double value = mp_node_pointer->col_solution_[index];
-				double fractionality = abs(round(value) - value); // distance from 0 or 1
-				if (!parallel_benders::CompareForEquality(fractionality, 0.0, integer_tolerance_)) {
-					assert(fractionality > 0 && fractionality <= 0.5);
-					//std::map cannot store records with duplicated keys
-					while (fractional_variables_.find(fractionality) != fractional_variables_.end()) {
-						fractionality += zero_tolerance_ * 2;
-					}
-					DLOG_IF(FATAL, fractional_variables_.find(fractionality) != fractional_variables_.end());
-					fractional_variables_.emplace(fractionality, make_pair(index, value));
-				}
-			}
-
-			assert(!fractional_variables_.empty() && "There must be fractional vars because we would not end up in CPX_CALLBACKCONTEXT_RELAXATION");
-			generate_lp_cuts_ = true;
-		}
-		
-		// TODO: do we do these stuff here or in CPX_CALLBACKCONTEXT_CANDIDATE block?
-		stage_old_lower_upper_bounds_[0].first = stage_lower_upper_bounds_[0].first;
-		stage_old_lower_upper_bounds_[0].second = stage_lower_upper_bounds_[0].second;
-		stage_lower_upper_bounds_[0].first = mp_node_pointer->lower_bound_; //  q(x) + theta: solution with thetas
-		stage_lower_upper_bounds_[0].second = mp_node_pointer->solution_value_; // q(x): solution w/o thetas
-		old_lower_bound_ = lower_bound_;
-		lower_bound_ = mp_node_pointer->lower_bound_;	
-		// UB will be calculated in ConstructOptimalityCuts()
-		// after 2nd-stage subproblems are evaluated
-
-		return status;
 	}
 
 	void BranchAndBendersCut::ConstructOptimalityCuts()
@@ -753,7 +583,344 @@ namespace branch_and_benders_cut {
 		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
 	}
 
-	void BranchAndBendersCut::ConstructLiftAndProjectCuts()
+	void BranchAndBendersCut::SetUpMPSolver()
+	{
+		assert(current_stage_ == 0);
+		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+		cpx_solver->messageHandler()->setLogLevel(4); // Log everything // TODO: change it
+		LOG_IF(FATAL, getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) << "When problem has no theta cuts, it is unbounded when B&B started as theta is not bounded.";
+		
+		int status;
+
+		// Set the CPLEX callback
+		BranchAndBendersCut* user_data = this;
+		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
+		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+		// TODO: do we need all of them
+		status = CPXcallbacksetfunc(env_ptr, lp_ptr, 
+			CPX_CALLBACKCONTEXT_CANDIDATE // - found integer solution
+			| CPX_CALLBACKCONTEXT_RELAXATION // - found infeasible (some int vars have non-int solution)
+			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS // - update global UB (LB - ?). Locks other threads
+			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS // - update thread UB (LB - ?)
+			| CPX_CALLBACKCONTEXT_THREAD_UP // - activate thread, is different to thread creation and might happen several times for one thread
+			| CPX_CALLBACKCONTEXT_THREAD_DOWN  // - deactivate thread, is different to thread creation and might happen several times for one thread
+			, benders_callback, user_data);
+		if (status) {
+			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
+		}
+
+		// Set threads number for B&B
+		// for CPLEX in Benders it was always mutlithread
+		// value 0 in CPLEX has the same meaning as in our implementation -- use all CPUs
+		// TODO: parameter to set num_cpu for B&B specifically (explicitely or parallel_mode)
+		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, num_cpu_);
+		//TODO: temp
+		// Display the detailed solution log
+		CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 1); // detailed log
+		CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 5); // display all the information from the log
+		CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF); // no presolve
+		CPXsetdblparam(env_ptr, CPX_PARAM_CUTSFACTOR, 1.0); // no cuts
+		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_HeuristicFreq, -1); // turn off periodic node heuristic
+		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_RINSHeur, -1); // turn off RINS heuristic
+	}
+
+	std::shared_ptr<ThreadBranchAndBendersCut> BranchAndBendersCut::getCopyForThread(int thread_id)
+	{
+		// TODO: delete the pointers of thread_copy_map_mutex_ destruction.
+		// Just in case because we delete them anyways when thread goes down.
+
+		{
+			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_);
+			std::map<int, std::shared_ptr<ThreadBranchAndBendersCut>>::iterator it = thread_copy_map_.find(thread_id);
+			
+			if (it != thread_copy_map_.end())
+				return (*it).second;
+			else {
+				return std::shared_ptr<ThreadBranchAndBendersCut>(nullptr);
+			}		
+		}
+		return std::shared_ptr<ThreadBranchAndBendersCut>(nullptr);
+	}
+
+	void BranchAndBendersCut::createCopyForThread(int thread_id)
+	{
+		ThreadBranchAndBendersCut* thread_copy = nullptr;
+		int num_theta = 0;
+		std::vector< std::vector<int> > nodes_in_cut;
+		{
+			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_);
+
+			// Initialize new bbc from current data
+			thread_copy = new ThreadBranchAndBendersCut(smi_);
+			thread_copy_map_.emplace(thread_id, std::shared_ptr<ThreadBranchAndBendersCut>(thread_copy));
+			thread_copy->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
+			thread_copy->parameter_ = parallel_benders::Parameter(parameter_);
+			thread_copy->testset_name_ = testset_name_;
+			thread_copy->problem_name_ = problem_name_;
+			thread_copy->instance_name_ = instance_name_ + "_thread_" + std::to_string(thread_id);
+			
+			// The data below was set when we built theta cuts.
+			// We could copy the nodes but do not need so much data.
+			num_theta = tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_;
+			nodes_in_cut = tree_nodes_by_stage_[0][0]->getDataPtr()->nodes_in_cut_;
+		}
+		thread_copy->Init();
+		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_ = num_theta;
+		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->nodes_in_cut_ = std::move(nodes_in_cut);
+		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
+		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
+					
+		// Copy warm start
+		if (warm_start_) {
+			for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
+				CoinWarmStart* ws;
+				std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
+				if (stage_data_[stage]->warm_start_) {
+					ws = (stage_data_[stage]->warm_start_.get())->clone();
+					thread_copy->stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
+				}
+				for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
+					if (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
+						ws = (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
+						thread_copy->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
+					}
+				}
+			}
+		}
+
+		// Add new Benders and L&P cuts from the main loop
+		// TODO: move these to the main bbc in thread down and delete from here, we could distinguish them by iteration != 0
+		// Here we deep copy the cuts since their attribs might be changed during the PNB Solve()        
+		assert(num_stages_ == 2 && "We copy cuts only from the first stage");
+		parallel_benders::BendersNodeData::cut_container::const_iterator it = getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.begin();
+		for (; it != getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end(); ++it) {
+			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+			cut_pointer->cut_creation_iteration_ = 0;
+			cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE; // it will be added to both - prime and double-prime - sides of MP CGP
+			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+		}
+
+		it = getTreeNode(0, 0)->getDataPtr()->domain_cuts_.begin();
+		for (; it != getTreeNode(0, 0)->getDataPtr()->domain_cuts_.end(); ++it) {
+			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+			cut_pointer->cut_creation_iteration_ = 0;
+			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
+			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+		}
+
+		it = getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
+		for (; it != getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end(); ++it) {
+			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+			cut_pointer->cut_creation_iteration_ = 0;
+			cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE;
+			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+		}
+
+		it = getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.begin();
+		for (; it != getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end(); ++it) {
+			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+			cut_pointer->cut_creation_iteration_ = 0;
+			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
+			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+		}
+
+		// reset all cut pointers
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_epigraph_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_epigraph_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_domain_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_domain_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
+	}
+
+	ThreadBranchAndBendersCut::ThreadBranchAndBendersCut(SmiScnModel* smi_model_ptr)
+		: BranchAndBendersCut(smi_model_ptr), current_node_depth_(-1),current_node_id_(-1)
+	{
+	}
+
+	ThreadBranchAndBendersCut::~ThreadBranchAndBendersCut()
+	{
+	}
+
+	int ThreadBranchAndBendersCut::StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid)
+	{
+		assert(current_stage_ == 0);
+		assert(contextid == CPX_CALLBACKCONTEXT_CANDIDATE || contextid == CPX_CALLBACKCONTEXT_RELAXATION);
+		int status = 0;
+
+		// TODO: do we need it
+		/*
+		No limitations when it can be called.
+		*/
+		int num_processed_nodes;
+		status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &num_processed_nodes);
+		if (status) {
+			fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
+			return status;
+		}
+
+		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
+		int num_x_cols = mp_node_pointer->cols_;
+		int num_theta = mp_node_pointer->num_thetas_;
+		if (!num_theta) {
+			num_theta = getNumThetasByStage(tree_nodes_by_stage_[0][0]);
+		}
+		assert(mp_node_pointer->num_thetas_ == getNumThetasByStage(tree_nodes_by_stage_[0][0]));
+
+		/*
+		Can query node data - CPXCALLBACKINFO_NODEDEPTH and CPXCALLBACKINFO_NODEUID when the context is:
+		CPX_CALLBACKCONTEXT_RELAXATION,
+		CPX_CALLBACKCONTEXT_BRANCHING,
+		CPX_CALLBACKCONTEXT_CANDIDATE but only if CPXCALLBACKINFO_CANDIDATE_SOURCE is CPX_LAZYCONSTRAINTCALLBACK_NODE.
+		*/
+		bool can_query_node_info = false;
+
+		std::vector<double> solution(num_x_cols + num_theta);
+		if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {
+			assert(!generate_lp_cuts_);
+			status = CPXcallbackgetcandidatepoint(context, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetcandidate: status = %d\n", status);
+				return status;
+			}
+
+			//Can be only called in CPX_CALLBACKCONTEXT_CANDIDATE
+			int candidate_source;
+			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_CANDIDATE_SOURCE, &candidate_source);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetinfolong for CPXCALLBACKINFO_CANDIDATE_SOURCE: status = %d\n", status);
+				return status;
+			}
+			assert((candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE
+				|| candidate_source == CPX_LAZYCONSTRAINTCALLBACK_HEUR)
+				&& "Why would we have another source?");
+			/*
+			- CPX_LAZYCONSTRAINTCALLBACK_MIPSTART, if the solution comes from a MIP start.
+			- CPX_LAZYCONSTRAINTCALLBACK_HEUR, if the solution comes from a heuristic.
+			- CPX_LAZYCONSTRAINTCALLBACK_USER, if the solution is provided by the user(via CPXXcallbackpostheursoln and CPXcallbackpostheursoln).
+			- CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
+			*/
+
+			if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE) {
+				can_query_node_info = true;
+			}
+		}
+		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
+			status = CPXcallbackgetrelaxationpoint(context, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetrelaxationpoint: status = %d\n", status);
+				return status;
+			}
+
+			can_query_node_info = true;
+		}
+
+		if (can_query_node_info) {
+			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEDEPTH, &current_node_depth_);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
+				return status;
+			}
+
+			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEUID, &current_node_id_);
+			if (status) {
+				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
+				return status;
+			}
+		}
+		else {
+			current_node_depth_ = -1;
+			current_node_id_ = -1;
+		}
+
+		mp_node_pointer->col_solution_.resize(num_x_cols);
+		mp_node_pointer->col_solution_.assign(solution.begin(), solution.begin() + num_x_cols);
+		mp_node_pointer->next_stage_approximation_.resize(num_theta);
+		mp_node_pointer->next_stage_approximation_.assign(solution.begin() + num_x_cols, solution.end());
+
+		double solution_value = 0;
+		if (mp_node_pointer->smi_node_data_->getObjectiveLength()) {
+			mp_node_pointer->objective_ = new double[stage_data_[0]->num_columns_];
+			memcpy(mp_node_pointer->objective_, core_->getDenseObjCoefficients(0), stage_data_[0]->num_columns_ * sizeof(double));
+			if (stage_data_[0]->stochastic_objective_)
+				for (int i = 0; i < mp_node_pointer->smi_node_data_->getObjectiveLength(); i++) {
+					mp_node_pointer->objective_[mp_node_pointer->smi_node_data_->getObjectiveIndices()[i] - core_->getColStart(0)] = mp_node_pointer->smi_node_data_->getObjectiveElements()[i];
+				}
+		}
+		else
+			mp_node_pointer->objective_ = const_cast<double*> (core_->getDenseObjCoefficients(0));
+		const double* obj_coefs = mp_node_pointer->objective_;
+
+		int i = 0;
+		for (; i < mp_node_pointer->cols_; i++) {
+			solution_value += mp_node_pointer->col_solution_[i] * obj_coefs[i];
+		}
+		mp_node_pointer->solution_value_ = solution_value; // q(x): solution w/o thetas
+
+		// Add all thetas to the c*x solution to get lower bound for node at this stage
+		for (double& theta_value : mp_node_pointer->next_stage_approximation_) {
+			solution_value += theta_value;
+			i++;
+		}
+		mp_node_pointer->lower_bound_ = solution_value; //  q(x) + theta: solution with thetas
+
+		if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
+			assert(current_stage_ == 0 && current_lp_round_ > 0);
+			//Check for integrality
+			for (int index : core_->getBinaryCols(current_stage_)) {
+				double value = mp_node_pointer->col_solution_[index];
+				double fractionality = abs(round(value) - value); // distance from 0 or 1
+				if (!parallel_benders::CompareForEquality(fractionality, 0.0, integer_tolerance_)) {
+					assert(fractionality > 0 && fractionality <= 0.5);
+					//std::map cannot store records with duplicated keys
+					while (fractional_variables_.find(fractionality) != fractional_variables_.end()) {
+						fractionality += zero_tolerance_ * 2;
+					}
+					DLOG_IF(FATAL, fractional_variables_.find(fractionality) != fractional_variables_.end());
+					fractional_variables_.emplace(fractionality, make_pair(index, value));
+				}
+			}
+
+			assert(!fractional_variables_.empty() && "There must be fractional vars because we would not end up in CPX_CALLBACKCONTEXT_RELAXATION");
+			generate_lp_cuts_ = true;
+		}
+
+		// TODO: do we do these stuff here or in CPX_CALLBACKCONTEXT_CANDIDATE block?
+		stage_old_lower_upper_bounds_[0].first = stage_lower_upper_bounds_[0].first;
+		stage_old_lower_upper_bounds_[0].second = stage_lower_upper_bounds_[0].second;
+		stage_lower_upper_bounds_[0].first = mp_node_pointer->lower_bound_; //  q(x) + theta: solution with thetas
+		stage_lower_upper_bounds_[0].second = mp_node_pointer->solution_value_; // q(x): solution w/o thetas
+		old_lower_bound_ = lower_bound_;
+		lower_bound_ = mp_node_pointer->lower_bound_;
+		// UB will be calculated in ConstructOptimalityCuts()
+		// after 2nd-stage subproblems are evaluated
+
+		return status;
+	}
+
+	int ThreadBranchAndBendersCut::getCurrentNodeDepth()
+	{
+		return current_node_depth_;
+	}
+
+	int ThreadBranchAndBendersCut::getCurrentNodeId()
+	{
+		return current_node_id_;
+	}
+
+	void ThreadBranchAndBendersCut::setCurrentNodeDepth(int value)
+	{
+		current_node_depth_ = value;
+	}
+
+	void ThreadBranchAndBendersCut::setCurrentNodeId(int value)
+	{
+		current_node_id_ = value;
+	}
+
+	void ThreadBranchAndBendersCut::ConstructLiftAndProjectCuts()
 	{
 		current_stage_ = 0;
 		assert(generate_lp_cuts_);
@@ -773,7 +940,7 @@ namespace branch_and_benders_cut {
 		for (auto id_solver_pair : osi_solver_map_) {
 			assert(!(current_lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
 			if (id_solver_pair.second->getNumCols() > 0) { // if solver is not empty
-				thread_pool_.schedule(boost::bind(&BranchAndBendersCut::SetDualCGPRoundSpecifics, this, boost::ref(*id_solver_pair.second), tree_nodes_by_stage_[0][0]));
+				thread_pool_.schedule(boost::bind(&ThreadBranchAndBendersCut::SetDualCGPRoundSpecifics, this, boost::ref(*id_solver_pair.second), tree_nodes_by_stage_[0][0]));
 			}
 		}
 		thread_pool_.wait(0);
@@ -782,7 +949,7 @@ namespace branch_and_benders_cut {
 		// Set round specifics to all existing cgp pnb
 		lp_cuts_timer_.Start(1);
 		for (auto id_pnb_pair : cgp_pnb_map_) {
-			thread_pool_.schedule(boost::bind(&BranchAndBendersCut::SetLnPCGPRoundSpecifics, this, boost::ref(*id_pnb_pair.second), tree_nodes_by_stage_[0][0]));
+			thread_pool_.schedule(boost::bind(&ThreadBranchAndBendersCut::SetLnPCGPRoundSpecifics, this, boost::ref(*id_pnb_pair.second), tree_nodes_by_stage_[0][0]));
 		}
 		thread_pool_.wait(0); // We wait until all threads except the current one (for MP) are finished
 		lp_cuts_timer_.Stop(1);
@@ -790,7 +957,7 @@ namespace branch_and_benders_cut {
 		// Generate L&P cuts for all or some fract. variables
 		std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values
 		for (int i = 0; i < num_cuts; i++) {
-			thread_pool_.schedule(boost::bind(&BranchAndBendersCut::GenerateLiftAndProjectCut, this, i, rit->second));
+			thread_pool_.schedule(boost::bind(&ThreadBranchAndBendersCut::GenerateLiftAndProjectCut, this, i, rit->second));
 			++rit; // goes backwards
 		}
 		thread_pool_.wait(0); // We wait until all threads except the current one (for MP) are finished
@@ -897,7 +1064,7 @@ namespace branch_and_benders_cut {
 		generate_lp_cuts_ = false;
 	}
 
-	int BranchAndBendersCut::AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
+	int ThreadBranchAndBendersCut::AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
 	{
 		//based on OsiCpxSolverInterface::addLazyRowCut
 
@@ -950,7 +1117,7 @@ namespace branch_and_benders_cut {
 		return status;
 	}
 
-	int BranchAndBendersCut::AddUserCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
+	int ThreadBranchAndBendersCut::AddUserCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff)
 	{
 		//based on OsiCpxSolverInterface::addLazyRowCut
 
@@ -1007,7 +1174,7 @@ namespace branch_and_benders_cut {
 		return status;
 	}
 
-	int BranchAndBendersCut::AppendCutsToNode(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer)
+	int ThreadBranchAndBendersCut::AppendCutsToNode(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer)
 	{
 		//based on AppendCutsToSubproblem
 
@@ -1099,7 +1266,7 @@ namespace branch_and_benders_cut {
 
 			for (; it != benders_node_pointer->optimality_cuts_.end(); ++it) {
 				if ((*it)->to_use_) {
-					status = BranchAndBendersCut::AddLazyCutToNode(context, **it);
+					status = AddLazyCutToNode(context, **it);
 					if (status) {
 						LOG(WARNING) << "Error in AddCutToNode: status = " << status;
 						return status;
@@ -1125,7 +1292,7 @@ namespace branch_and_benders_cut {
 
 			for (; it != benders_node_pointer->epigraph_cuts_.end(); ++it) {
 				if ((*it)->to_use_) {
-					status = BranchAndBendersCut::AddUserCutToNode(context, **it);
+					status = AddUserCutToNode(context, **it);
 					if (status) {
 						LOG(WARNING) << "Error in AddUserCutToNode: status = " << status;
 						return status;
@@ -1136,157 +1303,6 @@ namespace branch_and_benders_cut {
 		}
 
 		return 0;
-	}
-
-	void BranchAndBendersCut::SetUpMPSolver()
-	{
-		assert(current_stage_ == 0);
-		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-		cpx_solver->messageHandler()->setLogLevel(4); // Log everything // TODO: change it
-		LOG_IF(FATAL, getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) << "When problem has no theta cuts, it is unbounded when B&B started as theta is not bounded.";
-		
-		int status;
-
-		// Set the CPLEX callback
-		BranchAndBendersCut* user_data = this;
-		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
-		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-		// TODO: do we need all of them
-		status = CPXcallbacksetfunc(env_ptr, lp_ptr, 
-			CPX_CALLBACKCONTEXT_CANDIDATE // - found integer solution
-			| CPX_CALLBACKCONTEXT_RELAXATION // - found infeasible (some int vars have non-int solution)
-			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS // - update global UB (LB - ?). Locks other threads
-			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS // - update thread UB (LB - ?)
-			| CPX_CALLBACKCONTEXT_THREAD_UP // - activate thread, is different to thread creation and might happen several times for one thread
-			| CPX_CALLBACKCONTEXT_THREAD_DOWN  // - deactivate thread, is different to thread creation and might happen several times for one thread
-			, benders_callback, user_data);
-		if (status) {
-			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
-		}
-
-		// Set threads number for B&B
-		// for CPLEX in Benders it was always mutlithread
-		// value 0 in CPLEX has the same meaning as in our implementation -- use all CPUs
-		// TODO: parameter to set num_cpu for B&B specifically (explicitely or parallel_mode)
-		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, num_cpu_);
-		//TODO: temp
-		// Display the detailed solution log
-		CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 1); // detailed log
-		CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 5); // display all the information from the log
-		CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF); // no presolve
-		CPXsetdblparam(env_ptr, CPX_PARAM_CUTSFACTOR, 1.0); // no cuts
-		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_HeuristicFreq, -1); // turn off periodic node heuristic
-		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_RINSHeur, -1); // turn off RINS heuristic
-	}
-
-	BranchAndBendersCut* BranchAndBendersCut::getCopyForThread(int thread_id)
-	{
-		// TODO: delete the pointers of thread_copy_map_mutex_ destruction.
-		// Just in case because we delete them anyways when thread goes down.
-
-		{
-			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_);
-			std::map<int, BranchAndBendersCut*>::iterator it = thread_copy_map_.find(thread_id);
-			
-			if (it != thread_copy_map_.end())
-				return (*it).second;
-			else {
-				return nullptr;
-			}		
-		}		
-	}
-
-	void BranchAndBendersCut::createCopyForThread(int thread_id)
-	{
-		BranchAndBendersCut* thread_copy = nullptr;
-		int num_theta = 0;
-		std::vector< std::vector<int> > nodes_in_cut;
-		{
-			std::lock_guard<std::mutex> unique_lock(thread_copy_map_mutex_);
-
-			// Initialize new bbc from current data
-			thread_copy = new BranchAndBendersCut(smi_);
-			thread_copy_map_.emplace(thread_id, thread_copy);
-			thread_copy->console_mutex_ptr_ = console_mutex_ptr_; // we share the console as the resource
-			thread_copy->parameter_ = parallel_benders::Parameter(parameter_);
-			thread_copy->testset_name_ = testset_name_;
-			thread_copy->problem_name_ = problem_name_;
-			thread_copy->instance_name_ = instance_name_ + "_thread_" + std::to_string(thread_id);
-			
-			// The data below was set when we built theta cuts.
-			// We could copy the nodes but do not need so much data.
-			num_theta = tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_;
-			nodes_in_cut = tree_nodes_by_stage_[0][0]->getDataPtr()->nodes_in_cut_;
-		}
-		thread_copy->Init();
-		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_ = num_theta;
-		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->nodes_in_cut_ = std::move(nodes_in_cut);
-		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
-		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
-					
-		// Copy warm start
-		if (warm_start_) {
-			for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
-				CoinWarmStart* ws;
-				std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
-				if (stage_data_[stage]->warm_start_) {
-					ws = (stage_data_[stage]->warm_start_.get())->clone();
-					thread_copy->stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
-				}
-				for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
-					if (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
-						ws = (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
-						thread_copy->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
-					}
-				}
-			}
-		}
-
-		// Add new Benders and L&P cuts from the main loop
-		// TODO: move these to the main bbc in thread down and delete from here, we could distinguish them by iteration != 0
-		// Here we deep copy the cuts since their attribs might be changed during the PNB Solve()        
-		assert(num_stages_ == 2 && "We copy cuts only from the first stage");
-		parallel_benders::BendersNodeData::cut_container::const_iterator it = getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.begin();
-		for (; it != getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end(); ++it) {
-			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
-			cut_pointer->cut_creation_iteration_ = 0;
-			cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE; // it will be added to both - prime and double-prime - sides of MP CGP
-			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
-		}
-
-		it = getTreeNode(0, 0)->getDataPtr()->domain_cuts_.begin();
-		for (; it != getTreeNode(0, 0)->getDataPtr()->domain_cuts_.end(); ++it) {
-			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
-			cut_pointer->cut_creation_iteration_ = 0;
-			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
-			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
-		}
-
-		it = getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
-		for (; it != getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end(); ++it) {
-			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
-			cut_pointer->cut_creation_iteration_ = 0;
-			cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE;
-			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
-		}
-
-		it = getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.begin();
-		for (; it != getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end(); ++it) {
-			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
-			cut_pointer->cut_creation_iteration_ = 0;
-			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
-			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
-		}
-
-		// reset all cut pointers
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_epigraph_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end();
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_epigraph_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end();
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_domain_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.end();
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_domain_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.end();
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
 	}
 
 } // end namespace branch_and_benders_cut
