@@ -196,17 +196,11 @@ namespace branch_and_benders_cut {
 			}
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_LOCAL_PROGRESS) {
-			double thread_lower_bound;
-			status = CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_BND, &thread_lower_bound);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
-				return status;
-			}
+			//results of CPXcallbackgetinfo___ are local here
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS) {
-			// TODO: is it so important for us. Maybe do not gather this data or gather it in THREAD_DOWN
-			//this context locks all threads, be fast!
-			//results of CPXcallbackgetinfo___ are global here
+			// this context locks all threads, be fast!
+			// results of CPXcallbackgetinfo___ are global here
 
 			int ub_available;
 			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_FEASIBLE, &ub_available);
@@ -223,29 +217,29 @@ namespace branch_and_benders_cut {
 					return status;
 				}
 				global_data->benders_optimal_incumbents_.push_back(global_upper_bound);
-			}			
-
-			double global_lower_bound;
-			status = CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_BND, &global_lower_bound);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfodbl: status = %d\n", status);
-				return status;
 			}
-			global_data->best_bounds_.push_back(global_lower_bound);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
 			// TODO: copy cuts and whatever else to the global_data
 
 			// We delete thread_data in destructor because the thread with the same id
 			// can be up and down multiple times. Choose time efficiency for memory efficiency.
-			return status;
+
+			// TODO: use some other mutex below			
+			std::lock_guard<std::mutex> lock(global_data->thread_copy_map_mutex_);
+			// sometimes bounds are not synced with the global data in CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS
+			double thread_optimal_incumbend = thread_data->benders_optimal_incumbents_.back();
+			if (thread_optimal_incumbend < global_data->benders_optimal_incumbents_.back()) {
+				assert(*std::min_element(thread_data->benders_optimal_incumbents_.begin(), thread_data->benders_optimal_incumbents_.end()) == thread_optimal_incumbend);
+				global_data->benders_optimal_incumbents_.push_back(thread_optimal_incumbend);
+			}
 		}
 
 		return 0;
 	} /* END benders_callback */
 	
 	BranchAndBendersCut::BranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),best_bounds_(1,-infinity_),thread_copy_map_(),thread_copy_map_mutex_()
+		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),thread_copy_map_(),thread_copy_map_mutex_()
 	{
 	}
 
@@ -287,13 +281,7 @@ namespace branch_and_benders_cut {
 		
 		if (osi_solver_->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
-			assert(parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), osi_solver_->getObjValue(), 0.001));
-			// TODO: not sure why, but sometimes LB is -infinity
-			if (!parallel_benders::CompareForEquality(best_bounds_.back(), benders_optimal_incumbents_.back(), relative_epsilon_) &&
-				benders_optimal_incumbents_.back() > best_bounds_.back())
-			{
-				best_bounds_.push_back(benders_optimal_incumbents_.back());
-			}			
+			LOG_IF(FATAL, !parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), osi_solver_->getObjValue(), 0.001)) << "UB != solution";
 		}
 		else if (osi_solver_->isProvenPrimalInfeasible()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
@@ -322,7 +310,7 @@ namespace branch_and_benders_cut {
 		// Output the final values once again!
 		if (log_level_ <= google::INFO) {
 			LOG(INFO) << "Algorithm finished with status code " << solution_code_ << ", final values below.";
-			LOG(INFO) << "Lower Bound:  " << best_bounds_.back() << "\n" << "Upper Bound:  " << benders_optimal_incumbents_.back() << "\n" << "Relative Gap: " << parallel_benders::ComputeRelativeGap(benders_optimal_incumbents_.back(), best_bounds_.back());
+			LOG(INFO) << "Lower Bound:  " << getLB() << "\n" << "Upper Bound:  " << benders_optimal_incumbents_.back() << "\n" << "Relative Gap: " << parallel_benders::ComputeRelativeGap(benders_optimal_incumbents_.back(), getLB());
 			int cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
 				cut_counter += stage_data_[i]->added_optimality_cuts_;
@@ -397,6 +385,9 @@ namespace branch_and_benders_cut {
 			// Do not aggregate cuts
 			// as a result, no new cuts constructed
 			// and the current integer B&B candidate will be accepted
+			// We could record it in CPX_CALLBACKCONTEXT_LOCAL_PROGRESS
+			// but sometimes that context is not called
+			// and UB is not recorded.
 			benders_optimal_incumbents_.push_back(upper_bound_);
 			return; 
 		}
@@ -735,6 +726,21 @@ namespace branch_and_benders_cut {
 		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
 	}
 
+	double BranchAndBendersCut::getLB()
+	{
+		int status;
+		double lb;
+		OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+		CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
+		CPXLPptr lp_ptr = cpx_solver->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+		status = CPXgetbestobjval(env_ptr, lp_ptr, &lb);
+		if (status) {
+			fprintf(stderr, "Error in CPXgetbestobjval, status = %d.\n", status);
+			LOG(FATAL) << "Did you query LB inside callback?";
+		}
+		return lb;
+	}
+
 	ThreadBranchAndBendersCut::ThreadBranchAndBendersCut(SmiScnModel* smi_model_ptr)
 		: BranchAndBendersCut(smi_model_ptr), current_node_depth_(-1),current_node_id_(-1)
 	{
@@ -886,16 +892,16 @@ namespace branch_and_benders_cut {
 			assert(!fractional_variables_.empty() && "There must be fractional vars because we would not end up in CPX_CALLBACKCONTEXT_RELAXATION");
 			generate_lp_cuts_ = true;
 		}
-
-		// TODO: do we do these stuff here or in CPX_CALLBACKCONTEXT_CANDIDATE block?
-		stage_old_lower_upper_bounds_[0].first = stage_lower_upper_bounds_[0].first;
-		stage_old_lower_upper_bounds_[0].second = stage_lower_upper_bounds_[0].second;
-		stage_lower_upper_bounds_[0].first = mp_node_pointer->lower_bound_; //  q(x) + theta: solution with thetas
-		stage_lower_upper_bounds_[0].second = mp_node_pointer->solution_value_; // q(x): solution w/o thetas
-		old_lower_bound_ = lower_bound_;
-		lower_bound_ = mp_node_pointer->lower_bound_;
-		// UB will be calculated in ConstructOptimalityCuts()
-		// after 2nd-stage subproblems are evaluated
+		else if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {
+			stage_old_lower_upper_bounds_[0].first = stage_lower_upper_bounds_[0].first;
+			stage_old_lower_upper_bounds_[0].second = stage_lower_upper_bounds_[0].second;
+			stage_lower_upper_bounds_[0].first = mp_node_pointer->lower_bound_; //  q(x) + theta: solution with thetas
+			stage_lower_upper_bounds_[0].second = mp_node_pointer->solution_value_; // q(x): solution w/o thetas
+			old_lower_bound_ = lower_bound_;
+			lower_bound_ = mp_node_pointer->lower_bound_;
+			// UB will be calculated in ConstructOptimalityCuts()
+			// after 2nd-stage subproblems are evaluated
+		}	
 
 		return status;
 	}

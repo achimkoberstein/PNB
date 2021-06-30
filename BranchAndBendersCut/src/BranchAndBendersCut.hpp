@@ -61,6 +61,12 @@ public:
 	std::shared_ptr<branch_and_benders_cut::ThreadBranchAndBendersCut> getCopyForThread(int thread_id);
 	void createCopyForThread(int thread_id);
 
+	// Get LB
+	// i.e., max obj value of unprocessed nodes
+	// or obj value (if found)
+	// Cannot be called withing callback
+	double getLB();
+
 	BranchAndBendersCut* clone() = delete;
 
 private:
@@ -76,13 +82,12 @@ private:
 	*/
 	void SetUpMPSolver();
 	
-	// obj values of integer feasible node solutions
-	// for which Benders UB == LB
+	// Obj values of integer feasible node solutions
+	// For these UB == LB in Benders because other
+	// would be rejected.
+	// Updated for thread data in ConstructOptimalityCuts()
+	// and for global data in GLOBAL PROGRESS context.
 	std::deque<double> benders_optimal_incumbents_;
-
-	// best global bounds of B&B, i.e., lower bounds
-	// updated during the GLOBAL PROGRESS context
-	std::deque<double> best_bounds_;
 
 	std::map<int, std::shared_ptr<ThreadBranchAndBendersCut>> thread_copy_map_;
 	std::mutex thread_copy_map_mutex_; // std::mutex for accessing copies of this
