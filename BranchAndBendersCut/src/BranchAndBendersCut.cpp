@@ -645,10 +645,47 @@ namespace branch_and_benders_cut {
 		// Display the detailed solution log
 		CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 1); // detailed log
 		CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 5); // display all the information from the log
-		CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF); // no presolve
-		CPXsetdblparam(env_ptr, CPX_PARAM_CUTSFACTOR, 1.0); // no cuts
+
+		CPXsetintparam(env_ptr, CPXPARAM_Preprocessing_Relax, CPX_OFF);
+		CPXsetintparam(env_ptr, CPX_PARAM_RELAXPREIND, CPX_OFF); // for older CPLEX version
+
+		CPXsetintparam(env_ptr, CPXPARAM_Preprocessing_RepeatPresolve, CPX_OFF);
+		CPXsetintparam(env_ptr, CPX_PARAM_REPEATPRESOLVE, CPX_OFF); // for older CPLEX version
+
+		CPXsetintparam(env_ptr, CPXPARAM_Preprocessing_NumPass, CPX_OFF);
+		CPXsetintparam(env_ptr, CPX_PARAM_PREPASS, CPX_OFF); // for older CPLEX version
+
+		CPXsetintparam(env_ptr, CPXPARAM_Preprocessing_Reduce, CPX_PREREDUCE_NOPRIMALORDUAL);
+		CPXsetintparam(env_ptr, CPX_PARAM_REDUCE, CPX_PREREDUCE_NOPRIMALORDUAL); // for older CPLEX version
+		
+		// TODO: Which of these are realy necessary
+		CPXsetintparam(env_ptr, CPXPARAM_Preprocessing_Aggregator, CPX_OFF);
+		CPXsetintparam(env_ptr, CPX_PARAM_AGGIND, CPX_OFF);  // for older CPLEX version
+
+		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_Search, CPX_MIPSEARCH_TRADITIONAL);  // no dynamic search (however, it is compatible with generic callbacks)
+		CPXsetintparam(env_ptr, CPX_PARAM_MIPSEARCH, CPX_MIPSEARCH_TRADITIONAL);  // for older CPLEX version
+
+		CPXsetintparam(env_ptr, CPXPARAM_Preprocessing_Presolve, CPX_OFF);  // no presolve
+		CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF); // for older CPLEX version
+		CPXsetintparam(env_ptr, CPXPARAM_Preprocessing_Symmetry, CPX_OFF); // no symmetry breaking		
+		CPXsetintparam(env_ptr, CPX_PARAM_SYMMETRY, CPX_OFF); // for older CPLEX version
+
+		CPXsetintparam(env_ptr, CPXPARAM_MIP_Limits_CutsFactor, 1.0); // no cuts
+		CPXsetdblparam(env_ptr, CPX_PARAM_CUTSFACTOR, 1.0); // for older CPLEX version
+		
+		CPXsetdblparam(env_ptr, CPXPARAM_MIP_Cuts_Nodecuts, -1); // do not generate cuts for root node, impacts user cuts in pools but not callback 
+		// I am not sure what is the difference between the one above and below
+		CPXsetdblparam(env_ptr, CPXPARAM_MIP_Limits_CutPasses, -1); // turn off cut rounds for root node, also influences 
+		CPXsetdblparam(env_ptr, CPX_PARAM_CUTPASS, -1); // for older CPLEX version
+
+		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_FPHeur, -1);// turn off feasibility pump heuristic
+		CPXsetintparam(env_ptr, CPX_PARAM_FPHEUR, -1); // for older CPLEX version
 		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_HeuristicFreq, -1); // turn off periodic node heuristic
+		CPXsetintparam(env_ptr, CPX_PARAM_HEURFREQ, -1); // for older CPLEX version
 		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_RINSHeur, -1); // turn off RINS heuristic
+		CPXsetintparam(env_ptr, CPX_PARAM_RINSHEUR, -1); // for older CPLEX version
+		CPXsetintparam(env_ptr, CPXPARAM_Advance, CPX_OFF); // no advance start
+		CPXsetintparam(env_ptr, CPX_PARAM_ADVIND, CPX_OFF); // for older CPLEX version
 	}
 
 	std::shared_ptr<ThreadBranchAndBendersCut> BranchAndBendersCut::getCopyForThread(int thread_id)
