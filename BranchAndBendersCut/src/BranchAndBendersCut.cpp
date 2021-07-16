@@ -157,13 +157,6 @@ namespace branch_and_benders_cut {
 					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 				}
 			}
-			// quit if reached the L&P rounds limit
-			// TODO: check if the logic above + below is correct, should it be for one specific node?
-			if (thread_data->current_lp_round_ == thread_data->lp_rounds_limit_) {
-				thread_data->current_lp_round_ = 0;
-				return 0;
-			}
-			thread_data->current_lp_round_++;
 			
 			//Store Data
 			status = thread_data->StoreNodeData(context, contextid);
@@ -182,6 +175,15 @@ namespace branch_and_benders_cut {
 				thread_data->generate_lp_cuts_ = false;
 				return status;
 			}
+
+			// Quit if reached the L&P rounds limit
+			// TODO: check if the logic above + below is correct, should it be for one specific node?
+			if (thread_data->current_lp_round_ == thread_data->lp_rounds_limit_) {
+				thread_data->current_lp_round_ = 0;
+				thread_data->generate_lp_cuts_ = false;
+				return 0;
+			}
+			thread_data->current_lp_round_++;
 
 			// Generate L&P cuts			
 			assert(thread_data->current_stage_ == 0);
@@ -835,6 +837,8 @@ namespace branch_and_benders_cut {
 			- CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
 			*/
 
+			assert(candidate_source != CPX_LAZYCONSTRAINTCALLBACK_HEUR && "Did not we disable heuristics? Will L&P CGP work correct for this case.");
+
 			if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE) {
 				can_query_node_info = true;
 			}
@@ -1150,6 +1154,9 @@ namespace branch_and_benders_cut {
 			&rhs, &sns, &rmatbeg, 
 			const_cast<int*>(rowCut.row().getIndices()),
 			const_cast<double*>(rowCut.row().getElements()));
+		// We can also add these (Benders) cuts as local cuts
+		// i.e., use them only with subtree,
+		// with CPXcallbackrejectcandidatelocal()
 		
 		LOG_IF(WARNING, status) << "Error in CPXcallbackrejectcandidate: status = " << status;
 
