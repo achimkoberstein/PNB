@@ -75,6 +75,9 @@ namespace branch_and_benders_cut {
 		
 		std::shared_ptr<ThreadBranchAndBendersCut> thread_data = global_data->getCopyForThread(thread_id);
 
+		/* Below is the explicit list of contextid_s.
+		We need it for tracking what algorithm does.
+		Enable contexts in SetUpMPSolver() */
 		if (contextid == CPX_CALLBACKCONTEXT_THREAD_UP && !thread_data) {
 			assert(thread_data == nullptr);
 			global_data->createCopyForThread(thread_id);
@@ -143,6 +146,8 @@ namespace branch_and_benders_cut {
 			thread_data->setCurrentNodeId(-1);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
+			// TODO: exclude this context completely if we do not use L&P cuts
+			
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;			
 
@@ -195,8 +200,23 @@ namespace branch_and_benders_cut {
 				}
 			}
 		}
+		else if (contextid == CPX_CALLBACKCONTEXT_BRANCHING){
+			// Callback for this context is not called in release mode.
+			
+			thread_data->current_stage_ = 0;
+			status = thread_data->StoreNodeData(context, contextid);
+			if (status) {
+				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
+				return status;
+			}
+
+			DLOG(INFO) << "Branching context for node " << thread_data->getCurrentNodeId();
+		}
 		else if (contextid == CPX_CALLBACKCONTEXT_LOCAL_PROGRESS) {
 			//results of CPXcallbackgetinfo___ are local here
+			// Callback for this context is not called in release mode.
+
+			DLOG(INFO) << "Local progress context. Last processed node " << thread_data->getCurrentNodeId();
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS) {
 			// this context locks all threads, be fast!
@@ -404,6 +424,7 @@ namespace branch_and_benders_cut {
 		// *****************
 		// Preprocess with L&P cuts
 		// *****************
+		//if (lp_rounds_limit_) {
 		if (false) {
 			// TODO: implement parameter to start it. We can choose to construct cuts here or in B&B for node with depth 0
 			// Prepare parameters
@@ -478,7 +499,7 @@ namespace branch_and_benders_cut {
 			}
 
 			// Calculate number cuts
-			assert(false && "The block below was never tested");
+			//assert(false && "The block below was never tested");
 			// - optimality (w/o PNB CGP cuts)
 			int cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
@@ -591,10 +612,13 @@ namespace branch_and_benders_cut {
 		status = CPXcallbacksetfunc(env_ptr, lp_ptr, 
 			CPX_CALLBACKCONTEXT_CANDIDATE // - found integer solution
 			| CPX_CALLBACKCONTEXT_RELAXATION // - found infeasible (some int vars have non-int solution)
-			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS // - update global UB (LB - ?). Locks other threads
-			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS // - update thread UB (LB - ?)
+			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS // - update global UB. Locks other threads
 			| CPX_CALLBACKCONTEXT_THREAD_UP // - activate thread, is different to thread creation and might happen several times for one thread
 			| CPX_CALLBACKCONTEXT_THREAD_DOWN  // - deactivate thread, is different to thread creation and might happen several times for one thread
+#ifndef NDEBUG
+			| CPX_CALLBACKCONTEXT_LOCAL_PROGRESS
+			| CPX_CALLBACKCONTEXT_BRANCHING
+#endif
 			, benders_callback, user_data);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbacksetfunc, status = %d.\n", status);
@@ -753,7 +777,9 @@ namespace branch_and_benders_cut {
 	int ThreadBranchAndBendersCut::StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid)
 	{
 		assert(current_stage_ == 0);
-		assert(contextid == CPX_CALLBACKCONTEXT_CANDIDATE || contextid == CPX_CALLBACKCONTEXT_RELAXATION);
+		assert(contextid == CPX_CALLBACKCONTEXT_CANDIDATE ||
+			   contextid == CPX_CALLBACKCONTEXT_RELAXATION ||
+			   contextid == CPX_CALLBACKCONTEXT_BRANCHING);
 		int status = 0;
 
 		// TODO: do we need it
@@ -822,6 +848,9 @@ namespace branch_and_benders_cut {
 
 			can_query_node_info = true;
 		}
+		else if (contextid == CPX_CALLBACKCONTEXT_BRANCHING) {
+			can_query_node_info = true;
+		}
 
 		if (can_query_node_info) {
 			status = CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODEDEPTH, &current_node_depth_);
@@ -841,39 +870,43 @@ namespace branch_and_benders_cut {
 			current_node_id_ = -1;
 		}
 
-		mp_node_pointer->col_solution_.resize(num_x_cols);
-		mp_node_pointer->col_solution_.assign(solution.begin(), solution.begin() + num_x_cols);
-		mp_node_pointer->next_stage_approximation_.resize(num_theta);
-		mp_node_pointer->next_stage_approximation_.assign(solution.begin() + num_x_cols, solution.end());
+		// Get the current node solution
+		if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE || contextid == CPX_CALLBACKCONTEXT_RELAXATION)
+		{
+			mp_node_pointer->col_solution_.resize(num_x_cols);
+			mp_node_pointer->col_solution_.assign(solution.begin(), solution.begin() + num_x_cols);
+			mp_node_pointer->next_stage_approximation_.resize(num_theta);
+			mp_node_pointer->next_stage_approximation_.assign(solution.begin() + num_x_cols, solution.end());
 
-		double solution_value = 0;
-		if (mp_node_pointer->smi_node_data_->getObjectiveLength()) {
-			mp_node_pointer->objective_ = new double[stage_data_[0]->num_columns_];
-			memcpy(mp_node_pointer->objective_, core_->getDenseObjCoefficients(0), stage_data_[0]->num_columns_ * sizeof(double));
-			if (stage_data_[0]->stochastic_objective_)
-				for (int i = 0; i < mp_node_pointer->smi_node_data_->getObjectiveLength(); i++) {
-					mp_node_pointer->objective_[mp_node_pointer->smi_node_data_->getObjectiveIndices()[i] - core_->getColStart(0)] = mp_node_pointer->smi_node_data_->getObjectiveElements()[i];
-				}
-		}
-		else
-			mp_node_pointer->objective_ = const_cast<double*> (core_->getDenseObjCoefficients(0));
-		const double* obj_coefs = mp_node_pointer->objective_;
+			double solution_value = 0;
+			if (mp_node_pointer->smi_node_data_->getObjectiveLength()) {
+				mp_node_pointer->objective_ = new double[stage_data_[0]->num_columns_];
+				memcpy(mp_node_pointer->objective_, core_->getDenseObjCoefficients(0), stage_data_[0]->num_columns_ * sizeof(double));
+				if (stage_data_[0]->stochastic_objective_)
+					for (int i = 0; i < mp_node_pointer->smi_node_data_->getObjectiveLength(); i++) {
+						mp_node_pointer->objective_[mp_node_pointer->smi_node_data_->getObjectiveIndices()[i] - core_->getColStart(0)] = mp_node_pointer->smi_node_data_->getObjectiveElements()[i];
+					}
+			}
+			else
+				mp_node_pointer->objective_ = const_cast<double*> (core_->getDenseObjCoefficients(0));
+			const double* obj_coefs = mp_node_pointer->objective_;
 
-		int i = 0;
-		for (; i < mp_node_pointer->cols_; i++) {
-			solution_value += mp_node_pointer->col_solution_[i] * obj_coefs[i];
-		}
-		mp_node_pointer->solution_value_ = solution_value; // q(x): solution w/o thetas
+			int i = 0;
+			for (; i < mp_node_pointer->cols_; i++) {
+				solution_value += mp_node_pointer->col_solution_[i] * obj_coefs[i];
+			}
+			mp_node_pointer->solution_value_ = solution_value; // q(x): solution w/o thetas
 
-		// Add all thetas to the c*x solution to get lower bound for node at this stage
-		for (double& theta_value : mp_node_pointer->next_stage_approximation_) {
-			solution_value += theta_value;
-			i++;
-		}
-		mp_node_pointer->lower_bound_ = solution_value; //  q(x) + theta: solution with thetas
+			// Add all thetas to the c*x solution to get lower bound for node at this stage
+			for (double& theta_value : mp_node_pointer->next_stage_approximation_) {
+				solution_value += theta_value;
+				i++;
+			}
+			mp_node_pointer->lower_bound_ = solution_value; //  q(x) + theta: solution with thetas
+		}		
 
 		if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
-			assert(current_stage_ == 0 && current_lp_round_ > 0);
+			assert(current_stage_ == 0);
 			//Check for integrality
 			for (int index : core_->getBinaryCols(current_stage_)) {
 				double value = mp_node_pointer->col_solution_[index];
