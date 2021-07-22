@@ -170,15 +170,25 @@ namespace branch_and_benders_cut {
 				std::cout << "We are constructing L&P cuts for the root node." << std::endl;
 			}
 			else {
+				// TODO: can it be that withing one thread we "jump" between open nodes
+				// for which we construct L&P cuts.
 				assert(thread_data->getCurrentNodeId() != 0);
 				std::cout << "We do not construct L&P cuts for non-root node as lifting is not implemented." << std::endl;
+				assert(thread_data->current_lp_round_ == 0);
 				thread_data->generate_lp_cuts_ = false;
 				return status;
+			}
+
+			if (thread_data->lp_cuts_constructed_) {
+				thread_data->lp_cuts_constructed_ = false;
+				thread_data->generate_lp_cuts_ = false;
+				return 0;
 			}
 
 			// Quit if reached the L&P rounds limit
 			// TODO: check if the logic above + below is correct, should it be for one specific node?
 			if (thread_data->current_lp_round_ == thread_data->lp_rounds_limit_) {
+				thread_data->lp_cuts_constructed_ = true;
 				thread_data->current_lp_round_ = 0;
 				thread_data->generate_lp_cuts_ = false;
 				return 0;
@@ -196,7 +206,6 @@ namespace branch_and_benders_cut {
 
 			// TEMP: empty CPLEX, do we need it?
 			if (thread_data->getCurrentNodeId() != -1) {
-				thread_data->current_lp_round_ = 0;
 				for (auto& id_solver_pair : thread_data->osi_solver_map_) {
 					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 				}
@@ -501,6 +510,7 @@ namespace branch_and_benders_cut {
 			}
 
 			// Calculate number cuts
+			// TODO: test the code below
 			//assert(false && "The block below was never tested");
 			// - optimality (w/o PNB CGP cuts)
 			int cut_counter = 0;
@@ -768,7 +778,7 @@ namespace branch_and_benders_cut {
 	}
 
 	ThreadBranchAndBendersCut::ThreadBranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: BranchAndBendersCut(smi_model_ptr), current_node_depth_(-1),current_node_id_(-1)
+		: BranchAndBendersCut(smi_model_ptr),current_node_depth_(-1),current_node_id_(-1),lp_cuts_constructed_(false)
 	{
 	}
 
@@ -836,8 +846,9 @@ namespace branch_and_benders_cut {
 			- CPX_LAZYCONSTRAINTCALLBACK_USER, if the solution is provided by the user(via CPXXcallbackpostheursoln and CPXcallbackpostheursoln).
 			- CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
 			*/
-
-			assert(candidate_source != CPX_LAZYCONSTRAINTCALLBACK_HEUR && "Did not we disable heuristics? Will L&P CGP work correct for this case.");
+			
+			// TODO: why this assert fails sometimes (at least on 16.07)
+			//assert(candidate_source != CPX_LAZYCONSTRAINTCALLBACK_HEUR && "Did not we disable heuristics? Will L&P CGP work correct for this case.");
 
 			if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE) {
 				can_query_node_info = true;
@@ -1051,13 +1062,12 @@ namespace branch_and_benders_cut {
 			LogSpecialCase(current_iteration_ == 1, "Wanted and built L&P cuts in first iteration");
 		}
 		else { // if no L&P cuts build - we can switch
-			LOG_IF(WARNING, log_level_ <= google::WARNING) << "No L&P cuts build in this round. Switching to minor iteration." << std::endl;
+			LOG_IF(WARNING, log_level_ <= google::WARNING) << "No L&P cuts build in this round. The node will be branched." << std::endl;
 			if (current_lp_round_ == 1) {
 				lp_switch_counter_--; // we do no want to count as switch with one cut-less lp_round. Substract here but increase later
 			}
-			current_lp_round_ = lp_rounds_limit_;
-			// we will switch osi to MIP in Solve() when switch to minor iteration
-			// if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
+			current_lp_round_ = 0;
+			lp_cuts_constructed_ = true;
 		}
 
 		// TODO: we do not want to reset last_iteration_start_optimality_
