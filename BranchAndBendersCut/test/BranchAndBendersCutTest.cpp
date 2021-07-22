@@ -886,7 +886,7 @@ TEST_F(BranchAndBendersTest, fast) {
 	//EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224444.4, 0.1); // same characteristics as SNDP_TestCase_17, CGP MP is always infeasible due to some reason
 	EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 882.615, 0.1); // 1834.87 for MIP
 	EXPECT_NEAR(solveSMPS("han/dcap/dcap468_50"), 1401.06, 0.1);
-	EXPECT_NEAR(solveSMPS("siplib/smkp/smkp_11"), 9415.88, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/smkp/smkp_11"), 9415.88, 0.1); // TODO: critical on 16.07 {L&P cuts, BBC}
 	// generate feasibility cuts
 	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_15"), -10750, 0.1); // feasibility cuts, similar characteristics to ssch/c...
 }
@@ -896,9 +896,9 @@ TEST_F(BranchAndBendersTest, slow) {
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/SNDP_20_4_2_1"), -87272, 0.1); // TODO: wrong solution: 24.06.21 L&P cuts for root node {L&P cuts}
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5); // TODO: wrong solution: 24.06.21 L&P cuts for root node and UB != solution {L&P cuts}
-	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.5); // TODO: wrong solution: 24.06.21 L&P cuts for root node {L&P cuts}, 18.06.21 {L&P cuts}
+	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.5); // TODO: critical on 16.07 {L&P cuts}, wrong solution: 24.06.21 L&P cuts for root node {L&P cuts}, 18.06.21 {L&P cuts}
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_25"), -479326, 0.5);
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_16_cr"), 53891.6, 0.1); //slow
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_16_cr"), 53891.6, 0.1); // TODO: critical on 16.07 {L&P cuts, BBC}
 
 	// Integer on 2 stages
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
