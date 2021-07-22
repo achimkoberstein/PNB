@@ -5099,7 +5099,7 @@ namespace parallel_benders {
             use_benders_cuts_intra_round = false;
             use_lp_cuts_intra_round = false;
         }
-        bool construct_epigraph_if_cgp_pnb_fails(true);
+        bool construct_epigraph_if_cgp_pnb_fails(false);
         bool construct_domain_if_cgp_fails(false); // seems that often leads to unboundess or infeasibility
         bool use_2nd_stage_info(false);
 		bool solve_dual_of_cgp(false);
@@ -5252,6 +5252,7 @@ namespace parallel_benders {
                 if (cgp_pnb->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
                     cgp_pnb->upper_bound_ = cgp_pnb->iteration_u_and_l_bounds_.back().first; // if problem is infeasible, ub is set to infinity. Let us revert it
                 }
+				LOG_IF(FATAL, cgp_pnb->solution_code_ != PNB_SOLUTION_INFEASIBLE) << "Never happend with BBC. Think if we do not want building cuts in this case.";
                 if (RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_, infinity_, std::max(cgp_relative_epsilon_, 0.01)) && !construct_epigraph_if_cgp_pnb_fails) {
                     log_message << "Will NOT build L&P cut since gap is too large.";
                     LogSpecialCase(true, log_message.str(), fractional_variable.second);
@@ -5623,17 +5624,24 @@ namespace parallel_benders {
                     if (sum > std::accumulate(benders_node_pointer->next_stage_approximation_.begin(), benders_node_pointer->next_stage_approximation_.end(), 0.0) || load_cut_stuff) {
                         // Check if we already have such cut
                         std::lock_guard<std::mutex>unique_lock(lp_round_cuts_mutex_);
-                        assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->optimality_cuts_) && "The same cut to just build epigraph cut is present in optimality cuts. Never happened before.");
                         assert(!CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_optimality_cuts_) && "The same cut to just build epigraph cut is present in L&P round optimality cuts. Never happened before.");
                         
-                        bool duplicate_cut = CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_epigraph_cuts_) || CheckForSameCut(*cut_stuff, benders_node_pointer->epigraph_cuts_);
-                        if (!duplicate_cut){
-                            benders_node_pointer->active_aggregates_.set(); // L&P cut is defined for all aggregates
+                        bool duplicate_cut = CheckForSameCut(*cut_stuff, benders_node_pointer->lp_round_epigraph_cuts_) ||
+							CheckForSameCut(*cut_stuff, benders_node_pointer->epigraph_cuts_) ||
+							CheckForSameCut(*cut_stuff, benders_node_pointer->optimality_cuts_);
+						// TODO: we need to have some parameter that turns on distance_violation (maybe distance violation itself with default value -inf, 
+						// we can set it differently for root node and sub nodes)
+						// TODO: count how many cuts were ommited (see also above the case when CGP PNB fails)
+						double dist_violation = cut_stuff->DistanceViolation(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_, tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_);
+						if (!duplicate_cut && dist_violation > 0.00001){  // in Bodur 0.00001 is the violation for Benders (lazy) cuts. For user (L&P) cuts it is 0.0001 in root node and 0.001 for other nodes
+							LogSpecialCase(dist_violation > 1.0, "L&P cuts dist_violation > 1.0", fractional_variable.second);
+							benders_node_pointer->active_aggregates_.set(); // L&P cut is defined for all aggregates
                             benders_node_pointer->lp_round_epigraph_cuts_.push_back(cut_stuff);
                             use_2nd_stage_info ? benders_node_pointer->lp_round_str_epigraph_cuts_counter_++ : benders_node_pointer->lp_round_plain_epigraph_cuts_counter_++;
                         }
                         else {
                             std::stringstream log_message;
+							// TODO: see the condition above. The message should be modified and the block in next else revised
                             log_message << "Fract index:" << lp_cut_index << " The same cut to just build epigraph cut is present in epigraph cuts";
                             LogSpecialCase(benders_node_pointer->lp_round_epigraph_cuts_.size() >= 1, log_message.str(), fractional_variable.second);
                         }
