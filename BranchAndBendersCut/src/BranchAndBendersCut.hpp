@@ -61,6 +61,10 @@ public:
 	std::shared_ptr<branch_and_benders_cut::ThreadBranchAndBendersCut> getCopyForThread(int thread_id);
 	void createCopyForThread(int thread_id);
 
+	// TODO: temp, we need it because the nodes is solved again after no L&P cuts are added
+	// How to go directly to branching if no L&P cuts added to withing fractional context
+	bool LP_cuts_constructed_;
+
 	// Get LB
 	// i.e., max obj value of unprocessed nodes
 	// or obj value (if found)
@@ -116,6 +120,14 @@ public:
 	void ConstructLiftAndProjectCuts();
 
 	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
+
+	/* when L&P round == L&P rounds limit
+	no L&P cuts are created and
+	the node is supposed to be branched. 
+	However, the node is solved again.
+	We do this to avoid it.*/
+	// TODO: rething its mechanics
+	bool lp_cuts_constructed_;
 
 private:
 	int current_node_depth_; // how deep the thread is in B&B // TODO: initialize this and below in constructor
