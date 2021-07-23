@@ -179,6 +179,7 @@ namespace branch_and_benders_cut {
 				return status;
 			}
 
+			// TODO: get rid of lp_cuts_constructed_ member
 			if (thread_data->lp_cuts_constructed_) {
 				thread_data->lp_cuts_constructed_ = false;
 				thread_data->generate_lp_cuts_ = false;
@@ -186,7 +187,6 @@ namespace branch_and_benders_cut {
 			}
 
 			// Quit if reached the L&P rounds limit
-			// TODO: check if the logic above + below is correct, should it be for one specific node?
 			if (thread_data->current_lp_round_ == thread_data->lp_rounds_limit_) {
 				thread_data->lp_cuts_constructed_ = true;
 				thread_data->current_lp_round_ = 0;
@@ -463,8 +463,8 @@ namespace branch_and_benders_cut {
 			
 			LOG_IF(FATAL, lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT &&
 				lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_OPTIMAL);
-			LOG_IF(FATAL, lift_and_project_pnb->getSolutionCode() == parallel_benders::PNB_SOLUTION_OPTIMAL) 
-				<< "We can stop here if the solution is optimal. It will be optimal for B&B. Not implemented.";
+			LOG_IF(WARNING, lift_and_project_pnb->getSolutionCode() == parallel_benders::PNB_SOLUTION_OPTIMAL) 
+				<< "Optimal solution found during the L&P rounds before the B&B procedure.";
 
 			// Move cuts to bbc:
 			// - optimality (incl. PNB CGP cuts)
