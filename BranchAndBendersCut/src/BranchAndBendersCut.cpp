@@ -251,26 +251,77 @@ namespace branch_and_benders_cut {
 			}
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
-			// TODO: copy cuts and whatever else to the global_data
+			{
+				// Add Benders and L&P cuts to the global data
+				// TODO: do we calculate final amount of cuts correct?
+				// TODO: do it in global progress (so that we share the cuts earlier)
+				std::lock_guard<std::shared_mutex> exclusive_lock(global_data->thread_data_mutex_);
+				global_data->stage_data_[0]->lp_cgp_counter_ += thread_data->stage_data_[0]->lp_cgp_counter_;
 
-			// We delete thread_data in destructor because the thread with the same id
-			// can be up and down multiple times. Choose time efficiency for memory efficiency.
+				std::vector<parallel_benders::BendersNodeData::cut_container*> cut_containers;
+				cut_containers.push_back(&thread_data->getTreeNode(0, 0)->getDataPtr()->optimality_cuts_);
+				cut_containers.push_back(&thread_data->getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_);
+				cut_containers.push_back(&thread_data->getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_);
+				cut_containers.push_back(&thread_data->getTreeNode(0, 0)->getDataPtr()->domain_cuts_);
+				for (auto& cut_container : cut_containers) {
+					for (auto& cut_stuff : *cut_container) {
+						//TODO: cut_stuff->cut_creation_node_ >= 0 &&... cut creation node: -1 root node before B&B, -2 copied from global data
+						if (!(global_data->CheckForSameCut(*cut_stuff, global_data->getTreeNode(0, 0)->getDataPtr()->optimality_cuts_) ||
+								global_data->CheckForSameCut(*cut_stuff, global_data->getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_) ||
+								global_data->CheckForSameCut(*cut_stuff, global_data->getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_) ||
+								global_data->CheckForSameCut(*cut_stuff, global_data->getTreeNode(0, 0)->getDataPtr()->domain_cuts_)))
+						{
+							global_data->AddCutToContainer(global_data->getMutableTreeNode(0, 0), cut_stuff);
 
-			// TODO: use some other mutex below			
-			std::lock_guard<std::mutex> lock(global_data->thread_copy_map_mutex_);
-			// sometimes bounds are not synced with the global data in CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS
-			double thread_optimal_incumbend = thread_data->benders_optimal_incumbents_.back();
-			if (thread_optimal_incumbend < global_data->benders_optimal_incumbents_.back()) {
-				assert(*std::min_element(thread_data->benders_optimal_incumbents_.begin(), thread_data->benders_optimal_incumbents_.end()) == thread_optimal_incumbend);
-				global_data->benders_optimal_incumbents_.push_back(thread_optimal_incumbend);
+							if (cut_stuff->type_ == parallel_benders::PNB_CUT_TYPE_OPTIMALITY)
+							{
+								global_data->stage_data_[0]->added_optimality_cuts_++;
+								//added_cgp_optimality_cuts_; // we cannot distinguish opt. cuts from cgp. opt. cuts
+							}
+							else if (cut_stuff->type_ == parallel_benders::PNB_CUT_TYPE_FEASIBILITY)
+							{
+								global_data->stage_data_[0]->added_feasibility_cuts_++;
+								//added_cgp_feasibility_cuts_; // we cannot distinguish feas. cuts from cgp. feas. cuts
+							}
+							else if (cut_stuff->type_ == parallel_benders::PNB_CUT_TYPE_EPIGRAPH)
+							{
+								global_data->stage_data_[0]->added_epigraph_cuts_++;
+								//added_str_epigraph_cuts_;  // we cannot distinguish strong and plain epigraph cuts
+								//added_plain_epigraph_cuts_;
+							}
+							else if (cut_stuff->type_ == parallel_benders::PNB_CUT_TYPE_DOMAIN)
+							{
+								global_data->stage_data_[0]->added_domain_cuts_++;
+								//added_domain_cuts_;
+							}
+							else
+							{
+								LOG(FATAL) << "Unknown cut type. PNB_CUT_TYPE_CVAR?";
+							}
+						}
+					}
+				}
 			}
+
+			{
+				std::lock_guard<std::mutex> lock(global_data->thread_copy_map_mutex_);
+				// sometimes bounds are not synced with the global data in CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS
+				double thread_optimal_incumbend = thread_data->benders_optimal_incumbents_.back();
+				if (thread_optimal_incumbend < global_data->benders_optimal_incumbents_.back()) {
+					assert(*std::min_element(thread_data->benders_optimal_incumbents_.begin(), thread_data->benders_optimal_incumbents_.end()) == thread_optimal_incumbend);
+					global_data->benders_optimal_incumbents_.push_back(thread_optimal_incumbend);
+				}
+				// We delete thread_data in because the thread with the same id
+				// can be up and down multiple times. // TODO: how often it happens, maybe keep the solver and restart it?
+				global_data->thread_copy_map_.erase(thread_id);
+			}					
 		}
 
 		return 0;
 	} /* END benders_callback */
 	
 	BranchAndBendersCut::BranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),thread_copy_map_(),thread_copy_map_mutex_()
+		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),thread_copy_map_(),thread_copy_map_mutex_(),thread_data_mutex_()
 	{
 	}
 
@@ -281,6 +332,15 @@ namespace branch_and_benders_cut {
 	void BranchAndBendersCut::Solve()
 	{
 		smi_->writeSmps("modeloutput");
+
+		for (int stage = 0; stage < num_stages_; stage++)
+		{
+			// We cannot distinguish between normal and CGP cuts in B&B
+			// set the counter value to -1 so that we know
+			// that its value is not valid.
+			stage_data_[stage]->added_cgp_optimality_cuts_ = -1;
+			stage_data_[stage]->added_cgp_feasibility_cuts_ = -1;
+		}
 
 		if (solution_code_ == parallel_benders::PNB_SOLUTION_PARAMETER_PROBLEM) {
 			LOG_IF(ERROR, log_level_ <= google::ERROR) << "Cannot solve because of the problem in parameters.";
@@ -347,13 +407,13 @@ namespace branch_and_benders_cut {
 				cut_counter += stage_data_[i]->added_optimality_cuts_;
 			}
 			// TODO: we need to calculate here cuts for all bbc thread copies
-			LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
+			LOG(INFO) << "Added " << cut_counter << " optimality cuts (incl. cuts from L&P CGP).";
 			LOG(INFO) << "Added " << getNumContinuousOptimalityCuts() << " continuous optimality cuts.";
 			cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
 				cut_counter += stage_data_[i]->added_feasibility_cuts_;
 			}
-			LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
+			LOG(INFO) << "Added " << cut_counter << " feasibility cuts (incl. cuts from L&P CGP).";
 			if (lp_rounds_limit_) { // if we use L&P cuts
 				cut_counter = 0;
 				for (int i = 0; i < num_stages_; i++) {
@@ -365,16 +425,19 @@ namespace branch_and_benders_cut {
 					cut_counter += stage_data_[i]->added_domain_cuts_;
 				}
 				LOG(INFO) << "Added " << cut_counter << " L&P domain cuts.";
+				/*
+				We cannot distinguish these cuts from non CGP ones.
 				cut_counter = 0;
 				for (int i = 0; i < num_stages_; i++) {
 					cut_counter += stage_data_[i]->added_cgp_optimality_cuts_;
-				}
+				}	
 				LOG(INFO) << "Added " << cut_counter << " optimality cuts from L&P CGP.";
 				cut_counter = 0;
 				for (int i = 0; i < num_stages_; i++) {
 					cut_counter += stage_data_[i]->added_cgp_feasibility_cuts_;
 				}
 				LOG(INFO) << "Added " << cut_counter << " feasibility cuts from L&P CGP.";
+				*/
 			}
 		}
 	}
@@ -510,49 +573,24 @@ namespace branch_and_benders_cut {
 			}
 
 			// Calculate number cuts
-			// TODO: test the code below
-			//assert(false && "The block below was never tested");
 			// - optimality (w/o PNB CGP cuts)
 			int cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
 				cut_counter += lift_and_project_pnb->getStageData(i)->added_optimality_cuts_;
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_cgp_optimality_cuts_; // we cannot distinguish them in B&B
 			}
 			stage_data_[current_stage_]->added_optimality_cuts_ += cut_counter;
-
-			// - optimality CGP cuts
-			cut_counter = 0;
-			for (int i = 0; i < num_stages_; i++) {
-				cut_counter += lift_and_project_pnb->getStageData(i)->added_cgp_optimality_cuts_;
-			}
-			stage_data_[current_stage_]->added_cgp_optimality_cuts_ += cut_counter;
 
 			// - feasibility
 			cut_counter = 0;
 			for (int i = 0; i < num_stages_; i++) {
 				cut_counter += lift_and_project_pnb->getStageData(i)->added_feasibility_cuts_;
+				cut_counter += lift_and_project_pnb->getStageData(i)->added_cgp_feasibility_cuts_; // we cannot distinguish them in B&B
 			}
 			stage_data_[current_stage_]->added_feasibility_cuts_ += cut_counter;
 
-			// - feasibility CGP cuts
-			cut_counter = 0;
-			for (int i = 0; i < num_stages_; i++) {
-				cut_counter += lift_and_project_pnb->getStageData(i)->added_cgp_feasibility_cuts_;
-			}
-			stage_data_[current_stage_]->added_cgp_feasibility_cuts_ += cut_counter;
-
 			// - epigraph
 			stage_data_[current_stage_]->added_epigraph_cuts_ += getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.size();
-			cut_counter = 0;
-			for (int i = 0; i < num_stages_; i++) {
-				cut_counter += lift_and_project_pnb->getStageData(i)->added_str_epigraph_cuts_;
-			}
-			stage_data_[current_stage_]->added_str_epigraph_cuts_ += cut_counter;
-			cut_counter = 0;
-			for (int i = 0; i < num_stages_; i++) {
-				cut_counter += lift_and_project_pnb->getStageData(i)->added_plain_epigraph_cuts_;
-			}
-			stage_data_[current_stage_]->added_plain_epigraph_cuts_ += cut_counter;
-			assert(stage_data_[current_stage_]->added_epigraph_cuts_ == (stage_data_[current_stage_]->added_str_epigraph_cuts_ + stage_data_[current_stage_]->added_plain_epigraph_cuts_));
 			
 			// - domain
 			cut_counter = 0;
@@ -729,63 +767,72 @@ namespace branch_and_benders_cut {
 			nodes_in_cut = tree_nodes_by_stage_[0][0]->getDataPtr()->nodes_in_cut_;
 		}
 		thread_copy->Init();
+		for (int stage = 0; stage < num_stages_; stage++)
+		{
+			// In thread data we can
+			// distinguish between normal and CGP cuts in B&B
+			stage_data_[stage]->added_cgp_optimality_cuts_ = 0;
+			stage_data_[stage]->added_cgp_feasibility_cuts_ = 0;
+		}
 		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_ = num_theta;
 		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->nodes_in_cut_ = std::move(nodes_in_cut);
 		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
 		thread_copy->tree_nodes_by_stage_[0][0]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_theta); // Gets initialized with 0
-					
-		// Copy warm start
-		if (warm_start_) {
-			for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
-				CoinWarmStart* ws;
-				std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
-				if (stage_data_[stage]->warm_start_) {
-					ws = (stage_data_[stage]->warm_start_.get())->clone();
-					thread_copy->stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
-				}
-				for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
-					if (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
-						ws = (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
-						thread_copy->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
+		
+		{
+			std::shared_lock<std::shared_mutex> shared_lock(thread_data_mutex_);
+			// Copy warm start
+			if (warm_start_) {
+				for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
+					CoinWarmStart* ws;
+					std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
+					if (stage_data_[stage]->warm_start_) {
+						ws = (stage_data_[stage]->warm_start_.get())->clone();
+						thread_copy->stage_data_[stage]->warm_start_.reset(ws); // deep copy of warm start
+					}
+					for (int scenario = 0; scenario < tree_nodes_by_stage_[stage].size(); scenario++) {
+						if (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_) {
+							ws = (tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.get())->clone(); // deep copy
+							thread_copy->tree_nodes_by_stage_[stage][scenario]->getDataPtr()->warm_start_.reset(ws);
+						}
 					}
 				}
 			}
-		}
 
-		// Add new Benders and L&P cuts from the main loop
-		// TODO: move these to the main bbc in thread down and delete from here, we could distinguish them by iteration != 0
-		// Here we deep copy the cuts since their attribs might be changed during the PNB Solve()        
-		assert(num_stages_ == 2 && "We copy cuts only from the first stage");
-		parallel_benders::BendersNodeData::cut_container::const_iterator it = getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.begin();
-		for (; it != getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end(); ++it) {
-			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
-			cut_pointer->cut_creation_iteration_ = 0;
-			cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE; // it will be added to both - prime and double-prime - sides of MP CGP
-			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
-		}
+			// Add new Benders and L&P cuts from the main loop
+			// Here we deep copy the cuts since their attribs might be changed during the PNB Solve()        
+			assert(num_stages_ == 2 && "We copy cuts only from the first stage");
+			parallel_benders::BendersNodeData::cut_container::const_iterator it = getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.begin();
+			for (; it != getTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end(); ++it) {
+				std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+				cut_pointer->cut_creation_iteration_ = 0;
+				cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE; // it will be added to both - prime and double-prime - sides of MP CGP
+				AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+			}
 
-		it = getTreeNode(0, 0)->getDataPtr()->domain_cuts_.begin();
-		for (; it != getTreeNode(0, 0)->getDataPtr()->domain_cuts_.end(); ++it) {
-			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
-			cut_pointer->cut_creation_iteration_ = 0;
-			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
-			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
-		}
+			it = getTreeNode(0, 0)->getDataPtr()->domain_cuts_.begin();
+			for (; it != getTreeNode(0, 0)->getDataPtr()->domain_cuts_.end(); ++it) {
+				std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+				cut_pointer->cut_creation_iteration_ = 0;
+				assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
+				AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+			}
 
-		it = getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
-		for (; it != getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end(); ++it) {
-			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
-			cut_pointer->cut_creation_iteration_ = 0;
-			cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE;
-			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
-		}
+			it = getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
+			for (; it != getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end(); ++it) {
+				std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+				cut_pointer->cut_creation_iteration_ = 0;
+				cut_pointer->column_set_ = parallel_benders::PNB_COL_SET_NONE;
+				AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+			}
 
-		it = getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.begin();
-		for (; it != getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end(); ++it) {
-			std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
-			cut_pointer->cut_creation_iteration_ = 0;
-			assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
-			AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+			it = getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.begin();
+			for (; it != getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end(); ++it) {
+				std::shared_ptr<parallel_benders::CutStuff> cut_pointer = std::make_shared<parallel_benders::CutStuff>(*it->get());
+				cut_pointer->cut_creation_iteration_ = 0;
+				assert(cut_pointer->column_set_ == parallel_benders::PNB_COL_SET_NONE);
+				AddCutToContainer(thread_copy->getMutableTreeNode(0, 0), cut_pointer);
+			}
 		}
 
 		// reset all cut pointers

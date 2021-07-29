@@ -5631,7 +5631,7 @@ namespace parallel_benders {
 							CheckForSameCut(*cut_stuff, benders_node_pointer->optimality_cuts_);
 						// TODO: we need to have some parameter that turns on distance_violation (maybe distance violation itself with default value -inf, 
 						// we can set it differently for root node and sub nodes)
-						// TODO: count how many cuts were ommited (see also above the case when CGP PNB fails)
+						// TODO: count how many cuts were ommited (see also above the case when CGP PNB fails) stage_data_[current_stage_]->lp_cgp_counter_...
 						double dist_violation = cut_stuff->DistanceViolation(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_, tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_);
 						if (!duplicate_cut && dist_violation > 0.00001){  // in Bodur 0.00001 is the violation for Benders (lazy) cuts. For user (L&P) cuts it is 0.0001 in root node and 0.001 for other nodes
 							LogSpecialCase(dist_violation > 1.0, "L&P cuts dist_violation > 1.0", fractional_variable.second);
