@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include <shared_mutex>
 #include <atomic>
 
 #include <boost/dynamic_bitset.hpp>
@@ -95,6 +96,7 @@ private:
 
 	std::map<int, std::shared_ptr<ThreadBranchAndBendersCut>> thread_copy_map_;
 	std::mutex thread_copy_map_mutex_; // std::mutex for accessing copies of this
+	std::shared_mutex thread_data_mutex_; // for synchronizing cuts and other data
 };
 
 class ThreadBranchAndBendersCut : public BranchAndBendersCut {
