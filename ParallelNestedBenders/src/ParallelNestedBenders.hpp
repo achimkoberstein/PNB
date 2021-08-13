@@ -70,7 +70,8 @@ public:
     double computeScenarioValue(int scenario);
     void fixFirstStageVariables(const double* solution);
 	int getNumContPhasePnbIterations() const;
-	int getNumContinuousOptimalityCuts() const;    
+	int getNumContinuousOptimalityCuts() const;
+    virtual int getCurrentThreadId() const; // works for thread_BBC but for PNB and BBC returns -1
 
     // Access data
     const SmiTreeNode<BendersNodeData*>* getTreeNode(int stage, int scenario) const;

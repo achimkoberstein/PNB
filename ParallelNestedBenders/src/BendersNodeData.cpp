@@ -762,14 +762,15 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
 
 double CutStuff::active_threshold_ = 1.0;
 int CutStuff::strike_threshold_ = -1;
-CutStuff::CutStuff( int iteration, std::unique_ptr<OsiRowCut>& cut_pointer, int type, int num_cols, int num_theta): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregates_(),cut_(std::move(cut_pointer)),type_(type), num_cols_(num_cols),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
+CutStuff::CutStuff( int iteration, int thread_id, std::unique_ptr<OsiRowCut>& cut_pointer, int type, int num_cols, int num_theta): cut_creation_iteration_(iteration),cut_creation_thread_(thread_id),not_active_iterations_(0),aggregates_(),cut_(std::move(cut_pointer)),type_(type), num_cols_(num_cols),active_value(0.0),current_index_in_solver_(-1),to_use_(true),column_set_(parallel_benders::PNB_COL_SET_NONE)
 {
+    LOG_IF(FATAL, thread_id <= -2) << "We use -2 thread id for the non implemented code parts.";
     updateAggregData(num_theta);
 	assert(is_consistent());
 }
 
 CutStuff::CutStuff(const CutStuff& another)
-    : cut_creation_iteration_(another.cut_creation_iteration_), not_active_iterations_(another.not_active_iterations_), aggregates_(another.aggregates_), cut_(new OsiRowCut(*another.cut_)), type_(another.type_), num_cols_(another.num_cols_), active_value(another.active_value), current_index_in_solver_(another.current_index_in_solver_), to_use_(another.to_use_), column_set_(another.column_set_)
+    : cut_creation_iteration_(another.cut_creation_iteration_),cut_creation_thread_(another.cut_creation_thread_),not_active_iterations_(another.not_active_iterations_), aggregates_(another.aggregates_), cut_(new OsiRowCut(*another.cut_)), type_(another.type_), num_cols_(another.num_cols_), active_value(another.active_value), current_index_in_solver_(another.current_index_in_solver_), to_use_(another.to_use_), column_set_(another.column_set_)
 {
     assert(is_consistent());
 }
@@ -1156,7 +1157,7 @@ void CutStuff::resetAggregates(int num_theta /* = -1*/ )
     updateAggregData(num_theta);
 }
 
-std::shared_ptr<CutStuff> LoadCutStuff(const std::string& fname)
+std::shared_ptr<CutStuff> LoadCutStuff(const std::string& fname, int thread_id)
 {
     std::fstream file;
     file.open(fname.c_str()); // should be the list of relative paths to .sto (.stoch) files
@@ -1218,7 +1219,7 @@ std::shared_ptr<CutStuff> LoadCutStuff(const std::string& fname)
     cut->setRow(cut_indices.size(), cut_indices.data(), cut_elements.data(), false);
     std::unique_ptr<OsiRowCut> cut_pointer(cut);
 
-    std::shared_ptr<CutStuff> cut_stuff(new CutStuff(iteration, cut_pointer, cut_type, num_cols, num_thetas));
+    std::shared_ptr<CutStuff> cut_stuff(new CutStuff(iteration, thread_id, cut_pointer, cut_type, num_cols, num_thetas));
 
     LOG_IF(FATAL, !cut_stuff->is_consistent());
 

@@ -1974,7 +1974,7 @@ namespace parallel_benders {
                     cut->setUb(infinity_);
                     cut->setRow(integer_cols.size(),&integer_cols[0],&cut_coefficients[0]);
 					std::unique_ptr<OsiRowCut> cut_pointer(cut);
-					std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY,stage_data_[current_stage_ - 1]->num_columns_,num_thetas));
+                    std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,-2,cut_pointer,PNB_CUT_TYPE_OPTIMALITY,stage_data_[current_stage_ - 1]->num_columns_,num_thetas));
                     assert(cut_stuff->getAggregateType() == CutStuff::AGGREGATE_OVER_ALL);
                     cut_stuff->to_use_ = true;
                     tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.push_back(cut_stuff);
@@ -4644,7 +4644,7 @@ namespace parallel_benders {
             cut->setUb(infinity_);
             cut->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             std::unique_ptr<OsiRowCut> cut_pointer(cut);
-            std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY,num_columns,stage_data_[current_stage_ - 1]->num_thetas_));
+            std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,getCurrentThreadId(),cut_pointer,PNB_CUT_TYPE_OPTIMALITY,num_columns,stage_data_[current_stage_ - 1]->num_thetas_));
             assert(cut_stuff->isAggregate(i));
 			cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
 #ifndef NDEBUG
@@ -5048,7 +5048,7 @@ namespace parallel_benders {
         cut->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0],debug_test_duplicate_indices_);
 		std::unique_ptr<OsiRowCut> cut_pointer(cut);
         // Increase feasCutCounter, together with locking/unlocking a std::mutex, and adding the cut the the parent problem
-        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_FEASIBILITY,stage_data_[current_stage_ - 1]->num_columns_,0));
+        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_, getCurrentThreadId(),cut_pointer,PNB_CUT_TYPE_FEASIBILITY,stage_data_[current_stage_ - 1]->num_columns_,0));
 		cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
 		bool duplicate_cut = false;
 		{
@@ -5607,7 +5607,7 @@ namespace parallel_benders {
                 cut->setRow(new_index, cut_indices.data(), cut_elements.data(), debug_test_duplicate_indices_); // copy
                 int num_theta_for_cut = lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? 0 : num_theta;
                 std::unique_ptr<OsiRowCut> cut_pointer(cut);
-                std::shared_ptr<CutStuff> cut_stuff(new CutStuff(1,cut_pointer,lift_and_project_cut_type,num_cols, num_theta_for_cut)); // cut iteration should be 1. We will then identify these cut by it and delete from PNB CGP
+                std::shared_ptr<CutStuff> cut_stuff(new CutStuff(1,getCurrentThreadId(),cut_pointer,lift_and_project_cut_type,num_cols, num_theta_for_cut)); // cut iteration should be 1. We will then identify these cut by it and delete from PNB CGP
 
 #ifdef LOAD_DUMP_CUTS
                 if (load_cut_stuff) {
@@ -7763,7 +7763,7 @@ namespace parallel_benders {
         osi_row_cut->setUb(infinity_);
         osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
         std::unique_ptr<OsiRowCut> cut_pointer(osi_row_cut);
-        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_OPTIMALITY,num_columns,num_aggregates));
+        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,getCurrentThreadId(),cut_pointer,PNB_CUT_TYPE_OPTIMALITY,num_columns,num_aggregates));
 
         stage_data_[current_stage_]->added_optimality_cuts_ += 1;
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
@@ -8081,6 +8081,11 @@ namespace parallel_benders {
 			}
 		return cut_counter;
 	}
+
+    int ParallelNestedBenders::getCurrentThreadId() const
+    {
+        return -1;
+    };
 
     const SmiTreeNode<BendersNodeData*>* ParallelNestedBenders::getTreeNode(int stage, int scenario) const
     {
@@ -9584,7 +9589,7 @@ namespace parallel_benders {
                     file.open(cut_filename.str());
                     if (file.is_open()) {
                         file.close();
-                        std::shared_ptr<CutStuff> cut_stuff = LoadCutStuff(cut_filename.str());
+                        std::shared_ptr<CutStuff> cut_stuff = LoadCutStuff(cut_filename.str(), -2);
                         assert(cut_stuff->isAggregate(aggregate_number));
                         AddCutToContainer(tree_nodes_by_stage_[0][0], cut_stuff);  
                     }
@@ -10126,7 +10131,8 @@ namespace parallel_benders {
         cut->setUb(infinity_);
         cut->setRow(num_columns,&cvar_cut_indices[0],&cvar_cut_coefficient[0],debug_test_duplicate_indices_);
         std::unique_ptr<OsiRowCut> cut_pointer(cut);
-        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer,PNB_CUT_TYPE_CVAR,num_columns,getNumThetasByStage(benders_tree_node_pointer)));
+        int thread_id = -2;
+        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,thread_id,cut_pointer,PNB_CUT_TYPE_CVAR,num_columns,getNumThetasByStage(benders_tree_node_pointer)));
         assert(cut_stuff->getAggregateType() == CutStuff::AGGREGATE_OVER_ALL);
         tree_nodes_by_stage_[0][0]->getDataPtr()->cvar_cuts_.emplace_back(cut_stuff);
 

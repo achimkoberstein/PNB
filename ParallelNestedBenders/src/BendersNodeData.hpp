@@ -232,7 +232,7 @@ namespace parallel_benders{
         static double active_threshold_; // If active_value is less than
         static int strike_threshold_; // If non_active_iterations_ is more than
 
-        CutStuff(int iteration, std::unique_ptr<OsiRowCut>& cut_pointer, int type, int num_cols, int num_theta);
+        CutStuff(int iteration, int thread_id, std::unique_ptr<OsiRowCut>& cut_pointer, int type, int num_cols, int num_theta);
         CutStuff(const CutStuff& another);
 
         const OsiRowCut& getCut() const;
@@ -240,6 +240,7 @@ namespace parallel_benders{
         void setCut(std::unique_ptr<OsiRowCut>& new_cut);
 
         int cut_creation_iteration_;
+        int cut_creation_thread_;
         double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
         int not_active_iterations_;
         bool to_use_;
@@ -273,7 +274,7 @@ namespace parallel_benders{
         std::unique_ptr<OsiRowCut> cut_;
     };
 
-    std::shared_ptr<CutStuff> LoadCutStuff(const std::string& fname);
+    std::shared_ptr<CutStuff> LoadCutStuff(const std::string& fname, int thread_id);
 
     // To be able to use find_if on std::list< std::shared_ptr<CutStuff> > in conjunction with active values
     struct CutStuffComparison: public std::binary_function< std::shared_ptr<CutStuff>, int, bool > {
