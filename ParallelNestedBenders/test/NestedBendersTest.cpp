@@ -155,7 +155,7 @@ public:
 		if (type == parallel_benders::PNB_CUT_TYPE_FEASIBILITY || type == parallel_benders::PNB_CUT_TYPE_DOMAIN) {
 			num_theta_for_cut = 0;
 		}
-		parallel_benders::CutStuff* cut_stuff = new parallel_benders::CutStuff(cut_info[it_ind], cut_pointer, type, num_cols, num_theta_for_cut);
+		parallel_benders::CutStuff* cut_stuff = new parallel_benders::CutStuff(cut_info[it_ind], -2, cut_pointer, type, num_cols, num_theta_for_cut);
 		cut_stuff->column_set_ = cut_info[col_set_ind];
 
 		return cut_stuff;

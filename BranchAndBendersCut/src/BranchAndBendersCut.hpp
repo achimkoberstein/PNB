@@ -107,41 +107,47 @@ public:
 	ThreadBranchAndBendersCut(const BranchAndBendersCut& bbc) = delete;
 	~ThreadBranchAndBendersCut();
 
+	int getCurrentThreadId() const override; // works for BBC but for PNB returns -1
+
 	/* Store solution, theta and
 	LB of the B&B node */
-	int StoreNodeData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
+	int StoreNodeData();
 
 	int getCurrentNodeDepth();
 	int getCurrentNodeId();
 
 	void setCurrentNodeDepth(int value);
 	void setCurrentNodeId(int value);
+	void setCurrentContextData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
 
 	/* Solve subproblems, update UB // TODO: do we updated bound?
 	and solve CGPs	*/
 	void ConstructLiftAndProjectCuts();
 
-	int AppendCutsToNode(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
+	int AppendCutsToNode(SmiTreeNode<parallel_benders::BendersNodeData*>* benders_tree_node_pointer);
 
 	/* when L&P round == L&P rounds limit
 	no L&P cuts are created and
 	the node is supposed to be branched. 
 	However, the node is solved again.
 	We do this to avoid it.*/
-	// TODO: rething its mechanics
+	// TODO: rethink its mechanics
 	bool lp_cuts_constructed_;
 
 private:
+	// TODO: we should get them with method and not store
 	int current_node_depth_; // how deep the thread is in B&B // TODO: initialize this and below in constructor
 	int current_node_id_;
+	CPXCALLBACKCONTEXTptr current_context_;
+	CPXLONG current_contextid_;
 
 
 	/* Reject current candidate B&B node
 	and add lazy cuts */
-	int AddLazyCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
+	int AddLazyCutToNode(const parallel_benders::CutStuff& cut_stuff);
 	/* Add user cuts after continuous solution
 	was found */
-	int AddUserCutToNode(CPXCALLBACKCONTEXTptr context, const parallel_benders::CutStuff& cut_stuff);
+	int AddUserCutToNode(const parallel_benders::CutStuff& cut_stuff);
 };
 
 } // end namespace branch_and_benders_cut
