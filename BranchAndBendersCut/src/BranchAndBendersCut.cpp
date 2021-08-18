@@ -559,7 +559,7 @@ namespace branch_and_benders_cut {
 					ws = (lift_and_project_pnb->getStageData(1)->warm_start_.get())->clone();
 					stage_data_[1]->warm_start_.reset(ws); // deep copy of warm start
 				}
-				for (int scenario = 0; scenario < tree_nodes_by_stage_[0].size(); scenario++) {
+				for (int scenario = 0; scenario < tree_nodes_by_stage_[1].size(); scenario++) {
 					if (lift_and_project_pnb->getTreeNode(1, scenario)->getDataPtr()->warm_start_) {
 						ws = (lift_and_project_pnb->getTreeNode(1, scenario)->getDataPtr()->warm_start_.get())->clone(); // deep copy
 						tree_nodes_by_stage_[1][scenario]->getDataPtr()->warm_start_.reset(ws);
@@ -794,7 +794,7 @@ namespace branch_and_benders_cut {
 			std::shared_lock<std::shared_mutex> shared_lock(thread_data_mutex_);
 			// Copy warm start
 			if (warm_start_) {
-				for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - warm start of main loop MP is not applicable to MP in PNB CGP 
+				for (int stage = 1; stage < num_stages_; stage++) { // start from 2nd stage - we never solve MP of ThreadBBC 
 					CoinWarmStart* ws;
 					std::lock_guard<std::mutex> temp_lock(stage_warm_start_mutex_);
 					if (stage_data_[stage]->warm_start_) {
