@@ -1189,8 +1189,8 @@ namespace branch_and_benders_cut {
 		//Move CGP cuts to the main loop
 		if (!tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_optimality_cuts_.empty() || !tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.empty()) {
 			// TODO: the line below will probably fail because we do not execute delete now
-			assert(tree_nodes_by_stage_[0][0]->getDataPtr()->last_iteration_start_optimality_ == tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
-			assert(tree_nodes_by_stage_[0][0]->getDataPtr()->last_iteration_start_feasibility_ == tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.end());
+			//assert(tree_nodes_by_stage_[0][0]->getDataPtr()->last_iteration_start_optimality_ == tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.end() && "Should be like that after DeleteSubproblem()");
+			//assert(tree_nodes_by_stage_[0][0]->getDataPtr()->last_iteration_start_feasibility_ == tree_nodes_by_stage_[0][0]->getDataPtr()->feasibility_cuts_.end());
 			stage_data_[current_stage_]->added_cgp_feasibility_cuts_ += tree_nodes_by_stage_[0][0]->getDataPtr()->lp_round_feasibility_cuts_.size(); // we always add feas cuts
 
 			int added_opt_cuts = 0;
