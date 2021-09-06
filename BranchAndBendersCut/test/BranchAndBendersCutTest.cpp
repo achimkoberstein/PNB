@@ -317,7 +317,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			// BRANCH AND BENDERS
 			// single-cut
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true }");
-			//!parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false }");
 
 			// multi-cut
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
@@ -326,7 +326,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			// multithread
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
 			
 			//warm start
@@ -343,8 +343,8 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
 				// multithread, multi-cut, use CGP cuts
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\" }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\" }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\" }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\" }");
 
 			// BENDERS
 			//parameter_strings_.push_back("{ \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true }");
@@ -863,7 +863,7 @@ TEST_F(BranchAndBendersTest, fast) {
 	// Binary 1st stage
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.3); // same characteristics as SNDP_TestCase_0 // TODO: wrong solution: 24.06.21 L&P cuts for root node {L&P cuts}
 	// L&P cuts above means: NumCpu 1, no 1st Phase, L&P method 2, Rounds Limit 1, L&P cuts for fract 1
 	// BBC above means: NumCpu 1, no 1st Phase
