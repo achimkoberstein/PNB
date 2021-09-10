@@ -5094,10 +5094,13 @@ namespace parallel_benders {
         assert(generate_lp_cuts_);
         
         bool use_benders_cuts_intra_round(true);
-        bool use_lp_cuts_intra_round(false); // seems that often leads to unboundess or infeasibility
-        if (lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_NONE || lp_parallel_mode_ >= PNB_PARAL_FRACTS) { //only when fract are solved sequentially 
+        bool use_lp_cuts_intra_round(false); // TODO: seems that often leads to unboundess or infeasibility
+        if (lp_parallel_mode_ >= PNB_PARAL_FRACTS) { //only when fract are solved sequentially 
             use_benders_cuts_intra_round = false;
             use_lp_cuts_intra_round = false;
+        }
+        if (lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_NONE) {
+            use_benders_cuts_intra_round = false;
         }
         bool construct_epigraph_if_cgp_pnb_fails(false);
         bool construct_domain_if_cgp_fails(false); // seems that often leads to unboundess or infeasibility
@@ -5294,7 +5297,6 @@ namespace parallel_benders {
                     dual_cgp_solver = (*it).second;
                 }
                 else {
-                    assert(false && "Never tested");
                     dual_cgp_solver = SetSolverByThread(nullptr);
                 }
                 assert(dual_cgp_solver != osi_solver_); // we do not want to modify the MP solver
@@ -5314,7 +5316,8 @@ namespace parallel_benders {
 
                     // Add lp_round_opt and feas cuts
                     for (const auto& cut_container : lp_round_cut_containers) {
-						// no need to use mutex since only in sequential
+						// no need to use mutex since lp_round_cut_containers is not mepty only in sequential mode, see conditions for use benders / lp cuts intra round
+                        assert(use_benders_cuts_intra_round || use_lp_cuts_intra_round);
                         // TODO: could not we simply change the position of old_cgp_pnb_opt_cuts_back in PNB CGP before adding these cuts?
 						assert(lp_parallel_mode_ < PNB_PARAL_FRACTS);
                         lp_round_cuts_applied += cut_container->size();
