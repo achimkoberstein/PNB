@@ -148,6 +148,9 @@ private:
 	/* Add user cuts after continuous solution
 	was found */
 	int AddUserCutToNode(const parallel_benders::CutStuff& cut_stuff);
+	/* Node depth and id can not be queried in some conextes.
+	*/
+	bool CanQueryNodeInfo();
 };
 
 } // end namespace branch_and_benders_cut

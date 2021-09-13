@@ -918,14 +918,6 @@ namespace branch_and_benders_cut {
 		}
 		assert(mp_node_pointer->num_thetas_ == getNumThetasByStage(tree_nodes_by_stage_[0][0]));
 
-		/*
-		Can query node data - CPXCALLBACKINFO_NODEDEPTH and CPXCALLBACKINFO_NODEUID when the context is:
-		CPX_CALLBACKCONTEXT_RELAXATION,
-		CPX_CALLBACKCONTEXT_BRANCHING,
-		CPX_CALLBACKCONTEXT_CANDIDATE but only if CPXCALLBACKINFO_CANDIDATE_SOURCE is CPX_LAZYCONSTRAINTCALLBACK_NODE.
-		*/
-		bool can_query_node_info = false;
-
 		std::vector<double> solution(num_x_cols + num_theta);
 		if (current_contextid_ == CPX_CALLBACKCONTEXT_CANDIDATE) {
 			assert(!generate_lp_cuts_);
@@ -954,10 +946,6 @@ namespace branch_and_benders_cut {
 			
 			// TODO: why this assert fails sometimes (at least on 16.07)
 			//assert(candidate_source != CPX_LAZYCONSTRAINTCALLBACK_HEUR && "Did not we disable heuristics? Will L&P CGP work correct for this case.");
-
-			if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE) {
-				can_query_node_info = true;
-			}
 		}
 		else if (current_contextid_ == CPX_CALLBACKCONTEXT_RELAXATION) {
 			status = CPXcallbackgetrelaxationpoint(current_context_, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
@@ -965,14 +953,9 @@ namespace branch_and_benders_cut {
 				fprintf(stderr, "Error in CPXcallbackgetrelaxationpoint: status = %d\n", status);
 				return status;
 			}
-
-			can_query_node_info = true;
-		}
-		else if (current_contextid_ == CPX_CALLBACKCONTEXT_BRANCHING) {
-			can_query_node_info = true;
 		}
 
-		if (can_query_node_info) {
+		if (CanQueryNodeInfo()) {
 			status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_NODEDEPTH, &current_node_depth_);
 			if (status) {
 				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
@@ -1479,3 +1462,46 @@ namespace branch_and_benders_cut {
 	}
 
 } // end namespace branch_and_benders_cut
+
+bool branch_and_benders_cut::ThreadBranchAndBendersCut::CanQueryNodeInfo()
+{
+	/*
+		Can query node data - CPXCALLBACKINFO_NODEDEPTH and CPXCALLBACKINFO_NODEUID when the context is:
+		CPX_CALLBACKCONTEXT_RELAXATION,
+		CPX_CALLBACKCONTEXT_BRANCHING,
+		CPX_CALLBACKCONTEXT_CANDIDATE but only if CPXCALLBACKINFO_CANDIDATE_SOURCE is CPX_LAZYCONSTRAINTCALLBACK_NODE.
+	*/
+
+	if (current_contextid_ == CPX_CALLBACKCONTEXT_CANDIDATE) {
+		assert(!generate_lp_cuts_);
+		
+		//Can be only called in CPX_CALLBACKCONTEXT_CANDIDATE
+		int candidate_source;
+		int status;
+		status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_CANDIDATE_SOURCE, &candidate_source);
+		if (status) {
+			LOG(FATAL) << "Error in CPXcallbackgetinfolong for CPXCALLBACKINFO_CANDIDATE_SOURCE: status = " << status;
+		}
+		assert((candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE
+			|| candidate_source == CPX_LAZYCONSTRAINTCALLBACK_HEUR)
+			&& "Why would we have another source?");
+		/*
+		- CPX_LAZYCONSTRAINTCALLBACK_MIPSTART, if the solution comes from a MIP start.
+		- CPX_LAZYCONSTRAINTCALLBACK_HEUR, if the solution comes from a heuristic.
+		- CPX_LAZYCONSTRAINTCALLBACK_USER, if the solution is provided by the user(via CPXXcallbackpostheursoln and CPXcallbackpostheursoln).
+		- CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
+		*/
+
+		// TODO: why this assert fails sometimes (at least on 16.07)
+		//assert(candidate_source != CPX_LAZYCONSTRAINTCALLBACK_HEUR && "Did not we disable heuristics? Will L&P CGP work correct for this case.");
+
+		if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE) {
+			return true;
+		}
+	}
+	else if (current_contextid_ == CPX_CALLBACKCONTEXT_RELAXATION || current_contextid_ == CPX_CALLBACKCONTEXT_BRANCHING) {
+		return true;
+	}
+
+	return false;
+}
