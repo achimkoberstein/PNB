@@ -116,8 +116,6 @@ public:
 	int getCurrentNodeDepth();
 	int getCurrentNodeId();
 
-	void setCurrentNodeDepth(int value);
-	void setCurrentNodeId(int value);
 	void setCurrentContextData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
 
 	/* Solve subproblems, update UB // TODO: do we updated bound?
@@ -134,10 +132,11 @@ public:
 	// TODO: rethink its mechanics
 	bool lp_cuts_constructed_;
 
+	/* Node depth and id can not be queried in some conextes.
+	*/
+	bool CanQueryNodeInfo();
+
 private:
-	// TODO: we should get them with method and not store
-	int current_node_depth_; // how deep the thread is in B&B // TODO: initialize this and below in constructor
-	int current_node_id_;
 	CPXCALLBACKCONTEXTptr current_context_;
 	CPXLONG current_contextid_;
 
@@ -148,9 +147,6 @@ private:
 	/* Add user cuts after continuous solution
 	was found */
 	int AddUserCutToNode(const parallel_benders::CutStuff& cut_stuff);
-	/* Node depth and id can not be queried in some conextes.
-	*/
-	bool CanQueryNodeInfo();
 };
 
 } // end namespace branch_and_benders_cut
