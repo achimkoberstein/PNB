@@ -107,11 +107,10 @@ namespace branch_and_benders_cut {
 			}
 
 			// empty CPLEX (needed if we already built L&P cuts and used solvers)
-			if (thread_data->getCurrentNodeId() != -1) {
-				thread_data->current_lp_round_ = 0;
-				for (auto& id_solver_pair : thread_data->osi_solver_map_) {
-					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-				}
+			// TODO: Was if (thread_data->getCurrentNodeId() != -1)
+			thread_data->current_lp_round_ = 0;
+			for (auto& id_solver_pair : thread_data->osi_solver_map_) {
+				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 			}
 
 			//Store Data
@@ -136,7 +135,7 @@ namespace branch_and_benders_cut {
 			// context CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS might never be called.
 			// We need to set UB here
 			// TODO: distinguish between root is integer vs root is integer + Benders optimal
-			if (thread_data->getCurrentNodeId() == 0 && !added_cuts)
+			if (thread_data->CanQueryNodeInfo() && thread_data->getCurrentNodeId() == 0 && !added_cuts)
 			{
 				global_data->benders_optimal_incumbents_.push_back(thread_data->benders_optimal_incumbents_.back());
 			}
@@ -147,7 +146,8 @@ namespace branch_and_benders_cut {
 				node->getDataPtr()->CleanUnusedMemory(thread_data->forward_);
 			}
 			// also can be set to -1 in StoreNodeData()
-			thread_data->setCurrentNodeId(-1);
+			// TODO: Implement the line below. Do we need that.
+			//thread_data->setCurrentNodeId(-1);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
 			// TODO: exclude this context completely if we do not use L&P cuts
@@ -155,11 +155,10 @@ namespace branch_and_benders_cut {
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;			
 
-			// If we come from contextid == CPX_CALLBACKCONTEXT_CANDIDATE
-			if (thread_data->getCurrentNodeId() == -1) {
-				for (auto& id_solver_pair : thread_data->osi_solver_map_) {
-					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-				}
+			// TODO: If we come from contextid == CPX_CALLBACKCONTEXT_CANDIDATE. How to check it?
+			// We can check current context id. Was: if (thread_data->getCurrentNodeId() == -1)
+			for (auto& id_solver_pair : thread_data->osi_solver_map_) {
+				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 			}
 			
 			//Store Data
@@ -208,11 +207,10 @@ namespace branch_and_benders_cut {
 				return status;
 			}
 
-			// TEMP: empty CPLEX, do we need it?
-			if (thread_data->getCurrentNodeId() != -1) {
-				for (auto& id_solver_pair : thread_data->osi_solver_map_) {
-					id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-				}
+			// TODO: empty CPLEX, do we need it?
+			// Was: if (thread_data->getCurrentNodeId() != -1)
+			for (auto& id_solver_pair : thread_data->osi_solver_map_) {
+				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 			}
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_BRANCHING){
@@ -231,7 +229,6 @@ namespace branch_and_benders_cut {
 			//results of CPXcallbackgetinfo___ are local here
 			// Callback for this context is not called in release mode.
 
-			DLOG(INFO) << "Local progress context. Last processed node " << thread_data->getCurrentNodeId();
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS) {
 			// this context locks all threads, be fast!
@@ -874,7 +871,7 @@ namespace branch_and_benders_cut {
 	}
 
 	ThreadBranchAndBendersCut::ThreadBranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: BranchAndBendersCut(smi_model_ptr),current_node_depth_(-1),current_node_id_(-1),lp_cuts_constructed_(false),current_context_(nullptr),current_contextid_(-1)
+		: BranchAndBendersCut(smi_model_ptr),lp_cuts_constructed_(false),current_context_(nullptr),current_contextid_(-1)
 	{
 	}
 
@@ -926,26 +923,6 @@ namespace branch_and_benders_cut {
 				fprintf(stderr, "Error in CPXcallbackgetcandidate: status = %d\n", status);
 				return status;
 			}
-
-			//Can be only called in CPX_CALLBACKCONTEXT_CANDIDATE
-			int candidate_source;
-			status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_CANDIDATE_SOURCE, &candidate_source);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfolong for CPXCALLBACKINFO_CANDIDATE_SOURCE: status = %d\n", status);
-				return status;
-			}
-			assert((candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE
-				|| candidate_source == CPX_LAZYCONSTRAINTCALLBACK_HEUR)
-				&& "Why would we have another source?");
-			/*
-			- CPX_LAZYCONSTRAINTCALLBACK_MIPSTART, if the solution comes from a MIP start.
-			- CPX_LAZYCONSTRAINTCALLBACK_HEUR, if the solution comes from a heuristic.
-			- CPX_LAZYCONSTRAINTCALLBACK_USER, if the solution is provided by the user(via CPXXcallbackpostheursoln and CPXcallbackpostheursoln).
-			- CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
-			*/
-			
-			// TODO: why this assert fails sometimes (at least on 16.07)
-			//assert(candidate_source != CPX_LAZYCONSTRAINTCALLBACK_HEUR && "Did not we disable heuristics? Will L&P CGP work correct for this case.");
 		}
 		else if (current_contextid_ == CPX_CALLBACKCONTEXT_RELAXATION) {
 			status = CPXcallbackgetrelaxationpoint(current_context_, solution.data(), 0, num_x_cols + num_theta - 1, NULL);
@@ -953,24 +930,6 @@ namespace branch_and_benders_cut {
 				fprintf(stderr, "Error in CPXcallbackgetrelaxationpoint: status = %d\n", status);
 				return status;
 			}
-		}
-
-		if (CanQueryNodeInfo()) {
-			status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_NODEDEPTH, &current_node_depth_);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
-				return status;
-			}
-
-			status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_NODEUID, &current_node_id_);
-			if (status) {
-				fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
-				return status;
-			}
-		}
-		else {
-			current_node_depth_ = -1;
-			current_node_id_ = -1;
 		}
 
 		// Get the current node solution
@@ -1044,22 +1003,31 @@ namespace branch_and_benders_cut {
 
 	int ThreadBranchAndBendersCut::getCurrentNodeDepth()
 	{
-		return current_node_depth_;
+		LOG_IF(FATAL, !CanQueryNodeInfo()) << "Cannot getCurrentNodeDepth() because cannot query node data.";
+		
+		int status;
+		int node_depth;
+		status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_NODEDEPTH, &node_depth);
+		if (status) {
+			fprintf(stderr, "Error in CPXcallbackgetinfolong: status = %d\n", status);
+			return status;
+		}
+
+		return node_depth;		
 	}
 
 	int ThreadBranchAndBendersCut::getCurrentNodeId()
 	{
-		return current_node_id_;
-	}
+		LOG_IF(FATAL, !CanQueryNodeInfo()) << "Cannot getCurrentNodeId() because cannot query node data.";
+		
+		int status;
+		int node_id;
+		status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_NODEUID, &node_id);
+		if (status) {
+			LOG(FATAL) << "Error in CPXcallbackgetinfolong: status = " << status;
+		}
 
-	void ThreadBranchAndBendersCut::setCurrentNodeDepth(int value)
-	{
-		current_node_depth_ = value;
-	}
-
-	void ThreadBranchAndBendersCut::setCurrentNodeId(int value)
-	{
-		current_node_id_ = value;
+		return node_id;
 	}
 
 	void ThreadBranchAndBendersCut::setCurrentContextData(CPXCALLBACKCONTEXTptr context, CPXLONG contextid)
@@ -1492,9 +1460,12 @@ bool branch_and_benders_cut::ThreadBranchAndBendersCut::CanQueryNodeInfo()
 		- CPX_LAZYCONSTRAINTCALLBACK_NODE, if the solution comes from an integer feasible node.
 		*/
 
-		// TODO: why this assert fails sometimes (at least on 16.07)
-		//assert(candidate_source != CPX_LAZYCONSTRAINTCALLBACK_HEUR && "Did not we disable heuristics? Will L&P CGP work correct for this case.");
-
+		if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_HEUR) {
+			// TODO: why we end up here sometimes (at least for SNDP_TestCase_16)
+			LogSpecialCase(true, "Did not we disable heuristics? Will L&P CGP work correct for this case.", -1.0);
+			return false;
+		}
+		
 		if (candidate_source == CPX_LAZYCONSTRAINTCALLBACK_NODE) {
 			return true;
 		}
