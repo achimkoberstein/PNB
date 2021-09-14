@@ -135,7 +135,7 @@ namespace branch_and_benders_cut {
 			// context CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS might never be called.
 			// We need to set UB here
 			// TODO: distinguish between root is integer vs root is integer + Benders optimal
-			if (thread_data->CanQueryNodeInfo() && thread_data->getCurrentNodeId() == 0 && !added_cuts)
+			if (thread_data->CanQueryNodeInfo() && thread_data->getCurrentNodeDepth() == 0 && !added_cuts)
 			{
 				global_data->benders_optimal_incumbents_.push_back(thread_data->benders_optimal_incumbents_.back());
 			}
@@ -168,11 +168,8 @@ namespace branch_and_benders_cut {
 				return status;
 			}
 
-			if (thread_data->getCurrentNodeDepth() == 0) {
-				assert(thread_data->getCurrentNodeId() == 0);
-				std::cout << "We are constructing L&P cuts for the root node." << std::endl;
-			}
-			else {
+			// We are not in the root node or we are in the root node after presolve restart
+			if (thread_data->getCurrentNodeDepth() != 0 || thread_data->getCurrentNodeId() != 0) {
 				// TODO: can it be that withing one thread we "jump" between open nodes
 				// for which we construct L&P cuts.
 				assert(thread_data->getCurrentNodeId() != 0);
