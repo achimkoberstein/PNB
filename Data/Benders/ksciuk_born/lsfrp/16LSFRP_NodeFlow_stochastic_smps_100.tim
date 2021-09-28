@@ -1,6 +1,0 @@
-TIME          LSFRP_Instance_16_stochastic (MAX)
-PERIODS       IMPLICIT
-    yy10104   OneShipPerNode01                 Stage1    
-                                       Stage2    
-*
-ENDATA

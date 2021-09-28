@@ -1,5 +1,9 @@
 // cor;tim;sto or cor_tim;sto or cor_tim_sto
-glushko/lsfrp/LSFRP_instance10_stochastic
+koberstein/lsfrp/47LSFRP
+koberstein/lsfrp/49LSFRP
+koberstein/lsfrp/50LSFRP
+koberstein/lsfrp/53LSFRP
+koberstein/lsfrp/54LSFRP
 Bodur/CAP/cap101_1000
 Bodur/CAP/cap101_2000
 Bodur/CAP/cap101_250
