@@ -1,6 +1,0 @@
-TIME          LSFRP_Instance_10 (MAX)
-PERIODS       IMPLICIT
-    ys10102   OneShipPerNode02                 Stage1    
-    x010102   ShippingAmount01                 Stage2    
-*
-ENDATA

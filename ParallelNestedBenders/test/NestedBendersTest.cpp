@@ -1923,6 +1923,11 @@ TEST_F(CollectInstanceSpecs, cap) {
 	EXPECT_TRUE(true);
 }
 
+TEST_F(CollectInstanceSpecs, lsfrp) {
+	solveSMPSFromList("../../../../Data/Benders/InstanceListKobersteinLSFRP.txt");
+	EXPECT_TRUE(true);
+}
+
 TEST_F(LiftAndProjectCutsTest, fast) {
 	// Binary 1st stage
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
