@@ -938,6 +938,21 @@ TEST_F(BranchAndBendersTest, slow) {
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION, false);
 }
 
+TEST_F(BranchAndBendersTest, koberstein_LSFRP) { //Two-Stage, bin on the first
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_EPSILON_RELATIVE, 0.000001);
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 10800);
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_WARM_START, parallel_benders::PNB_INT_WARM_START_SCENARIO_WISE);
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_PARALLEL_MODE, parallel_benders::PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS);
+
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 0);
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_USE_CGP_PNB_CUTS, parallel_benders::PNB_CGP_CUTS_NONE);
+	solveSMPSFromList("../../../../Data/Benders/InstanceListKobersteinLSFRP.txt");
+
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 1);
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_USE_CGP_PNB_CUTS, parallel_benders::PNB_CGP_CUTS_ALL);
+	solveSMPSFromList("../../../../Data/Benders/InstanceListKobersteinLSFRP.txt");
+}
+
 TEST_F(BranchAndBendersTest, for_LP) {
 	//have bin and sometimes cont vars on the 1st stage
 	//need >0.2 secs to be solved on workstation with DETEQ
