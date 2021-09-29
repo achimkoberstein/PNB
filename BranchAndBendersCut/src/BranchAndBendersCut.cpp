@@ -173,7 +173,6 @@ namespace branch_and_benders_cut {
 				// TODO: can it be that withing one thread we "jump" between open nodes
 				// for which we construct L&P cuts.
 				assert(thread_data->getCurrentNodeId() != 0);
-				std::cout << "We do not construct L&P cuts for non-root node as lifting is not implemented." << std::endl;
 				assert(thread_data->current_lp_round_ == 0);
 				thread_data->generate_lp_cuts_ = false;
 				return status;
@@ -692,8 +691,10 @@ namespace branch_and_benders_cut {
 		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, num_cpu_);
 		//TODO: temp
 		// Display the detailed solution log
+#ifndef NDEBUG
 		CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 1); // detailed log
 		CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 5); // display all the information from the log
+#endif
 		
 		// Dynamic Search
 		//CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_Search, CPX_MIPSEARCH_TRADITIONAL);  // no dynamic search (however, it is compatible with generic callbacks)
