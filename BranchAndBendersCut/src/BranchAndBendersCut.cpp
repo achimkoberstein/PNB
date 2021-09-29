@@ -249,6 +249,8 @@ namespace branch_and_benders_cut {
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
 			bool sync_cuts = false;
+
+			assert(thread_data->lp_cuts_timer_.GetTime(0) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
 			
 			// TODO: otherwise just update their quantity
 			if (sync_cuts) {
@@ -442,6 +444,8 @@ namespace branch_and_benders_cut {
 				*/
 			}
 		}
+		
+		assert(lp_cuts_timer_.GetTime(0) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
 	}
 
 	void BranchAndBendersCut::ConstructOptimalityCuts()
