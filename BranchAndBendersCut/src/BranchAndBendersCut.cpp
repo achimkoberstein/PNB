@@ -515,7 +515,7 @@ namespace branch_and_benders_cut {
 			lift_and_project_pnb->setGlobalLPRoundsLimit(lp_rounds_limit_);
 
 #ifdef NDEBUG
-			lift_and_project_pnb->log_level_ = google::WARNING; // TODO: it will crash, no INFO output for cont phase in release
+			lift_and_project_pnb->setLogLevel(google::WARNING); // TODO: it will crash, no INFO output for cont phase in release
 #endif
 			// Find solution
 			// We stop the process after the total number of L&P rounds

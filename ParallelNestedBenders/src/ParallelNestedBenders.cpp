@@ -10596,3 +10596,8 @@ namespace parallel_benders {
         return osi_cut->lb()-sum;  
     }
 } // end namespace parallel_benders
+
+void parallel_benders::ParallelNestedBenders::setLogLevel(int level)
+{
+    log_level_ = level;
+}
