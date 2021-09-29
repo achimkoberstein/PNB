@@ -509,6 +509,8 @@ protected:
    
 
 
+public:
+    void setLogLevel(int level);
 };
 
 // TODO: Problems
