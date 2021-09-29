@@ -5255,7 +5255,8 @@ namespace parallel_benders {
                 if (cgp_pnb->solution_code_ == PNB_SOLUTION_INFEASIBLE) {
                     cgp_pnb->upper_bound_ = cgp_pnb->iteration_u_and_l_bounds_.back().first; // if problem is infeasible, ub is set to infinity. Let us revert it
                 }
-				LOG_IF(FATAL, cgp_pnb->solution_code_ != PNB_SOLUTION_INFEASIBLE) << "Never happend with BBC. Think if we do not want building cuts in this case.";
+				// TODO: Think if we do not want building cuts in this case.
+				//LOG_IF(FATAL, cgp_pnb->solution_code_ != PNB_SOLUTION_INFEASIBLE) << "Never happend with BBC. Think if we do not want building cuts in this case.";
                 if (RelativeGapLargerEpsilon(cgp_pnb->upper_bound_, cgp_pnb->lower_bound_, infinity_, std::max(cgp_relative_epsilon_, 0.01)) && !construct_epigraph_if_cgp_pnb_fails) {
                     log_message << "Will NOT build L&P cut since gap is too large.";
                     LogSpecialCase(true, log_message.str(), fractional_variable.second);
