@@ -249,10 +249,14 @@ namespace branch_and_benders_cut {
 			}
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
-			{
+			bool sync_cuts = false;
+			
+			// TODO: otherwise just update their quantity
+			if (sync_cuts) {
 				// Add Benders and L&P cuts to the global data
 				// TODO: do it in global progress (so that we share the cuts earlier)
 				std::lock_guard<std::shared_mutex> exclusive_lock(global_data->thread_data_mutex_);
+				LOG(INFO) << "Started syncing cuts in thread down context for thread " << thread_data->getCurrentThreadId();
 				global_data->stage_data_[0]->lp_cgp_counter_ += thread_data->stage_data_[0]->lp_cgp_counter_;
 
 				std::vector<parallel_benders::BendersNodeData::cut_container*> cut_containers;
@@ -298,6 +302,7 @@ namespace branch_and_benders_cut {
 						}
 					}
 				}
+				LOG(INFO) << "Finished syncing cuts." << thread_data->getCurrentThreadId();
 			}
 
 			{
