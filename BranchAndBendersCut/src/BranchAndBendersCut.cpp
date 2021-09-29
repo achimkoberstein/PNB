@@ -500,8 +500,7 @@ namespace branch_and_benders_cut {
 		// *****************
 		// Preprocess with L&P cuts
 		// *****************
-		//if (lp_rounds_limit_) {
-		if (false) {
+		if (lp_rounds_limit_) {
 			// TODO: implement parameter to start it. We can choose to construct cuts here or in B&B for node with depth 0
 			// Prepare parameters
 			parallel_benders::Parameter lift_and_project_param = parallel_benders::Parameter(parameter_);
@@ -526,8 +525,9 @@ namespace branch_and_benders_cut {
 			// reaches lp_rounds_limit_ (PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT status)
 			lift_and_project_pnb->Solve();
 			
-			LOG_IF(FATAL, lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT &&
-				lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_OPTIMAL);
+			// TODO: also here should be time limit
+			//LOG_IF(FATAL, lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_GLOBAL_LP_ROUNDS_LIMIT &&
+			//	lift_and_project_pnb->getSolutionCode() != parallel_benders::PNB_SOLUTION_OPTIMAL);
 			LOG_IF(WARNING, lift_and_project_pnb->getSolutionCode() == parallel_benders::PNB_SOLUTION_OPTIMAL) 
 				<< "Optimal solution found during the L&P rounds before the B&B procedure.";
 
