@@ -151,6 +151,7 @@ namespace branch_and_benders_cut {
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
 			// TODO: exclude this context completely if we do not use L&P cuts
+			global_data->get_mutable_lp_cuts_timer().Start(3);
 			
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;			
@@ -165,6 +166,7 @@ namespace branch_and_benders_cut {
 			status = thread_data->StoreNodeData();
 			if (status) {
 				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
+				global_data->get_mutable_lp_cuts_timer().Stop(3);
 				return status;
 			}
 
@@ -175,6 +177,7 @@ namespace branch_and_benders_cut {
 				assert(thread_data->getCurrentNodeId() != 0);
 				assert(thread_data->current_lp_round_ == 0);
 				thread_data->generate_lp_cuts_ = false;
+				global_data->get_mutable_lp_cuts_timer().Stop(3);
 				return status;
 			}
 
@@ -182,6 +185,7 @@ namespace branch_and_benders_cut {
 			if (thread_data->lp_cuts_constructed_) {
 				thread_data->lp_cuts_constructed_ = false;
 				thread_data->generate_lp_cuts_ = false;
+				global_data->get_mutable_lp_cuts_timer().Stop(3);
 				return 0;
 			}
 
@@ -190,6 +194,7 @@ namespace branch_and_benders_cut {
 				thread_data->lp_cuts_constructed_ = true;
 				thread_data->current_lp_round_ = 0;
 				thread_data->generate_lp_cuts_ = false;
+				global_data->get_mutable_lp_cuts_timer().Stop(3);
 				return 0;
 			}
 			thread_data->current_lp_round_++;
@@ -200,6 +205,7 @@ namespace branch_and_benders_cut {
 			status = thread_data->AppendCutsToNode(thread_data->tree_nodes_by_stage_[0][0]);
 			if (status) {
 				fprintf(stderr, "Error in bbc_->AppendCutsToNode(): status = %d\n", status);
+				global_data->get_mutable_lp_cuts_timer().Stop(3);
 				return status;
 			}
 
@@ -208,6 +214,7 @@ namespace branch_and_benders_cut {
 			for (auto& id_solver_pair : thread_data->osi_solver_map_) {
 				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 			}
+			global_data->get_mutable_lp_cuts_timer().Stop(3);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_BRANCHING){
 			// Callback for this context is not called in release mode.
@@ -250,7 +257,14 @@ namespace branch_and_benders_cut {
 		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
 			bool sync_cuts = false;
 
+			// TODO: we need some function to sync time
+			// Sync timers
 			assert(thread_data->lp_cuts_timer_.GetTime(0) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
+			global_data->get_mutable_lp_cuts_timer().AddTime(1, thread_data->get_lp_cuts_timer().GetTime(1));
+			global_data->get_mutable_lp_cuts_timer().AddTime(2, thread_data->get_lp_cuts_timer().GetTime(2));
+			assert(thread_data->lp_cuts_timer_.GetTime(3) == 0 && "timer 3 - L&P generation wall clock time is timed in global thread");
+			global_data->get_mutable_lp_cuts_timer().AddTime(4, thread_data->get_lp_cuts_timer().GetTime(4));
+			global_data->get_mutable_lp_cuts_timer().AddTime(5, thread_data->get_lp_cuts_timer().GetTime(5));
 			
 			// TODO: otherwise just update their quantity
 			if (sync_cuts) {
@@ -608,7 +622,15 @@ namespace branch_and_benders_cut {
 			// - continuous optimality cuts if use_first_phase_
 			cont_phase_pnb_ = lift_and_project_pnb->getContPhasePNB();
 
-			delete lift_and_project_pnb;
+			// Timers
+			// TODO: use loop here
+			lp_cuts_timer_.AddTime(1, lift_and_project_pnb->get_lp_cuts_timer().GetTime(1));
+			lp_cuts_timer_.AddTime(2, lift_and_project_pnb->get_lp_cuts_timer().GetTime(2));
+			lp_cuts_timer_.AddTime(3, lift_and_project_pnb->get_lp_cuts_timer().GetTime(3));
+			lp_cuts_timer_.AddTime(4, lift_and_project_pnb->get_lp_cuts_timer().GetTime(4));
+			lp_cuts_timer_.AddTime(5, lift_and_project_pnb->get_lp_cuts_timer().GetTime(5));
+
+			delete lift_and_project_pnb;			
 		}
 		// *****************
 		// Generate continuous optimality cuts
