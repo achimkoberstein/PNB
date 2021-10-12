@@ -82,6 +82,10 @@ public:
 
     std::shared_ptr<std::mutex> getMutableConsoleMutex();
 
+    // Timers
+    inline const Timer& get_lp_cuts_timer() const {return lp_cuts_timer_;};
+    inline Timer& get_mutable_lp_cuts_timer() { return lp_cuts_timer_; };
+
     /************************************************************************/
     /* Takes ownership of solution                                          */
     /************************************************************************/
