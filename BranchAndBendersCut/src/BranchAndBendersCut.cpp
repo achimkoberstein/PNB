@@ -87,7 +87,7 @@ namespace branch_and_benders_cut {
 			global_data->createCopyForThread(thread_id);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {
-			global_data->get_mutable_solution_times().Start(3);
+			global_data->get_mutable_timer().Start(1);
 
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;
@@ -151,7 +151,7 @@ namespace branch_and_benders_cut {
 			// TODO: Implement the line below. Do we need that.
 			//thread_data->setCurrentNodeId(-1);
 
-			global_data->get_mutable_solution_times().Stop(3);
+			global_data->get_mutable_timer().Stop(1);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
 			// TODO: exclude this context completely if we do not use L&P cuts
@@ -267,12 +267,14 @@ namespace branch_and_benders_cut {
 			global_data->get_mutable_lp_cuts_timer().AddTime(1, thread_data->get_lp_cuts_timer().GetTime(1));
 			global_data->get_mutable_lp_cuts_timer().AddTime(2, thread_data->get_lp_cuts_timer().GetTime(2));
 			assert(thread_data->get_lp_cuts_timer().GetTime(3) == 0 && "timer 3 - L&P generation wall clock time is timed in global thread");
-			// These timers are not valid for BBC
 			assert(thread_data->get_solution_times().GetTime(0) == 0);
 			assert(thread_data->get_solution_times().GetTime(1) == 0);
 			assert(thread_data->get_solution_times().GetTime(2) == 0);
-			assert(thread_data->get_solution_times().GetTime(3) == 0 && "timer 3 - Solution of subproblems is timed in global thread");
+			global_data->get_mutable_solution_times().AddTime(3, thread_data->get_solution_times().GetTime(3));
 			assert(thread_data->get_solution_times().GetTime(4) == 0 && "timer 4 - Cont phase is not run in threads");
+			assert(thread_data->get_timer().GetTime(0) == 0 && "timer of 1st stage should be 0");
+			assert(thread_data->get_timer().GetTime(1) == 0 && "timer of 2nd is timed in global thread");
+
 						
 			// TODO: otherwise just update their quantity
 			if (sync_cuts) {
@@ -383,6 +385,7 @@ namespace branch_and_benders_cut {
 		
 		// Construct continuous optimality, L&P cuts or
 		// one round of Benders cuts (to avoid unboundness)
+		wall_clock_solution_time_.Start(0);
 		assert(current_stage_ == 0);
 		BuildSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
 		AppendColsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
@@ -394,6 +397,7 @@ namespace branch_and_benders_cut {
 		SolveSolverInterface(osi_solver_);
 		current_stage_ = 0;
 		PrintSubproblem(osi_solver_, 0, "MP_after");
+		wall_clock_solution_time_.Stop(0);
 		
 		if (osi_solver_->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
@@ -518,7 +522,11 @@ namespace branch_and_benders_cut {
 		}
 
 		// We need to aggregate optimality cuts for the parent node
-		AggregateOptimalityCuts(tree_nodes_by_stage_[current_stage_ - 1][0]);		
+		AggregateOptimalityCuts(tree_nodes_by_stage_[current_stage_ - 1][0]);
+
+		for (auto node : tree_nodes_by_stage_[1]) {
+			solution_times_.AddTime(3, node->getDataPtr()->solution_time_);
+		}
 	}
 
 	void BranchAndBendersCut::ConstructRootNodeCuts()
@@ -662,6 +670,7 @@ namespace branch_and_benders_cut {
 		// If no theta cuts are present, generate them.
 		// Without theta cuts the problem is unbounded as theta is unbounded.
 		if (getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) {
+			solution_times_.Start(4);
 			osi_solver_->initialSolve();
 			assert(osi_solver_->isProvenOptimal());
 			StoreData(osi_solver_, getMutableTreeNode(0, 0));
@@ -674,6 +683,7 @@ namespace branch_and_benders_cut {
 			cont_phase_pnb_->getMutableStageData(0)->added_optimality_cuts_.store(stage_data_[0]->added_optimality_cuts_.load());
 			// and reset the number of optimality cuts
 			stage_data_[0]->added_optimality_cuts_ = 0;
+			solution_times_.Stop(4);
 		}
 
 		LOG_IF(FATAL, !getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.empty()) << "Feasibility cuts not implemented (not tested)";
