@@ -274,6 +274,11 @@ namespace branch_and_benders_cut {
 			assert(thread_data->get_solution_times().GetTime(4) == 0 && "timer 4 - Cont phase is not run in threads");
 			assert(thread_data->get_timer().GetTime(0) == 0 && "timer of 1st stage should be 0");
 			assert(thread_data->get_timer().GetTime(1) == 0 && "timer of 2nd is timed in global thread");
+			assert(thread_data->get_detailed_timer().GetTime(0) == 0);
+			assert(thread_data->get_detailed_timer().GetTime(1) == 0);
+			assert(thread_data->get_detailed_timer().GetTime(2) == 0);
+			global_data->get_mutable_detailed_timer().AddTime(3, thread_data->get_detailed_timer().GetTime(3));
+			global_data->get_mutable_detailed_timer().AddTime(4, thread_data->get_detailed_timer().GetTime(4));
 
 						
 			// TODO: otherwise just update their quantity
@@ -475,6 +480,9 @@ namespace branch_and_benders_cut {
 		assert(get_solution_times().GetTime(0) == 0 && "Solution timer of MP is not applicable to BBC.");
 		assert(get_solution_times().GetTime(1) == 0 && "Timer for projection is not applicable because we never use that technique.");
 		assert(get_solution_times().GetTime(2) == 0 && "Timer for ODA is not applicable because we never use ODA.");
+		assert(get_detailed_timer().GetTime(0) == 0 && "Timer for build MP is not applicable.");
+		assert(get_detailed_timer().GetTime(1) == 0 && "Timer for prejections is not applicable because we never use that technique.");
+		assert(get_detailed_timer().GetTime(2) == 0 && "Time for solve ODA is not even used in PNB.");
 	}
 
 	void BranchAndBendersCut::ConstructOptimalityCuts()
@@ -525,6 +533,8 @@ namespace branch_and_benders_cut {
 		AggregateOptimalityCuts(tree_nodes_by_stage_[current_stage_ - 1][0]);
 
 		for (auto node : tree_nodes_by_stage_[1]) {
+			detailed_timer_.AddTime(3, node->getDataPtr()->build_time_);
+			detailed_timer_.AddTime(4, node->getDataPtr()->cut_generation_time_);
 			solution_times_.AddTime(3, node->getDataPtr()->solution_time_);
 		}
 	}
@@ -651,6 +661,9 @@ namespace branch_and_benders_cut {
 
 			solution_times_.AddTime(3, lift_and_project_pnb->get_solution_times().GetTime(3));
 			solution_times_.AddTime(4, lift_and_project_pnb->get_solution_times().GetTime(4));
+
+			detailed_timer_.AddTime(3, lift_and_project_pnb->get_detailed_timer().GetTime(3));
+			detailed_timer_.AddTime(4, lift_and_project_pnb->get_detailed_timer().GetTime(4));
 
 			delete lift_and_project_pnb;			
 		}
