@@ -86,7 +86,9 @@ namespace branch_and_benders_cut {
 			assert(thread_data == nullptr);
 			global_data->createCopyForThread(thread_id);
 		}
-		else if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {	
+		else if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {
+			global_data->get_mutable_solution_times().Start(3);
+
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;
 
@@ -148,6 +150,8 @@ namespace branch_and_benders_cut {
 			// also can be set to -1 in StoreNodeData()
 			// TODO: Implement the line below. Do we need that.
 			//thread_data->setCurrentNodeId(-1);
+
+			global_data->get_mutable_solution_times().Stop(3);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
 			// TODO: exclude this context completely if we do not use L&P cuts
@@ -262,10 +266,14 @@ namespace branch_and_benders_cut {
 			assert(thread_data->lp_cuts_timer_.GetTime(0) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
 			global_data->get_mutable_lp_cuts_timer().AddTime(1, thread_data->get_lp_cuts_timer().GetTime(1));
 			global_data->get_mutable_lp_cuts_timer().AddTime(2, thread_data->get_lp_cuts_timer().GetTime(2));
-			assert(thread_data->lp_cuts_timer_.GetTime(3) == 0 && "timer 3 - L&P generation wall clock time is timed in global thread");
-			global_data->get_mutable_lp_cuts_timer().AddTime(4, thread_data->get_lp_cuts_timer().GetTime(4));
-			global_data->get_mutable_lp_cuts_timer().AddTime(5, thread_data->get_lp_cuts_timer().GetTime(5));
-			
+			assert(thread_data->get_lp_cuts_timer().GetTime(3) == 0 && "timer 3 - L&P generation wall clock time is timed in global thread");
+			// These timers are not valid for BBC
+			assert(thread_data->get_solution_times().GetTime(0) == 0);
+			assert(thread_data->get_solution_times().GetTime(1) == 0);
+			assert(thread_data->get_solution_times().GetTime(2) == 0);
+			assert(thread_data->get_solution_times().GetTime(3) == 0 && "timer 3 - Solution of subproblems is timed in global thread");
+			assert(thread_data->get_solution_times().GetTime(4) == 0 && "timer 4 - Cont phase is not run in threads");
+						
 			// TODO: otherwise just update their quantity
 			if (sync_cuts) {
 				// Add Benders and L&P cuts to the global data
@@ -458,8 +466,11 @@ namespace branch_and_benders_cut {
 				*/
 			}
 		}
-		
-		assert(lp_cuts_timer_.GetTime(0) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
+		assert(get_lp_cuts_timer().GetTime(0) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
+		// these timers should be somewhere else
+		assert(get_solution_times().GetTime(0) == 0 && "Solution timer of MP is not applicable to BBC.");
+		assert(get_solution_times().GetTime(1) == 0 && "Timer for projection is not applicable because we never use that technique.");
+		assert(get_solution_times().GetTime(2) == 0 && "Timer for ODA is not applicable because we never use ODA.");
 	}
 
 	void BranchAndBendersCut::ConstructOptimalityCuts()
@@ -630,6 +641,9 @@ namespace branch_and_benders_cut {
 			lp_cuts_timer_.AddTime(4, lift_and_project_pnb->get_lp_cuts_timer().GetTime(4));
 			lp_cuts_timer_.AddTime(5, lift_and_project_pnb->get_lp_cuts_timer().GetTime(5));
 
+			solution_times_.AddTime(3, lift_and_project_pnb->get_solution_times().GetTime(3));
+			solution_times_.AddTime(4, lift_and_project_pnb->get_solution_times().GetTime(4));
+
 			delete lift_and_project_pnb;			
 		}
 		// *****************
@@ -640,7 +654,9 @@ namespace branch_and_benders_cut {
 		else if (use_first_phase_)
 		{
 			current_iteration_ = 1;
+			solution_times_.Start(4);
 			HandleContinuousPhase();
+			solution_times_.Stop(4);
 		}
 
 		// If no theta cuts are present, generate them.

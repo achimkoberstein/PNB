@@ -85,6 +85,8 @@ public:
     // Timers
     inline const Timer& get_lp_cuts_timer() const {return lp_cuts_timer_;};
     inline Timer& get_mutable_lp_cuts_timer() { return lp_cuts_timer_; };
+    inline const Timer& get_solution_times() const { return solution_times_; };
+    inline Timer& get_mutable_solution_times() { return solution_times_; };
 
     /************************************************************************/
     /* Takes ownership of solution                                          */
