@@ -87,7 +87,7 @@ namespace branch_and_benders_cut {
 			global_data->createCopyForThread(thread_id);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE) {
-			global_data->get_mutable_timer().Start(1);
+			global_data->startTimer(global_data->INT_TIMER_ID_TIMER_INIT + 2);
 
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;
@@ -151,11 +151,11 @@ namespace branch_and_benders_cut {
 			// TODO: Implement the line below. Do we need that.
 			//thread_data->setCurrentNodeId(-1);
 
-			global_data->get_mutable_timer().Stop(1);
+			global_data->stopTimer(global_data->INT_TIMER_ID_TIMER_INIT + 2);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_RELAXATION) {
 			// TODO: exclude this context completely if we do not use L&P cuts
-			global_data->get_mutable_lp_cuts_timer().Start(3);
+			global_data->startTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 			
 			thread_data->current_stage_ = 0;
 			thread_data->forward_ = true;			
@@ -170,7 +170,7 @@ namespace branch_and_benders_cut {
 			status = thread_data->StoreNodeData();
 			if (status) {
 				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
-				global_data->get_mutable_lp_cuts_timer().Stop(3);
+				global_data->stopTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 				return status;
 			}
 
@@ -181,7 +181,7 @@ namespace branch_and_benders_cut {
 				assert(thread_data->getCurrentNodeId() != 0);
 				assert(thread_data->current_lp_round_ == 0);
 				thread_data->generate_lp_cuts_ = false;
-				global_data->get_mutable_lp_cuts_timer().Stop(3);
+				global_data->stopTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 				return status;
 			}
 
@@ -189,7 +189,7 @@ namespace branch_and_benders_cut {
 			if (thread_data->lp_cuts_constructed_) {
 				thread_data->lp_cuts_constructed_ = false;
 				thread_data->generate_lp_cuts_ = false;
-				global_data->get_mutable_lp_cuts_timer().Stop(3);
+				global_data->stopTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 				return 0;
 			}
 
@@ -198,7 +198,7 @@ namespace branch_and_benders_cut {
 				thread_data->lp_cuts_constructed_ = true;
 				thread_data->current_lp_round_ = 0;
 				thread_data->generate_lp_cuts_ = false;
-				global_data->get_mutable_lp_cuts_timer().Stop(3);
+				global_data->stopTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 				return 0;
 			}
 			thread_data->current_lp_round_++;
@@ -209,7 +209,7 @@ namespace branch_and_benders_cut {
 			status = thread_data->AppendCutsToNode(thread_data->tree_nodes_by_stage_[0][0]);
 			if (status) {
 				fprintf(stderr, "Error in bbc_->AppendCutsToNode(): status = %d\n", status);
-				global_data->get_mutable_lp_cuts_timer().Stop(3);
+				global_data->stopTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 				return status;
 			}
 
@@ -218,7 +218,7 @@ namespace branch_and_benders_cut {
 			for (auto& id_solver_pair : thread_data->osi_solver_map_) {
 				id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 			}
-			global_data->get_mutable_lp_cuts_timer().Stop(3);
+			global_data->stopTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_BRANCHING){
 			// Callback for this context is not called in release mode.
@@ -263,22 +263,22 @@ namespace branch_and_benders_cut {
 
 			// TODO: we need some function to sync time
 			// Sync timers
-			assert(thread_data->lp_cuts_timer_.GetTime(0) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
-			global_data->get_mutable_lp_cuts_timer().AddTime(1, thread_data->get_lp_cuts_timer().GetTime(1));
-			global_data->get_mutable_lp_cuts_timer().AddTime(2, thread_data->get_lp_cuts_timer().GetTime(2));
-			assert(thread_data->get_lp_cuts_timer().GetTime(3) == 0 && "timer 3 - L&P generation wall clock time is timed in global thread");
-			assert(thread_data->get_solution_times().GetTime(0) == 0);
-			assert(thread_data->get_solution_times().GetTime(1) == 0);
-			assert(thread_data->get_solution_times().GetTime(2) == 0);
-			global_data->get_mutable_solution_times().AddTime(3, thread_data->get_solution_times().GetTime(3));
-			assert(thread_data->get_solution_times().GetTime(4) == 0 && "timer 4 - Cont phase is not run in threads");
-			assert(thread_data->get_timer().GetTime(0) == 0 && "timer of 1st stage should be 0");
-			assert(thread_data->get_timer().GetTime(1) == 0 && "timer of 2nd is timed in global thread");
-			assert(thread_data->get_detailed_timer().GetTime(0) == 0);
-			assert(thread_data->get_detailed_timer().GetTime(1) == 0);
-			assert(thread_data->get_detailed_timer().GetTime(2) == 0);
-			global_data->get_mutable_detailed_timer().AddTime(3, thread_data->get_detailed_timer().GetTime(3));
-			global_data->get_mutable_detailed_timer().AddTime(4, thread_data->get_detailed_timer().GetTime(4));
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
+			global_data->addTime(thread_data->INT_TIMER_ID_LP_CUTS_PNB_CGP, thread_data->getTime(thread_data->INT_TIMER_ID_LP_CUTS_PNB_CGP));
+			global_data->addTime(thread_data->INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP, thread_data->getTime(thread_data->INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP));
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK) == 0 && "timer 3 - L&P generation wall clock time is timed in global thread");
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_MASTER) == 0);
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_PROJECTIONS) == 0);
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_ODA) == 0);
+			global_data->addTime(global_data->INT_TIMER_ID_SOLVE_SUBS, thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_SUBS));
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_CONT_PHASE) == 0 && "timer 4 - Cont phase is not run in threads");
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_TIMER_INIT + 1) == 0 && "timer of 1st stage should be 0");
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_TIMER_INIT + 2) == 0 && "timer of 2nd is timed in global thread");
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_DETAILED_BUILD_MASTER) == 0);
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS) == 0);
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_DETAILED_BUILD_ODA) == 0);
+			global_data->addTime(global_data->INT_TIMER_ID_DETAILED_BUILD_SUBS, thread_data->getTime(global_data->INT_TIMER_ID_DETAILED_BUILD_SUBS));
+			global_data->addTime(global_data->INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION, thread_data->getTime(global_data->INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION));
 
 						
 			// TODO: otherwise just update their quantity
@@ -390,7 +390,7 @@ namespace branch_and_benders_cut {
 		
 		// Construct continuous optimality, L&P cuts or
 		// one round of Benders cuts (to avoid unboundness)
-		wall_clock_solution_time_.Start(0);
+		startTimer(INT_TIMER_ID_SOL_WALL_CLOCK);
 		assert(current_stage_ == 0);
 		BuildSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
 		AppendColsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
@@ -402,7 +402,7 @@ namespace branch_and_benders_cut {
 		SolveSolverInterface(osi_solver_);
 		current_stage_ = 0;
 		PrintSubproblem(osi_solver_, 0, "MP_after");
-		wall_clock_solution_time_.Stop(0);
+		stopTimer(INT_TIMER_ID_SOL_WALL_CLOCK);
 		
 		if (osi_solver_->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
@@ -475,14 +475,14 @@ namespace branch_and_benders_cut {
 				*/
 			}
 		}
-		assert(get_lp_cuts_timer().GetTime(0) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
+		assert(getTime(INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
 		// these timers should be somewhere else
-		assert(get_solution_times().GetTime(0) == 0 && "Solution timer of MP is not applicable to BBC.");
-		assert(get_solution_times().GetTime(1) == 0 && "Timer for projection is not applicable because we never use that technique.");
-		assert(get_solution_times().GetTime(2) == 0 && "Timer for ODA is not applicable because we never use ODA.");
-		assert(get_detailed_timer().GetTime(0) == 0 && "Timer for build MP is not applicable.");
-		assert(get_detailed_timer().GetTime(1) == 0 && "Timer for prejections is not applicable because we never use that technique.");
-		assert(get_detailed_timer().GetTime(2) == 0 && "Time for solve ODA is not even used in PNB.");
+		assert(getTime(INT_TIMER_ID_SOLVE_MASTER) == 0 && "Solution timer of MP is not applicable to BBC.");
+		assert(getTime(INT_TIMER_ID_SOLVE_PROJECTIONS) == 0 && "Timer for projection is not applicable because we never use that technique.");
+		assert(getTime(INT_TIMER_ID_SOLVE_ODA) == 0 && "Timer for ODA is not applicable because we never use ODA.");
+		assert(getTime(INT_TIMER_ID_DETAILED_BUILD_MASTER) == 0 && "Timer for build MP is not applicable.");
+		assert(getTime(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS) == 0 && "Timer for prejections is not applicable because we never use that technique.");
+		assert(getTime(INT_TIMER_ID_DETAILED_BUILD_ODA) == 0 && "Time for solve ODA is not even used in PNB.");
 	}
 
 	void BranchAndBendersCut::ConstructOptimalityCuts()
@@ -533,9 +533,9 @@ namespace branch_and_benders_cut {
 		AggregateOptimalityCuts(tree_nodes_by_stage_[current_stage_ - 1][0]);
 
 		for (auto node : tree_nodes_by_stage_[1]) {
-			detailed_timer_.AddTime(3, node->getDataPtr()->build_time_);
-			detailed_timer_.AddTime(4, node->getDataPtr()->cut_generation_time_);
-			solution_times_.AddTime(3, node->getDataPtr()->solution_time_);
+			addTime(INT_TIMER_ID_DETAILED_BUILD_SUBS, node->getDataPtr()->build_time_);
+			addTime(INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION, node->getDataPtr()->cut_generation_time_);
+			addTime(INT_TIMER_ID_SOLVE_SUBS, node->getDataPtr()->solution_time_);
 		}
 	}
 
@@ -653,17 +653,17 @@ namespace branch_and_benders_cut {
 
 			// Timers
 			// TODO: use loop here
-			lp_cuts_timer_.AddTime(1, lift_and_project_pnb->get_lp_cuts_timer().GetTime(1));
-			lp_cuts_timer_.AddTime(2, lift_and_project_pnb->get_lp_cuts_timer().GetTime(2));
-			lp_cuts_timer_.AddTime(3, lift_and_project_pnb->get_lp_cuts_timer().GetTime(3));
-			lp_cuts_timer_.AddTime(4, lift_and_project_pnb->get_lp_cuts_timer().GetTime(4));
-			lp_cuts_timer_.AddTime(5, lift_and_project_pnb->get_lp_cuts_timer().GetTime(5));
+			addTime(INT_TIMER_ID_LP_CUTS_PNB_CGP, lift_and_project_pnb->getTime(INT_TIMER_ID_LP_CUTS_PNB_CGP));
+			addTime(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP, lift_and_project_pnb->getTime(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP));
+			addTime(INT_TIMER_ID_LP_CUTS_WALL_CLOCK, lift_and_project_pnb->getTime(INT_TIMER_ID_LP_CUTS_WALL_CLOCK));
+			addTime(INT_TIMER_ID_LP_CUTS_SOLVE_DUAL_CGP, lift_and_project_pnb->getTime(INT_TIMER_ID_LP_CUTS_SOLVE_DUAL_CGP));
+			addTime(INT_TIMER_ID_LP_CUTS_CONSOLIDATE, lift_and_project_pnb->getTime(INT_TIMER_ID_LP_CUTS_CONSOLIDATE));
 
-			solution_times_.AddTime(3, lift_and_project_pnb->get_solution_times().GetTime(3));
-			solution_times_.AddTime(4, lift_and_project_pnb->get_solution_times().GetTime(4));
+			addTime(INT_TIMER_ID_SOLVE_SUBS, lift_and_project_pnb->getTime(INT_TIMER_ID_SOLVE_SUBS));
+			addTime(INT_TIMER_ID_SOLVE_CONT_PHASE, lift_and_project_pnb->getTime(INT_TIMER_ID_SOLVE_CONT_PHASE));
 
-			detailed_timer_.AddTime(3, lift_and_project_pnb->get_detailed_timer().GetTime(3));
-			detailed_timer_.AddTime(4, lift_and_project_pnb->get_detailed_timer().GetTime(4));
+			addTime(INT_TIMER_ID_DETAILED_BUILD_SUBS, lift_and_project_pnb->getTime(INT_TIMER_ID_DETAILED_BUILD_SUBS));
+			addTime(INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION, lift_and_project_pnb->getTime(INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION));
 
 			delete lift_and_project_pnb;			
 		}
@@ -675,15 +675,15 @@ namespace branch_and_benders_cut {
 		else if (use_first_phase_)
 		{
 			current_iteration_ = 1;
-			solution_times_.Start(4);
+			startTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
 			HandleContinuousPhase();
-			solution_times_.Stop(4);
+			stopTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
 		}
 
 		// If no theta cuts are present, generate them.
 		// Without theta cuts the problem is unbounded as theta is unbounded.
 		if (getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) {
-			solution_times_.Start(4);
+			startTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
 			osi_solver_->initialSolve();
 			assert(osi_solver_->isProvenOptimal());
 			StoreData(osi_solver_, getMutableTreeNode(0, 0));
@@ -696,7 +696,7 @@ namespace branch_and_benders_cut {
 			cont_phase_pnb_->getMutableStageData(0)->added_optimality_cuts_.store(stage_data_[0]->added_optimality_cuts_.load());
 			// and reset the number of optimality cuts
 			stage_data_[0]->added_optimality_cuts_ = 0;
-			solution_times_.Stop(4);
+			stopTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
 		}
 
 		LOG_IF(FATAL, !getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.empty()) << "Feasibility cuts not implemented (not tested)";
@@ -1130,7 +1130,7 @@ namespace branch_and_benders_cut {
 
 		assert(thread_pool_.active() == 0 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
 		// Set round specifics to all dual cgp
-		lp_cuts_timer_.Start(2);
+		startTimer(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP);
 		for (auto id_solver_pair : osi_solver_map_) {
 			assert(!(current_lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
 			if (id_solver_pair.second->getNumCols() > 0) { // if solver is not empty
@@ -1138,15 +1138,15 @@ namespace branch_and_benders_cut {
 			}
 		}
 		thread_pool_.wait(0);
-		lp_cuts_timer_.Stop(2);
+		stopTimer(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP);
 
 		// Set round specifics to all existing cgp pnb
-		lp_cuts_timer_.Start(1);
+		startTimer(INT_TIMER_ID_LP_CUTS_PNB_CGP);
 		for (auto id_pnb_pair : cgp_pnb_map_) {
 			thread_pool_.schedule(boost::bind(&ThreadBranchAndBendersCut::SetLnPCGPRoundSpecifics, this, boost::ref(*id_pnb_pair.second), tree_nodes_by_stage_[0][0]));
 		}
 		thread_pool_.wait(0); // We wait until all threads except the current one (for MP) are finished
-		lp_cuts_timer_.Stop(1);
+		stopTimer(INT_TIMER_ID_LP_CUTS_PNB_CGP);
 
 		// Generate L&P cuts for all or some fract. variables
 		std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values

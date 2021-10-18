@@ -105,7 +105,7 @@ public:
 	}
 protected:
 	TimerTest() : 
-		pnb_thread_timer(10)
+		pnb_thread_timer(10, 0)
 	{
 		wall_thread_timer = 0;
 	}
@@ -547,7 +547,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 
 			const int orig_repetitions = repetitions_;
 			for (int loop_counter = 0; loop_counter < repetitions_; loop_counter++) {
-				parallel_benders::Timer overall_and_solver_timer(2);
+				parallel_benders::Timer overall_and_solver_timer(2, 0);
 				// This can be done in a loop.
 				overall_and_solver_timer.Start(0);
 				SmiScnModel smi;

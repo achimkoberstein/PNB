@@ -105,7 +105,7 @@ public:
 	}
 protected:
 	TimerTest() : 
-		pnb_thread_timer(10)
+		pnb_thread_timer(10, 0)
 	{
 		wall_thread_timer = 0;
 	}
@@ -1078,7 +1078,7 @@ protected:
 
 		const int orig_repetitions = repetitions_;
 		for (int loop_counter = 0; loop_counter < repetitions_; loop_counter++) {
-			parallel_benders::Timer overall_and_solver_timer(2);
+			parallel_benders::Timer overall_and_solver_timer(2, 0);
 			// This can be done in a loop.
 			overall_and_solver_timer.Start(0);
 			SmiScnModel smi;
@@ -1416,7 +1416,7 @@ public:
 			logfile.open("saa-log.txt", fstream::out | fstream::app);
 			logfile << core_name_string << std::endl;
 			logfile.close();
-			parallel_benders::Timer solver_timer(1);
+			parallel_benders::Timer solver_timer(1, 0);
 			solver_timer.Start(0);
 			saa_solver.setParameters(benders_parameter);
 			// These values do not change!
@@ -1887,7 +1887,7 @@ TEST_F(UnitTestCutStuff, unitTest) {
 }
 
 TEST_F(TimerTest, unitTest) {
-	parallel_benders::Timer pnb_timer(4);
+	parallel_benders::Timer pnb_timer(4, 0);
 	pnb_timer.Start(0);
 	sumApproxTimes(6, 6, 100000, true);
 	pnb_timer.Stop(0);
@@ -3955,7 +3955,7 @@ TEST_F(NestedBendersTest, DISABLED_temporary) {// TODO: crashes
 
 TEST_F(NestedBendersTest, DISABLED_temporarySD) { // TODO: crashes
 	assert(false && "see TODO above");
-	parallel_benders::Timer overall_and_solver_timer(2);
+	parallel_benders::Timer overall_and_solver_timer(2, 0);
 	overall_and_solver_timer.Start(0);
 	SmiScnModel smi;
 	OsiCpxSolverInterface osi_cpx;
