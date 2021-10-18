@@ -292,7 +292,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),cont_phase_it_limit_(0),use_first_phase_(false),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),solved_counter_(0),
-        current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(5),lp_cuts_timer_(10),maximal_solution_time_(0),solution_code_(0),
+        current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1, INT_TIMER_ID_TIMER_INIT),wall_clock_solution_time_(1, INT_TIMER_ID_SOL_WALL_CLOCK),detailed_timer_(5, INT_TIMER_ID_DETAILED_BUILD_MASTER),solution_times_(5, INT_TIMER_ID_SOLVE_MASTER),lp_cuts_timer_(10, INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_dual_cgp_node_data_mutex_(),lp_round_cuts_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
 		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),global_lp_rounds_limit_(10000),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(PNB_CGP_CUTS_NONE),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),current_lp_round_(0),lp_rounds_counter_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
@@ -318,7 +318,7 @@ namespace parallel_benders {
         num_scenarios_ = smi_->getNumScenarios();
         integer_problems_ = boost::dynamic_bitset<>(num_stages_);
         infeasible_problems_ =  boost::dynamic_bitset<>(num_scenarios_);
-        timer_.Start(num_stages_);
+        startTimer(INT_TIMER_ID_TIMER_INIT);
         // Initialize osiSolver with cplex, if no solver is given
         if (smi_->getOsiSolverInterface() == nullptr)
             osi_solver_ = new OsiCpxSolverInterface();
@@ -829,7 +829,7 @@ namespace parallel_benders {
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
             solved_counter_++;
             LOG_IF(ERROR, log_level_ <= google::ERROR) << "Wrong parameters or issues with the problem instance. We stop the algorithm, solution code 8.";
-            timer_.Stop(num_stages_);
+            stopTimer(INT_TIMER_ID_TIMER_INIT);
             return;
         }
 #endif
@@ -853,7 +853,7 @@ namespace parallel_benders {
         LOG_IF(FATAL, osi_solver_map_.size() != num_cpu_) << "Not all threads were created.";
 
 		// Initialize all benders node data objects with the correct cut aggregation policy.
-		timer_.Stop(num_stages_);
+		stopTimer(INT_TIMER_ID_TIMER_INIT);
     }
 
     void ParallelNestedBenders::SetLnPCGPRoundSpecifics(ParallelNestedBenders& cgp_pnb, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer){
@@ -1117,8 +1117,7 @@ namespace parallel_benders {
             return;
         }
 		
-        int setup_timer = num_stages_;
-        timer_.Start(setup_timer); // NB: big portion of Solve() was mooved to Init()
+        startTimer(INT_TIMER_ID_TIMER_INIT); // NB: big portion of Solve() was mooved to Init()
 
         bool made_one_turn = false;
 
@@ -1149,8 +1148,8 @@ namespace parallel_benders {
         int last_current_iteration = 0;
         double last_gap = infinity_;
 
-        timer_.Stop(setup_timer);
-        wall_clock_solution_time_.Start(0);
+        stopTimer(INT_TIMER_ID_TIMER_INIT);
+        startTimer(INT_TIMER_ID_SOL_WALL_CLOCK);
         // Print initial solution line
         LOG_IF(INFO, log_level_ <= google::INFO) << left << std::setw(7) << "It." << std::setw(16) << "Lower Bound: " << std::setw(16) << "Upper Bound: " << std::setw(16) << "Relative Gap: ";
         // Do initialization stuff necessary for solve process
@@ -1230,15 +1229,15 @@ namespace parallel_benders {
                 solved_counter_++;
                 break;// We stop solving the problem
             }
-            wall_clock_solution_time_.Stop(0);
+            stopTimer(INT_TIMER_ID_SOL_WALL_CLOCK);
             // Check if we already went over the time limit
-            if ( ((int) wall_clock_solution_time_.GetTime(0)) > maximal_solution_time_ ){
-                LOG_IF(ERROR, log_level_ <= google::ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
+            if ( ((int) getTime(INT_TIMER_ID_SOL_WALL_CLOCK)) > maximal_solution_time_ ){
+                LOG_IF(ERROR, log_level_ <= google::ERROR) << "We stopped solving the problem after " << getTime(INT_TIMER_ID_SOL_WALL_CLOCK)/60 << " minutes.";
                 solution_code_ = PNB_SOLUTION_TIME_LIMIT;
                 solved_counter_++;
                 break; // We stop solving the problem
             }
-            wall_clock_solution_time_.Start(0);
+            startTimer(INT_TIMER_ID_SOL_WALL_CLOCK);
             timer_.Start(current_stage_);
             // Reset warm start indicator
             if (lp_column_set_ != PNB_COL_SET_DOUBLE_PRIME) { // we do not want to overwrite warm start with values from double-prime
@@ -1300,18 +1299,18 @@ namespace parallel_benders {
 					current_iteration_++;
 					minor_iteration_++;
 					uncritical_iteration_counter_++;
-                    solution_times_.Start(4);
+                    startTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
                     HandleContinuousPhase();
-                    solution_times_.Stop(4);
+                    stopTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
 				}
 				if (lp_rounds_limit_) { // we use L&P cuts
 					fractional_variables_.clear();
 					if (lp_switch_counter_ < lp_switches_limit_ && current_iteration_ == next_lp_rounds_iteration_) {
-                        lp_cuts_timer_.Stop(3);
+                        stopTimer(INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 						if (current_lp_round_ < lp_rounds_limit_) {
 							generate_lp_cuts_ = true;
 							current_lp_round_++;
-                            lp_cuts_timer_.Start(3);
+                            startTimer(INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 						}
 						else {
                             StoreWarmStart(osi_solver_, tree_nodes_by_stage_[0][0]); // we will solve MP as MIP and want to store the LP warm start
@@ -1466,14 +1465,14 @@ namespace parallel_benders {
                 oda_current_tilde_q_s_.resize(num_scenarios_,0.0);
                 int num_nodes_oda = tree_nodes_by_stage_[current_stage_].size();
                 // Store time needed to compute the oda_stuff in addition to normal Benders!
-                solution_times_.Start(2);
+                startTimer(INT_TIMER_ID_SOLVE_ODA);
                 for ( int i = 0; i < num_nodes_oda; i++ ){
                     // Schedule the tasks for this stage
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveOnDemandAccuracyProblem,this,tree_nodes_by_stage_[current_stage_][i]));
                 }
                 thread_pool_.wait(0); // We wait until all threads are done
                 oda_tilde_q_ = std::accumulate(oda_current_tilde_q_s_.begin(),oda_current_tilde_q_s_.end(),oda_first_stage_);
-                solution_times_.Stop(2);
+                stopTimer(INT_TIMER_ID_SOLVE_ODA);
 
             }
             // Find out if we still need to solve the second stage subproblems when using ODA ( with everything entailed )
@@ -1492,7 +1491,7 @@ namespace parallel_benders {
                     oda_descent_target = oda_kappa_*lower_level+(1-oda_kappa_)*upper_level;
                 }
                 if (oda_tilde_q_ >= oda_descent_target ){
-                    solution_times_.Start(2);
+                    startTimer(INT_TIMER_ID_SOLVE_ODA);
                     //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
 
@@ -1704,7 +1703,7 @@ namespace parallel_benders {
 
 
                 
-                    solution_times_.Stop(2);
+                    stopTimer(INT_TIMER_ID_SOLVE_ODA);
                     solve_subproblems = false;
                     timer_.Stop(current_stage_);
                     // We need to invalidate all the lower/upper bound solutions we got at later stages!
@@ -2376,9 +2375,9 @@ namespace parallel_benders {
         // Compute solution times for subproblems!
 #ifdef COMPUTING_TIMER
         for ( auto node : tree_nodes_by_stage_[1]){
-            detailed_timer_.AddTime(3,node->getDataPtr()->build_time_);
-            solution_times_.AddTime(3,node->getDataPtr()->solution_time_);
-            detailed_timer_.AddTime(4,node->getDataPtr()->cut_generation_time_);
+            addTime(INT_TIMER_ID_DETAILED_BUILD_SUBS, node->getDataPtr()->build_time_);
+            addTime(INT_TIMER_ID_SOLVE_SUBS, node->getDataPtr()->solution_time_);
+            addTime(INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION, node->getDataPtr()->cut_generation_time_);
         }
 #endif
         // We finished solving
@@ -2792,8 +2791,7 @@ namespace parallel_benders {
         d_square_c_triple_timer_ = 0.0;
         d_square_c_rhs_timer_ = 0.0;
         
-        int setup_timer = num_stages_;
-        timer_.Start(setup_timer);
+        startTimer(INT_TIMER_ID_TIMER_INIT);
         current_iteration_ = 0;
         current_stage_ = 0; // if done later might lead to the error in methods that use current_stage_
 
@@ -2934,7 +2932,7 @@ namespace parallel_benders {
         current_solution_value_ = 0.0;
         solution_similiarity_counter_ = 0;
 
-        timer_.Stop(setup_timer);
+        stopTimer(INT_TIMER_ID_TIMER_INIT);
     }
 
 
@@ -2947,7 +2945,7 @@ namespace parallel_benders {
 
         OsiSolverInterface* osi_solver = GetSolverByThread();
         if ( current_stage_ == 0){
-            detailed_timer_.Start(0);
+            startTimer(INT_TIMER_ID_DETAILED_BUILD_MASTER);
         }
 #ifdef COMPUTING_TIMER
         double current_time = timer_.Now();
@@ -2983,12 +2981,12 @@ namespace parallel_benders {
         AppendCutsToSubproblem(osi_solver,benders_tree_node_pointer);
 
         if ( current_stage_ == 0){
-            detailed_timer_.Stop(0);
+            stopTimer(INT_TIMER_ID_DETAILED_BUILD_MASTER);
             if (generate_lp_cuts_) { 
-                lp_cuts_timer_.Start(0);
+                startTimer(INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX);
             }
             else {
-                solution_times_.Start(0);
+                startTimer(INT_TIMER_ID_SOLVE_MASTER);
             }
         }
 #ifdef COMPUTING_TIMER
@@ -3017,8 +3015,8 @@ namespace parallel_benders {
         }
 
         if ( current_stage_ == 0){
-            solution_times_.Stop(0);
-            lp_cuts_timer_.Stop(0);
+            stopTimer(INT_TIMER_ID_SOLVE_MASTER);
+            stopTimer(INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX);
         }
 #ifdef COMPUTING_TIMER
         if ( current_stage_ == 1){
@@ -3060,7 +3058,7 @@ namespace parallel_benders {
 
                 assert(thread_pool_.active() == 1 && "We generate L&P cuts on the first stage and should always have only 1 active thread.");
                 // Set round specifics to all dual cgp
-                lp_cuts_timer_.Start(2);
+                startTimer(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP);
                 for (auto id_solver_pair : osi_solver_map_) {
                     assert(!(current_lp_round_ == 1 && id_solver_pair.second->getNumCols() > 0 && "In the first round all osi should be empty"));
                     if (id_solver_pair.second->getNumCols() > 0) { // if solver is not empty
@@ -3073,10 +3071,10 @@ namespace parallel_benders {
                     }
                 }
                 thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
-                lp_cuts_timer_.Stop(2);
+                stopTimer(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP);
 
                 // Set round specifics to all existing cgp pnb
-                lp_cuts_timer_.Start(1);
+                startTimer(INT_TIMER_ID_LP_CUTS_PNB_CGP);
                 for (auto id_pnb_pair : cgp_pnb_map_) {
                     assert(id_pnb_pair.second->solved_counter_ > 0);
                     if (num_cpu_ > 1) {
@@ -3087,7 +3085,7 @@ namespace parallel_benders {
                     }
                 }
                 thread_pool_.wait(1); // We wait until all threads except the current one (for MP) are finished
-                lp_cuts_timer_.Stop(1);
+                stopTimer(INT_TIMER_ID_LP_CUTS_PNB_CGP);
 
                 std::map<double, std::pair<int, double>>::reverse_iterator rit = fractional_variables_.rbegin(); // reverse iterator since map is ordered ascending and we start from the most fractional values
                 for (int i = 0; i < num_cuts; i++) {
@@ -3605,7 +3603,7 @@ namespace parallel_benders {
                 current_lp_round_ = 0;
                 // we will switch osi to MIP in HandleSubproblem() after problem is printed
                 // if not switched to MIP, might lead to issues in warm start: osi will be switched to MIP only in SolveSubproblem() but before that we will try to Set MIP Warm Start.
-                lp_cuts_timer_.Stop(3);
+                stopTimer(INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
 			}
             LogSpecialCase(generate_lp_cuts_ && current_iteration_ == 1, "Wanted to build L&P cuts in first iteration");
         }
@@ -5232,7 +5230,7 @@ namespace parallel_benders {
             assert(!(cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() && cgp_pnb->tree_nodes_by_stage_[0][0]->getDataPtr()->epigraph_cuts_.empty()) && "How can we end up here: Solve CGP PNB w/o optimality-like cuts");
                    
 			cgp_pnb->Solve();
-            lp_cuts_timer_.AddTime(1, timer_.Now() - start_time);
+            addTime(INT_TIMER_ID_LP_CUTS_PNB_CGP, timer_.Now() - start_time);
 
             std::map<int, std::string> solution_code_map = { {PNB_SOLUTION_OPTIMAL, "PNB_SOLUTION_OPTIMAL"},
                 {PNB_SOLUTION_INFEASIBLE, "PNB_SOLUTION_INFEASIBLE"},
@@ -5359,12 +5357,12 @@ namespace parallel_benders {
 
                         int num_aggregates = getNumThetasByStage(tree_nodes_by_stage_[current_stage_][0]);
                         if ((lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_CONSOLIDATE || lp_use_cgp_pnb_cuts_ == PNB_CGP_CUTS_EFFICIENT_AND_CONSOLIDATE) && num_aggregates > 1) {
-                            lp_cuts_timer_.AddTime(2, timer_.Now() - start_time);
+                            addTime(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP, timer_.Now() - start_time);
                             assert(!use_benders_cuts_intra_round && !use_lp_cuts_intra_round); //TODO: from which iteration if we use lp_use_cgp_pnb_cuts_ cuts
                             int num_non_cgp_pnb_cuts = cgp_optimality_cuts->size()-new_cgp_pnb_opt_cuts;
                             start_time = timer_.Now();
                             ConsolidateCuts(*cgp_optimality_cuts, *cgp_optimality_cuts, it);
-                            lp_cuts_timer_.AddTime(5, timer_.Now() - start_time);
+                            addTime(INT_TIMER_ID_LP_CUTS_CONSOLIDATE, timer_.Now() - start_time);
                             benders_node_pointer->active_aggregates_.set(); // L&P cut is defined for all aggregates
                             LOG_IF(INFO, log_level_ <= google::INFO) << "Consolidated " << new_cgp_pnb_opt_cuts << " CGP PNB opt cuts to " << cgp_optimality_cuts->size()-num_non_cgp_pnb_cuts << " cuts.";
                         }
@@ -5413,11 +5411,11 @@ namespace parallel_benders {
                 else {
                     SetAlphaNormalization(dual_cgp_solver, false);
                 }
-                lp_cuts_timer_.AddTime(2, timer_.Now() - start_time);
+                addTime(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP, timer_.Now() - start_time);
 
                 start_time = timer_.Now();
                 SolveSolverInterface(dual_cgp_solver);
-                lp_cuts_timer_.AddTime(4, timer_.Now() - start_time);
+                addTime(INT_TIMER_ID_LP_CUTS_SOLVE_DUAL_CGP, timer_.Now() - start_time);
                 {
                     DLOG_IF(INFO, log_level_ <= google::INFO && dual_cgp_solver->isProvenOptimal()) << "Fract var with index " << fractional_variable.first << ": Solution of " << (lift_and_project_cut_type == PNB_CUT_TYPE_DOMAIN ? "Alpha" : "Zeta") << "-normalized Dual L&P Cut Generation Problem: " << dual_cgp_solver->getObjValue();
                 }
@@ -5678,7 +5676,7 @@ namespace parallel_benders {
             }
             cgp_pnb->Reset(1, true); // delete cuts that were generate in it >= 1 iteration (i.e., generated in PNB CGP itself or are lp_round cuts) and keep warm start. Cuts "generated" in it == 0, are taken from the main loop
             cgp_pnb->lp_main_loop_iteration_round_ = std::make_unique<std::pair<int, int>>(current_iteration_, current_lp_round_); // we want to keep it after reset
-            lp_cuts_timer_.AddTime(1, timer_.Now() - start_time);
+            addTime(INT_TIMER_ID_LP_CUTS_PNB_CGP, timer_.Now() - start_time);
         }
 
         if (dual_cgp_solver != nullptr) {
@@ -5702,7 +5700,7 @@ namespace parallel_benders {
 
             vallist = { 0.0, 0.0 };
             CPXchgcoeflist(env_ptr, lp_ptr, 2, rowlist.data(), collist.data(), vallist.data());
-            lp_cuts_timer_.AddTime(2, timer_.Now() - start_time);
+            addTime(INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP, timer_.Now() - start_time);
         }
 	}
 
@@ -8134,6 +8132,102 @@ namespace parallel_benders {
     {
         return console_mutex_ptr_;
     }
+    
+    double ParallelNestedBenders::getTime(int timer_id) const
+    {
+        const Timer& timer = getTimer(timer_id);
+        if (timer_id == INT_TIMER_ID_TIMER_INIT) {
+            assert(num_stages_ >= 2);
+            return timer.GetTime(num_stages_);
+        }
+        else if (timer_id > INT_TIMER_ID_TIMER_INIT) {
+            assert(timer_id - INT_TIMER_ID_TIMER_INIT <= num_stages_);
+            return timer.GetTime(timer_id - INT_TIMER_ID_TIMER_INIT - 1);
+        }
+        else {
+            return timer.GetTime(timer_id - timer.GetMinTimerId());
+        }
+    }
+
+    void ParallelNestedBenders::addTime(int timer_id, double time)
+    {
+        Timer& timer = getMutableTimer(timer_id);
+        if (timer_id == INT_TIMER_ID_TIMER_INIT) {
+            assert(num_stages_ >= 2);
+            timer.AddTime(num_stages_, time);
+        }
+        else if (timer_id > INT_TIMER_ID_TIMER_INIT) {
+            assert(timer_id - INT_TIMER_ID_TIMER_INIT <= num_stages_);
+            timer.AddTime(timer_id - INT_TIMER_ID_TIMER_INIT - 1, time);
+        }
+        else {
+            timer.AddTime(timer_id - timer.GetMinTimerId(), time);
+        }
+    }
+
+    void ParallelNestedBenders::startTimer(int timer_id)
+    {
+        Timer& timer = getMutableTimer(timer_id);
+        if (timer_id == INT_TIMER_ID_TIMER_INIT) {
+            assert(num_stages_ >= 2);
+            timer.Start(num_stages_);
+        }
+        else if (timer_id > INT_TIMER_ID_TIMER_INIT) {
+            assert(timer_id - INT_TIMER_ID_TIMER_INIT <= num_stages_);
+            timer.Start(timer_id - INT_TIMER_ID_TIMER_INIT - 1);
+        }
+        else {
+            timer.Start(timer_id - timer.GetMinTimerId());
+        }
+    }
+
+    void ParallelNestedBenders::stopTimer(int timer_id)
+    {
+        Timer& timer = getMutableTimer(timer_id);
+        if (timer_id == INT_TIMER_ID_TIMER_INIT) {
+            assert(num_stages_ >= 2);
+            return timer.Stop(num_stages_);
+        }
+        else if (timer_id > INT_TIMER_ID_TIMER_INIT) {
+            assert(timer_id - INT_TIMER_ID_TIMER_INIT <= num_stages_);
+            return timer.Stop(timer_id - INT_TIMER_ID_TIMER_INIT - 1);
+        }
+        else {
+            return timer.Stop(timer_id - timer.GetMinTimerId());
+        }
+    }
+
+    const Timer& ParallelNestedBenders::getTimer(int timer_id) const {
+        
+        if (timer_id == INT_TIMER_ID_SOL_WALL_CLOCK) {
+            return wall_clock_solution_time_;
+        }
+        else if (timer_id >= INT_TIMER_ID_DETAILED_BUILD_MASTER &&
+            timer_id <= INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION) {
+            return detailed_timer_;
+        }
+        else if (timer_id >= INT_TIMER_ID_SOLVE_MASTER &&
+            timer_id <= INT_TIMER_ID_SOLVE_CONT_PHASE) {
+            return solution_times_;
+        }
+        else if (timer_id >= INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX &&
+            timer_id <= INT_TIMER_ID_LP_CUTS_CONSOLIDATE) {
+            return lp_cuts_timer_;
+        }
+        else if (timer_id == INT_TIMER_ID_TIMER_INIT) {
+            assert(num_stages_ >= 2);
+            return timer_;
+        }
+        else { // timer for stage
+            assert(timer_id - INT_TIMER_ID_TIMER_INIT <= num_stages_);
+            return timer_;
+        }
+    }
+
+    Timer& ParallelNestedBenders::getMutableTimer(int timer_id) {
+
+        return const_cast<Timer&>(getTimer(timer_id));
+    }
 
     void ParallelNestedBenders::setWarmUpSolution( const double* solution, int num_cols_given )
     {
@@ -8524,7 +8618,7 @@ namespace parallel_benders {
         assert( !benders_tree_node_pointer->getDataPtr()->level_regularized_solution_.empty() ); // We need a regularization point! 
 
         if ( num_stages_ == 2)
-            detailed_timer_.Start(1); 
+            startTimer(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS);
 
         // We assume that the first stage problem is present!
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -8719,8 +8813,8 @@ namespace parallel_benders {
 
         // This makes no sense for multi-stage cases
         if ( num_stages_ == 2){
-            detailed_timer_.Stop(1);
-            solution_times_.Start(1);
+            stopTimer(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS);
+            startTimer(INT_TIMER_ID_SOLVE_PROJECTIONS);
         }
 
         // Think about calling this method!
@@ -8747,8 +8841,8 @@ namespace parallel_benders {
         }
 
         if ( num_stages_ == 2){
-            solution_times_.Stop(1);
-            detailed_timer_.Start(1);
+            stopTimer(INT_TIMER_ID_SOLVE_PROJECTIONS);
+            startTimer(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS);
         }
 
 		if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX ){
@@ -8850,7 +8944,7 @@ namespace parallel_benders {
         }
 
         if ( num_stages_ == 2)
-            detailed_timer_.Stop(1);
+            stopTimer(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS);
 
     }
 

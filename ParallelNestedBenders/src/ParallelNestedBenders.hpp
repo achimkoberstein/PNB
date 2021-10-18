@@ -83,14 +83,10 @@ public:
     std::shared_ptr<std::mutex> getMutableConsoleMutex();
 
     // Timers
-    inline const Timer& get_lp_cuts_timer() const {return lp_cuts_timer_;};
-    inline Timer& get_mutable_lp_cuts_timer() { return lp_cuts_timer_; };
-    inline const Timer& get_solution_times() const { return solution_times_; };
-    inline Timer& get_mutable_solution_times() { return solution_times_; };
-    inline const Timer& get_timer() const { return timer_; };
-    inline Timer& get_mutable_timer() { return timer_; };
-    inline const Timer& get_detailed_timer() const { return detailed_timer_; };
-    inline Timer& get_mutable_detailed_timer() { return detailed_timer_; };
+    double getTime(int timer_id) const;
+    void addTime(int timer_id, double time);
+    void startTimer(int timer_id);
+    void stopTimer(int timer_id);
 
     /************************************************************************/
     /* Takes ownership of solution                                          */
@@ -98,7 +94,10 @@ public:
     void setWarmUpSolution( const double* solution, int num_cols_given = 0);
     void unfixFirstStageVariables();
 
+    void setLogLevel(int level);
+
 protected:
+
     
     void SetLnPCGPRoundSpecifics(ParallelNestedBenders& cgp_pnb, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     ParallelNestedBenders* GetLnP_PNB_CGP_ByThread();
@@ -316,6 +315,33 @@ protected:
     Timer detailed_timer_; // 0 - build master (incl. as part of L&P cuts since will be used for major iteration), 1 - build projections, 2 - build oda [never used], 3 - build subs: sum of 2nd stage: node->build_time_, 4 - cut generation: sum of 2nd stage node->cut_generation_time_
     Timer solution_times_; // 0 - solve master (excl. solving the relaxation for L&P cuts), 1 - solve projections, 2 - solve oda, 3 - solve sub: sum of 2nd stage: node->solution_time_, 4 - cont phase wall clock
     Timer lp_cuts_timer_; // 0 - solve MP relaxation, 1 - build and solve PNB CGP (parallel), 2 - build Dual CGP (parallel), 3 - L&P generation wall clock time, 4 - solve Dual CGP (parallel), 5 - consolidate PNB CGP cuts timer
+    const Timer& getTimer(int timer_id) const;
+    Timer& getMutableTimer(int timer_id);
+
+    // Timer id consts
+    static const int INT_TIMER_ID_SOL_WALL_CLOCK = 0;
+
+    static const int INT_TIMER_ID_DETAILED_BUILD_MASTER = 1;           // 0
+    static const int INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS = 2;      // 1
+    static const int INT_TIMER_ID_DETAILED_BUILD_ODA = 3;              // 2
+    static const int INT_TIMER_ID_DETAILED_BUILD_SUBS = 4;             // 3
+    static const int INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION = 5;   // 4
+
+    static const int INT_TIMER_ID_SOLVE_MASTER = 6;            // 0
+    static const int INT_TIMER_ID_SOLVE_PROJECTIONS = 7;       // 1
+    static const int INT_TIMER_ID_SOLVE_ODA = 8;               // 2
+    static const int INT_TIMER_ID_SOLVE_SUBS = 9;              // 3
+    static const int INT_TIMER_ID_SOLVE_CONT_PHASE = 10;       // 4
+
+    static const int INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX = 11;  // 0
+    static const int INT_TIMER_ID_LP_CUTS_PNB_CGP = 12;         // 1
+    static const int INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP = 13;  // 2
+    static const int INT_TIMER_ID_LP_CUTS_WALL_CLOCK = 14;      // 3
+    static const int INT_TIMER_ID_LP_CUTS_SOLVE_DUAL_CGP = 15;  // 4
+    static const int INT_TIMER_ID_LP_CUTS_CONSOLIDATE = 16;     // 5
+
+    static const int INT_TIMER_ID_TIMER_INIT = 17;
+    // INT_TIMER_ID_STAGE_1 = INT_TIMER_ID_TIMER_INIT // for stage timers we claculate id during the runtime
 
     int maximal_solution_time_;
 
@@ -515,12 +541,6 @@ protected:
     double d_square_c_rhs_timer_;
     int solution_similiarity_counter_;
     int max_similarity_iteration_;
-
-   
-
-
-public:
-    void setLogLevel(int level);
 };
 
 // TODO: Problems

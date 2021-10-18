@@ -567,7 +567,7 @@ typedef std::chrono::high_resolution_clock wall_clock;
 
 class Timer {
 public:
-    explicit Timer(int stgs) : stages_(stgs),start_time_(stages_,0.0),overall_time_(stages_,0.0), overall_time_mutex_() {}
+    explicit Timer(int stgs, int min_timer_id) : stages_(stgs),min_timer_id_(min_timer_id),start_time_(stages_,0.0),overall_time_(stages_,0.0), overall_time_mutex_() {}
     ~Timer() { }
 
     double Now();
@@ -589,8 +589,11 @@ public:
 
     int GetTimeStages() const;
 
+    inline int GetMinTimerId() const { return min_timer_id_; }
+
 private:
     int stages_;
+    int min_timer_id_;
     std::vector<double> start_time_;
     std::vector<double> overall_time_;
     std::mutex overall_time_mutex_; // used to lock overall_time_ double, i.e., AddTime()

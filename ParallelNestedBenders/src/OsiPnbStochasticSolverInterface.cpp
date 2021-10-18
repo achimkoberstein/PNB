@@ -158,7 +158,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 
         bool deteq_risk = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK;
 		bool solver_benders = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_SOLVER_BENDERS;
-		parallel_benders::Timer solution_time(2);
+		parallel_benders::Timer solution_time(2, 0);
         solution_time.Start(1);
         if ( osi_ != nullptr ){
             delete osi_;
