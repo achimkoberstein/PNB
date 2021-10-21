@@ -259,7 +259,8 @@ namespace branch_and_benders_cut {
 			}
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
-			bool sync_cuts = false;
+			global_data->startTimer(global_data->INT_TIMER_ID_DETAILED_SYNC_DATA);
+			bool sync_cuts = true;
 
 			// TODO: we need some function to sync time
 			// Sync timers
@@ -267,14 +268,14 @@ namespace branch_and_benders_cut {
 			global_data->addTime(thread_data->INT_TIMER_ID_LP_CUTS_PNB_CGP, thread_data->getTime(thread_data->INT_TIMER_ID_LP_CUTS_PNB_CGP));
 			global_data->addTime(thread_data->INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP, thread_data->getTime(thread_data->INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP));
 			assert(thread_data->getTime(thread_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK) == 0 && "timer 3 - L&P generation wall clock time is timed in global thread");
-			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_MASTER) == 0);
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_MASTER) == 0 && "Solution timer of MP is not applicable to BBC.");
 			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_PROJECTIONS) == 0);
 			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_ODA) == 0);
 			global_data->addTime(global_data->INT_TIMER_ID_SOLVE_SUBS, thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_SUBS));
 			assert(thread_data->getTime(thread_data->INT_TIMER_ID_SOLVE_CONT_PHASE) == 0 && "timer 4 - Cont phase is not run in threads");
 			assert(thread_data->getTime(thread_data->INT_TIMER_ID_TIMER_INIT + 1) == 0 && "timer of 1st stage should be 0");
 			assert(thread_data->getTime(thread_data->INT_TIMER_ID_TIMER_INIT + 2) == 0 && "timer of 2nd is timed in global thread");
-			assert(thread_data->getTime(thread_data->INT_TIMER_ID_DETAILED_BUILD_MASTER) == 0);
+			assert(thread_data->getTime(thread_data->INT_TIMER_ID_DETAILED_BUILD_MASTER) == 0 && "Build timer of MP is not applicable to BBC.");
 			assert(thread_data->getTime(thread_data->INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS) == 0);
 			assert(thread_data->getTime(thread_data->INT_TIMER_ID_DETAILED_BUILD_ODA) == 0);
 			global_data->addTime(global_data->INT_TIMER_ID_DETAILED_BUILD_SUBS, thread_data->getTime(global_data->INT_TIMER_ID_DETAILED_BUILD_SUBS));
@@ -334,6 +335,7 @@ namespace branch_and_benders_cut {
 				}
 				LOG(INFO) << "Finished syncing cuts." << thread_data->getCurrentThreadId();
 			}
+			global_data->stopTimer(global_data->INT_TIMER_ID_DETAILED_SYNC_DATA);
 
 			{
 				std::lock_guard<std::mutex> lock(global_data->thread_copy_map_mutex_);
@@ -480,7 +482,6 @@ namespace branch_and_benders_cut {
 		assert(getTime(INT_TIMER_ID_SOLVE_MASTER) == 0 && "Solution timer of MP is not applicable to BBC.");
 		assert(getTime(INT_TIMER_ID_SOLVE_PROJECTIONS) == 0 && "Timer for projection is not applicable because we never use that technique.");
 		assert(getTime(INT_TIMER_ID_SOLVE_ODA) == 0 && "Timer for ODA is not applicable because we never use ODA.");
-		assert(getTime(INT_TIMER_ID_DETAILED_BUILD_MASTER) == 0 && "Timer for build MP is not applicable.");
 		assert(getTime(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS) == 0 && "Timer for prejections is not applicable because we never use that technique.");
 		assert(getTime(INT_TIMER_ID_DETAILED_BUILD_ODA) == 0 && "Time for solve ODA is not even used in PNB.");
 	}

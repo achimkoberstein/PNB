@@ -310,38 +310,38 @@ protected:
     std::vector<int> d_square_w_iteration_;
 
 
-    Timer timer_; // timer for stage 1, stage 2, ..., Init() + time until main loop in Solve() + Reset()
-    Timer wall_clock_solution_time_; // timer of the main loop in Solve()
-    Timer detailed_timer_; // 0 - build master (incl. as part of L&P cuts since will be used for major iteration), 1 - build projections, 2 - build oda [never used], 3 - build subs: sum of 2nd stage: node->build_time_, 4 - cut generation: sum of 2nd stage node->cut_generation_time_
-    Timer solution_times_; // 0 - solve master (excl. solving the relaxation for L&P cuts), 1 - solve projections, 2 - solve oda, 3 - solve sub: sum of 2nd stage: node->solution_time_, 4 - cont phase wall clock
-    Timer lp_cuts_timer_; // 0 - solve MP relaxation, 1 - build and solve PNB CGP (parallel), 2 - build Dual CGP (parallel), 3 - L&P generation wall clock time, 4 - solve Dual CGP (parallel), 5 - consolidate PNB CGP cuts timer
+    Timer timer_; // see stg values for this and other timers below in INT_TIMER_... var comments
+    Timer wall_clock_solution_time_; 
+    Timer detailed_timer_;
+    Timer solution_times_;
+    Timer lp_cuts_timer_;
     const Timer& getTimer(int timer_id) const;
     Timer& getMutableTimer(int timer_id);
 
-    // Timer id consts
-    static const int INT_TIMER_ID_SOL_WALL_CLOCK = 0;
+    // Timer id consts // stg in specific timer
+    static const int INT_TIMER_ID_SOL_WALL_CLOCK = 0;                  // timer of the main loop in Solve()
 
-    static const int INT_TIMER_ID_DETAILED_BUILD_MASTER = 1;           // 0
-    static const int INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS = 2;      // 1
-    static const int INT_TIMER_ID_DETAILED_BUILD_ODA = 3;              // 2
-    static const int INT_TIMER_ID_DETAILED_BUILD_SUBS = 4;             // 3
-    static const int INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION = 5;   // 4
+    static const int INT_TIMER_ID_DETAILED_BUILD_MASTER = 1;           // 0 - build master (incl. as part of L&P cuts since will be used for major iteration)
+    static const int INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS = 2;      // 1 - build projections
+    static const int INT_TIMER_ID_DETAILED_BUILD_ODA = 3;              // 2 - build oda [never used]
+    static const int INT_TIMER_ID_DETAILED_BUILD_SUBS = 4;             // 3 - build subs: sum of 2nd stage: node->build_time_
+    static const int INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION = 5;   // 4 - cut generation: sum of 2nd stage node->cut_generation_time_
 
-    static const int INT_TIMER_ID_SOLVE_MASTER = 6;            // 0
-    static const int INT_TIMER_ID_SOLVE_PROJECTIONS = 7;       // 1
-    static const int INT_TIMER_ID_SOLVE_ODA = 8;               // 2
-    static const int INT_TIMER_ID_SOLVE_SUBS = 9;              // 3
-    static const int INT_TIMER_ID_SOLVE_CONT_PHASE = 10;       // 4
+    static const int INT_TIMER_ID_SOLVE_MASTER = 6;            // 0 - solve master (excl. solving the relaxation for L&P cuts)
+    static const int INT_TIMER_ID_SOLVE_PROJECTIONS = 7;       // 1 - solve projections
+    static const int INT_TIMER_ID_SOLVE_ODA = 8;               // 2 - solve oda
+    static const int INT_TIMER_ID_SOLVE_SUBS = 9;              // 3 - solve sub: sum of 2nd stage: node->solution_time_
+    static const int INT_TIMER_ID_SOLVE_CONT_PHASE = 10;       // 4 - cont phase wall clock
 
-    static const int INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX = 11;  // 0
-    static const int INT_TIMER_ID_LP_CUTS_PNB_CGP = 12;         // 1
-    static const int INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP = 13;  // 2
-    static const int INT_TIMER_ID_LP_CUTS_WALL_CLOCK = 14;      // 3
-    static const int INT_TIMER_ID_LP_CUTS_SOLVE_DUAL_CGP = 15;  // 4
-    static const int INT_TIMER_ID_LP_CUTS_CONSOLIDATE = 16;     // 5
+    static const int INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX = 11;  // 0 - solve MP relaxation
+    static const int INT_TIMER_ID_LP_CUTS_PNB_CGP = 12;         // 1 - build and solve PNB CGP (parallel)
+    static const int INT_TIMER_ID_LP_CUTS_BUILD_DUAL_CGP = 13;  // 2 - build Dual CGP (parallel)
+    static const int INT_TIMER_ID_LP_CUTS_WALL_CLOCK = 14;      // 3 - L&P generation wall clock time
+    static const int INT_TIMER_ID_LP_CUTS_SOLVE_DUAL_CGP = 15;  // 4 - solve Dual CGP (parallel)
+    static const int INT_TIMER_ID_LP_CUTS_CONSOLIDATE = 16;     // 5 - consolidate PNB CGP cuts timer
 
-    static const int INT_TIMER_ID_TIMER_INIT = 17;
-    // INT_TIMER_ID_STAGE_1 = INT_TIMER_ID_TIMER_INIT // for stage timers we claculate id during the runtime
+    static const int INT_TIMER_ID_TIMER_INIT = 17;              // num_stages_ - Init() + time until main loop in Solve() + Reset()
+    // INT_TIMER_ID_STAGE_1 = INT_TIMER_ID_TIMER_INIT           // timer for stage 1, stage 2, ...; we claculate id during the runtime,
 
     int maximal_solution_time_;
 
