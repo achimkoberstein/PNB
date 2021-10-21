@@ -74,6 +74,12 @@ public:
 
 	BranchAndBendersCut* clone() = delete;
 
+protected:
+	// Timer id consts
+	// Since INT_TIMER_ID_DETAILED_BUILD_MASTER is not applicable in BBC
+	// we will use it to measure data sync time between threads.
+	static const int INT_TIMER_ID_DETAILED_SYNC_DATA = INT_TIMER_ID_DETAILED_BUILD_MASTER; // stg 0 in detailed_timer_
+
 private:
 	/* Add Continuous and/or L&P cuts to root node
 	- append continuous Benders and/or L&P cuts (if any)
