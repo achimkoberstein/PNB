@@ -229,8 +229,6 @@ namespace branch_and_benders_cut {
 				fprintf(stderr, "Error in bbc_->StoreNodeData(): status = %d\n", status);
 				return status;
 			}
-
-			DLOG(INFO) << "Branching context for node " << thread_data->getCurrentNodeId();
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_LOCAL_PROGRESS) {
 			//results of CPXcallbackgetinfo___ are local here
@@ -755,11 +753,10 @@ namespace branch_and_benders_cut {
 		// value 0 in CPLEX has the same meaning as in our implementation -- use all CPUs
 		// TODO: parameter to set num_cpu for B&B specifically (explicitely or parallel_mode)
 		CPXsetintparam(env_ptr, CPX_PARAM_THREADS, num_cpu_);
-		//TODO: temp
 		// Display the detailed solution log
 #ifndef NDEBUG
-		CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 1); // detailed log
-		CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 5); // display all the information from the log
+		CPXsetintparam(env_ptr, CPX_PARAM_MIPINTERVAL, 0); // detailed log, 0 - let CPLEX decide, n - every n
+		CPXsetintparam(env_ptr, CPX_PARAM_MIPDISPLAY, 3); // display all the information from the log, 0 - nothing, 5 - most detailed
 #endif
 		
 		// Dynamic Search
