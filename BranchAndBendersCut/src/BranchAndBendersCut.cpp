@@ -736,7 +736,7 @@ namespace branch_and_benders_cut {
 		// TODO: do we need all of them
 		status = CPXcallbacksetfunc(env_ptr, lp_ptr, 
 			CPX_CALLBACKCONTEXT_CANDIDATE // - found integer solution
-			| CPX_CALLBACKCONTEXT_RELAXATION // - found infeasible (some int vars have non-int solution)
+			// | CPX_CALLBACKCONTEXT_RELAXATION // - found infeasible (some int vars have non-int solution)
 			| CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS // - update global UB. Locks other threads
 			| CPX_CALLBACKCONTEXT_THREAD_UP // - activate thread, is different to thread creation and might happen several times for one thread
 			| CPX_CALLBACKCONTEXT_THREAD_DOWN  // - deactivate thread, is different to thread creation and might happen several times for one thread
