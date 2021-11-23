@@ -428,7 +428,8 @@ namespace branch_and_benders_cut {
 			solution_code_ = parallel_benders::PNB_SOLUTION_TIME_LIMIT;
 		}
 		else {
-			LOG(FATAL) << "Unknown solution code";
+			//LOG(FATAL) << "Unknown solution code";
+			solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
 		}
 
 		if (pretty_printing_)
