@@ -1238,7 +1238,7 @@ namespace parallel_benders {
                 break; // We stop solving the problem
             }
             startTimer(INT_TIMER_ID_SOL_WALL_CLOCK);
-            timer_.Start(current_stage_);
+            startTimer(INT_TIMER_ID_TIMER_INIT + current_stage_);
             // Reset warm start indicator
             if (lp_column_set_ != PNB_COL_SET_DOUBLE_PRIME) { // we do not want to overwrite warm start with values from double-prime
                 stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = false;
@@ -1705,7 +1705,7 @@ namespace parallel_benders {
                 
                     stopTimer(INT_TIMER_ID_SOLVE_ODA);
                     solve_subproblems = false;
-                    timer_.Stop(current_stage_);
+                    stopTimer(INT_TIMER_ID_TIMER_INIT + current_stage_);
                     // We need to invalidate all the lower/upper bound solutions we got at later stages!
                     for ( int temp_stage = current_stage_; temp_stage < num_stages_;temp_stage++){
                         stage_lower_upper_bounds_[temp_stage].first = infinity_;
@@ -2312,7 +2312,7 @@ namespace parallel_benders {
                 //critical_stage = num_stages_-1;
                 LOG_IF(INFO, log_level_ <= google::INFO) << "Bouncing stage is stage " << critical_stage;
             }
-            timer_.Stop(current_stage_);
+            stopTimer(INT_TIMER_ID_TIMER_INIT + current_stage_);
             // Change next stage, depending on where we are heading (forward or backward)
 			if (!generate_lp_cuts_ && lp_column_set_ != parallel_benders::PNB_COL_SET_PRIME) { // we stay on the same stage during the L&P rounds (1st stage) or when we switched from prime to double prime (2nd stage) 
 				forward_ ? current_stage_++ : current_stage_--;
@@ -2327,7 +2327,7 @@ namespace parallel_benders {
 				}
 			}
         }
-        timer_.Stop(current_stage_);
+        stopTimer(INT_TIMER_ID_TIMER_INIT + current_stage_);
         if ( pretty_printing_ )
             std::cout << "\n";
         // Output the final values once again!
