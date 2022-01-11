@@ -570,6 +570,7 @@ void Parameter::init()
     parameter_.put(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
     parameter_.put(PNB_LP_USE_CGP_PNB_CUTS, PNB_CGP_CUTS_NONE);
     parameter_.put(PNB_LP_MAX_NODE_DEPTH, std::numeric_limits<int>::max());
+	parameter_.put(PNB_LP_OPT_CUTS_AFTER_LP_CUTS, false);
 
 	// Fill in constants
 	// PNB_BENDERS
