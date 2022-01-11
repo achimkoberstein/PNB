@@ -532,6 +532,7 @@ protected:
 	int lp_column_set_;
     std::map<boost::thread::id, ParallelNestedBenders*> cgp_pnb_map_;
 	std::bitset<11> allowed_test_cases_;
+    bool generate_optimality_cuts_after_lp_cuts_;
 
     // TODO: REMOVE AGAIN
     int optimality_cut_counter_;
