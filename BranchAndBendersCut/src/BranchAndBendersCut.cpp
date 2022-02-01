@@ -77,6 +77,11 @@ namespace branch_and_benders_cut {
 		if (thread_data != nullptr) {
 			assert(contextid != CPX_CALLBACKCONTEXT_THREAD_UP);
 			thread_data->setCurrentContextData(context, contextid);
+			status = thread_data->AppendCutsToNode(thread_data->tree_nodes_by_stage_[0][0]);
+			if (status) {
+				fprintf(stderr, "Error in AppendCutsToNode: status = %d\n", status);
+				return status;
+			}
 		}		
 
 		/* Below is the explicit list of contextid_s.
@@ -541,8 +546,27 @@ namespace branch_and_benders_cut {
 
 	void BranchAndBendersCut::ConstructRootNodeCuts()
 	{
-		// TODO: maybe add cuts through the pool as user / lazy cuts https://www.ibm.com/docs/en/icos/12.8.0.0?topic=uclcp-what-are-pools-user-cuts-lazy-constraints
 		assert(current_stage_ == 0);
+		
+		// Without theta cuts the problem is unbounded as theta is unbounded.
+		startTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
+		osi_solver_->initialSolve();
+		assert(osi_solver_->isProvenOptimal());
+		StoreData(osi_solver_, getMutableTreeNode(0, 0));
+		ConstructOptimalityCuts();
+
+		// Calculate these cuts as continuous cuts
+		int added_opt_cuts_for_boundness = stage_data_[0]->added_optimality_cuts_;
+		// and reset the number of optimality cuts
+		stage_data_[0]->added_optimality_cuts_ = 0;
+
+		current_stage_ = 0;
+		// call this method to activate thetas,
+		// i.e., set their coef to 1
+		AppendColsToSubproblem(osi_solver_, getMutableTreeNode(0, 0));
+		AppendCutsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
+		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
+		stopTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
 
 		// *****************
 		// Preprocess with L&P cuts
@@ -612,14 +636,6 @@ namespace branch_and_benders_cut {
 					}
 				}
 			}
-			if (!lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->optimality_cuts_.empty() || !lift_and_project_pnb->getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) {
-				getTreeNode(0, 0)->getDataPtr()->num_thetas_ = stage_data_[0]->num_thetas_;
-				getTreeNode(0, 0)->getDataPtr()->changed_aggregation_level_ = true;
-				createRoundRobinAggregation(tree_nodes_by_stage_[0][0]->getDataPtr(), tree_nodes_by_stage_[0][0]->numChildren(), getTreeNode(0, 0)->getDataPtr()->num_thetas_, (int)std::ceil((double)tree_nodes_by_stage_[0][0]->numChildren() / getTreeNode(0, 0)->getDataPtr()->num_thetas_), num_oda_aggregates_);
-				getTreeNode(0, 0)->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>((getTreeNode(0, 0)->getDataPtr()->num_thetas_)); // Gets initialized with 0
-				getTreeNode(0, 0)->getDataPtr()->active_aggregates_.set();
-				getTreeNode(0, 0)->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(getTreeNode(0, 0)->getDataPtr()->num_thetas_); // Gets initialized with 0
-			}
 
 			// Calculate number cuts
 			// - optimality (w/o PNB CGP cuts)
@@ -661,6 +677,7 @@ namespace branch_and_benders_cut {
 
 			addTime(INT_TIMER_ID_SOLVE_SUBS, lift_and_project_pnb->getTime(INT_TIMER_ID_SOLVE_SUBS));
 			addTime(INT_TIMER_ID_SOLVE_CONT_PHASE, lift_and_project_pnb->getTime(INT_TIMER_ID_SOLVE_CONT_PHASE));
+			//assert(getTime(INT_TIMER_ID_SOLVE_CONT_PHASE) == 0);
 
 			addTime(INT_TIMER_ID_DETAILED_BUILD_SUBS, lift_and_project_pnb->getTime(INT_TIMER_ID_DETAILED_BUILD_SUBS));
 			addTime(INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION, lift_and_project_pnb->getTime(INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION));
@@ -680,34 +697,27 @@ namespace branch_and_benders_cut {
 			stopTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
 		}
 
-		// If no theta cuts are present, generate them.
-		// Without theta cuts the problem is unbounded as theta is unbounded.
-		if (getTreeNode(0,0)->getDataPtr()->optimality_cuts_.empty() && getTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.empty()) {
-			startTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
-			osi_solver_->initialSolve();
-			assert(osi_solver_->isProvenOptimal());
-			StoreData(osi_solver_, getMutableTreeNode(0, 0));
-			ConstructOptimalityCuts();
-
-			// Calculate these cuts as continuous cuts
-			// For that we creat the cont phase PNB,
-			cont_phase_pnb_ = std::make_shared<ParallelNestedBenders>(smi_);
-			// update the cut counter in it
-			cont_phase_pnb_->getMutableStageData(0)->added_optimality_cuts_.store(stage_data_[0]->added_optimality_cuts_.load());
-			// and reset the number of optimality cuts
-			stage_data_[0]->added_optimality_cuts_ = 0;
-			stopTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
-		}
-
 		LOG_IF(FATAL, !getTreeNode(0,0)->getDataPtr()->feasibility_cuts_.empty()) << "Feasibility cuts not implemented (not tested)";
 		LOG_IF(FATAL, !getTreeNode(0,0)->getDataPtr()->domain_cuts_.empty()) << "Domain cuts not implemented (not tested)";
+		
+		current_stage_ = 0;
+
+		// Calculate boundness cuts as continuous cuts
+		if (cont_phase_pnb_ == nullptr) {
+			cont_phase_pnb_ = std::make_shared<ParallelNestedBenders>(smi_);
+			// update the cut counter in it
+			//cont_phase_pnb_->getMutableStageData(0)->added_optimality_cuts_.store(stage_data_[0]->added_optimality_cuts_.load());
+		}
+		cont_phase_pnb_->getMutableStageData(0)->added_optimality_cuts_ += added_opt_cuts_for_boundness;
 
 		// Add all cuts from above
-		current_stage_ = 0;
-		// call this method to activate thetas,
-		// i.e., set their coef to 1
-		AppendColsToSubproblem(osi_solver_, getMutableTreeNode(0, 0));
-		// add cuts from containers to the formulation of the MP
+		// Add L&P and feasibility cuts from containers to the formulation of the MP
+		// but we do not want to add optimality cuts to the formulation (they will be used as lazy cuts)
+		getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_optimality_ = getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
+		getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_optimality_ = getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
+		getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_epigraph_ = getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.begin();
+		getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_domain_ = getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.begin();
+		assert(getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.empty());
 		AppendCutsToSubproblem(osi_solver_, tree_nodes_by_stage_[0][0]);
 		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
 
@@ -920,15 +930,16 @@ namespace branch_and_benders_cut {
 			}
 		}
 
-		// reset all cut pointers
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
-		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.end();
+		// reset L&P and feasibility cut pointers (they were added to the problem formulation in ConstructRootNodeCuts())
 		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_epigraph_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end();
 		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_epigraph_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.end();
 		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_domain_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.end();
 		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_domain_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->domain_cuts_.end();
 		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
 		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_problem_start_feasibility_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->feasibility_cuts_.end();
+		// except. optimality cuts which are lazy cuts
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
+		thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_optimality_ = thread_copy->getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
 	}
 
 	double BranchAndBendersCut::getLB()
