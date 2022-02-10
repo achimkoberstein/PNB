@@ -406,7 +406,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			std::stringstream s;
 			// Header line of File should be this one
 			// We need to write the header line for this file
-			s << "Testset;Problem;Instance;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Return Code;Cont Phase Iterations;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
+			s << "Testset;Problem;Instance;Overall Wall Clock Time (s);Iterations;Solution value;UB;LB;Relative Gap;Processed MIP Nodes;Initial Root Solution;Return Code;Cont Phase Iterations;Infeasibility Iterations;Substantial Iterations;Insubstantial Iterations;Solver Wall Clock Time (s);Critical Iterations;Max Length between Crit. It.;";
 			s << "Created Optimality Cuts;Created Continuous Optimality Cuts;Created Feasibility Cuts;Created Epigraph Cuts;Created Strengthened Epigraph Cuts;Created Plain Epigraph Cuts;Created Domain Cuts;Solved L&P CGPs;Integer Gap;";
 			
 			BOOST_FOREACH(boost::property_tree::ptree::value_type & v, bbc_parameter_.parameter_)
@@ -489,6 +489,8 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			std::string ub_string("ub");
 			std::string lb_string("lb");
 			std::string relative_gap_string("relative_gap");
+			std::string num_processed_nodes_string("num_processed_nodes");
+			std::string root_node_init_solution_string("root_init_solution");
 			std::string optimality_cuts_string("optimality_cuts");
 			std::string cont_optimality_cuts_string("cont_optimality_cuts");
 			std::string feasibility_cuts_string("feasibility_cuts");
@@ -626,7 +628,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 				//Testset;Problem;Instance
 				testset_problem_instance << bbc_interface.getTestsetProblemInstanceNames()[0] << ";" << bbc_interface.getTestsetProblemInstanceNames()[1] << ";" << bbc_interface.getTestsetProblemInstanceNames()[2];
 				s << testset_problem_instance.str() << ";" << cpuTime << ";" << bbc_interface.getNumIterations() << ";" << bbc_interface.getObjValue() << ";" << bbc_interface.getUB() << ";" << bbc_interface.getLB() << ";";
-				s << bbc_interface.getRelativeGap() << ";" << bbc_interface.getSolutionCode() << ";" << bbc_interface.getNumInfeasibilityIterations() << ";";
+				s << bbc_interface.getRelativeGap() << ";" << bbc_interface.getNumProcessedMipNodes() << ";" << bbc_interface.getInitRootNodeObjectiveValue() << ";" << bbc_interface.getSolutionCode() << ";" << bbc_interface.getNumInfeasibilityIterations() << ";";
 				s << bbc_interface.getNumIterations() - bbc_interface.getNumInsubstantialIterations() << ";" << bbc_interface.getNumInsubstantialIterations() << ";";
 				s << solver_time << ";" << bbc_interface.getNumCriticalIteration() << ";" << bbc_interface.getMaximalLengthOfCriticalIterationSequence() << ";";
 				// Write num cuts
@@ -642,6 +644,8 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 				values_map[ub_string] += bbc_interface.getUB();
 				values_map[lb_string] += bbc_interface.getLB();
 				values_map[relative_gap_string] += bbc_interface.getRelativeGap();
+				values_map[num_processed_nodes_string] = bbc_interface.getNumProcessedMipNodes();
+				values_map[root_node_init_solution_string] = bbc_interface.getInitRootNodeObjectiveValue();
 				values_map[optimality_cuts_string] += created_opt_cuts;
 				values_map[cont_optimality_cuts_string] += created_cont_opt_cuts;
 				values_map[feasibility_cuts_string] += created_feas_cuts;
@@ -732,10 +736,11 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			BOOST_FOREACH(double& value, values_map | boost::adaptors::map_values) {
 				value /= repetitions_;
 			}
+			
 			// Prepare output string, according to ordering from above (bad coding..)
 			aggregated_s << testset_problem_instance.str() << ";" << values_map[cpu_time_string] << ";" << values_map[iterations_string] << ";"
 				<< values_map[objective_value_string] << ";" << values_map[ub_string] << ";" << values_map[lb_string] << ";"
-				<< values_map[relative_gap_string] << ";" << values_map[return_code_string] << ";" << values_map[cont_phase_iterations_string] << ";"
+				<< values_map[relative_gap_string] << ";" << values_map[num_processed_nodes_string] << ";" << values_map[root_node_init_solution_string] << ";" << values_map[return_code_string] << ";" << values_map[cont_phase_iterations_string] << ";"
 				<< values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";"
 				<< values_map[insubstantial_iterations_string] << ";" << values_map[solver_time_string] << ";"
 				<< values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";

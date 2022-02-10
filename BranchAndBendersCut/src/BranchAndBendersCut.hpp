@@ -81,7 +81,7 @@ protected:
 	static const int INT_TIMER_ID_DETAILED_SYNC_DATA = INT_TIMER_ID_DETAILED_BUILD_MASTER; // stg 0 in detailed_timer_
 
 	int num_processed_nodes_;
-	double root_node_solution_;
+	double root_node_obj_value_;
 
 private:
 	/* Add Continuous and/or L&P cuts to root node
