@@ -64,6 +64,10 @@ public:
 	int getNumDomainCuts() const override;
 	int getLpCgpCounter() const override;
 
+	int getNumProcessedMipNodes() const;
+
+	double getInitRootNodeObjectiveValue() const;
+
 	branch_and_benders_cut::BranchAndBendersCut* getBBC() const;
 
 	const double* getSolutionByNodeAndStage(int node_number, int stage) const override;

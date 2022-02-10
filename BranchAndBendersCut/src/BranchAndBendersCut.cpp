@@ -363,7 +363,7 @@ namespace branch_and_benders_cut {
 	} /* END benders_callback */
 	
 	BranchAndBendersCut::BranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),thread_copy_map_(),thread_copy_map_mutex_(),thread_data_mutex_(),num_processed_nodes_(0),root_node_solution_(0.0)
+		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),thread_copy_map_(),thread_copy_map_mutex_(),thread_data_mutex_(),num_processed_nodes_(0),root_node_obj_value_(0.0)
 	{
 	}
 
@@ -486,7 +486,7 @@ namespace branch_and_benders_cut {
 				*/
 			}
 			LOG(INFO) << "Number processed nodes: " << num_processed_nodes_ << ".";
-			LOG(INFO) << "Root node solution: " << root_node_solution_ << ".";
+			LOG(INFO) << "Root node solution: " << root_node_obj_value_ << ".";
 		}
 		assert(getTime(INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
 		// these timers should be somewhere else

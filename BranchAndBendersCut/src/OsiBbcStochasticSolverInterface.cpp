@@ -357,6 +357,18 @@ int OsiStochasticBranchAndBendersCutSolverInterface::getLpCgpCounter() const
 	return value;
 }
 
+int OsiStochasticBranchAndBendersCutSolverInterface::getNumProcessedMipNodes() const
+{
+	assert(bbc_);
+	return bbc_->num_processed_nodes_;
+}
+
+double OsiStochasticBranchAndBendersCutSolverInterface::getInitRootNodeObjectiveValue() const
+{
+	assert(bbc_);
+	return bbc_->root_node_obj_value_;
+}
+
 
 branch_and_benders_cut::BranchAndBendersCut* OsiStochasticBranchAndBendersCutSolverInterface::getBBC() const
 {
