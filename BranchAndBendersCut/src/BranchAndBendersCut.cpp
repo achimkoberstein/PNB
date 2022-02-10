@@ -263,6 +263,11 @@ namespace branch_and_benders_cut {
 		}
 		else if (contextid == CPX_CALLBACKCONTEXT_THREAD_DOWN) {
 			global_data->startTimer(global_data->INT_TIMER_ID_DETAILED_SYNC_DATA);
+			{
+				std::lock_guard<std::shared_mutex> exclusive_lock(global_data->thread_data_mutex_);
+				assert(global_data->num_processed_nodes_ <= thread_data->num_processed_nodes_);
+				global_data->num_processed_nodes_ = thread_data->num_processed_nodes_;
+			}
 			bool sync_cuts = true;
 
 			// TODO: we need some function to sync time
@@ -336,7 +341,7 @@ namespace branch_and_benders_cut {
 						}
 					}
 				}
-				LOG(INFO) << "Finished syncing cuts." << thread_data->getCurrentThreadId();
+				LOG(INFO) << "Finished syncing cuts for thread " << thread_data->getCurrentThreadId();
 			}
 			global_data->stopTimer(global_data->INT_TIMER_ID_DETAILED_SYNC_DATA);
 
@@ -358,7 +363,7 @@ namespace branch_and_benders_cut {
 	} /* END benders_callback */
 	
 	BranchAndBendersCut::BranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),thread_copy_map_(),thread_copy_map_mutex_(),thread_data_mutex_()
+		: parallel_benders::ParallelNestedBenders(smi_model_ptr),benders_optimal_incumbents_(1, infinity_),thread_copy_map_(),thread_copy_map_mutex_(),thread_data_mutex_(),num_processed_nodes_(0),root_node_solution_(0.0)
 	{
 	}
 
@@ -480,6 +485,8 @@ namespace branch_and_benders_cut {
 				LOG(INFO) << "Added " << cut_counter << " feasibility cuts from L&P CGP.";
 				*/
 			}
+			LOG(INFO) << "Number processed nodes: " << num_processed_nodes_ << ".";
+			LOG(INFO) << "Root node solution: " << root_node_solution_ << ".";
 		}
 		assert(getTime(INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX) == 0 && "Solution timer of MP relaxation for L&P cuts is not applicable to BBC.");
 		// these timers should be somewhere else
@@ -677,7 +684,6 @@ namespace branch_and_benders_cut {
 
 			addTime(INT_TIMER_ID_SOLVE_SUBS, lift_and_project_pnb->getTime(INT_TIMER_ID_SOLVE_SUBS));
 			addTime(INT_TIMER_ID_SOLVE_CONT_PHASE, lift_and_project_pnb->getTime(INT_TIMER_ID_SOLVE_CONT_PHASE));
-			//assert(getTime(INT_TIMER_ID_SOLVE_CONT_PHASE) == 0);
 
 			addTime(INT_TIMER_ID_DETAILED_BUILD_SUBS, lift_and_project_pnb->getTime(INT_TIMER_ID_DETAILED_BUILD_SUBS));
 			addTime(INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION, lift_and_project_pnb->getTime(INT_TIMER_ID_DETAILED_BUILD_CUT_GENERATION));
@@ -709,6 +715,17 @@ namespace branch_and_benders_cut {
 			//cont_phase_pnb_->getMutableStageData(0)->added_optimality_cuts_.store(stage_data_[0]->added_optimality_cuts_.load());
 		}
 		cont_phase_pnb_->getMutableStageData(0)->added_optimality_cuts_ += added_opt_cuts_for_boundness;
+
+		// Calculate initial root relaxation solution
+		OsiSolverInterface* osi_solver_for_bound = osi_solver_->clone();
+		getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_optimality_ = getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
+		getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_optimality_ = getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
+		AppendCutsToSubproblem(osi_solver_for_bound, tree_nodes_by_stage_[0][0]);
+		osi_solver_for_bound->initialSolve();
+		assert(osi_solver_for_bound->isProvenOptimal());
+		root_node_obj_value_ = osi_solver_for_bound->getObjValue();
+		DeleteSubproblem(nullptr, tree_nodes_by_stage_[0][0]);
+		delete osi_solver_for_bound;
 
 		// Add all cuts from above
 		// Add L&P and feasibility cuts from containers to the formulation of the MP
@@ -987,8 +1004,7 @@ namespace branch_and_benders_cut {
 		/*
 		No limitations when it can be called.
 		*/
-		int num_processed_nodes;
-		status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_NODECOUNT, &num_processed_nodes);
+		status = CPXcallbackgetinfoint(current_context_, CPXCALLBACKINFO_NODECOUNT, &num_processed_nodes_);
 		if (status) {
 			fprintf(stderr, "Error in CPXcallbackgetinfoint: status = %d\n", status);
 			return status;
