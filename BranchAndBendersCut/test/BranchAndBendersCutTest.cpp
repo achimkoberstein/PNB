@@ -345,7 +345,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_CUTS_FOR_FRACT\" : 10, \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1, \"PNB_LP_CUTS_FOR_FRACT\" : 10, \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 2, \"PNB_LP_CUTS_FOR_FRACT\" : 10, \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }");
-			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_CUTS_FOR_FRACT\" : 80, \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }");
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_CUTS_FOR_FRACT\" : 80, \"PNB_CGP_EPSILON_RELATIVE\" : 0.1 }");
 				// warm start
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_LP_CUTS_FOR_FRACT\" : 100, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_STAGE_WISE\" }");
@@ -358,6 +358,26 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\", \"PNB_LP_CUTS_FOR_FRACT\" : 40, \"PNB_LP_PARALLEL_MODE\" : \"PNB_PARAL_CGP_SUBPROBLEMS\" }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\", \"PNB_LP_CUTS_FOR_FRACT\" : 40, \"PNB_LP_PARALLEL_MODE\" : \"PNB_PARAL_FRACTS\" }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\", \"PNB_LP_CUTS_FOR_FRACT\" : 40, \"PNB_LP_PARALLEL_MODE\" : \"PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS\" }");
+
+			//For L&P
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 0,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 10 }");
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 25,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 25,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 0,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 25,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 50,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 100,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 200,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
+			
 
 			//*************
 			//***** BENDERS
@@ -967,7 +987,7 @@ TEST_F(BranchAndBendersTest, for_LP) {
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 10800);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_WARM_START, parallel_benders::PNB_INT_WARM_START_SCENARIO_WISE);
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_PARALLEL_MODE, parallel_benders::PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_PARALLEL_MODE, parallel_benders::PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS);
 
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 0);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_USE_CGP_PNB_CUTS, parallel_benders::PNB_CGP_CUTS_NONE);
@@ -1006,7 +1026,7 @@ TEST_F(BranchAndBendersTest, for_LP) {
 
 	//rahmaniani - complete recourse
 	//solveSMPSFromList("../../../../Data/Benders/InstanceList_rahmaniani_ForPaper.txt");
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r04_7_0_64_cr"), -85164.4, 0.1);
+	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r04_7_0_64_cr"), -85164.4, 0.1);
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r05_1_0-8_64_cr"), -85164.4, 0.1);
 
 	//sslprf
@@ -1045,18 +1065,18 @@ TEST_F(BranchAndBendersTest, for_LP) {
 	//EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r10_9_0_64_cr"), 0.0, 0.1); // obj value?
 
 	//cap_BODUR
-	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5"), -114935, 0.1); // what is the obj value for these instances?
+	//!!! error !!! EXPECT_NEAR(solveSMPS("Bodur/CAP/cap101_5"), -114935, 0.1); // what is the obj value for these instances?
 	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap111_5"), -114935, 0.1);
 	//EXPECT_NEAR(solveSMPS("Bodur/CAP/cap113_5"), -114935, 0.1);
 
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 1);
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_USE_CGP_PNB_CUTS, parallel_benders::PNB_CGP_CUTS_ALL);
+	//bbc_parameter_.SetParameterValue(parallel_benders::PNB_LP_USE_CGP_PNB_CUTS, parallel_benders::PNB_CGP_CUTS_ALL);
 
 	//sslp_SIPLIB
 	// from paper
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
-	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
+	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_5"), -265.569, 0.1);
@@ -1077,7 +1097,7 @@ TEST_F(BranchAndBendersTest, for_LP) {
 	//sslp_NTAIMO
 	//solveSMPSFromList("../../../../Data/Benders/InstanceList_sslp_ForPaper.txt");
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_15_45_25d"), 1, 0.1);
-	EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000e"), 1, 0.1);
+	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_10_50_2000e"), 1, 0.1);
 	//EXPECT_NEAR(solveSMPS("ntaimo/sslp-ntaimo/sslp_5_25_1000a"), 1, 0.1);
 
 	//sizes_SIPLIB //
@@ -1096,7 +1116,7 @@ TEST_F(BranchAndBendersTest, for_LP) {
 
 	//sslp_HAN
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_20_100_50"), -12345.6, 1.0);
-	EXPECT_NEAR(solveSMPS("han/sslp/sslp_20_100_200"), -12345.6, 1.0);
+	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_20_100_200"), -12345.6, 1.0);
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_30_100_50"), -12345.6, 1.0);
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_30_100_200"), -12345.6, 1.0);
 	//EXPECT_NEAR(solveSMPS("han/sslp/sslp_60_60_50"), -12345.6, 1.0);
