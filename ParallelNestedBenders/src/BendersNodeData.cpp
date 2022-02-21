@@ -721,7 +721,7 @@ void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_ch
 	}
 	else{
         // Do not do it!
-        assert(false);
+        //assert(false);
 	}
 }
 

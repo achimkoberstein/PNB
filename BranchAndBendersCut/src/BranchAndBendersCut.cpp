@@ -354,7 +354,8 @@ namespace branch_and_benders_cut {
 					global_data->benders_optimal_incumbents_.push_back(thread_optimal_incumbend);
 				}
 				// We delete thread_data because the thread with the same id
-				// can be up and down multiple times. // TODO: how often it happens, maybe keep the solver and restart it?
+				// can be up and down multiple times. 
+				// TODO: how often it happens, maybe keep the solver and restart it?
 				global_data->thread_copy_map_.erase(thread_id);
 			}					
 		}
