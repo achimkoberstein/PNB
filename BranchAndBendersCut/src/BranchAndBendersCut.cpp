@@ -720,6 +720,7 @@ namespace branch_and_benders_cut {
 		OsiSolverInterface* osi_solver_for_bound = osi_solver_->clone();
 		getMutableTreeNode(0, 0)->getDataPtr()->last_iteration_start_optimality_ = getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
 		getMutableTreeNode(0, 0)->getDataPtr()->last_in_lp_cgp_start_optimality_ = getMutableTreeNode(0, 0)->getDataPtr()->optimality_cuts_.begin();
+		getMutableTreeNode(0, 0)->getDataPtr()->last_round_start_epigraph_ = getMutableTreeNode(0, 0)->getDataPtr()->epigraph_cuts_.begin();
 		AppendCutsToSubproblem(osi_solver_for_bound, tree_nodes_by_stage_[0][0]);
 		osi_solver_for_bound->initialSolve();
 		assert(osi_solver_for_bound->isProvenOptimal());
