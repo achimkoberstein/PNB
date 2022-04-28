@@ -82,6 +82,7 @@ namespace branch_and_benders_cut {
 				fprintf(stderr, "Error in AppendCutsToNode: status = %d\n", status);
 				return status;
 			}
+			thread_data->fractional_variables_.clear();
 		}		
 
 		/* Below is the explicit list of contextid_s.
