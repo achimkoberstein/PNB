@@ -1,9 +1,16 @@
 // cor;tim;sto or cor_tim;sto or cor_tim_sto
-koberstein/lsfrp/47LSFRP
-koberstein/lsfrp/49LSFRP
-koberstein/lsfrp/50LSFRP
-koberstein/lsfrp/53LSFRP
-koberstein/lsfrp/54LSFRP
+koberstein/lsfrp_50/16LSFRP
+koberstein/lsfrp_50/17LSFRP
+koberstein/lsfrp_50/30LSFRP
+koberstein/lsfrp_50/38LSFRP
+koberstein/lsfrp_100/16LSFRP
+koberstein/lsfrp_100/17LSFRP
+koberstein/lsfrp_100/30LSFRP
+koberstein/lsfrp_100/38LSFRP
+koberstein/lsfrp_200/16LSFRP
+koberstein/lsfrp_200/17LSFRP
+koberstein/lsfrp_200/30LSFRP
+koberstein/lsfrp_200/38LSFRP
 Bodur/CAP/cap101_1000
 Bodur/CAP/cap101_2000
 Bodur/CAP/cap101_250

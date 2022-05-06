@@ -1,0 +1,5 @@
+TIME           LSFRP_Instance_16 (MIN)
+PERIODS       IMPLICIT
+    yy10104  OneShipPerNode00                  Stage1
+    x0011  FlowofEquipmentq13701                  Stage2
+ENDATA

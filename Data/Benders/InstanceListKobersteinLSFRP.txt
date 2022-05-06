@@ -1,6 +1,19 @@
 // cor;tim;sto or cor_tim;sto or cor_tim_sto
-koberstein/lsfrp/47LSFRP
-koberstein/lsfrp/49LSFRP
-koberstein/lsfrp/50LSFRP
-//koberstein/lsfrp/53LSFRP - it needs feasibility cuts when single cut and use cgp cuts
-//koberstein/lsfrp/54LSFRP - it needs feasibility cuts when single cut and use cgp cuts
+//koberstein/lsfrp/28LSFRP_50
+koberstein/lsfrp/28LSFRP_200
+//koberstein/lsfrp/47LSFRP_100
+//koberstein/lsfrp/47LSFRP_200
+//koberstein/lsfrp/16LSFRP_50
+//koberstein/lsfrp/16LSFRP_100
+//koberstein/lsfrp/16LSFRP_200
+koberstein/lsfrp/17LSFRP_50
+//koberstein/lsfrp/17LSFRP_100
+//koberstein/lsfrp/17LSFRP_200
+koberstein/lsfrp/30LSFRP_50
+//koberstein/lsfrp/30LSFRP_100
+koberstein/lsfrp/30LSFRP_200
+koberstein/lsfrp/38LSFRP_50
+//koberstein/lsfrp/38LSFRP_100
+//koberstein/lsfrp/38LSFRP_200
+koberstein/lsfrp/38LSFRP_50
+koberstein/lsfrp/38LSFRP_200
