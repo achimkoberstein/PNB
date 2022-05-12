@@ -69,6 +69,7 @@ namespace parallel_benders{
 	const std::string PNB_LP_ALLOW_TEST_CASES = "PNB_LP_ALLOW_TEST_CASES";
     const std::string PNB_LP_PARALLEL_MODE = "PNB_LP_PARALLEL_MODE"; // what do we want to do parallel: schedule the generation of each L&P cut and/or make PNB CGP parallel
     const std::string PNB_LP_USE_CGP_PNB_CUTS = "PNB_LP_USE_CGP_PNB_CUTS"; // use optimality and feasibility cuts generated in L&P cuts CGP Benders
+    const std::string PNB_LP_MAX_NODE_DEPTH = "PNB_LP_MAX_NODE_DEPTH"; // limits the node depth for which L&P cuts are generated
     const std::string PNB_USE_FIRST_PHASE = "PNB_USE_FIRST_PHASE"; // whether to construct Benders cuts for stoch. problem with MP relaxation
 
 

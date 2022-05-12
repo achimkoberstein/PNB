@@ -1,6 +1,7 @@
 #include "BendersNodeData.hpp"
 
 #include <math.h>
+#include <limits> // std::numeric_limits<int>::max();
 
 #include <sstream>
 #include <boost/property_tree/json_parser.hpp>
@@ -568,6 +569,7 @@ void Parameter::init()
 	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 11111111111);
     parameter_.put(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
     parameter_.put(PNB_LP_USE_CGP_PNB_CUTS, PNB_CGP_CUTS_NONE);
+    parameter_.put(PNB_LP_MAX_NODE_DEPTH, std::numeric_limits<int>::max());
 
 	// Fill in constants
 	// PNB_BENDERS
