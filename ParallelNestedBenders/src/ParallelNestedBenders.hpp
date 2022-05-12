@@ -515,6 +515,7 @@ protected:
     int global_lp_rounds_limit_; // used to build L&P rounds in B&B
 	int lp_switches_limit_;
 	int lp_major_it_limit_;
+    int lp_max_node_depth_; // limits the node depth for which L&P cuts are generated, only used in BranchAndBendersCut
     int lp_parallel_mode_;
     int lp_use_cgp_pnb_cuts_;
 	int cuts_for_fract_vars_;

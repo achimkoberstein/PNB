@@ -181,15 +181,11 @@ namespace branch_and_benders_cut {
 			}
 
 			// We are not in the root node or we are in the root node after presolve restart
-			//if (thread_data->getCurrentNodeDepth() != 0 || thread_data->getCurrentNodeId() != 0) {
-			//	// TODO: can it be that withing one thread we "jump" between open nodes
-			//	// for which we construct L&P cuts.
-			//	assert(thread_data->getCurrentNodeId() != 0);
-			//	assert(thread_data->current_lp_round_ == 0);
-			//	thread_data->generate_lp_cuts_ = false;
-			//	global_data->stopTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
-			//	return status;
-			//}
+			if (thread_data->getCurrentNodeDepth() >= global_data->lp_max_node_depth_) {
+				thread_data->generate_lp_cuts_ = false;
+				global_data->stopTimer(global_data->INT_TIMER_ID_LP_CUTS_WALL_CLOCK);
+				return status;
+			}
 
 			// TODO: get rid of lp_cuts_constructed_ member
 			if (thread_data->lp_cuts_constructed_) {
@@ -561,6 +557,7 @@ namespace branch_and_benders_cut {
 		startTimer(INT_TIMER_ID_SOLVE_CONT_PHASE);
 		osi_solver_->initialSolve();
 		assert(osi_solver_->isProvenOptimal());
+		// TODO: do not round integer vars here in method below
 		StoreData(osi_solver_, getMutableTreeNode(0, 0));
 		ConstructOptimalityCuts();
 
