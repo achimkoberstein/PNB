@@ -63,6 +63,7 @@ namespace parallel_benders{
 	const std::string PNB_LIFT_AND_P_METHOD = "PNB_LIFT_AND_P_METHOD";
     const std::string PNB_CONT_PHASE_IT_LIMIT = "PNB_CONT_PHASE_IT_LIMIT"; // run this number of iteration for the MP relaxation before L&P round and major it
 	const std::string PNB_LP_ROUNDS_LIMIT = "PNB_LP_ROUNDS_LIMIT";
+    const std::string PNB_LP_ROOT_ROUNDS_LIMIT = "PNB_LP_ROOT_ROUNDS_LIMIT";
 	const std::string PNB_LP_SWITCHES_LIMIT = "PNB_LP_SWITCHES_LIMIT";
 	const std::string PNB_LP_MAJOR_IT_LIMIT = "PNB_LP_MAJOR_IT_LIMIT";
 	const std::string PNB_LP_CUTS_FOR_FRACT = "PNB_LP_CUTS_FOR_FRACT";

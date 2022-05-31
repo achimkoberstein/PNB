@@ -458,7 +458,7 @@ namespace branch_and_benders_cut {
 				cut_counter += stage_data_[i]->added_feasibility_cuts_;
 			}
 			LOG(INFO) << "Added " << cut_counter << " feasibility cuts (incl. cuts from L&P CGP).";
-			if (lp_rounds_limit_) { // if we use L&P cuts
+			if (lp_rounds_limit_ || lp_root_rounds_limit_) { // if we use L&P cuts
 				cut_counter = 0;
 				for (int i = 0; i < num_stages_; i++) {
 					cut_counter += stage_data_[i]->added_epigraph_cuts_;
@@ -577,14 +577,14 @@ namespace branch_and_benders_cut {
 		// *****************
 		// Preprocess with L&P cuts
 		// *****************
-		if (lp_rounds_limit_) {
+		if (lp_root_rounds_limit_) {
 			// TODO: implement parameter to start it. We can choose to construct cuts here or in B&B for node with depth 0
 			// Prepare parameters
 			parallel_benders::Parameter lift_and_project_param = parallel_benders::Parameter(parameter_);
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS, false);
 			lift_and_project_param.SetParameterValue(parallel_benders::PNB_PRINT_SUBPROBLEMS, false);
-			lift_and_project_param.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, lp_rounds_limit_); // will anyways be < global_lp_rounds_limit_
-			lift_and_project_param.SetParameterValue(parallel_benders::PNB_LP_SWITCHES_LIMIT, lp_rounds_limit_); // if cont solution is found, we construct opt cuts and continue
+			lift_and_project_param.SetParameterValue(parallel_benders::PNB_LP_ROUNDS_LIMIT, lp_root_rounds_limit_); // will anyways be < global_lp_rounds_limit_
+			lift_and_project_param.SetParameterValue(parallel_benders::PNB_LP_SWITCHES_LIMIT, lp_root_rounds_limit_); // if cont solution is found, we construct opt cuts and continue
 
 			// Create pnb for L&P cuts
 			ParallelNestedBenders* lift_and_project_pnb = new ParallelNestedBenders(smi_);
@@ -592,7 +592,7 @@ namespace branch_and_benders_cut {
 			lift_and_project_pnb->setTestsetProblemInstanceNames(testset_name_, problem_name_, instance_name_ + "_ROOT_LP_CUTS");
 			lift_and_project_pnb->getMutableConsoleMutex() = console_mutex_ptr_; // we share the console as the resource
 			lift_and_project_pnb->Init();
-			lift_and_project_pnb->setGlobalLPRoundsLimit(lp_rounds_limit_);
+			lift_and_project_pnb->setGlobalLPRoundsLimit(lp_root_rounds_limit_);
 
 #ifdef NDEBUG
 			lift_and_project_pnb->setLogLevel(google::WARNING); // TODO: it will crash, no INFO output for cont phase in release

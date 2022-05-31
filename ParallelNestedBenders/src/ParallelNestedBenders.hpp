@@ -512,6 +512,7 @@ protected:
     
 	int lift_and_p_method_;
 	int lp_rounds_limit_;
+    int lp_root_rounds_limit_; // used in Brand-and-Benders-Cut only. Specific L&P round limit for root root
     int global_lp_rounds_limit_; // used to build L&P rounds in B&B
 	int lp_switches_limit_;
 	int lp_major_it_limit_;
