@@ -562,6 +562,7 @@ void Parameter::init()
 	parameter_.put(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED);
     parameter_.put(PNB_CONT_PHASE_IT_LIMIT, 0);
 	parameter_.put(PNB_LP_ROUNDS_LIMIT, 0);
+    parameter_.put(PNB_LP_ROOT_ROUNDS_LIMIT, 0);
 	parameter_.put(PNB_LP_SWITCHES_LIMIT, 1);
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
 	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
