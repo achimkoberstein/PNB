@@ -309,7 +309,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			//parameter_strings_.push_back("{}"); // default parameters
 
 			// DETEQ
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
 
 			// BENDERS CPLEX
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_SOLVER_BENDERS\", \"PNB_NUM_CPU\" : 1 }");
@@ -322,10 +322,10 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 
 			// single-cut
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false }");
 
 			// multi-cut
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }");
 
 			// multithread
@@ -360,22 +360,9 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 0, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_LP_USE_CGP_PNB_CUTS\" : \"PNB_CGP_CUTS_ALL\", \"PNB_LP_CUTS_FOR_FRACT\" : 40, \"PNB_LP_PARALLEL_MODE\" : \"PNB_PARAL_FRACTS_AND_CGP_SUBPROBLEMS\" }");
 
 			//For L&P
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 0,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 10 }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10, \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
-
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 25,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 25,  \"PNB_LP_CUTS_FOR_FRACT\" : 5  }");
-
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 0,  \"PNB_LP_CUTS_FOR_FRACT\" : 4  }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1,  \"PNB_LP_CUTS_FOR_FRACT\" : 4  }");
-			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROOT_ROUNDS_LIMIT\" : 10, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 4, \"PNB_LP_OPT_CUTS_AFTER_LP_CUTS\" : true, \"PNB_LP_MAX_NODE_DEPTH\": 20}");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10,  \"PNB_LP_CUTS_FOR_FRACT\" : 4  }");
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20,  \"PNB_LP_CUTS_FOR_FRACT\" : 4  }");
-			
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROOT_ROUNDS_LIMIT\" : 5, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5, \"PNB_LP_OPT_CUTS_AFTER_LP_CUTS\" : true, \"PNB_LP_MAX_NODE_DEPTH\": 5}");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROOT_ROUNDS_LIMIT\" : 5, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5, \"PNB_LP_OPT_CUTS_AFTER_LP_CUTS\" : true, \"PNB_LP_MAX_NODE_DEPTH\": 5}");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROOT_ROUNDS_LIMIT\" : 0, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 5, \"PNB_LP_OPT_CUTS_AFTER_LP_CUTS\" : true, \"PNB_LP_MAX_NODE_DEPTH\": 5}");
 
 			//*************
 			//***** BENDERS
@@ -933,14 +920,14 @@ TEST_F(BranchAndBendersTest, fast) {
 }
 
 TEST_F(BranchAndBendersTest, slow) {
-	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
+	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 3600);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
 	EXPECT_NEAR(solveSMPS("glushko/sndp/SNDP_20_4_2_1"), -87272, 0.1); // TODO: wrong solution: 24.06.21 L&P cuts for root node {L&P cuts}
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_2_25"), -136474, 0.5); // TODO: wrong solution: 24.06.21 L&P cuts for root node and UB != solution {L&P cuts}
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_1_25"), -397621, 0.5); // TODO: critical on 16.07 {L&P cuts}, wrong solution: 24.06.21 L&P cuts for root node {L&P cuts}, 18.06.21 {L&P cuts}
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_80_3_2_25"), -479326, 0.5);
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_16_cr"), 53891.6, 0.1); // for local solution is 56945.63, for global 56331.63
-	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r04_7_0_64_cr"), 48975.94, 0.1);  // for local solution is 69574.37, for global 58435.45
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r01_1_0-6_16_cr"), 53891.6, 0.1); // TODO: critical on 16.07 {L&P cuts, BBC}
+	EXPECT_NEAR(solveSMPS("rahmaniani/MCFNDSD_complete_recourse/r04_7_0_64_cr"), 53891.6, 0.1);
 
 	// Integer on 2 stages
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
