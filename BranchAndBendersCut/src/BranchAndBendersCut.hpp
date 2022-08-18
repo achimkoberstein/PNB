@@ -149,6 +149,15 @@ private:
 	CPXCALLBACKCONTEXTptr current_context_;
 	CPXLONG current_contextid_;
 
+	void updateFixedColumnsInfo(CPXCALLBACKCONTEXTptr context, CPXLONG contextid);
+
+	/* index of bin variables that are set to 1
+	in the current MIP node */
+	std::vector<int> fixed_to_one_;
+
+	/* index of bin variables that are set to 0
+	in the current MIP node */
+	std::vector<int> fixed_to_zero_;
 
 	/* Reject current candidate B&B node
 	and add lazy cuts */
