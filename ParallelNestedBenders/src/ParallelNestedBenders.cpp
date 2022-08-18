@@ -5720,7 +5720,8 @@ namespace parallel_benders {
     void ParallelNestedBenders::SetDualCGPRoundSpecifics(OsiSolverInterface& dual_cgp_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer)
     {
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
-        BendersStageData* stage_data = stage_data_[0];
+        BendersStageData* stage_data = getStageDataForDualCGP();
+        SmiCoreData* core_data = getCoreDataForDualCGP();
         int num_theta = benders_node_pointer->num_thetas_;
         if (num_theta == 0) {
             num_theta = getNumThetasByStage(benders_tree_node_pointer);
@@ -5774,7 +5775,7 @@ namespace parallel_benders {
                     // Can be used to construct Domain L&P cuts (w/o theta) if SetAlphaNormalization() applied                 
 
                     int num_rows = stage_data->num_rows_;
-                    int num_bin = core_->getBinaryCols(0).size();
+                    int num_bin = core_data->getBinaryCols(0).size();
                     int z0_col_index = num_cols * 2;
                     int y0_col_index = z0_col_index + 1;
                     int tau_start = y0_col_index + 1;
@@ -5827,13 +5828,13 @@ namespace parallel_benders {
                     indices.resize(2);
                     // prime side
                     indices[1] = z0_col_index;
-                    for (std::vector<int>::const_iterator it = core_->getBinaryCols(0).begin(); it != core_->getBinaryCols(0).end(); ++it) {
+                    for (std::vector<int>::const_iterator it = core_data->getBinaryCols(0).begin(); it != core_data->getBinaryCols(0).end(); ++it) {
                         indices[0] = *it;
                         matrix->appendRow(2, indices.data(), elems.data());
                     }
                     // double-prime side
                     indices[1] = y0_col_index;
-                    for (std::vector<int>::const_iterator it = core_->getBinaryCols(0).begin(); it != core_->getBinaryCols(0).end(); ++it) {
+                    for (std::vector<int>::const_iterator it = core_data->getBinaryCols(0).begin(); it != core_data->getBinaryCols(0).end(); ++it) {
                         indices[0] = *it + num_cols;
                         matrix->appendRow(2, indices.data(), elems.data());
                     }
@@ -5843,7 +5844,7 @@ namespace parallel_benders {
                     if (num_rows) {
                         
                         if (benders_node_pointer->matrix_ == nullptr) {
-                            benders_node_pointer->matrix_ = core_->getNode(0)->generateCoinPackedWMatrix();
+                            benders_node_pointer->matrix_ = core_data->getNode(0)->generateCoinPackedWMatrix();
                         }
                         CoinPackedMatrix* A_matrix = benders_node_pointer->matrix_; // RowOrdered
                         assert(A_matrix->getNumRows() == num_rows);
@@ -5863,8 +5864,8 @@ namespace parallel_benders {
                         // define and append b
                         CoinPackedVector vector_b;
                         vector_b.reserve(num_rows);
-                        const double* r_upper = core_->getDenseRowUpper(0);
-                        const double* r_lower = core_->getDenseRowLower(0);
+                        const double* r_upper = core_data->getDenseRowUpper(0);
+                        const double* r_lower = core_data->getDenseRowLower(0);
                         for (int row = 0; row < num_rows; row++) {
                             if (CompareForEquality(r_upper[row], r_lower[row], zero_tolerance_)) { // E(=) sense
                                 if (!CompareWithZero(r_upper[row])) {
@@ -5918,9 +5919,9 @@ namespace parallel_benders {
 
                     //Column bounds
                     //z and y have bounds from the original problem
-                    const double* c_upper = core_->getDenseColUpper(0);
-                    const double* c_lower = core_->getDenseColLower(0);
-                    for (auto binary_index : core_->getBinaryCols(0)) { // for bin x ub should be 1 and lb should be 0
+                    const double* c_upper = core_data->getDenseColUpper(0);
+                    const double* c_lower = core_data->getDenseColLower(0);
+                    for (auto binary_index : core_data->getBinaryCols(0)) { // for bin x ub should be 1 and lb should be 0
                         assert(CompareForEquality(c_lower[binary_index], 0.0, zero_tolerance_));
                         assert(CompareForEquality(c_upper[binary_index], 1.0, zero_tolerance_));
                     }

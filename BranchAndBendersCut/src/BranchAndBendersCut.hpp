@@ -145,6 +145,10 @@ public:
 	*/
 	bool CanQueryNodeInfo();
 
+protected:
+	parallel_benders::BendersStageData* getStageDataForDualCGP() override;
+	SmiCoreData* getCoreDataForDualCGP() override;
+
 private:
 	CPXCALLBACKCONTEXTptr current_context_;
 	CPXLONG current_contextid_;

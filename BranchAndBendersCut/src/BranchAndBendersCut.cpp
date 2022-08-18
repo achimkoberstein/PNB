@@ -1604,3 +1604,41 @@ bool branch_and_benders_cut::ThreadBranchAndBendersCut::CanQueryNodeInfo()
 
 	return false;
 }
+
+parallel_benders::BendersStageData* branch_and_benders_cut::ThreadBranchAndBendersCut::getStageDataForDualCGP()
+{
+	parallel_benders::BendersStageData* stage_data_wo_fixed_cols = nullptr;
+	
+	if (stage_data_wo_fixed_cols == nullptr) {
+		parallel_benders::BendersStageData* stage_data_with_fixed_cols = ParallelNestedBenders::getStageDataForDualCGP();
+		// TODO: do we need to delete smth here
+		stage_data_wo_fixed_cols = new parallel_benders::BendersStageData(*stage_data_with_fixed_cols);
+	}
+
+	// stage_data_wo_fixed_cols->num_columns_ -= (fixed_to_one_.size() + fixed_to_zero_.size());
+	// TODO: manage memory
+	return stage_data_wo_fixed_cols;
+}
+
+SmiCoreData* branch_and_benders_cut::ThreadBranchAndBendersCut::getCoreDataForDualCGP()
+{
+	SmiCoreData* core_data_wo_fixed_cols = nullptr;
+
+	if (core_data_wo_fixed_cols == nullptr) {
+		SmiCoreData* core_data = ParallelNestedBenders::getCoreDataForDualCGP();
+		OsiCpxSolverInterface* osi_cpx = new OsiCpxSolverInterface();
+		//int num_columns = core_data->getNumCols(0) - (fixed_to_one_.size() + fixed_to_zero_.size());
+		BuildSubproblem(osi_cpx, tree_nodes_by_stage_[0][0]);
+		int num_columns = core_data->getNumCols(0);
+		std::vector<int> cstag(num_columns, 0);
+		std::vector<int> rstag(core_data->getNumRows(0), 0);
+		core_data_wo_fixed_cols = new SmiCoreData(osi_cpx, 1, cstag.data(), rstag.data(), 
+			const_cast<int*>(core_data->getIntCols(0).data()), core_data->getIntCols(0).size(),
+			const_cast<int*>(core_data->getBinaryCols(0).data()), core_data->getBinaryCols(0).size());
+		
+		// TODO: manage memory
+		delete osi_cpx;
+	}
+
+	return core_data_wo_fixed_cols;
+}

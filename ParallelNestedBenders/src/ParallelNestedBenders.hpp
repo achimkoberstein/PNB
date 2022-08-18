@@ -210,6 +210,7 @@ protected:
     // Problem data
     SmiScnModel* smi_;
     SmiCoreData* core_;
+    virtual inline SmiCoreData* getCoreDataForDualCGP() { return core_; };
     OsiSolverInterface* osi_solver_;
     std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_;
     std::shared_ptr<ParallelNestedBenders> cont_phase_pnb_;
@@ -218,6 +219,7 @@ protected:
     std::vector<std::vector<SmiTreeNode<BendersNodeData*>* > > tree_nodes_by_stage_;
     // Vector that contains StageWiseInformation
     std::vector< BendersStageData* > stage_data_;
+    virtual inline BendersStageData* getStageDataForDualCGP() { return stage_data_[0]; };
 
     
     // Problem characteristics
