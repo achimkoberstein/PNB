@@ -975,8 +975,11 @@ namespace branch_and_benders_cut {
 	}
 
 	ThreadBranchAndBendersCut::ThreadBranchAndBendersCut(SmiScnModel* smi_model_ptr)
-		: BranchAndBendersCut(smi_model_ptr),lp_cuts_constructed_(false),current_context_(nullptr),current_contextid_(-1)
+		: BranchAndBendersCut(smi_model_ptr),lp_cuts_constructed_(false),current_context_(nullptr),current_contextid_(-1),fixed_to_one_(),fixed_to_zero_()
 	{
+		int num_bins = core_->getBinaryCols(0).size();
+		fixed_to_one_.reserve(num_bins);
+		fixed_to_zero_.reserve(num_bins);
 	}
 
 	ThreadBranchAndBendersCut::~ThreadBranchAndBendersCut()
@@ -1138,6 +1141,9 @@ namespace branch_and_benders_cut {
 		assert(this != nullptr && "Construct ThreadBBC");
 		current_context_ = context;
 		current_contextid_ = contextid;
+
+		fixed_to_one_.clear();
+		fixed_to_zero_.clear();
 	}
 
 	void ThreadBranchAndBendersCut::ConstructLiftAndProjectCuts()
@@ -1146,6 +1152,25 @@ namespace branch_and_benders_cut {
 		assert(generate_lp_cuts_);
 		forward_ = false;
 		int num_nodes = tree_nodes_by_stage_[current_stage_].size();
+
+		// Identify fixed binary variables
+		int num_cols = stage_data_[current_stage_]->num_columns_;
+		std::vector<double> ub(num_cols);
+		CPXcallbackgetlocalub(current_context_, ub.data(), 0, num_cols - 1);
+		std::vector<double> lb(num_cols);
+		CPXcallbackgetlocallb(current_context_, lb.data(), 0, num_cols - 1);
+
+		assert(fixed_to_one_.size() == 0 && fixed_to_zero_.size() == 0 
+			&& "fixed_to... vectors should be cleared in setCurrentContextData() when we arrive here.");
+		
+		for (const int& i: core_->getBinaryCols(current_stage_)){
+			if (ub[i] == lb[i] && ub[i] == 1) {
+				fixed_to_one_.push_back(i);
+			}
+			else if (ub[i] == lb[i] && ub[i] == 0) {
+				fixed_to_zero_.push_back(i);
+			}
+		}
 
 		int num_cuts = ceil(fractional_variables_.size() * (cuts_for_fract_vars_ / 100.0)); //at least cut for one fract variable
 		assert(num_cuts > 0 && num_cuts <= fractional_variables_.size());
