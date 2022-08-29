@@ -1627,14 +1627,30 @@ SmiCoreData* branch_and_benders_cut::ThreadBranchAndBendersCut::getCoreDataForDu
 	if (core_data_wo_fixed_cols == nullptr) {
 		SmiCoreData* core_data = ParallelNestedBenders::getCoreDataForDualCGP();
 		OsiCpxSolverInterface* osi_cpx = new OsiCpxSolverInterface();
-		//int num_columns = core_data->getNumCols(0) - (fixed_to_one_.size() + fixed_to_zero_.size());
 		BuildSubproblem(osi_cpx, tree_nodes_by_stage_[0][0]);
-		int num_columns = core_data->getNumCols(0);
-		std::vector<int> cstag(num_columns, 0);
-		std::vector<int> rstag(core_data->getNumRows(0), 0);
+		assert(core_data->getNumCols(0) == osi_cpx->getNumCols());
+		assert(core_data->getNumRows(0) == osi_cpx->getNumRows());
+		// TODO: modify RHS
+		osi_cpx->deleteCols(fixed_to_one_.size(), fixed_to_one_.data());
+		osi_cpx->deleteCols(fixed_to_zero_.size(), fixed_to_zero_.data());
+		assert(core_data->getNumCols(0) == (osi_cpx->getNumCols() + fixed_to_one_.size() + fixed_to_zero_.size()));
+		// TODO: use set for fixed_to_one_ and fixed_to_zero_
+		assert(core_data->getBinaryCols(0) == core_data->getIntCols(0) && "Never tested with integer non-binary columns.");
+		std::vector<int> bin_cols;
+		bin_cols.reserve(osi_cpx->getNumCols());
+		int col_shift = 0;
+		for (int i = 0; i < osi_cpx->getNumCols(); i++) {
+			if (osi_cpx->getCtype()[i] == 'B') {
+				bin_cols.push_back(i + col_shift);
+			}
+		}
+		assert(bin_cols.size() == (core_data->getBinaryCols(0).size() - fixed_to_one_.size() - fixed_to_zero_.size()));
+
+		std::vector<int> cstag(osi_cpx->getNumCols(), 0);
+		std::vector<int> rstag(osi_cpx->getNumRows(), 0);
 		core_data_wo_fixed_cols = new SmiCoreData(osi_cpx, 1, cstag.data(), rstag.data(), 
-			const_cast<int*>(core_data->getIntCols(0).data()), core_data->getIntCols(0).size(),
-			const_cast<int*>(core_data->getBinaryCols(0).data()), core_data->getBinaryCols(0).size());
+			const_cast<int*>(bin_cols.data()), bin_cols.size(),
+			const_cast<int*>(bin_cols.data()), bin_cols.size());
 		
 		// TODO: manage memory
 		delete osi_cpx;
