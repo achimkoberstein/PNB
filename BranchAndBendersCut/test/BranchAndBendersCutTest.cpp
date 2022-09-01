@@ -888,7 +888,7 @@ TEST_F(BranchAndBendersTest, fast) {
 	// Binary 1st stage
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
 	bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
-	EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
+	//EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
 	EXPECT_NEAR(solveSMPS("glushko/sndp/sndp_40_3_1_25"), -148692, 0.3); // same characteristics as SNDP_TestCase_0 // TODO: wrong solution: 24.06.21 L&P cuts for root node {L&P cuts}
 	// L&P cuts above means: NumCpu 1, no 1st Phase, L&P method 2, Rounds Limit 1, L&P cuts for fract 1
 	// BBC above means: NumCpu 1, no 1st Phase

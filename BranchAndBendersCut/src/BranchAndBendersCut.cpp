@@ -1615,7 +1615,7 @@ parallel_benders::BendersStageData* branch_and_benders_cut::ThreadBranchAndBende
 		stage_data_wo_fixed_cols = new parallel_benders::BendersStageData(*stage_data_with_fixed_cols);
 	}
 
-	// stage_data_wo_fixed_cols->num_columns_ -= (fixed_to_one_.size() + fixed_to_zero_.size());
+	stage_data_wo_fixed_cols->num_columns_ -= (fixed_to_one_.size() + fixed_to_zero_.size());
 	// TODO: manage memory
 	return stage_data_wo_fixed_cols;
 }
@@ -1630,9 +1630,31 @@ SmiCoreData* branch_and_benders_cut::ThreadBranchAndBendersCut::getCoreDataForDu
 		BuildSubproblem(osi_cpx, tree_nodes_by_stage_[0][0]);
 		assert(core_data->getNumCols(0) == osi_cpx->getNumCols());
 		assert(core_data->getNumRows(0) == osi_cpx->getNumRows());
-		// TODO: modify RHS
-		osi_cpx->deleteCols(fixed_to_one_.size(), fixed_to_one_.data());
-		osi_cpx->deleteCols(fixed_to_zero_.size(), fixed_to_zero_.data());
+		// modify RHS
+		for (const int& col : fixed_to_one_) {
+			for (int row = 0; row < osi_cpx->getNumRows(); row++) {
+				double col_coef = osi_cpx->getMatrixByRow()->getCoefficient(row, col);
+				char row_sense = osi_cpx->getRowSense()[row];
+				if (row_sense == 'L') {
+					osi_cpx->setRowUpper(row, osi_cpx->getRowUpper()[row] - col_coef);
+				}
+				else if (row_sense == 'G') {
+					osi_cpx->setRowLower(row, osi_cpx->getRowLower()[row] - col_coef);
+				}
+				else if (row_sense == 'E') {
+					osi_cpx->setRowBounds(row, osi_cpx->getRowLower()[row] - col_coef, osi_cpx->getRowUpper()[row] - col_coef);
+				}
+				else {
+					LOG(FATAL) << "Not implemented for row sense " << row_sense;
+				}
+			}
+		}
+		// delete columns
+		std::vector<int> fixed_columns;
+		fixed_columns.reserve(fixed_to_one_.size() + fixed_to_zero_.size());
+		fixed_columns.insert(fixed_columns.end(), fixed_to_one_.begin(), fixed_to_one_.end());
+		fixed_columns.insert(fixed_columns.end(), fixed_to_zero_.begin(), fixed_to_zero_.end());
+		osi_cpx->deleteCols(fixed_columns.size(), fixed_columns.data());
 		assert(core_data->getNumCols(0) == (osi_cpx->getNumCols() + fixed_to_one_.size() + fixed_to_zero_.size()));
 		// TODO: use set for fixed_to_one_ and fixed_to_zero_
 		assert(core_data->getBinaryCols(0) == core_data->getIntCols(0) && "Never tested with integer non-binary columns.");
@@ -1640,7 +1662,7 @@ SmiCoreData* branch_and_benders_cut::ThreadBranchAndBendersCut::getCoreDataForDu
 		bin_cols.reserve(osi_cpx->getNumCols());
 		int col_shift = 0;
 		for (int i = 0; i < osi_cpx->getNumCols(); i++) {
-			if (osi_cpx->getCtype()[i] == 'B') {
+			if (osi_cpx->isBinary(i)) {
 				bin_cols.push_back(i + col_shift);
 			}
 		}
