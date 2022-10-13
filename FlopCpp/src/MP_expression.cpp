@@ -37,12 +37,19 @@ namespace flopc {
     VariableRef::~VariableRef() { }
 
     double VariableRef::level() const {
-        return  V->M->Solver->getColSolution()[V->offset +
-            V->f(V->S1->evaluate(),
-            V->S2->evaluate(),
-            V->S3->evaluate(),
-            V->S4->evaluate(),
-            V->S5->evaluate())];
+        return V->level(I1->evaluate(),
+            I2->evaluate(),
+            I3->evaluate(),
+            I4->evaluate(),
+            I5->evaluate());
+    }
+
+    double VariableRef::levelScenario(int scenario) const {
+        return V->levelScenario(scenario, I1->evaluate(),
+            I2->evaluate(),
+            I3->evaluate(),
+            I4->evaluate(),
+            I5->evaluate());
     }
 
     int VariableRef::getColumn() const { 
