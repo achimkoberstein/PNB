@@ -26,6 +26,7 @@ public:
     virtual double getObjValue() const = 0;
 
 	virtual void printSolutionToFile(const char* filename) const = 0;
+	virtual double getColSolution(int ns, int stage, int colIndex) = 0;
 
 	virtual void setParameters(const parallel_benders::Parameter& parameters) = 0;
 
@@ -60,6 +61,7 @@ public:
     double getObjValue() const;
 
 	void printSolutionToFile(const char* filename) const;
+	double getColSolution(int ns, int stage, int colIndex);
 	
 	void setParameters(const parallel_benders::Parameter& parameters);
 
