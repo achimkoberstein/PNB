@@ -1,0 +1,5 @@
+TIME          .\Farmer
+PERIODS
+    x_0 landConstr_0             STAGE_0
+    w_1_0 cattleConstr_1_0         STAGE_1
+ENDATA
