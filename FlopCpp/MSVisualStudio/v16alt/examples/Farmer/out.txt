@@ -1,5 +1,5 @@
-Seed is: 226435400
-Seed is: 1636963111
+Seed is: 277117477
+Seed is: 1407300832
 
 Writing SMPS
 Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
@@ -199,7 +199,7 @@ dRowMap (getDenseRow):
 smiTree_ (nodewise):
 
 ------ SmiScnNode::printout() BEGIN ------
-this (mem address): 00000217EBDF2BD0
+this (mem address): 000002458C2D9290
 parent_ (mem address)0000000000000000
 prob_: 1
 mdl_prob_: 1
@@ -237,8 +237,8 @@ dRowMap (getDenseRow):
 ------ SmiScnNode::printout() END ------
 
 ------ SmiScnNode::printout() BEGIN ------
-this (mem address): 00000217EBDF15D0
-parent_ (mem address)00000217EBDF2BD0
+this (mem address): 000002458C2D8990
+parent_ (mem address)000002458C2D9290
 prob_: 0.333333
 mdl_prob_: 0.333333
 condProb_: 0
@@ -281,8 +281,8 @@ dRowMap (getDenseRow):
 ------ SmiScnNode::printout() END ------
 
 ------ SmiScnNode::printout() BEGIN ------
-this (mem address): 00000217EBDF2C50
-parent_ (mem address)00000217EBDF2BD0
+this (mem address): 000002458C2D8B90
+parent_ (mem address)000002458C2D9290
 prob_: 0.333333
 mdl_prob_: 0.333333
 condProb_: 0
@@ -325,8 +325,8 @@ dRowMap (getDenseRow):
 ------ SmiScnNode::printout() END ------
 
 ------ SmiScnNode::printout() BEGIN ------
-this (mem address): 00000217EBDF1ED0
-parent_ (mem address)00000217EBDF2BD0
+this (mem address): 000002458C2D8A10
+parent_ (mem address)000002458C2D9290
 prob_: 0.333333
 mdl_prob_: 0.333333
 condProb_: 0

@@ -1,5 +1,5 @@
-Seed is: 2914146462
-Seed is: 669276824
+Seed is: 172655329
+Seed is: 862387903
 
 Writing SMPS
 Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
@@ -163,8 +163,6 @@ nodes_[0]:
 
 ------ SmiNodeData::printout() BEGIN ------
 stg_: 0
-dRowMap (getDenseRow): 
-
 isCoreNode_: 1
 numarrays_: 5
 nels_: 9
@@ -184,6 +182,8 @@ dels_: [0]: 0   [1]: 0   [2]: 0   [3]: 1e+20   [4]: 1e+20   [5]: 1e+20   [6]: 2 
 inds_: [0]: 0   [1]: 1   [2]: 2   [3]: 0   [4]: 1   [5]: 2   [6]: 0   [7]: 1   [8]: 2   
 strt_: [0]: 0   [1]: 3   [2]: 6   [3]: 9   [4]: 9   [5]: 9   
 ptr_count: 1
+dRowMap (getDenseRow): 
+
 
 ------ SmiNodeData::printout() END ------
 
@@ -191,14 +191,6 @@ nodes_[1]:
 
 ------ SmiNodeData::printout() BEGIN ------
 stg_: 1
-dRowMap (getDenseRow): 
-[0]: 0 0 0 1 0 0 
-[1]: 0 0 0 0 1 0 
-[2]: 0 0 0 0 0 1 
-[3]: -1 0 0 8 6 1 
-[4]: 0 -1 0 4 2 1.5 
-[5]: 0 0 -1 2 1.5 0.5 
-
 isCoreNode_: 1
 numarrays_: 5
 nels_: 36
@@ -218,13 +210,21 @@ dels_: [0]: 1   [1]: 1   [2]: 1   [3]: -1   [4]: 8   [5]: 6   [6]: 1   [7]: -1  
 inds_: [0]: 3   [1]: 4   [2]: 5   [3]: 0   [4]: 3   [5]: 4   [6]: 5   [7]: 1   [8]: 3   [9]: 4   [10]: 5   [11]: 2   [12]: 3   [13]: 4   [14]: 5   [15]: 3   [16]: 4   [17]: 5   [18]: 3   [19]: 4   [20]: 5   [21]: 3   [22]: 4   [23]: 5   [24]: 0   [25]: 1   [26]: 2   [27]: 3   [28]: 4   [29]: 5   [30]: 0   [31]: 1   [32]: 2   [33]: 3   [34]: 4   [35]: 5   
 strt_: [0]: 0   [1]: 1   [2]: 2   [3]: 3   [4]: 7   [5]: 11   [6]: 15   [7]: 18   [8]: 21   [9]: 24   [10]: 30   [11]: 36   
 ptr_count: 1
+dRowMap (getDenseRow): 
+[0]: 0 0 0 1 0 0 
+[1]: 0 0 0 0 1 0 
+[2]: 0 0 0 0 0 1 
+[3]: -1 0 0 8 6 1 
+[4]: 0 -1 0 4 2 1.5 
+[5]: 0 0 -1 2 1.5 0.5 
+
 
 ------ SmiNodeData::printout() END ------
 ------ SmiCoreData::printout() END ------
 smiTree_ (nodewise):
 
 ------ SmiScnNode::printout() BEGIN ------
-this (mem address): 000001F5771AAFB0
+this (mem address): 0000023F512EB390
 parent_ (mem address)0000000000000000
 prob_: 1
 mdl_prob_: 1
@@ -236,8 +236,6 @@ include_: 0
 
 ------ SmiNodeData::printout() BEGIN ------
 stg_: 0
-dRowMap (getDenseRow): 
-
 isCoreNode_: 0
 numarrays_: 5
 nels_: 0
@@ -257,13 +255,15 @@ dels_:
 inds_: 
 strt_: [0]: 0   [1]: 0   [2]: 0   [3]: 0   [4]: 0   [5]: 0   
 ptr_count: 1
+dRowMap (getDenseRow): 
+
 
 ------ SmiNodeData::printout() END ------
 ------ SmiScnNode::printout() END ------
 
 ------ SmiScnNode::printout() BEGIN ------
-this (mem address): 000001F5771AB630
-parent_ (mem address)000001F5771AAFB0
+this (mem address): 0000023F512EBD90
+parent_ (mem address)0000023F512EB390
 prob_: 0.3
 mdl_prob_: 0.3
 condProb_: 0
@@ -274,14 +274,6 @@ include_: 0
 
 ------ SmiNodeData::printout() BEGIN ------
 stg_: 1
-dRowMap (getDenseRow): 
-[0]: 0 0 0 0 0 0 
-[1]: 0 0 0 0 0 0 
-[2]: 0 0 0 0 0 0 
-[3]: 0 0 0 0 0 0 
-[4]: 0 0 0 0 0 0 
-[5]: 0 0 0 0 0 0 
-
 isCoreNode_: 0
 numarrays_: 5
 nels_: 3
@@ -301,13 +293,15 @@ dels_: [0]: 50   [1]: 20   [2]: 200
 inds_: [0]: 0   [1]: 1   [2]: 2   
 strt_: [0]: 0   [1]: 0   [2]: 0   [3]: 0   [4]: 0   [5]: 3   
 ptr_count: 1
+dRowMap (getDenseRow): 
+
 
 ------ SmiNodeData::printout() END ------
 ------ SmiScnNode::printout() END ------
 
 ------ SmiScnNode::printout() BEGIN ------
-this (mem address): 000001F5771AB330
-parent_ (mem address)000001F5771AAFB0
+this (mem address): 0000023F512EC110
+parent_ (mem address)0000023F512EB390
 prob_: 0.4
 mdl_prob_: 0.4
 condProb_: 0
@@ -318,14 +312,6 @@ include_: 6
 
 ------ SmiNodeData::printout() BEGIN ------
 stg_: 1
-dRowMap (getDenseRow): 
-[0]: 0 0 0 0 0 0 
-[1]: 0 0 0 0 0 0 
-[2]: 0 0 0 0 0 0 
-[3]: 0 0 0 0 0 0 
-[4]: 0 0 0 0 0 0 
-[5]: 0 0 0 0 0 0 
-
 isCoreNode_: 0
 numarrays_: 5
 nels_: 3
@@ -345,13 +331,15 @@ dels_: [0]: 150   [1]: 110   [2]: 225
 inds_: [0]: 0   [1]: 1   [2]: 2   
 strt_: [0]: 0   [1]: 0   [2]: 0   [3]: 0   [4]: 0   [5]: 3   
 ptr_count: 1
+dRowMap (getDenseRow): 
+
 
 ------ SmiNodeData::printout() END ------
 ------ SmiScnNode::printout() END ------
 
 ------ SmiScnNode::printout() BEGIN ------
-this (mem address): 000001F5771AAC30
-parent_ (mem address)000001F5771AAFB0
+this (mem address): 0000023F512EC010
+parent_ (mem address)0000023F512EB390
 prob_: 0.3
 mdl_prob_: 0.3
 condProb_: 0
@@ -362,14 +350,6 @@ include_: 12
 
 ------ SmiNodeData::printout() BEGIN ------
 stg_: 1
-dRowMap (getDenseRow): 
-[0]: 0 0 0 0 0 0 
-[1]: 0 0 0 0 0 0 
-[2]: 0 0 0 0 0 0 
-[3]: 0 0 0 0 0 0 
-[4]: 0 0 0 0 0 0 
-[5]: 0 0 0 0 0 0 
-
 isCoreNode_: 0
 numarrays_: 5
 nels_: 3
@@ -389,6 +369,8 @@ dels_: [0]: 250   [1]: 250   [2]: 500
 inds_: [0]: 0   [1]: 1   [2]: 2   
 strt_: [0]: 0   [1]: 0   [2]: 0   [3]: 0   [4]: 0   [5]: 3   
 ptr_count: 1
+dRowMap (getDenseRow): 
+
 
 ------ SmiNodeData::printout() END ------
 ------ SmiScnNode::printout() END ------

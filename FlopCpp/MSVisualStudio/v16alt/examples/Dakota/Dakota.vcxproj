@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>../../../../../ParallelNestedBenders/src;../../../../../ThirdParty/cplex/cplex124/include/ilcplex;../../../../../Smi/src;../../../../../Osi/src/Osi;../../../../../FlopCpp/src;../../../../../Cbc/src;../../../../../Clp/src;../../../../../Cbc/src/OsiCbc;../../../../../Osi/src/OsiCpx;../../../../../Clp/src/OsiClp;../../../../../BuildTools/headers;../../../../../CoinUtils/src;../../../../../ThirdParty/gtest/include;../../../../../ThirdParty/boost; ../../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../ParallelNestedBenders/src;../../../../../ThirdParty/cplex/cplex124/include/ilcplex;../../../../../Smi/src;../../../../../Osi/src/Osi;../../../../../FlopCpp/src;../../../../../Cbc/src;../../../../../Clp/src;../../../../../Cbc/src/OsiCbc;../../../../../Osi/src/OsiCpx;../../../../../Clp/src/OsiClp;../../../../../BuildTools/headers;../../../../../CoinUtils/src;../../../../../ThirdParty/gtest/include;../../../../../ThirdParty/boost;../../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
