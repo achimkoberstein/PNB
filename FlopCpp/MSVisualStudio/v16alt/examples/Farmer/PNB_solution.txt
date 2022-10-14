@@ -1,18 +1,19 @@
-Objective Value : -1730
-Objective Value Stage 0 : 6450
-Objective Value Stage 1 : -8180
+Objective Value : -108390
+Objective Value Stage 0 : 108900
+Objective Value Stage 1 : -217290
 Column Values sorted by Stage and Scenario
-Objective Value Stage-Scenario=0-0 : 6450
-Stage-Scenario=0-0 :  : 1300
-Stage-Scenario=0-0 :  : 540
-Stage-Scenario=0-0 :  : 325
-Objective Value Stage-Scenario=1-0 : -1740
-Stage-Scenario=1-0 :  : 50
-Stage-Scenario=1-0 :  : 20
-Stage-Scenario=1-0 :  : 200
-Objective Value Stage-Scenario=1-1 : -3680
-Stage-Scenario=1-1 :  : 80
-Stage-Scenario=1-1 :  : 110
-Objective Value Stage-Scenario=1-2 : -2760
-Stage-Scenario=1-2 :  : 80
-Stage-Scenario=1-2 :  : 110
+Objective Value Stage-Scenario=0-0 : 108900
+Stage-Scenario=0-0 :  : 170
+Stage-Scenario=0-0 :  : 80
+Stage-Scenario=0-0 :  : 250
+Objective Value Stage-Scenario=1-0 : -52573.3
+Stage-Scenario=1-0 :  : 140
+Stage-Scenario=1-0 :  : 4000
+Stage-Scenario=1-0 :  : 48
+Objective Value Stage-Scenario=1-1 : -72750
+Stage-Scenario=1-1 :  : 225
+Stage-Scenario=1-1 :  : 5000
+Objective Value Stage-Scenario=1-2 : -91966.7
+Stage-Scenario=1-2 :  : 310
+Stage-Scenario=1-2 :  : 48
+Stage-Scenario=1-2 :  : 6000

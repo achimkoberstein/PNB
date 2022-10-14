@@ -12,7 +12,7 @@
 using namespace flopc;
 
 int main(int argc, char* argv[]) {
-	const double myInfty = 1e9;
+	const double myInfty = 1e5;
 
 	MP_model m(new OsiCpxSolverInterface());
 
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
 	z.display("Display z:\n");
 	y.display("Display y:\n");
 
-/*
+
 	// ---------------------------------------
 	// ---------- use PNB solver -------------
 	// ---------------------------------------
@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
 	// Declare parameter file
 	parallel_benders::Parameter benders_param;
 	benders_param.init();
-	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, 0);
+	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, 1);
 	//	benders_param.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION, parallel_benders::PNB_INT_USE_EV_SOLUTION);
 	benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
 
@@ -163,6 +163,6 @@ int main(int argc, char* argv[]) {
 	w.display("Display w:\n");
 	z.display("Display z:\n");
 	y.display("Display y:\n");
-*/
+
 	m.getSmi()->printout();
 }
