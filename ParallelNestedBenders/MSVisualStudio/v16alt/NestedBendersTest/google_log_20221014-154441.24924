@@ -1,0 +1,4 @@
+Log file created at: 2022/10/14 15:44:41
+Running on machine: DESKTOP-H8777OU
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+F1014 15:44:41.463449  5864 NestedBendersTest.cpp:990] Your parameter line changed in your output log file. Please remove old log file ../../../../Data/Benders/Results-Aggregated.csv before proceeding!.

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="85" failures="0" disabled="7" errors="0" time="0.625" name="AllTests">
+  <testsuite name="UnitTestPNB" tests="1" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="unitTest" status="notrun" time="0" classname="UnitTestPNB" />
+  </testsuite>
+  <testsuite name="UnitTestCutStuff" tests="1" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="unitTest" status="notrun" time="0" classname="UnitTestCutStuff" />
+  </testsuite>
+  <testsuite name="TimerTest" tests="1" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="unitTest" status="notrun" time="0" classname="TimerTest" />
+  </testsuite>
+  <testsuite name="CollectInstanceSpecs" tests="5" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="all" status="notrun" time="0" classname="CollectInstanceSpecs" />
+    <testcase name="snip" status="notrun" time="0" classname="CollectInstanceSpecs" />
+    <testcase name="rrtailassign" status="notrun" time="0" classname="CollectInstanceSpecs" />
+    <testcase name="cap" status="notrun" time="0" classname="CollectInstanceSpecs" />
+    <testcase name="lsfrp" status="notrun" time="0" classname="CollectInstanceSpecs" />
+  </testsuite>
+  <testsuite name="LiftAndProjectCutsTest" tests="5" failures="0" disabled="2" errors="0" time="0">
+    <testcase name="fast" status="notrun" time="0" classname="LiftAndProjectCutsTest" />
+    <testcase name="DISABLED_bounds_convergence_fast" status="notrun" time="0" classname="LiftAndProjectCutsTest" />
+    <testcase name="for_LP" status="notrun" time="0" classname="LiftAndProjectCutsTest" />
+    <testcase name="slow" status="notrun" time="0" classname="LiftAndProjectCutsTest" />
+    <testcase name="DISABLED_bounds_convergence_slow" status="notrun" time="0" classname="LiftAndProjectCutsTest" />
+  </testsuite>
+  <testsuite name="NestedBendersTest" tests="26" failures="0" disabled="5" errors="0" time="0.624">
+    <testcase name="fast" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="slow" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="DISABLED_InvestmentExampleTest" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="DISABLED_BirgeLouveuxFarmersTest" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="farmer_OTHER" status="run" time="0.623" classname="NestedBendersTest" />
+    <testcase name="finance_OTHER" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="gas_OTHER" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="dakota_OTHER" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="sslp_OTHER" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="stormG2_POSTS" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="airlift_FELT" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="assets_OTHER" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="assets_FELT" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="cargo_FELT" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="electric_FELT" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="stocfor_FELT" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="scenarios_WRIGHT" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="unbounded_infeasible" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="saphir" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="frankellison" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="deak" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="rand_OTHER" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="FeasibilityCutTest" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="DISABLED_StageAggregationTest" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="DISABLED_temporary" status="notrun" time="0" classname="NestedBendersTest" />
+    <testcase name="DISABLED_temporarySD" status="notrun" time="0" classname="NestedBendersTest" />
+  </testsuite>
+  <testsuite name="NestedBendersTestInteger" tests="20" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="fast" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="sndp_mini_tests_GLUSHKO" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="lsfrp_GLUSHKO" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="sndp_GLUSHKO" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="cap" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="slow" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="sslp_SIPLIB" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="sslp_HAN" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="dcap_SIPLIP" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="dcap_HAN" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="semi_SIPLIP" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="sizes_SIPLIB" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="ssch_OTHER" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="sslp_NTAIMO" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="chem_FELT" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="phone_FELT" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="scdp" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="postponement" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="mcfndsd_cr_RAHMANIANI" status="notrun" time="0" classname="NestedBendersTestInteger" />
+    <testcase name="mcfndsd_RAHMANIANI" status="notrun" time="0" classname="NestedBendersTestInteger" />
+  </testsuite>
+  <testsuite name="NestedBendersTestFeasibility" tests="5" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="fast" status="notrun" time="0" classname="NestedBendersTestFeasibility" />
+    <testcase name="slow" status="notrun" time="0" classname="NestedBendersTestFeasibility" />
+    <testcase name="chem_FELT" status="notrun" time="0" classname="NestedBendersTestFeasibility" />
+    <testcase name="environ_FELT" status="notrun" time="0" classname="NestedBendersTestFeasibility" />
+    <testcase name="feasibility" status="notrun" time="0" classname="NestedBendersTestFeasibility" />
+  </testsuite>
+  <testsuite name="NestedBendersTestMultiStage" tests="10" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="fast" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="scfxm_POSTS" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="sgpf_POSTS" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="bonds_FELT" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="electric_FELT" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="stocfor_FELT" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="watson_conditional" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="watson_independent" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="scdp" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+    <testcase name="pltexp_POSTS" status="notrun" time="0" classname="NestedBendersTestMultiStage" />
+  </testsuite>
+  <testsuite name="CVaRTest" tests="1" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="fast" status="notrun" time="0" classname="CVaRTest" />
+  </testsuite>
+  <testsuite name="DetEqTest" tests="2" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="fast" status="notrun" time="0" classname="DetEqTest" />
+    <testcase name="slow" status="notrun" time="0" classname="DetEqTest" />
+  </testsuite>
+  <testsuite name="RelaxationTest" tests="2" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="fast" status="notrun" time="0" classname="RelaxationTest" />
+    <testcase name="slow" status="notrun" time="0" classname="RelaxationTest" />
+  </testsuite>
+  <testsuite name="NestedBendersTestSampleAverageApproximation" tests="6" failures="0" disabled="0" errors="0" time="0">
+    <testcase name="20term_WRIGHT" status="notrun" time="0" classname="NestedBendersTestSampleAverageApproximation" />
+    <testcase name="gbd_WRIGHT" status="notrun" time="0" classname="NestedBendersTestSampleAverageApproximation" />
+    <testcase name="ssn_WRIGHT" status="notrun" time="0" classname="NestedBendersTestSampleAverageApproximation" />
+    <testcase name="LandS_WRIGHT" status="notrun" time="0" classname="NestedBendersTestSampleAverageApproximation" />
+    <testcase name="storm_WRIGHT" status="notrun" time="0" classname="NestedBendersTestSampleAverageApproximation" />
+    <testcase name="sample_average_approximation1" status="notrun" time="0" classname="NestedBendersTestSampleAverageApproximation" />
+  </testsuite>
+</testsuites>
