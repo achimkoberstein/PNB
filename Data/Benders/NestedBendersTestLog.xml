@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites tests="85" failures="0" disabled="7" errors="0" time="0.625" name="AllTests">
+<testsuites tests="85" failures="0" disabled="7" errors="0" time="0.936" name="AllTests">
   <testsuite name="UnitTestPNB" tests="1" failures="0" disabled="0" errors="0" time="0">
     <testcase name="unitTest" status="notrun" time="0" classname="UnitTestPNB" />
   </testsuite>
@@ -23,12 +23,12 @@
     <testcase name="slow" status="notrun" time="0" classname="LiftAndProjectCutsTest" />
     <testcase name="DISABLED_bounds_convergence_slow" status="notrun" time="0" classname="LiftAndProjectCutsTest" />
   </testsuite>
-  <testsuite name="NestedBendersTest" tests="26" failures="0" disabled="5" errors="0" time="0.624">
+  <testsuite name="NestedBendersTest" tests="26" failures="0" disabled="5" errors="0" time="0.935">
     <testcase name="fast" status="notrun" time="0" classname="NestedBendersTest" />
     <testcase name="slow" status="notrun" time="0" classname="NestedBendersTest" />
     <testcase name="DISABLED_InvestmentExampleTest" status="notrun" time="0" classname="NestedBendersTest" />
     <testcase name="DISABLED_BirgeLouveuxFarmersTest" status="notrun" time="0" classname="NestedBendersTest" />
-    <testcase name="farmer_OTHER" status="run" time="0.623" classname="NestedBendersTest" />
+    <testcase name="farmer_OTHER" status="run" time="0.935" classname="NestedBendersTest" />
     <testcase name="finance_OTHER" status="notrun" time="0" classname="NestedBendersTest" />
     <testcase name="gas_OTHER" status="notrun" time="0" classname="NestedBendersTest" />
     <testcase name="dakota_OTHER" status="notrun" time="0" classname="NestedBendersTest" />

@@ -1,0 +1,5 @@
+Log file created at: 2022/10/27 12:15:47
+Running on machine: DESKTOP-H8777OU
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+W1027 12:15:47.539808 24612 ParallelNestedBenders.cpp:1091] farmer - It: 7 L&P round: 0 Fract: 0: Optimality cuts duplicates (last it. not considered)
+W1027 12:15:47.906023 24612 ParallelNestedBenders.cpp:1091] farmer - It: 7 L&P round: 0 Fract: 0: Optimality cuts duplicates (last it. not considered)
