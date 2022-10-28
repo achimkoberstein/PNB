@@ -4659,9 +4659,13 @@ namespace parallel_benders {
             assert(cut_stuff->isAggregate(i));
 			cut_stuff->column_set_ = lp_column_set_; // for L&P CGP it is prime or double prime, else is none
 #ifndef NDEBUG
-			int theta_index = i + (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME ? benders_tree_node_pointer->getDataPtr()->num_thetas_ : 0);
-            double theta_value = (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index] - d_square_translation_term_ : 0);
-            DLOG_IF(FATAL, !CompareForEquality(cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, benders_tree_node_pointer->getDataPtr()->next_stage_approximation_), sum - theta_value, zero_tolerance_));
+            if (!warm_up_) {    // in case of warm_up_, next_stage_approximation_ is not initialized
+                int theta_index = i + (lp_column_set_ == parallel_benders::PNB_COL_SET_DOUBLE_PRIME ? benders_tree_node_pointer->getDataPtr()->num_thetas_ : 0);
+                double nextstageapprox = benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[theta_index];
+                double theta_value = (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? nextstageapprox - d_square_translation_term_ : 0);
+                DLOG_IF(FATAL, !CompareForEquality(cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, benders_tree_node_pointer->getDataPtr()->next_stage_approximation_), sum - theta_value, zero_tolerance_));
+            }
+
 #endif
             if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || cut_stuff->AbsoluteViolation(benders_tree_node_pointer->getDataPtr()->col_solution_, benders_tree_node_pointer->getDataPtr()->next_stage_approximation_) > 0){
                 added_cuts++;
