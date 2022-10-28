@@ -119,6 +119,7 @@
       <ProgramDataBaseFileName>$(TargetDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>../../../../ParallelNestedBenders/src;../../../../Smi/src;../../../../Osi/src/Osi;../../../../FlopCpp/src;../../../../Cbc/src;../../../../Clp/src;../../../../Clp/src/OsiClp;../../../../Cbc/src/OsiCbc;../../../../Osi/src/OsiGrb;../../../../Osi/src/OsiCpx;../../../../BuildTools/headers;../../../../CoinUtils/src;../../../../ThirdParty/gtest/include;../../../../ThirdParty/boost;../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -199,6 +200,9 @@
     <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16\libOsi\libOsi.vcxproj">
       <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\ParallelNestedBenders\MSVisualStudio\v16alt\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
+      <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v16\libSmi\libSmi.vcxproj">
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
