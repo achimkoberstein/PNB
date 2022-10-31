@@ -95,6 +95,12 @@ void OsiStochasticDetEqSolverInterface::printSolutionToFile(const char* filename
 	solution_file.close();
 }
 
+double OsiStochasticDetEqSolverInterface::getColSolution(int ns, int stage, int colIndex) {
+	// not yet done
+	assert(false);
+	return 0;
+}
+
 void OsiStochasticDetEqSolverInterface::setParameters(const parallel_benders::Parameter& parameters)
 {
 	

@@ -25,6 +25,7 @@ public:
 	
     const double * getFirstStageSolution();
     virtual const double * getSolutionByNodeAndStage(int node_number, int stage) const;
+    virtual double getColSolution(int ns, int stage, int colIndex);
 
     //const double * getFirstStageDuals();
     //const double * getDualsByNodeAndStage(int node_number, int stage) const;
