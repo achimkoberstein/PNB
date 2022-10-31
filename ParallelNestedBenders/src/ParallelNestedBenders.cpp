@@ -7761,13 +7761,25 @@ namespace parallel_benders {
                 }
             }
         }
+
+        // pack cut in place (AK: 31.10.2022)
+        int countels = 0;
+        for (int i = 0; i < num_columns + num_aggregates; i++) {
+            if (!CompareWithZero(cut_elements[i])) {
+                cut_indices[countels] = cut_indices[i];
+                cut_elements[countels] = cut_elements[i];
+                countels++;
+            }
+        }
+
         // Add cut to Optimality Cut Set!
         OsiRowCut* osi_row_cut = new OsiRowCut();
         if ( CompareWithZero(cut_lower_bound))
             cut_lower_bound = 0.0;
         osi_row_cut->setLb(cut_lower_bound);
         osi_row_cut->setUb(infinity_);
-        osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
+//        osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
+        osi_row_cut->setRow(countels,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_); //AK: 31.10.2022
         std::unique_ptr<OsiRowCut> cut_pointer(osi_row_cut);
         std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,getCurrentThreadId(),cut_pointer,PNB_CUT_TYPE_OPTIMALITY,num_columns,num_aggregates));
 

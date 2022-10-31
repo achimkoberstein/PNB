@@ -1009,7 +1009,7 @@ bool CutStuff::is_consistent() const
         double val = cut.row().getElements()[i];
         int ind = cut.row().getIndices()[i];
         if (val == 0.0) { //no zero elements in row PackedVector
-			inconsistencies.set(CutStuff::InconsistencyType::ZeroRowElems);
+ 			inconsistencies.set(CutStuff::InconsistencyType::ZeroRowElems);
         }
         if (ind >= num_cols_) { // it is theta
             calculated_aggregates.push_back(ind-num_cols_);
