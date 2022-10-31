@@ -295,7 +295,7 @@ namespace parallel_benders {
         current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1, INT_TIMER_ID_TIMER_INIT),wall_clock_solution_time_(1, INT_TIMER_ID_SOL_WALL_CLOCK),detailed_timer_(5, INT_TIMER_ID_DETAILED_BUILD_MASTER),solution_times_(5, INT_TIMER_ID_SOLVE_MASTER),lp_cuts_timer_(10, INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_dual_cgp_node_data_mutex_(),lp_round_cuts_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
-		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_root_rounds_limit_(0),global_lp_rounds_limit_(10000),lp_switches_limit_(1),lp_major_it_limit_(1),lp_max_node_depth_(std::numeric_limits<int>::max()),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(PNB_CGP_CUTS_NONE),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),current_lp_round_(0),lp_rounds_counter_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),generate_optimality_cuts_after_lp_cuts_(false),
+		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),global_lp_rounds_limit_(10000),lp_switches_limit_(1),lp_major_it_limit_(1),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(PNB_CGP_CUTS_NONE),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),current_lp_round_(0),lp_rounds_counter_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
@@ -702,10 +702,8 @@ namespace parallel_benders {
 		lift_and_p_method_ = param.get(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED);
         cont_phase_it_limit_ = param.get(PNB_CONT_PHASE_IT_LIMIT, 0);
 		lp_rounds_limit_ = param.get(PNB_LP_ROUNDS_LIMIT, 0);
-        lp_root_rounds_limit_ = param.get(PNB_LP_ROOT_ROUNDS_LIMIT, 0);
 		lp_switches_limit_ = param.get(PNB_LP_SWITCHES_LIMIT, 1);
 		lp_major_it_limit_ = param.get(PNB_LP_MAJOR_IT_LIMIT, 1);
-        lp_max_node_depth_ = param.get(PNB_LP_MAX_NODE_DEPTH, std::numeric_limits<int>::max());
         lp_parallel_mode_ = param.get(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
         if (num_cpu_ == 1) {
             lp_parallel_mode_ = PNB_PARAL_MODE_ALL_SEQUENTIAL; // one cpu => no parallelization
@@ -715,7 +713,6 @@ namespace parallel_benders {
 		cgp_relative_epsilon_ = param.get(PNB_CGP_EPSILON_RELATIVE, relative_epsilon_);
 		std::string allowed_str = parameter_.GetStrParamValue(PNB_LP_ALLOW_TEST_CASES);
         allowed_test_cases_ = std::bitset<11>(std::string(allowed_str.rbegin(), allowed_str.rend())); // due to technical momemnts - bits are initialized in revers order from string
-        generate_optimality_cuts_after_lp_cuts_ = param.get(PNB_LP_OPT_CUTS_AFTER_LP_CUTS, false); // after each L&P cut generate optimality cut, for Branch-and-Benders it applies for root node only
 
         AdjustProblem();
         // Initialize cvar_current_cut_coefficients
@@ -1123,7 +1120,6 @@ namespace parallel_benders {
         startTimer(INT_TIMER_ID_TIMER_INIT); // NB: big portion of Solve() was mooved to Init()
 
         bool made_one_turn = false;
-        bool optimality_cuts_after_lp_cuts = false;
 
         // Compute or Use initial solutions!
         HandleInitialSolutionProcedures();
@@ -1871,7 +1867,6 @@ namespace parallel_benders {
 
             bool can_update_upper_bound = !warm_up_;
 			can_update_upper_bound = (lp_column_set_ == parallel_benders::PNB_COL_SET_PRIME) ? false : can_update_upper_bound; // we do not update when solve prime subproblems in L&P cuts CGP
-            can_update_upper_bound = (optimality_cuts_after_lp_cuts) ? false : can_update_upper_bound;
             if ( d_square_ && current_stage_==1){
 				assert(!(lp_rounds_limit_ > 0 || lp_main_loop_iteration_round_) && "Never tested");
                 // Solve C^3-SLP
@@ -2258,10 +2253,6 @@ namespace parallel_benders {
 
             // We change the stage, so we should clear all of the osiSolverInterfaces we used
             //std::pair<boost::thread::id, OsiSolverInterface* > id_solver_pair;
-            if (generate_optimality_cuts_after_lp_cuts_) {
-                optimality_cuts_after_lp_cuts = generate_lp_cuts_;
-                generate_lp_cuts_ = false;
-            }
             if (!generate_lp_cuts_) { // we do not clear dual CGP during the switch
                 for (auto id_solver_pair : osi_solver_map_) {
                     //id_solver_pair.second->reset(); // This method throws exception with Cplex
@@ -2673,10 +2664,8 @@ namespace parallel_benders {
         other->generate_feasibility_and_optimality_cuts_ = generate_feasibility_and_optimality_cuts_;
         other->lift_and_p_method_ = lift_and_p_method_;
         other->lp_rounds_limit_ = lp_rounds_limit_;
-        other->lp_root_rounds_limit_ = lp_root_rounds_limit_;
         other->global_lp_rounds_limit_ = global_lp_rounds_limit_;
         other->lp_switches_limit_ = lp_switches_limit_;
-        other->lp_max_node_depth_ = lp_max_node_depth_;
         other->lp_major_it_limit_ = lp_major_it_limit_;
         other->lp_use_cgp_pnb_cuts_ = lp_use_cgp_pnb_cuts_;
         other->lp_parallel_mode_ = lp_parallel_mode_;
@@ -2690,7 +2679,6 @@ namespace parallel_benders {
         other->next_lp_rounds_iteration_ = next_lp_rounds_iteration_;
         other->lp_main_loop_fract_var_value_ = lp_main_loop_fract_var_value_;
         other->lp_column_set_ = lp_column_set_;
-        other->generate_optimality_cuts_after_lp_cuts_ = generate_optimality_cuts_after_lp_cuts_;
         other->store_primal_and_dual_ = store_primal_and_dual_;
         other->allowed_test_cases_ = allowed_test_cases_;
         other->sequencing_protocol_ = sequencing_protocol_;
@@ -3412,7 +3400,6 @@ namespace parallel_benders {
 					unbounded_problem_ = true;
                     LOG_IF(ERROR, log_level_ <= google::ERROR) << "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
                     LOG_IF(ERROR, log_level_ <= google::ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem. Switching off seperate first stage solver.";
-                    PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "unbounded");
                     LOG(FATAL) << "Never tested before. Do we handle it correct in Solve() loop?";
 					return;
 				}
@@ -7774,13 +7761,25 @@ namespace parallel_benders {
                 }
             }
         }
+
+        // pack cut in place (AK: 31.10.2022)
+        int countels = 0;
+        for (int i = 0; i < num_columns + num_aggregates; i++) {
+            if (!CompareWithZero(cut_elements[i])) {
+                cut_indices[countels] = cut_indices[i];
+                cut_elements[countels] = cut_elements[i];
+                countels++;
+            }
+        }
+
         // Add cut to Optimality Cut Set!
         OsiRowCut* osi_row_cut = new OsiRowCut();
         if ( CompareWithZero(cut_lower_bound))
             cut_lower_bound = 0.0;
         osi_row_cut->setLb(cut_lower_bound);
         osi_row_cut->setUb(infinity_);
-        osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
+//        osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
+        osi_row_cut->setRow(countels,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_); //AK: 31.10.2022
         std::unique_ptr<OsiRowCut> cut_pointer(osi_row_cut);
         std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,getCurrentThreadId(),cut_pointer,PNB_CUT_TYPE_OPTIMALITY,num_columns,num_aggregates));
 
