@@ -37,6 +37,7 @@ using std::vector;
 using std::set;
 
 class OsiSolverInterface;
+class OsiStochasticSolverInterface;
 //Forward declarations for generateScenarioTree and private variable declaration
 class SmiCoreData;
 class SmiScnModel;
@@ -187,6 +188,11 @@ namespace flopc {
             Solver = s;
         }
 
+        // AK: 06.10.2022 initialize stochastic solver (for now: after attach)
+        void setStochasticSolver(OsiStochasticSolverInterface* stochs) {
+            StochSolver = stochs;
+        }
+
         /// allows access to the OsiSolverInterface *
         OsiSolverInterface* operator->() {
             return Solver;
@@ -332,6 +338,9 @@ namespace flopc {
         SmiScnModel* getSmi() { return smiModel; }
 
         OsiSolverInterface* Solver; 
+
+        // AK (06.10.2022) add interface for genuinely stochastic solver
+        OsiStochasticSolverInterface* StochSolver;
 
         boost::shared_ptr<Uniform01Generator> getUniformGenerator(){
             return uniformGenerator;

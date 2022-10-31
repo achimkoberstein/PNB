@@ -231,6 +231,7 @@ namespace flopc {
 
         virtual int getColumn() const;
         double level() const;
+        double levelScenario(int scenario) const;
 
         void insertVariables(set<MP_variable*>& v) const {
             v.insert(V);

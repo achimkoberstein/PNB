@@ -16,6 +16,8 @@
 #include "MP_random_constant.hpp"
 #include "MP_random_data.hpp"
 
+class OsiStochasticSolverInterface;
+
 namespace flopc {
 
     /** @brief Enumeration for indicating variable type
@@ -53,8 +55,8 @@ namespace flopc {
         using Named::getName;
 
         /// Returns the value of the variable given the specific index values.
-        double level(int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
-        double levelScenario(int scenario = 0,int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
+        double level(int i1=0, int i2=0, int i3=0, int i4=0, int i5=0) const;
+        double levelScenario(int scenario = 0,int i1=0, int i2=0, int i3=0, int i4=0, int i5=0) const;
 
 
         /// Convert a MP_variable into a VariableRef
@@ -91,7 +93,7 @@ namespace flopc {
         MP_variable(const MP_variable&);
         MP_variable& operator=(const MP_variable&);
 
-        int getCurrentStage(int i1, int i2, int i3, int i4, int i5);
+        int getCurrentStage(int i1, int i2, int i3, int i4, int i5) const;
         void setStageSet();
 
         std::string generateNamesSuffixFree(const int k);
