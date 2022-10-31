@@ -512,6 +512,44 @@ const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByN
     }
 }
 
+double OsiStochasticParallelNestedBendersSolverInterface::getColSolution(int ns, int stage, int colIndex) {
+    assert(nested_benders_);
+    assert(stage < nested_benders_->num_stages_);
+    assert(ns < nested_benders_->num_scenarios_);
+
+    if (getParameters().parameter_.get(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ) {
+        // DETEQ solved with osiSolver
+        
+        const double* osiSoln = osi_->getColSolution();
+
+        SmiScnNode* node = smi_model_->getLeafNode(ns);
+        int curStage = smi_model_->getCore()->getNumStages() - stage - 1; // Number of stages
+        while (node != NULL && curStage) { // Go to the correct node. If Stage is reduced to zero we are at the correct node.
+            // get parent of node
+            node = node->getParent();
+            --curStage;
+        }
+
+        assert(colIndex < smi_model_->getCore()->getColStart(stage) + node->getNumCols() && colIndex >= smi_model_->getCore()->getColStart(stage));
+        return osiSoln[node->getColStart() + colIndex - smi_model_->getCore()->getColStart(stage)];// Return element in matrix that is at nodeColStart + colIndex for stage. Where to get colIndex for stage?
+    }
+    else {
+        // solved with Benders solver
+        
+        // find node in Benders Node Data tree
+        parallel_benders::BendersNodeData* bndata = nested_benders_->tree_.find(ns, stage)->getDataPtr();
+
+        if (bndata->incumbent_col_solution_.empty())
+            assert(false);
+        else {
+            int column_offset = smi_model_->getCore()->getColStart(stage);
+            return bndata->incumbent_col_solution_[colIndex - column_offset];
+        }
+    }
+
+}
+
+
 const double *  OsiStochasticParallelNestedBendersSolverInterface::getFirstStageSolution()
 {
     return getSolutionByNodeAndStage(0,0);
