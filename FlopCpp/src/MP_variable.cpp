@@ -8,6 +8,7 @@ using std::cout;
 using std::endl;
 
 #include <OsiSolverInterface.hpp>
+#include "OsiStochasticSolverInterface.hpp"
 #include "MP_variable.hpp"
 #include "MP_domain.hpp" 
 #include "MP_constant.hpp" 
@@ -37,23 +38,49 @@ offset(-1),stageSetPtr(NULL)
 
 MP_variable::~MP_variable() { }
 
-double MP_variable::level(int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) { 
+double MP_variable::level(int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) const { 
     assert(M != 0);
     assert(M->Solver != 0);
-    if (M->stage.size()) //TODO: This gives solution values for the first stage only..
-        throw invalid_argument_exception();
+    if (M->stage.size()) {  // if stochastic model
+        int ind = M->colIndirection[offset + f(lcl_i1, lcl_i2, lcl_i3, lcl_i4, lcl_i5)];
+        if (ind == outOfBound)
+            throw invalid_argument_exception();
+        int currSt = getCurrentStage(lcl_i1, lcl_i2, lcl_i3, lcl_i4, lcl_i5);
+        if (currSt == outOfBound)
+            // first-stage variable
+            return M->smiModel->getColSolution(0, 0, ind);
+        else
+            throw invalid_argument_exception();   // can be used for first-stage variables only
+    }
     else
         return M->Solver->getColSolution()[offset +  f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)];
 
 } 
 
-double MP_variable::levelScenario(int scenario, int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) { 
+double MP_variable::levelScenario(int scenario, int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) const { 
     assert(M != 0);
     assert(M->Solver != 0);
     if (M->colIndirection[offset+f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)] == outOfBound)
         throw invalid_argument_exception();
-    if (M->stage.size()) //TODO: This gives solution values for the first stage only..
-        return M->smiModel->getColSolution(scenario,getCurrentStage(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5),M->colIndirection[offset+f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)]);
+    if (M->stage.size()) { //TODO: This gives solution values for the first stage only..   //AK (28.09.2022): Why???
+        int ind = M->colIndirection[offset + f(lcl_i1, lcl_i2, lcl_i3, lcl_i4, lcl_i5)];
+        int currSt = getCurrentStage(lcl_i1, lcl_i2, lcl_i3, lcl_i4, lcl_i5);
+        if (M->StochSolver == NULL) {
+            if (currSt == outOfBound)
+                // first-stage variable
+                return M->smiModel->getColSolution(0, 0, ind);
+            else
+                return M->smiModel->getColSolution(scenario, currSt, ind);
+        } 
+        else {
+            // return solution from stochastic solver
+            if (currSt == outOfBound)
+                // first-stage variable
+                return M->StochSolver->getColSolution(0, 0, ind);
+            else
+                return M->StochSolver->getColSolution(scenario, currSt, ind);
+        }
+    } 
     else
         throw invalid_argument_exception();
 
@@ -88,7 +115,7 @@ void MP_variable::setStageSet(){
                         stageSet = outOfBound;
 }
 
-int MP_variable::getCurrentStage(int i1, int i2, int i3, int i4, int i5){
+int MP_variable::getCurrentStage(int i1, int i2, int i3, int i4, int i5) const {
     switch (stageSet)
     {
     case 0: return i1;
@@ -122,20 +149,24 @@ void MP_variable::operator()() const {
     // A variable can not be in two models at the same time obviously, or can it be?
     if ( M->getStochastic() ){ 
         int length = 0;
-        double* values = 0;
+//        double* values = 0;
         if ( stageSet >= 0){
             // get values for every scenario
             for (int i = 0; i < M->scenSet.size(); i++){
+/*
                 values = M->smiModel->getColSolution(i,&length); // Gets column solution values for scenario, i.e. values for the core model!
                 //TODO: Check length //Check colIndirection for outOfBound..
                 //TODO: Terribly inefficient.. It really is.. We can enhance this by getting the correct colIndex via the 
                 string_stream<< " Sc. " << i << ": " << values[M->colIndirection[curOffset]];
                 ::free(values); //we need to use free, as smi callocs the values..
+*/
+                string_stream << " Sc. " << i << ": " << levelScenario(i, i1.evaluate(), i2.evaluate(), i3.evaluate(), i4.evaluate(), i5.evaluate());
             }
             string_stream << endl;
         }
         else { 
-            string_stream << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
+//            string_stream << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
+            string_stream << " " << levelScenario(0, i1.evaluate(), i2.evaluate(), i3.evaluate(), i4.evaluate(), i5.evaluate()) << endl;
         }
     }
     else { 
@@ -150,8 +181,8 @@ void MP_variable::operator()() const {
 void MP_variable::display(const std::string &s) {
     cout<<s<<endl;
     if (offset >= 0) {
-        //((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(this);
-		cout<<"MP_variable::display is broken!"<<endl;
+        ((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(this);
+		cout<<"MP_variable::display is potentially broken!"<<endl;
     } else {
         cout<<"No solution available!"<<endl;
     }
