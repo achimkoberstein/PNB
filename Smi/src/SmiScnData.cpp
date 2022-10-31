@@ -1,7 +1,7 @@
 #include "SmiScnData.hpp"
 
 #include <algorithm>
-#include <iostream>
+//#include <iostream>
 #include <iterator>
 #include <vector>
 #include <deque>
@@ -15,7 +15,7 @@
 
 using namespace std;
 
-
+/* AK (08.10.2022):        Is this necessary?? Comment out...
 int nrow_;
 int ncol_;
 int nz_; // We can count the total number of elements, but I do not if we need this at one point
@@ -43,6 +43,172 @@ vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (
 vector<double *> pDenseRow_; //dense probability vector
 vector< vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
 vector< vector<int> > binaryColsStagewise;
+*/
+
+
+void SmiCoreData::printout() {
+    cout << endl << "------ SmiCoreData::printout() BEGIN ------" << endl;
+    cout << "nrow_: " << nrow_ << endl;
+    cout << "ncol_: " << ncol_ << endl;
+    cout << "nz_: " << nz_ << endl;
+    cout << "nstag_: " << nstag_ << endl; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 1 (AK: NO!!!) and so on. If the problem is deterministic, nstag_ = 0.
+    cout << "nColInStage_: "; //Number of Columns in Stage
+    for (SmiStageIndex i = 0; i < nstag_; i++)
+        cout << "[" << i << "]: " << nColInStage_[i] << "   ";
+    cout << endl;
+    cout << "nRowInStage_: "; //Number of Rows in Stage
+    for (SmiStageIndex i = 0; i < nstag_; i++)
+        cout << "[" << i << "]: " << nRowInStage_[i] << "   ";
+    cout << endl;
+    cout << "stageColPtr_: "; //Start Index of Columns in Stage, with respect to ncol_
+    for (SmiStageIndex i = 0; i < nstag_; i++)
+        cout << "[" << i << "]: " << stageColPtr_[i] << "   ";
+    cout << endl;
+    cout << "stageRowPtr_: "; //Start Index of Rows in Stage, with respect to nrow_
+    for (SmiStageIndex i = 0; i < nstag_; i++)
+        cout << "[" << i << "]: " << stageRowPtr_[i] << "   ";
+    cout << endl;
+    cout << "colStage_: "; //To which stage belongs the column?
+    for (int i = 0; i < ncol_; i++)
+        cout << "[" << i << "]: " << colStage_[i] << "   ";
+    cout << endl;
+    cout << "rowStage_: "; //To which stage belongs the row?
+    for (int i = 0; i < nrow_; i++)
+        cout << "[" << i << "]: " << rowStage_[i] << "   ";
+    cout << endl;
+    cout << "colEx2In_: ";
+    for (int i = 0; i < ncol_; i++)
+        cout << "[" << i << "]: " << colEx2In_[i] << "   ";
+    cout << endl;
+    cout << "rowEx2In_: "; 
+    for (int i = 0; i < nrow_; i++)
+        cout << "[" << i << "]: " << rowEx2In_[i] << "   ";
+    cout << endl;
+    cout << "colIn2Ex_: ";
+    for (int i = 0; i < ncol_; i++)
+        cout << "[" << i << "]: " << colIn2Ex_[i] << "   ";
+    cout << endl;
+    cout << "rowIn2Ex_: ";
+    for (int i = 0; i < nrow_; i++)
+        cout << "[" << i << "]: " << rowIn2Ex_[i] << "   ";
+    cout << endl;
+    cout << "integerLength_: " << integerLength_ << endl; //number of integer variables
+    cout << "integerIndices_: ";
+    for (int i = 0; i < integerLength_; i++)
+        cout << "[" << i << "]: " << integerIndices_[i] << "   ";
+    cout << endl;
+    cout << "binaryLength_: " << binaryLength_ << endl; //number of binary variables
+    cout << "binaryIndices_: ";
+    for (int i = 0; i < binaryLength_; i++)
+        cout << "[" << i << "]: " << binaryIndices_[i] << "   ";
+    cout << endl;
+    cout << "infinity_: " << infinity_ << endl;  //Infinity of solver
+    cout << "cdrlo_: "; // cdrlo_[t]: dense array of row lower bounds for every stage t
+    for (SmiStageIndex t = 0; t < nstag_; t++)
+        for (int i = 0; i < nRowInStage_[t]; i++)
+            cout << "[" << t << "][" << i << "]: " << cdrlo_[t][i] << "   ";
+    cout << endl;
+    cout << "cdrup_: "; // cdrup_[t]: dense array of row upper bounds for every stage t
+    for (SmiStageIndex t = 0; t < nstag_; t++)
+        for (int i = 0; i < nRowInStage_[t]; i++)
+            cout << "[" << t << "][" << i << "]: " << cdrup_[t][i] << "   ";
+    cout << endl;
+    cout << "cdclo_: "; // cdclo_[t]: dense array of column lower bounds for every stage t
+    for (SmiStageIndex t = 0; t < nstag_; t++)
+        for (int i = 0; i < nColInStage_[t]; i++)
+            cout << "[" << t << "][" << i << "]: " << cdclo_[t][i] << "   ";
+    cout << endl;
+    cout << "cdcup_: "; // cdcup_[t]: dense array of column upper bounds for every stage t
+    for (SmiStageIndex t = 0; t < nstag_; t++)
+        for (int i = 0; i < nColInStage_[t]; i++)
+            cout << "[" << t << "][" << i << "]: " << cdcup_[t][i] << "   ";
+    cout << endl;
+    cout << "pDenseRow_: "; //dense probability vector (AK: is it used anywhere?? How introduced it why??)
+    for (int i = 0; i < nrow_; i++)
+        if (pDenseRow_[i] != NULL)
+            for (int j = 0; j < ncol_; j++)
+                cout << "[" << i << "][" << j << "]: " << pDenseRow_[i][j] << "   ";
+    cout << endl;
+    cout << "intColsStagewise: "; // intColsStagewise[t]: For each stage separately, it contains the position of every integer column
+    for (SmiStageIndex t = 0; t < nstag_; t++)
+        for (int i = 0; i < intColsStagewise[t].size(); i++)
+            cout << "[" << t << "][" << i << "]: " << intColsStagewise[t][i] << "   ";
+    cout << endl;
+    cout << "binaryColsStagewise: "; // binaryColsStagewise[t]: For each stage separately, it contains the position of every binary column
+    for (SmiStageIndex t = 0; t < nstag_; t++)
+        for (int i = 0; i < binaryColsStagewise[t].size(); i++)
+            cout << "[" << t << "][" << i << "]: " << binaryColsStagewise[t][i] << "   ";
+    cout << endl;
+    cout << "colNamesStrict: ";
+    for (int i = 0; i < ncol_; i++)
+        cout << "[" << i << "]: " << colNamesStrict[i] << "   ";
+    cout << endl;
+    cout << "colNamesFree: ";
+    for (int i = 0; i < ncol_; i++)
+        cout << "[" << i << "]: " << colNamesFree[i] << "   ";
+    cout << endl;
+    cout << "rowNamesStrict: ";
+    for (int i = 0; i < nrow_; i++)
+        cout << "[" << i << "]: " << rowNamesStrict[i] << "   ";
+    cout << endl;
+    cout << "rowNamesFree: ";
+    for (int i = 0; i < nrow_; i++)
+        cout << "[" << i << "]: " << rowNamesFree[i] << "   ";
+    cout << endl;
+//    cout << "nodes_:" << endl; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes
+    for (SmiStageIndex t = 0; t < nstag_; t++) {
+        cout << endl << "nodes_[" << t << "]:" << endl;
+        nodes_[t]->printout();
+    }
+    cout << "------ SmiCoreData::printout() END ------" << endl;
+}
+
+void SmiNodeData::printout() {
+    cout << endl << "------ SmiNodeData::printout() BEGIN ------" << endl;
+    cout << "stg_: " << stg_ << endl; //Stage to which the node belongs
+    cout << "isCoreNode_: " << isCoreNode_ << endl; //Is this node a core node? If so, it should, at least in my opinion, not turn up in the Tree
+    cout << "numarrays_: " << numarrays_ << endl; //= number of arrays used = 5 (clo,cup,rlo,rup,obj)
+    cout << "nels_: " << nels_ << endl; //number of elements in the matrix and the other arrays
+    cout << "nrow_: " << nrow_ << endl; //number of rows (of corresponding stage in core model)
+    cout << "ncol_: " << ncol_ << endl; //number of columns (of corresponding stage in core model)
+    cout << "rowbeg_: " << rowbeg_ << endl; //index, where rows of corresponding stage begins in the core model
+    cout << "colbeg_: " << colbeg_ << endl; //index, where columns begin wrt to the columns of the corresponding stage in the core model
+    cout << "nstrt_: " << nstrt_ << endl; //number of strt indices = numarray + nrow+1 (see assignMemory())
+    cout << "has_matrix_: " << has_matrix_ << endl; //If this node has a matrix entry
+    cout << "mat_strt_: " << mat_strt_ << endl; //start arrays for corresponding entries
+    cout << "clo_strt_: " << clo_strt_ << endl; 
+    cout << "cup_strt_: " << cup_strt_ << endl;
+    cout << "obj_strt_: " << obj_strt_ << endl;
+    cout << "rlo_strt_: " << rlo_strt_ << endl;
+    cout << "rup_strt_: " << rup_strt_ << endl;
+    cout << "dels_: ";  //concrete elements
+    for (int i = 0; i < nels_; i++)
+        cout << "[" << i << "]: " << dels_[i] << "   ";
+    cout << endl;
+    cout << "inds_: ";  //indices for the elements
+    for (int i = 0; i < nels_; i++)
+        cout << "[" << i << "]: " << inds_[i] << "   ";
+    cout << endl;
+    cout << "strt_: ";  //start array, where new row begins
+    for (int i = 0; i < nstrt_; i++)
+        cout << "[" << i << "]: " << strt_[i] << "   ";
+    cout << endl;
+    cout << "ptr_count: " << ptr_count << endl;
+    cout << "dRowMap (getDenseRow): " << endl;   //Map of <int,double*>, stores row entries in dense format
+    if (has_matrix_) {
+        for (int i = rowbeg_; i < rowbeg_ + nrow_; i++) {
+            double* drow = getDenseRow(i);
+            int denseSize = this->getCore()->getNumCols();
+            cout << "[" << i << "]: ";
+            for (int j = 0; j < denseSize; j++)
+                cout << drow[j] << " ";
+            cout << endl;
+        }
+    }
+    cout << endl;
+    cout << endl << "------ SmiNodeData::printout() END ------" << endl;
+}
+
 
 SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):
     nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),

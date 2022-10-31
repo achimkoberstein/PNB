@@ -226,7 +226,6 @@ template<class T>
 class SmiScenarioTree {
     //friend void SmiScenarioTreeUnitTest();
 public:
-
     //---------------------------------------------------------------------------
     /**@name Iterators */
     //@{
