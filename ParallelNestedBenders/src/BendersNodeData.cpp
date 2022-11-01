@@ -1,7 +1,6 @@
 #include "BendersNodeData.hpp"
 
 #include <math.h>
-#include <limits> // std::numeric_limits<int>::max();
 
 #include <sstream>
 #include <boost/property_tree/json_parser.hpp>
@@ -23,7 +22,7 @@ smi_node_data_(nullptr),scenario_index_(-1),branch_scenario_(-1),num_node_in_sta
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),lp_round_optimality_cuts_(),lp_round_feasibility_cuts_(),lp_round_epigraph_cuts_(),lp_round_str_epigraph_cuts_counter_(0), lp_round_plain_epigraph_cuts_counter_(0),lp_round_domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_in_lp_cgp_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_lp_cgp_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_lp_cgp_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),last_in_lp_cgp_problem_start_feasibility_(feasibility_cuts_.end()),alpha_normalized_(false),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),oda_iterations_(),
 lp_dual_cgp_matrix_(nullptr), lp_dual_cgp_column_lower_(), lp_dual_cgp_column_upper_(), lp_dual_cgp_objective_(), lp_dual_cgp_row_lower_(), lp_dual_cgp_row_upper_(), lp_dual_cgp_elements_defined_(false),
-cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
+cvar_weight_(0.0), cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
 
 {
 
@@ -39,7 +38,7 @@ smi_node_data_(nodeData.smi_node_data_), scenario_index_(nodeData.scenario_index
 probability_(nodeData.probability_), conditional_probability_(nodeData.conditional_probability_), optimality_cuts_(), feasibility_cuts_(), epigraph_cuts_(), domain_cuts_(),lp_round_optimality_cuts_(),lp_round_feasibility_cuts_(),lp_round_epigraph_cuts_(),lp_round_str_epigraph_cuts_counter_(0),lp_round_plain_epigraph_cuts_counter_(0),lp_round_domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()), last_in_lp_cgp_start_optimality_(optimality_cuts_.end()), last_round_start_epigraph_(epigraph_cuts_.end()), last_in_lp_cgp_start_epigraph_(epigraph_cuts_.end()), last_round_start_domain_(domain_cuts_.end()), last_in_lp_cgp_problem_start_domain_(domain_cuts_.end()), last_iteration_start_feasibility_(feasibility_cuts_.end()), last_in_lp_cgp_problem_start_feasibility_(feasibility_cuts_.end()), alpha_normalized_(nodeData.alpha_normalized_), level_opt_iterator_(optimality_cuts_.end()), num_scen_pro_cut_(nodeData.num_scen_pro_cut_), nodes_in_cut_(nodeData.nodes_in_cut_), changed_aggregation_level_(nodeData.changed_aggregation_level_), alternating_intra_cut_adaptive_(nodeData.alternating_intra_cut_adaptive_),
 matrix_(nodeData.matrix_ ? new CoinPackedMatrix(*nodeData.matrix_) : nullptr), column_lower_(nullptr), column_upper_(nullptr), objective_(nullptr), row_lower_(nullptr), row_upper_(nullptr), no_staircase_constraints_(nodeData.no_staircase_constraints_), d_square_cut_t_matrix_(nodeData.d_square_cut_t_matrix_ ? new CoinPackedMatrix(*nodeData.d_square_cut_t_matrix_) : nullptr), d_square_cut_rhs_(nodeData.d_square_cut_rhs_), solver_rhs_(nullptr), can_safely_reuse_(nodeData.can_safely_reuse_), oda_optimality_cuts_(nodeData.oda_optimality_cuts_), oda_cut_evaluation_(nodeData.oda_cut_evaluation_), oda_lambdas_(nodeData.oda_lambdas_), oda_iterations_(nodeData.oda_iterations_),
 lp_dual_cgp_matrix_(nullptr), lp_dual_cgp_column_lower_(nodeData.lp_dual_cgp_column_lower_), lp_dual_cgp_column_upper_(nodeData.lp_dual_cgp_column_upper_), lp_dual_cgp_objective_(nodeData.lp_dual_cgp_objective_), lp_dual_cgp_row_lower_(nodeData.lp_dual_cgp_row_lower_), lp_dual_cgp_row_upper_(nodeData.lp_dual_cgp_row_upper_), lp_dual_cgp_elements_defined_(nodeData.lp_dual_cgp_elements_defined_),
-cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficients_), cvar_current_cut_rhs_(nodeData.cvar_current_cut_rhs_), cvar_cut_index_(nodeData.cvar_cut_index_), build_time_(nodeData.build_time_), solution_time_(nodeData.solution_time_), cut_generation_time_(nodeData.cut_generation_time_)
+cvar_weight_(0.0), cvar_cuts_(), cvar_current_cut_coefficients_(nodeData.cvar_current_cut_coefficients_), cvar_current_cut_rhs_(nodeData.cvar_current_cut_rhs_), cvar_cut_index_(nodeData.cvar_cut_index_), build_time_(nodeData.build_time_), solution_time_(nodeData.solution_time_), cut_generation_time_(nodeData.cut_generation_time_)
 
 {
     // we assume that stage_data_[current_stage_] - needed length of mip_solution is equal to cols_ and the same for rows_
@@ -164,7 +163,7 @@ smi_node_data_(smiNodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),epigraph_cuts_(),domain_cuts_(),lp_round_optimality_cuts_(),lp_round_feasibility_cuts_(),lp_round_epigraph_cuts_(),lp_round_str_epigraph_cuts_counter_(0),lp_round_plain_epigraph_cuts_counter_(0),lp_round_domain_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_in_lp_cgp_start_optimality_(optimality_cuts_.end()),last_round_start_epigraph_(epigraph_cuts_.end()),last_in_lp_cgp_start_epigraph_(epigraph_cuts_.end()),last_round_start_domain_(domain_cuts_.end()),last_in_lp_cgp_problem_start_domain_(domain_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),last_in_lp_cgp_problem_start_feasibility_(feasibility_cuts_.end()),alpha_normalized_(false),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),oda_iterations_(),
 lp_dual_cgp_matrix_(nullptr), lp_dual_cgp_column_lower_(), lp_dual_cgp_column_upper_(), lp_dual_cgp_objective_(), lp_dual_cgp_row_lower_(), lp_dual_cgp_row_upper_(), lp_dual_cgp_elements_defined_(false),
-cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
+cvar_weight_(0.0), cvar_cuts_(),cvar_current_cut_coefficients_(),cvar_current_cut_rhs_(0.0),cvar_cut_index_(0),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
 {
     
 }
@@ -320,6 +319,7 @@ void BendersNodeData::Clear(int delete_cuts_start_it, bool keep_warm_start)
     cvar_current_cut_coefficients_.clear();
     cvar_current_cut_rhs_ = 0.0;
     cvar_cut_index_ = 0;
+    cvar_weight_ = 0.0;
 
     lp_dual_cgp_matrix_.reset();
     lp_dual_cgp_column_lower_.clear();
@@ -442,7 +442,7 @@ void Timer::Start( int stg )
 void Timer::Stop( int stg )
 {
     if ( start_time_[stg] != 0.0)
-        overall_time_[stg] += Now() - start_time_[stg];
+        overall_time_[stg] = stg;
     start_time_[stg] = 0.0;
 }
 
@@ -562,7 +562,6 @@ void Parameter::init()
 	parameter_.put(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED);
     parameter_.put(PNB_CONT_PHASE_IT_LIMIT, 0);
 	parameter_.put(PNB_LP_ROUNDS_LIMIT, 0);
-    parameter_.put(PNB_LP_ROOT_ROUNDS_LIMIT, 0);
 	parameter_.put(PNB_LP_SWITCHES_LIMIT, 1);
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
 	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
@@ -570,8 +569,6 @@ void Parameter::init()
 	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 11111111111);
     parameter_.put(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
     parameter_.put(PNB_LP_USE_CGP_PNB_CUTS, PNB_CGP_CUTS_NONE);
-    parameter_.put(PNB_LP_MAX_NODE_DEPTH, std::numeric_limits<int>::max());
-	parameter_.put(PNB_LP_OPT_CUTS_AFTER_LP_CUTS, false);
 
 	// Fill in constants
 	// PNB_BENDERS
@@ -1013,7 +1010,7 @@ bool CutStuff::is_consistent() const
         double val = cut.row().getElements()[i];
         int ind = cut.row().getIndices()[i];
         if (val == 0.0) { //no zero elements in row PackedVector
-			inconsistencies.set(CutStuff::InconsistencyType::ZeroRowElems);
+ 			inconsistencies.set(CutStuff::InconsistencyType::ZeroRowElems);
         }
         if (ind >= num_cols_) { // it is theta
             calculated_aggregates.push_back(ind-num_cols_);
