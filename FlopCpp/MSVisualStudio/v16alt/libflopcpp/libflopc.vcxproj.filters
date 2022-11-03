@@ -113,5 +113,8 @@
     <ClInclude Include="..\..\..\src\SAA.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\ParallelNestedBenders\src\OsiStochasticSolverInterface.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
