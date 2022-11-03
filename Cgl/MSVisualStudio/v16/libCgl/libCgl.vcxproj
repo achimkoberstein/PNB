@@ -166,7 +166,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\CglClique;..\..\..\src\CglDuplicateRow;..\..\..\src\CglFlowCover;..\..\..\src\CglGomory;..\..\..\src\CglKnapsackCover;..\..\..\src\CglMixedIntegerRounding;..\..\..\src\CglMixedIntegerRounding2;..\..\..\src\CglOddHole;..\..\..\src\CglPreProcess;..\..\..\src\CglProbing;..\..\..\src\CglRedSplit;..\..\..\src\CglResidualCapacity;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src;..\..\..\..\Osi\src\Osi;..\..\..\..\Clp\src;..\..\..\..\Clp\src\OsiClp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>

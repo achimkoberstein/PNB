@@ -141,7 +141,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\..\..\Cbc\src\;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src;..\..\..\..\Osi\src\Osi;..\..\..\..\Cgl\src;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Clp\src;..\..\..\..\Clp\src\OsiClp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CBC_BUILD;_DEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
