@@ -145,6 +145,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>../../../../ParallelNestedBenders/src;../../../../Smi/src;../../../../Osi/src/Osi;../../../../FlopCpp/src;../../../../Cbc/src;../../../../Clp/src;../../../../Clp/src/OsiClp;../../../../Cbc/src/OsiCbc;../../../../Osi/src/OsiGrb;../../../../Osi/src/OsiCpx;../../../../BuildTools/headers;../../../../CoinUtils/src;../../../../ThirdParty/gtest/include;../../../../ThirdParty/boost;../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
