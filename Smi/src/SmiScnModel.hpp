@@ -53,6 +53,7 @@ class SmiScnModel
     friend void SmiScnModelDiscreteUnitTest();
     friend void DecompUnitTest();
 public:
+    void printout(); // for debugging purposes
 
     /**Read SMPS files.
 
@@ -427,7 +428,10 @@ class SmiScnNode
     friend class SmiScnModel;
     friend void DecompUnitTest();
 public:
-    /** For a given indice i of a column in this node, the method returns the index of this column in the core node wich corresponds the original (user's) ordering.
+
+    void printout(); // for debugging purposes
+	
+	/** For a given indice i of a column in this node, the method returns the index of this column in the core node wich corresponds the original (user's) ordering.
     @param i the index of the column in this node.
     @return the index of the column in the core node.
     */
