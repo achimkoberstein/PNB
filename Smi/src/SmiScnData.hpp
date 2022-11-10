@@ -205,13 +205,15 @@ private:
     int    * strt_; //start array, where new row begins
 
     int ptr_count; //Propably for memory management?!
+
+
 };
 
 
 class SmiCoreData
 {
 public:
-    void printout(); // AK: for debugging purposes
+    void printout(); // for debugging purposes
 
     inline int getNumCols(){ return ncol_;} //Gesamtzahl Variablen für das CoreModell
     inline int getNumRows(){ return nrow_;} //Gesamtzahl Restriktionen für das CoreModell
@@ -289,7 +291,7 @@ private:
     int nrow_;
     int ncol_;
     int nz_; // We can count the total number of elements, but I do not if we need this at one point
-    SmiStageIndex nstag_; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 1 (AK: NO!!!) and so on. If the problem is deterministic, nstag_ = 0.
+    SmiStageIndex nstag_; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 2 and so on. If the problem is deterministic, nstag_ = 0.
     int *nColInStage_; //Number of Columns in Stage
     int *nRowInStage_; //Number of Rows in Stage
     int *stageColPtr_; //Start Index of Columns in Stage, with respect to ncol_
@@ -311,7 +313,7 @@ private:
     double** cdclo_;            // cdclo_[t]: dense array of column lower bounds for every stage t
     double** cdcup_;            // cdcup_[t]: dense array of column upper bounds for every stage t
     std::vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes 
-    std::vector<double *> pDenseRow_; //dense probability vector (AK: Is it used anywhere??)
+    std::vector<double *> pDenseRow_; //dense probability vector AK: Is it used anywhere?
     std::vector< std::vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
     std::vector< std::vector<int> > binaryColsStagewise; 
     std::vector<std::string> colNamesStrict;
