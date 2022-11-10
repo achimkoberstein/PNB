@@ -15,43 +15,12 @@
 
 using namespace std;
 
-/* AK (08.10.2022):        Is this necessary?? Comment out...
-int nrow_;
-int ncol_;
-int nz_; // We can count the total number of elements, but I do not if we need this at one point
-SmiStageIndex nstag_; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 1 and so on. If the problem is deterministic, nstag_ = 0.
-int *nColInStage_; //Number of Columns in Stage
-int *nRowInStage_; //Number of Rows in Stage
-int *stageColPtr_; //Start Index of Columns in Stage, with respect to ncol_
-int *stageRowPtr_; //Start Index of Rows in Stage, with respect to nrow_
-int *colStage_; //To which stage belongs the column?
-int *rowStage_; //To which stage belongs the row?
-int *colEx2In_; //Not clear yet
-int *rowEx2In_; //Not clear yet
-int *colIn2Ex_; // Not clear yet
-int *rowIn2Ex_; // Not clear yet
-int *integerIndices_; //indices of integer variables
-int integerLength_; //number of integer variables
-int *binaryIndices_; //indices of binary variables
-int binaryLength_; //number of binary variables
-double **cdrlo_;
-double **cdrup_;
-double **cdobj_;
-double **cdclo_;
-double **cdcup_;
-vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes 
-vector<double *> pDenseRow_; //dense probability vector
-vector< vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
-vector< vector<int> > binaryColsStagewise;
-*/
-
-
 void SmiCoreData::printout() {
     cout << endl << "------ SmiCoreData::printout() BEGIN ------" << endl;
     cout << "nrow_: " << nrow_ << endl;
     cout << "ncol_: " << ncol_ << endl;
     cout << "nz_: " << nz_ << endl;
-    cout << "nstag_: " << nstag_ << endl; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 1 (AK: NO!!!) and so on. If the problem is deterministic, nstag_ = 0.
+    cout << "nstag_: " << nstag_ << endl; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 2 and so on. If the problem is deterministic, nstag_ = 0.
     cout << "nColInStage_: "; //Number of Columns in Stage
     for (SmiStageIndex i = 0; i < nstag_; i++)
         cout << "[" << i << "]: " << nColInStage_[i] << "   ";

@@ -53,7 +53,7 @@ class SmiScnModel
     friend void SmiScnModelDiscreteUnitTest();
     friend void DecompUnitTest();
 public:
-    void printout(); // AK: for debugging purposes
+    void printout(); // for debugging purposes
 
     /**Read SMPS files.
 
@@ -375,7 +375,6 @@ private:
 
     // internal clone of user declared OSI
     OsiSolverInterface * osiStoch_;
-
     // model statistics useful for predefining size of structures
     int nrow_;
     int ncol_;
@@ -430,10 +429,9 @@ class SmiScnNode
     friend void DecompUnitTest();
 public:
 
-    void printout(); // AK: for debugging purposes
-
-
-    /** For a given indice i of a column in this node, the method returns the index of this column in the core node wich corresponds the original (user's) ordering.
+    void printout(); // for debugging purposes
+	
+	/** For a given indice i of a column in this node, the method returns the index of this column in the core node wich corresponds the original (user's) ordering.
     @param i the index of the column in this node.
     @return the index of the column in the core node.
     */

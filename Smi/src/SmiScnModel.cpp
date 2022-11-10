@@ -17,7 +17,7 @@
 
 using namespace std;
 
-void SmiScnModel::printout() { // AK: for debugging purposes
+void SmiScnModel::printout() {
     cout << endl << "------ SmiScnModel::printout() BEGIN ------" << endl;
     // model statistics useful for predefining size of structures
     cout << "nrow_: " << nrow_ << endl; // model statistics useful for predefining size of structures
@@ -121,7 +121,7 @@ void SmiScnModel::printout() { // AK: for debugging purposes
     cout << "core_: " << endl;
     core_->printout();
     // scenario tree pointer
-//    SmiScenarioTree<SmiScnNode*> smiTree_;
+	// SmiScenarioTree<SmiScnNode*> smiTree_;
     cout << "smiTree_ (nodewise):" << endl;
     for (std::vector<SmiScnNode* >::iterator nodeptr = smiTree_.treeBegin(); nodeptr < smiTree_.treeEnd(); nodeptr++)
         (*nodeptr)->printout();
