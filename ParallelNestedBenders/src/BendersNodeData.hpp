@@ -113,10 +113,10 @@ namespace parallel_benders{
 
     // Start solution
     const int PNB_INT_NO_START_SOLUTION = 0;
-    const int PNB_INT_EV_SOLUTION_FROM_PNB = 1; // find EV solution using ev_pnb, use cuts from ev_pnb.
+    const int PNB_INT_EV_SOLUTION_FROM_PNB = 1; // find EV solution using ev_pnb, use cuts from ev_pnb.  TODO: DOES NOT WORK PROPERLY YET
     const int PNB_INT_USE_EV_SOLUTION = 2; // benders started using ev solution from osi solver
     const int PNB_INT_USE_SUPPLIED_SOLUTION = 3;
-	const int PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV = 4; // find EV solution using ev_pnb, use cuts from ev_pnb. ev_pnb is also started with ev solution from osi solver
+	const int PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV = 4; // find EV solution using ev_pnb, use cuts from ev_pnb. ev_pnb is also started with ev solution from osi solver  TODO: DOES NOT WORK PROPERLY YET
 
     // Warm Start
     const int PNB_INT_NO_WARM_START = 0;
@@ -260,13 +260,13 @@ namespace parallel_benders{
         double RelativeViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values); // (alpha*x - Beta)/|Beta|
         double DistanceViolation(const std::vector<double>& col_solution, const std::vector<double>& theta_values); // (alpha*x - Beta)/||alpha||
 
-        void CutStuff::setAggregate(int aggregate); // set aggregate and keep the old values if any
+        void setAggregate(int aggregate); // set aggregate and keep the old values if any
         bool isAggregate(int aggregate) const; // checks if aggregate is set
-        void CutStuff::resetAggregates(int num_theta = -1); // discard the old aggregate value(s) and change the num_theta to num_theta (do not change if -1)
-        const std::vector<int> CutStuff::getAggregates() const; // thetas for which the cut is activated, i.e., thetas that have coef 1.0 in the cut
+        void resetAggregates(int num_theta = -1); // discard the old aggregate value(s) and change the num_theta to num_theta (do not change if -1)
+        const std::vector<int> getAggregates() const; // thetas for which the cut is activated, i.e., thetas that have coef 1.0 in the cut
         int getNumTheta() const; // number of thetas in the problem for which the cut was constructed
         int getNumberAggregates() const; // num thetas for which the cut is activated, i.e., thetas that have coef 1.0 in the cut. Different from num thetas
-        int CutStuff::getAggregateType() const; // see AGGREGATE_ const ints above. return aggregate number if aggregate is for one
+        int getAggregateType() const; // see AGGREGATE_ const ints above. return aggregate number if aggregate is for one
 
         CutStuff& operator+=(const CutStuff& another); // Combine (consolidate) CutStuff
 
@@ -316,8 +316,8 @@ public:
     void Clear(int delete_cuts_start_it = 0, bool keep_warm_start = false);
 
     //L&P cuts dual cgp data
-    void BendersNodeData::getDualCGP_Data(std::shared_ptr<const CoinPackedMatrix>& matrix, const std::vector<double>*& column_lower, const std::vector<double>*& column_upper, const std::vector<double>*& objective, const std::vector<double>*& row_lower, const std::vector<double>*& row_upper) const;
-    void BendersNodeData::getMutableDualCGP_Data(std::shared_ptr<CoinPackedMatrix>& matrix, std::vector<double>*& column_lower, std::vector<double>*& column_upper, std::vector<double>*& objective, std::vector<double>*& row_lower, std::vector<double>*& row_upper);
+    void getDualCGP_Data(std::shared_ptr<const CoinPackedMatrix>& matrix, const std::vector<double>*& column_lower, const std::vector<double>*& column_upper, const std::vector<double>*& objective, const std::vector<double>*& row_lower, const std::vector<double>*& row_upper) const;
+    void getMutableDualCGP_Data(std::shared_ptr<CoinPackedMatrix>& matrix, std::vector<double>*& column_lower, std::vector<double>*& column_upper, std::vector<double>*& objective, std::vector<double>*& row_lower, std::vector<double>*& row_upper);
 
     // Information about the solution
     std::vector<double> col_solution_;
