@@ -17,6 +17,133 @@
 
 using namespace std;
 
+void SmiScnModel::printout() {
+    cout << endl << "------ SmiScnModel::printout() BEGIN ------" << endl;
+    // model statistics useful for predefining size of structures
+    cout << "nrow_: " << nrow_ << endl; // model statistics useful for predefining size of structures
+    cout << "ncol_: " << ncol_ << endl;
+    cout << "nels_: " << nels_ << endl;
+    cout << "nels_max: " << nels_max << endl;
+    // data pointers used in AddNode and loadOsiSolverData aka generateDetEq
+    cout << "drlo_: ";
+    if (drlo_) {
+        for (int i = 0; i < nrow_; i++)
+            cout << "[" << i << "]: " << drlo_[i] << "   ";
+        cout << endl;
+    }
+    cout << "drup_: ";
+    if (drup_) {
+        for (int i = 0; i < nrow_; i++)
+            cout << "[" << i << "]: " << drup_[i] << "   ";
+        cout << endl;
+    }
+    cout << "dobj_: ";
+    if (dobj_) {
+        for (int i = 0; i < ncol_; i++)
+            cout << "[" << i << "]: " << dobj_[i] << "   ";
+        cout << endl;
+    }
+    cout << "dclo_: ";
+    if (dclo_) {
+        for (int i = 0; i < ncol_; i++)
+            cout << "[" << i << "]: " << dclo_[i] << "   ";
+        cout << endl;
+    }
+    cout << "dcup_: ";
+    if (dclo_) {
+        for (int i = 0; i < ncol_; i++)
+            cout << "[" << i << "]: " << dcup_[i] << "   ";
+        cout << endl;
+    }
+    cout << "matrix_:" << endl;
+    if (matrix_) {
+        for (int i = 0; i < matrix_->getNumRows(); i++) {
+            cout << "Row " << i << ": ";
+            for (int j = 0; j < matrix_->getNumCols(); j++) {
+                matrix_->printMatrixElement(i, j);
+                cout << " ";
+            }
+            cout << endl;
+        }
+    }
+    cout << "dels_: ";
+    if (dels_) {
+        for (int i = 0; i < nels_; i++)
+            cout << "[" << i << "]: " << dels_[i] << "   ";
+    }
+    cout << endl;
+    cout << "indx_: ";
+    if (indx_) {
+        for (int i = 0; i < nels_; i++)
+            cout << "[" << i << "]: " << indx_[i] << "   ";
+    }
+    cout << endl;
+    cout << "rstrt_: ";
+    if (rstrt_) {
+        for (int i = 0; i < nrow_; i++)
+            cout << "[" << i << "]: " << rstrt_[i] << "   ";
+    }
+    cout << endl;
+    cout << "totalProb_: " << totalProb_ << endl; // total probability of added scenarios; used to normalize probability to one
+    cout << "integerLen: " << integerLen << endl;
+    cout << "integerInd: ";
+    for (int i = 0; i < integerLen; i++)
+        cout << "[" << i << "]: " << integerInd[i] << "   ";
+    cout << endl;
+    cout << "binaryLen: " << integerLen << endl;
+    cout << "binaryInd: ";
+    for (int i = 0; i < binaryLen; i++)
+        cout << "[" << i << "]: " << binaryInd[i] << "   ";
+    cout << endl;
+    cout << "intIndices: ";
+    for (int i = 0; i < intIndices.size(); i++)
+        cout << "[" << i << "]: " << intIndices[i] << "   ";
+    cout << endl;
+    cout << "maxNelsPerScenInStage: ";
+    for (int i = 0; i < core_->getNumStages(); i++)
+        cout << "[" << i << "]: " << maxNelsPerScenInStage[i] << "   ";
+    cout << endl;
+
+    /*
+    TODO
+    SmiDiscreteDistribution* discrete_distribution_;
+    SmiBlockStructure* block_structure_;
+    */
+
+    cout << "sampling_: " << sampling_ << endl;
+    cout << "cvar_: " << cvar_ << endl;
+    cout << "cvar_rho_: " << cvar_rho_ << endl;
+    cout << "cvar_beta_: " << cvar_beta_ << endl;
+    cout << "cvar_first_stage_: " << cvar_first_stage_ << endl;
+    cout << "cvar_objective_: " << cvar_objective_ << endl;
+
+    //core model --- used for discrete distributions
+    cout << "core_: " << endl;
+    core_->printout();
+    // scenario tree pointer
+	// SmiScenarioTree<SmiScnNode*> smiTree_;
+    cout << "smiTree_ (nodewise):" << endl;
+    for (std::vector<SmiScnNode* >::iterator nodeptr = smiTree_.treeBegin(); nodeptr < smiTree_.treeEnd(); nodeptr++)
+        (*nodeptr)->printout();
+
+    cout << "------ SmiScnModel::printout() END ------" << endl;
+}
+
+void SmiScnNode::printout() {
+    cout << endl << "------ SmiScnNode::printout() BEGIN ------" << endl;
+    cout << "this (mem address): " << this << endl;
+    cout << "parent_ (mem address)" << parent_ << endl;
+    cout << "prob_: " << prob_ << endl;
+    cout << "mdl_prob_: " << mdl_prob_ << endl;
+    cout << "condProb_: " << condProb_ << endl;
+    cout << "coffset_: " << condProb_ << endl;
+    cout << "roffset_: " << roffset_ << endl;
+    cout << "scen_: " << roffset_ << endl;
+    cout << "include_: " << roffset_ << endl;
+    node_->printout();
+    cout << "------ SmiScnNode::printout() END ------" << endl;
+}
+
 int SmiScnNode::getCoreColIndex(int i)
 {
     SmiCoreData *core = node_->getCore();
@@ -1328,7 +1455,7 @@ double *
     // start with leaf node
     SmiScnNode *node = this->getLeafNode(ns);
     while (node != NULL){
-        // accumulate number of collumns along scenario
+        // accumulate number of columns along scenario
         numcols+=node->getNumCols();
 
         // get parent of node
