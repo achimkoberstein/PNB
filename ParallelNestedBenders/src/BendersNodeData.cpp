@@ -1,6 +1,7 @@
 #include "BendersNodeData.hpp"
 
 #include <math.h>
+#include <limits> // std::numeric_limits<int>::max();
 
 #include <sstream>
 #include <boost/property_tree/json_parser.hpp>
@@ -441,7 +442,7 @@ void Timer::Start( int stg )
 void Timer::Stop( int stg )
 {
     if ( start_time_[stg] != 0.0)
-        overall_time_[stg] = stg;
+        overall_time_[stg] += Now() - start_time_[stg];
     start_time_[stg] = 0.0;
 }
 
@@ -561,6 +562,7 @@ void Parameter::init()
 	parameter_.put(PNB_LIFT_AND_P_METHOD, PNB_LIFT_AND_P_METHOD_EPIGRAPH_STRENGTHENED);
     parameter_.put(PNB_CONT_PHASE_IT_LIMIT, 0);
 	parameter_.put(PNB_LP_ROUNDS_LIMIT, 0);
+    parameter_.put(PNB_LP_ROOT_ROUNDS_LIMIT, 0);
 	parameter_.put(PNB_LP_SWITCHES_LIMIT, 1);
 	parameter_.put(PNB_LP_MAJOR_IT_LIMIT, 1);
 	parameter_.put(PNB_LP_CUTS_FOR_FRACT, 100);
@@ -568,6 +570,8 @@ void Parameter::init()
 	parameter_.put(PNB_LP_ALLOW_TEST_CASES, 11111111111);
     parameter_.put(PNB_LP_PARALLEL_MODE, PNB_PARAL_MODE_ALL_SEQUENTIAL);
     parameter_.put(PNB_LP_USE_CGP_PNB_CUTS, PNB_CGP_CUTS_NONE);
+    parameter_.put(PNB_LP_MAX_NODE_DEPTH, std::numeric_limits<int>::max());
+	parameter_.put(PNB_LP_OPT_CUTS_AFTER_LP_CUTS, false);
 
 	// Fill in constants
 	// PNB_BENDERS
