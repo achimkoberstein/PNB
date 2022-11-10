@@ -2162,9 +2162,13 @@ namespace parallel_benders {
                 }
                 else if ( current_stage_ == 0){
                         LOG_IF(INFO, log_level_ <= google::INFO) << " \nLower Bound: " << lower_bound_ << "\n" << "Upper Bound: " << upper_bound_ << "\n" << "Relative Gap: " << ComputeRelativeGap(upper_bound_, lower_bound_) << std::endl;
+                }
+
+                // AK: Why not here? Solves crash due to faulty bookkeeping in case of regularization...
+                if (current_stage_ == 0) {
                     if (!generate_lp_cuts_) {
-                        iteration_u_and_l_bounds_.push_back(make_pair(upper_bound_, lower_bound_));
-					}
+                        iteration_u_and_l_bounds_.push_back(make_pair(upper_bound_, lower_bound_));  // for regularization the values might not be correct
+                    }
                 }
             }
 
