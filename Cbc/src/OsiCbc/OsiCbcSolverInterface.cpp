@@ -790,6 +790,13 @@ OsiCbcSolverInterface::branchAndBound()
   modelPtr_->branchAndBound();
 }
 
+// Invoke solver's built-in Benders decomposition algorithm
+void
+benders(bool use_annotation)
+{
+
+}
+
 /*
   Name discipline support   -- lh, 070328 --
 
