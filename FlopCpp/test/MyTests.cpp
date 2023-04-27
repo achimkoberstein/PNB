@@ -74,7 +74,7 @@ namespace flopc {
         double ev = model.getSmi()->getEVValue(model.Solver, direction, false);
         EXPECT_NEAR(ev, ev_calculated, 0.01);
         if (std::abs(ev - ev_calculated) > 0.01) {
-            LOG(ERROR) << "failed";
+            //LOG(ERROR) << "failed";
         }
     }
 
@@ -7637,7 +7637,7 @@ int main(int argc, char *argv[]) {
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
 #endif
-    google::LogToStderr();
+    //google::LogToStderr();
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
     int result = RUN_ALL_TESTS();
     //_CrtMemDumpAllObjectsSince(&memstate);
