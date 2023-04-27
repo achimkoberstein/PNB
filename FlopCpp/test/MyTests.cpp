@@ -460,9 +460,9 @@ namespace flopc {
         testModel.Solver->writeLp("testModel");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(5,testModel.Solver->getObjValue());
-        y.display("y");
-        rVar.display("RandomVars");
-        combined.display("CombinedData");
+        //y.display("y");
+        //rVar.display("RandomVars");
+        //combined.display("CombinedData");
 
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         compareEVPTest(testModel,MP_model::MAXIMIZE);
@@ -496,9 +496,9 @@ namespace flopc {
         EXPECT_DOUBLE_EQ(11.5,testModel.Solver->getObjValue());
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         compareEVPTest(testModel,MP_model::MAXIMIZE);
-        y.display("y");
-        rVar.display("RandomVars");
-        combined.display("CombinedData");
+        //y.display("y");
+        //rVar.display("RandomVars");
+        //combined.display("CombinedData");
         // We should have a better way to check for certain values.. (like the level command)
     }
 
@@ -566,8 +566,8 @@ namespace flopc {
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
 
-        x1.display();
-        x2.display();
+        //x1.display();
+        //x2.display();
         EXPECT_DOUBLE_EQ(31.333333333333336,testModel->getObjValue());
     }
 
@@ -617,8 +617,8 @@ namespace flopc {
         testModel.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
 
-        x1.display();
-        x2.display();
+        //x1.display();
+        //x2.display();
         EXPECT_DOUBLE_EQ(4.0/3,testModel->getObjValue());
     }
 
@@ -658,16 +658,16 @@ namespace flopc {
 
         testModel.setObjective(objective);
         testModel.attach();
-        blubb.display("Blubb");
-        sumR.display("SumR");
-        randomWalkVar.display("RandomWalkVar");
+        //blubb.display("Blubb");
+        //sumR.display("SumR");
+        //randomWalkVar.display("RandomWalkVar");
         std::cout << std::endl;
         testModel.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         compareEVPTest(testModel,MP_model::MAXIMIZE);
         //sumR.display("RandomValues?");
-        x.display("Werte");
-        sumR.display("SumR");
+        //x.display("Werte");
+        //sumR.display("SumR");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(34.5,testModel.Solver->getObjValue());
 
@@ -931,7 +931,7 @@ namespace flopc {
         EXPECT_EQ(6,intModel->getObjValue());
         EXPECT_TRUE(intModel->isInteger(0));
         EXPECT_TRUE(intModel->isInteger(1));
-        y.display("y");
+        //y.display("y");
         cout << "Finished.";
     }
 
@@ -1089,7 +1089,7 @@ namespace flopc {
             }
         };
         MP_random_data yield(&yields[0][0][0], T,R);
-        yield.display();
+        //yield.display();
         MP_variable 
             x(R),   // Ressourcenbedarf
             y(T,R), // Einkaufsmenge
@@ -1114,12 +1114,12 @@ namespace flopc {
         OsiClpSolverInterface cplex;
         farmer.solve(MP_model::MINIMIZE);
         // Display results;
-        minAmount.display("minAmount");
-        yield.display("yield");
-        x.display("x");
-        w.display("w");
-        y.display("y");
-        wSugar.display("wSugar");
+        //minAmount.display("minAmount");
+        //yield.display("yield");
+        //x.display("x");
+        //w.display("w");
+        //y.display("y");
+        //wSugar.display("wSugar");
         farmer.getSmi()->writeSmps("bla");
         std::vector< std::pair<double,double> > ws;
         //ws = farmer.getSmi()->solveWS(&cplex);
@@ -1799,7 +1799,7 @@ namespace flopc {
 
         MP_data zeroTest(T);
         zeroTest(T) = 1;
-        zeroTest.display("zeroTest");
+        //zeroTest.display("zeroTest");
 
         zeroOne(1) = new DiscreteBernoulliRandomVariable(0.5);
         zeroOne(1)->setStage(1);
@@ -1815,10 +1815,10 @@ namespace flopc {
         arcsInStage.setName("arcsInStage");
         forall(T, testData(T,arcs) = 0 );
         forall(arcs, testData(T.last(),arcs) = zeroTest(T.last()) );
-        testData.display("testData");
+        //testData.display("testData");
         forall(T,arcsInStage(T,arcs) = 0 );
         arcsInStage(T,arcs) = combined(T);
-        arcsInStage.display("arcsInStage");
+        //arcsInStage.display("arcsInStage");
         //arcsInStage(T+1,arcs) = zeroOne(T+1);
 
         MP_variable x(T);
@@ -1895,7 +1895,7 @@ namespace flopc {
         MP_data c(&cval[0][0],i,j); //     c.value(&cval[0][0]);
         MP_data p(&pval[0][0],i,j); //     p.value(&pval[0][0]);
 
-        c.display("c");
+        //c.display("c");
 
         MP_data 
             aa(i),      // aircraft availiability 
@@ -1921,11 +1921,11 @@ namespace flopc {
 
         deltb(j,h) = pos(dd(j,h)-dd(j,h-1));
 
-        lambda.display("lambda");
-        ed.display("ed");
-        gamma.display("gamma");
-        deltb.display("deltb");
-        aa.display("aa");
+        //lambda.display("lambda");
+        //ed.display("ed");
+        //gamma.display("gamma");
+        //deltb.display("deltb");
+        //aa.display("aa");
 
         MP_variable
             x(i,j),   // number of aircraft type i assigned to route j
@@ -1962,7 +1962,7 @@ namespace flopc {
 
         bcd2() =    bc() == sum(j*h, k(j)*lambda(j,h)*b(j,h));
 
-        MP_model m1(new OsiCbcSolverInterface), m2(new OsiCbcSolverInterface);
+        MP_model m1(new OsiCpxSolverInterface), m2(new OsiCpxSolverInterface);
 
         y.upperLimit(j,h) = deltb(j,h);
 
@@ -1977,13 +1977,13 @@ namespace flopc {
         EXPECT_GE(m1->getObjValue(),1566.03);
         EXPECT_LE(m1->getObjValue(),1566.05);
 
-        y.display("y first model");
-        ab.display("ab");
-        db.display("db");
-        bcd1.display("bcd1");
-        ocd.display("ocd");
-        oc.display("operation cost");
-        x.display("x");
+        //y.display("y first model");
+        //ab.display("ab");
+        //db.display("db");
+        //bcd1.display("bcd1");
+        //ocd.display("ocd");
+        //oc.display("operation cost");
+        //x.display("x");
 
         m2.add(ab).add(yd).add(bd).add(bcd2).add(ocd);
         y.upperLimit(j,h) = m2->getInfinity();
@@ -2001,7 +2001,7 @@ namespace flopc {
 
         EXPECT_DOUBLE_EQ( 1566.042189132706,m2->getObjValue());
         EXPECT_DOUBLE_EQ( 1566.0421891327067,m1->getObjValue());
-        y.display("y second model");
+        //y.display("y second model");
     }
 
     TEST_F(FlopCppExamples, Aircraft){
@@ -2051,7 +2051,7 @@ namespace flopc {
         MP_data c(&cval[0][0],i,j); //     c.value(&cval[0][0]);
         MP_data p(&pval[0][0],i,j); //     p.value(&pval[0][0]);
 
-        c.display("c");
+        //c.display("c");
 
         MP_data 
             aa(i),      // aircraft availiability 
@@ -2077,10 +2077,10 @@ namespace flopc {
 
         deltb(j,h) = pos(dd(j,h)-dd(j,h-1));
 
-        ed.display("ed");
-        gamma.display("gamma");
-        deltb.display("deltb");
-        aa.display("aa");
+        //ed.display("ed");
+        //gamma.display("gamma");
+        //deltb.display("deltb");
+        //aa.display("aa");
 
         MP_variable
             x(i,j),   // number of aircraft type i assigned to route j
@@ -2117,7 +2117,7 @@ namespace flopc {
 
         bcd2() =    bc() == sum(j*h, k(j)*lambda(j,h)*b(j,h));
 
-        MP_model m1(new OsiCbcSolverInterface), m2(new OsiCbcSolverInterface);
+        MP_model m1(new OsiCpxSolverInterface), m2(new OsiCpxSolverInterface);
 
         y.upperLimit(j,h) = deltb(j,h);
 
@@ -2131,11 +2131,11 @@ namespace flopc {
         EXPECT_EQ(96, m1->getNumElements());
         EXPECT_NEAR(1566.04, m1->getObjValue(), 0.01);
 
-        y.display("y first model");
-        ab.display("ab");
-        db.display("db");
-        bcd1.display("bcd1");
-        ocd.display("ocd");
+        //y.display("y first model");
+        //ab.display("ab");
+        //db.display("db");
+        //bcd1.display("bcd1");
+        //ocd.display("ocd");
 
         m2.add(ab).add(yd).add(bd).add(bcd2).add(ocd);
         y.upperLimit(j,h) = m2->getInfinity();
@@ -2147,7 +2147,7 @@ namespace flopc {
         EXPECT_EQ(219, m2->getNumElements());
         EXPECT_NEAR(1566.04, m2->getObjValue(), 0.01);
 
-        y.display("y second model");
+        //y.display("y second model");
         cout<<"Test aircraft passed."<<endl;
     }
 
@@ -2156,8 +2156,7 @@ namespace flopc {
         Fourer, R, Gay, D M, and Kernighan, B W, AMPL: A Mathematical Programming
         Language. AT\&T Bell Laboratories, Murray Hill, New Jersey, 1987.
         */
-        OsiClpSolverInterface osiClpSolver;
-        MP_model testModel(new OsiCbcSolverInterface(&osiClpSolver));
+        MP_model testModel(new OsiClpSolverInterface());
         testModel.verbose();
 
         enum {iron, nickel, numRaw};
@@ -2239,8 +2238,8 @@ namespace flopc {
         EXPECT_EQ(52, testModel->getNumElements());
         EXPECT_NEAR(79.3413, testModel->getObjValue(), 0.0001);
 
-        x.display();
-        s.display();
+        //x.display();
+        //s.display();
         cout<<"Test ampl passed."<<endl;
     }
 
@@ -2255,7 +2254,7 @@ namespace flopc {
         Bracken, J, and McCormick, G P, Chapter 3. In Selected Applications of
         Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 28-36.
         */
-        MP_model bid(new OsiCbcSolverInterface);
+        MP_model bid(new OsiCpxSolverInterface);
 
         enum { a, b, c, d, e, nbrV};
         const int numSegments = 5;
@@ -2320,7 +2319,7 @@ namespace flopc {
         setup(VS(V,S+1)) = setup(VS(V,S-1)) +
             qmax(VS(V,S-1))*(price(VS(V,S-1))-price(VS(V,S)));
 
-        setup.display("setup");
+        //setup.display("setup");
 
         MP_variable         pl(VS);    //  purchase level
         MP_binary_variable  plb(VS);   //  purchase decision
@@ -2362,7 +2361,7 @@ namespace flopc {
 
         Bosch, R, Mind Sharpener. OPTIMA MPS Newsletter (2000).
         */
-        MP_model testModel(new OsiCbcSolverInterface);
+        MP_model testModel(new OsiCpxSolverInterface);
 
         MP_set I(5);  // size of chess board
 
@@ -2405,8 +2404,8 @@ namespace flopc {
         EXPECT_EQ(742, testModel->getNumElements());
         EXPECT_EQ(4, testModel->getObjValue());
 
-        b.display("Black");
-        w.display("White");
+        //b.display("Black");
+        //w.display("White");
 
         cout<<"Test coex passed."<<endl;
     }
@@ -2426,7 +2425,7 @@ namespace flopc {
         Bosch, R, Mind Sharpener. OPTIMA MPS Newsletter (2000).
         */
 
-        MP_model testModel(new OsiCbcSolverInterface);
+        MP_model testModel(new OsiCpxSolverInterface);
 
         const int boardSize = 5;
 
@@ -2496,8 +2495,8 @@ namespace flopc {
         EXPECT_EQ(480, testModel->getNumElements());
         EXPECT_EQ(4, testModel->getObjValue());
 
-        xb.display("Black");
-        xw.display("White");
+        //xb.display("Black");
+        //xw.display("White");
 
         cout<<"Test coexx passed."<<endl;
     }
@@ -2521,7 +2520,7 @@ namespace flopc {
         Contributed by Soren Nielsen, Institute for Mathematical Sciences
         University of Copenhagen
         */
-        MP_model testModel(new OsiCbcSolverInterface);
+        MP_model testModel(new OsiCpxSolverInterface);
 
         enum {goose, wolf, corn, numI};
 
@@ -2535,7 +2534,7 @@ namespace flopc {
             dir(k) = pow((double)-1,(double)k);
         }
 
-        dir.display("dir");
+        //dir.display("dir");
 
         MP_variable
             cross(i,t), //  crossing the river
@@ -2570,8 +2569,8 @@ namespace flopc {
         EXPECT_EQ(231, testModel->getNumElements());
         EXPECT_EQ(3, testModel->getObjValue());
 
-        y.display("y");
-        cross.display("cross");
+        //y.display("y");
+        //cross.display("cross");
 
         cout<<"Test cross passed."<<endl;
     }
@@ -2588,7 +2587,7 @@ namespace flopc {
             MP_variable use;
             MP_constraint demC;
 
-            Paper(int numWidths) : MP_model(new OsiCbcSolverInterface),
+            Paper(int numWidths) : MP_model(new OsiCpxSolverInterface),
                 WIDTHS(numWidths), PATTERNS(numWidths),
                 widths(WIDTHS), demand(WIDTHS),
                 pattern(WIDTHS,PATTERNS), use(WIDTHS),
@@ -2603,7 +2602,7 @@ namespace flopc {
         };
 
         double knapsack(int n, double* a, const double* c, double b, double* pat) {
-            MP_model KnapSack(new OsiCbcSolverInterface);
+            MP_model KnapSack(new OsiCpxSolverInterface);
 
             MP_set I(n);
             MP_data A(I);
@@ -2612,8 +2611,8 @@ namespace flopc {
             A.value(a);
             C.value(c);
 
-            A.display("A");
-            C.display("C");
+            //A.display("A");
+            //C.display("C");
 
             MP_variable x(I);
             x.integer();
@@ -2624,7 +2623,7 @@ namespace flopc {
             //KnapSack.add(constr);
             KnapSack.maximize( sum(I, C(I)*x(I)) );
 
-            x.display("x");
+            //x.display("x");
             for (int i=0; i<n; i++) {
                 pat[i] = x.level(i);
             }
@@ -2637,7 +2636,7 @@ namespace flopc {
             double tabWidth[] = {17, 21, 22.5, 24, 29.5};
             const double maxWidth = 94;
 
-            MP_model Paper(new OsiCbcSolverInterface);
+            MP_model Paper(new OsiCpxSolverInterface);
 
             MP_set WIDTHS(numWidths);
             MP_set PATTERNS(numWidths);
@@ -2652,7 +2651,7 @@ namespace flopc {
                 pattern(i,i) = ::floor(maxWidth/width(i));
             }
 
-            pattern.display("pattern");
+            //pattern.display("pattern");
 
             MP_variable use(PATTERNS);
             MP_index i,j;
@@ -2697,7 +2696,7 @@ namespace flopc {
 
             // generate OSI solver object
             // 	here we use OsiClp
-            OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+            OsiCpxSolverInterface *clp = new OsiCpxSolverInterface();
 
             // set solver object for SmiScnModel
             smi.setOsiSolverHandle(*clp);	
@@ -3254,7 +3253,7 @@ namespace flopc {
         f.value(&ftable[0][0]);
 
         zfeas() = sum(j, maximum(i, f(i,j)));
-        zfeas.display("zfeas");
+        //zfeas.display("zfeas");
 
         double alpha = 1.0;
         int count = 1;
@@ -3272,7 +3271,7 @@ namespace flopc {
                     myf(jc) = ftable[k][jc] - w(jc);
                 }
                 // Compare with gapmin original file..
-                MP_model testModel(new OsiCbcSolverInterface);
+                MP_model testModel(new OsiCpxSolverInterface);
 
                 //MP_set j(numItems);
                 MP_data a(atable[k],j);
@@ -3360,7 +3359,7 @@ namespace flopc {
         New York, 1978.
         */
 
-        MP_model testModel(new OsiCbcSolverInterface);
+        MP_model testModel(new OsiCpxSolverInterface);
         testModel.verbose();
 
         enum {t12pm_6am, t6am_9am, t9am_3pm, t3pm_6pm, t6pm_12pm, numT};
@@ -3419,10 +3418,10 @@ namespace flopc {
 
         lf() = tener()/(peak() * 24);
 
-        peak.display();
-        tener.display();
-        lf.display();
-        ener.display("ener");
+        //peak.display();
+        //tener.display();
+        //lf.display();
+        //ener.display("ener");
 
         MP_variable
             x(G,T),  // generator output (1000mw)
@@ -3463,9 +3462,9 @@ namespace flopc {
         EXPECT_NEAR(988540, testModel->getObjValue(), 1);
 
 
-        x.display("x");
-        n.display("n");
-        s.display("s");
+        //x.display("x");
+        //n.display("n");
+        //s.display("s");
         const int TSize=T.size();
         double **rep = new double *[TSize];
         for(int cnt=0;cnt<TSize;cnt++)
@@ -3504,9 +3503,7 @@ namespace flopc {
     TEST_F(FlopCppExamples, mine){
         for (int ij = 0; ij < 11; ij++) {
 
-            OsiClpSolverInterface clpSolver;
-
-            MP_model thisModel(new OsiCbcSolverInterface(&clpSolver));
+            MP_model thisModel(new OsiClpSolverInterface());
             enum {nw,ne,se,sw,numK};
 
             MP_set l(4);  // identfiers for level row and column labels  / 1*4 /;
@@ -3579,13 +3576,13 @@ namespace flopc {
                 c.insert(l,i,j)
                 );
 
-            c.display("c");
+            //c.display("c");
 
             forall(l*l(i)*l(j).such_that( l+i<l.size() && l+j<l.size() ),  
                 d.insert(l,i,j)
                 );
 
-            d.display("d");
+            //d.display("d");
 
             thisModel.verbose();
 
@@ -3605,7 +3602,7 @@ namespace flopc {
             EXPECT_EQ(17500, thisModel->getObjValue());
 
 
-            x.display("x");
+            //x.display("x");
             cout<<"Test mine passed."<<endl;
 
         }
@@ -3617,7 +3614,7 @@ namespace flopc {
         }
 
         TEST_F(FlopCppExamples, multiProduct){
-            MP_model testModel(new OsiCbcSolverInterface);
+            MP_model testModel(new OsiCpxSolverInterface);
             testModel.verbose();
             enum {Godiva,Neuhaus,Leonidas,nbrProducts};
             enum {Brussels,Amsterdam,Antwerpen,Paris,Milan,Cassis,Bonn,Madrid,Bergen,
@@ -3665,10 +3662,10 @@ namespace flopc {
             cout<<Customers.size()<<endl;
             cout<<Connections.size()<<endl;
 
-            Routes.display();
-            Suppliers.display();
-            Customers.display();
-            Connections.display();
+            //Routes.display();
+            //Suppliers.display();
+            //Customers.display();
+            //Connections.display();
 
             MP_data supply(Suppliers);
             MP_data demand(Customers);
@@ -3707,7 +3704,7 @@ namespace flopc {
             EXPECT_EQ(18, testModel->getNumCols());
             EXPECT_EQ(54, testModel->getNumElements());
 
-            trans.display("solution");
+            //trans.display("solution");
 
             //MultiProduct(testModel, Cities,Products,Routes,Suppliers,Customers, Connections,
             //    supply,demand,limit,cost);
@@ -3807,7 +3804,7 @@ namespace flopc {
             MP_data cutcoeff(j);
 
             double objsub = 0.0;
-            received.display("received");
+            //received.display("received");
             for (int jj=0; jj<numDistributionCenters; jj++) {
                 subproblem->setRowBounds( selling(jj), received.level(jj), received.level(jj));
             }
@@ -3834,7 +3831,7 @@ namespace flopc {
             masterproblem.addRow( theta() >= cutconst + sum(j, cutcoeff(j)*received(j)) );
 
             masterproblem->resolve();
-            ship.display("ship");
+            //ship.display("ship");
 
             lowerbound = masterproblem->getObjValue();
             objmaster = lowerbound - theta.level();
@@ -3863,7 +3860,7 @@ namespace flopc {
     }
 
     TEST_F(FlopCppExamples, DISABLED_sudoku){ // takes too long
-        MP_model testModel(new OsiCbcSolverInterface);
+        MP_model testModel(new OsiCpxSolverInterface);
 
         const int p = 3;
 
@@ -3931,7 +3928,7 @@ namespace flopc {
             MP_variable y;  
             MP_constraint supply, demand, def_y;
 
-            Tap(int numS, int numD) : MP_model(new OsiCbcSolverInterface),
+            Tap(int numS, int numD) : MP_model(new OsiCpxSolverInterface),
                 S(numS), D(numD),
                 s(S), d(D),
                 x(S,D), y(S,D),
@@ -3974,8 +3971,8 @@ namespace flopc {
             EXPECT_EQ(7, first_instance->getObjValue());
 
 
-            first_instance.x.display("Solution of first instance (x)");
-            first_instance.y.display("Solution of first instance (y)");
+            //first_instance.x.display("Solution of first instance (x)");
+            //first_instance.y.display("Solution of first instance (y)");
 
             second_instance.minimize();
 
@@ -3984,7 +3981,7 @@ namespace flopc {
             EXPECT_EQ(140, second_instance->getNumElements());
             EXPECT_EQ(9, second_instance->getObjValue());
 
-            second_instance.x.display("Solution of second instance");
+            //second_instance.x.display("Solution of second instance");
             cout<<"Test tap passed."<<endl;
         }
     }//end namespace tap
@@ -4022,7 +4019,7 @@ namespace flopc {
         }
 
         TEST_F(FlopCppExamples, DISABLED_train){ // fails
-            MP_model testModel(new OsiCbcSolverInterface);
+            MP_model testModel(new OsiCpxSolverInterface);
             testModel.verbose();
             const int numTimeIntervals=48;
             enum {BO, NY, PH, WA, numCities};
@@ -4039,7 +4036,7 @@ namespace flopc {
             links.insert(PH,NY);
             links.insert(WA,PH);
 
-            links.display("LINKS");
+            //links.display("LINKS");
 
             MP_subset<4> schedule(cities, cities, times, times); 
             // Member ((c1,c2),t1,t2) of this set represents a train that leaves 
@@ -4059,7 +4056,7 @@ namespace flopc {
             scheduleInsert(schedule,d["NYPH"],NY,PH);
             scheduleInsert(schedule,d["PHWA"],PH,WA);
 
-            schedule.display("SCHEDULE");
+            //schedule.display("SCHEDULE");
 
             MP_data demand(schedule); 
             // Smallest number of cars that can meet demand for each scheduled train    
@@ -4070,7 +4067,7 @@ namespace flopc {
             demandInsert(demand,d["demNYPH"],NY,PH,schedule);
             demandInsert(demand,d["demPHWA"],PH,WA,schedule);
 
-            demand.display("DEMAND");
+            //demand.display("DEMAND");
 
             // Maximum number of cars in one section of a train
             double section = 14;
@@ -4093,13 +4090,13 @@ namespace flopc {
             low(schedule) = ceil(demand(schedule));
             high(schedule) = maximum (2, minimum (ceil(2*demand(schedule)), 
                 section*ceil(demand(schedule)/section) ));
-            low.display("LOW");
-            high.display("HIGH");
+            //low.display("LOW");
+            //high.display("HIGH");
 
             distance(links).such_that(dist_table(links)>0) = dist_table(links);
             distance(links(c1,c2)).such_that(dist_table(links(c1,c2))==0.0) = dist_table(links(c2,c1));
 
-            distance.display("distance");
+            //distance.display("distance");
 
             MP_variable U(cities,times); 
             // u[c,t] is the number of unused cars stored at city c in the interval beginning at time t
@@ -4185,12 +4182,12 @@ namespace flopc {
         COST(Link) = 90 * COST(Link) / 1000.0;
 
         MP_variable x(Link);
-        x.display("...");
+        //x.display("...");
 
         MP_constraint supply(S);
         MP_constraint demand(D);  
 
-        supply.display("...");
+        //supply.display("...");
 
         supply(S) =  sum( Link(S,D), x(Link) ) <= SUPPLY(S);
         demand(D) =  sum( Link(S,D), x(Link) ) >= DEMAND(D);
@@ -4203,8 +4200,8 @@ namespace flopc {
         EXPECT_EQ(8, testModel->getNumElements());
         EXPECT_NEAR(156.15, testModel->getObjValue(), 0.01);
 
-        x.display("Optimal solution:");
-        supply.display("Supply dual solution");
+        //x.display("Optimal solution:");
+        //supply.display("Supply dual solution");
         cout<<"Test transport passed."<<endl;
     }
 
@@ -4224,7 +4221,7 @@ namespace flopc {
         MP_binary_variable delta(J,T); 
 
         MP_index t,j;
-        MP_model M(new OsiCbcSolverInterface);
+        MP_model M(new OsiCpxSolverInterface);
         MP_constraint C2_20, C2_30, C3(J), C4(J); 
 
         C2_20() = s(2)  >= D(0) + s(0);
@@ -4243,7 +4240,7 @@ namespace flopc {
         EXPECT_EQ(80, M->getNumElements());
         EXPECT_EQ(6, M->getObjValue());
 
-        s.display("s");
+        //s.display("s");
         cout<<"Test xbsl passed."<<endl;
     }
 
@@ -4299,18 +4296,18 @@ namespace flopc {
 
         MP_data val(A);
 
-        val.display("initialized");
+        //val.display("initialized");
 
         val(A).such_that(B(A)) = 1;
 
-        val.display("val(A).such_that(B(A)) = 1");
+        //val.display("val(A).such_that(B(A)) = 1");
 
         val(A).such_that(!B(A)) = 2;
 
-        val.display("val(A).such_that(!B(A)) = 2");
+        //val.display("val(A).such_that(!B(A)) = 2");
 
         forall(A.such_that(!B(A)), C.insert(A));
-        C.display("C = A\B");
+        //C.display("C = A\B");
 
         cout << "Finished.";
     }
@@ -7615,12 +7612,12 @@ namespace flopc {
 
         // Display results;
 
-        minAmount.display("minAmount");
-        yield.display("yield");
-        x.display("x");
-        w.display("w");
-        y.display("y");
-        wSugar.display("wSugar");
+        //minAmount.display("minAmount");
+        //yield.display("yield");
+        //x.display("x");
+        //w.display("w");
+        //y.display("y");
+        //wSugar.display("wSugar");
         /*
         test11.getSmi()->writeSmps("bla");
         std::vector< std::pair<double,double> > ws;
