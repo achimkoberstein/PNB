@@ -4334,6 +4334,52 @@ namespace flopc {
             }
         }
 
+        TEST_F(SmiUnitTest, FixColumns) {
+#ifdef _MSC_VER
+            std::string dataDir = "../../../../Data/Benders/other";
+#else
+            std::string dataDir = "../../Data/Benders/other";
+#endif
+            int nrows, ncols;
+
+            SmiScnModel smi;
+            myAssert(__FILE__, __LINE__, -1 != smi.readSmps((dataDir + "/Farmer").c_str()));
+
+            smi.fixColumn(0, 0, 0);
+            smi.fixColumn(0, 1, 1);
+            smi.fixColumn(0, 2, 2);
+
+            SmiCoreData* core = smi.getCore();
+            const double* col_lower = core->getDenseColLower(0);
+            myAssert(__FILE__, __LINE__, col_lower[0] == 0);
+            myAssert(__FILE__, __LINE__, col_lower[1] == 1);
+            myAssert(__FILE__, __LINE__, col_lower[2] == 2);
+            const double* col_upper = core->getDenseColUpper(0);
+            myAssert(__FILE__, __LINE__, col_upper[0] == 0);
+            myAssert(__FILE__, __LINE__, col_upper[1] == 1);
+            myAssert(__FILE__, __LINE__, col_upper[2] == 2);
+
+            SmiNodeData* first_stage_node = core->getNode(0);
+            const double* node_col_lower = first_stage_node->getColLowerElements();
+            myAssert(__FILE__, __LINE__, node_col_lower[0] == 0);
+            myAssert(__FILE__, __LINE__, node_col_lower[1] == 1);
+            myAssert(__FILE__, __LINE__, node_col_lower[2] == 2);
+            const double* node_col_upper = first_stage_node->getColUpperElements();
+            myAssert(__FILE__, __LINE__, node_col_upper[0] == 0);
+            myAssert(__FILE__, __LINE__, node_col_upper[1] == 1);
+            myAssert(__FILE__, __LINE__, node_col_upper[2] == 2);
+
+            OsiCpxSolverInterface* osi = new OsiCpxSolverInterface();
+            smi.setOsiSolverHandle(*osi);
+            OsiSolverInterface* osi_stoch = smi.loadOsiSolverData();
+
+            osi_stoch->initialSolve();
+            myAssert(__FILE__, __LINE__, fabs(osi_stoch->getObjValue() - 96680) < 0.0001);
+
+            delete osi;
+
+        }
+        
         TEST_F(SmiUnitTest, DecompUnitTest) {
             OsiClpSolverInterface osi;
             double INF=osi.getInfinity();
