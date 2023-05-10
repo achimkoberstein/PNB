@@ -109,20 +109,32 @@ void SmiCoreData::printout() {
             cout << "[" << t << "][" << i << "]: " << binaryColsStagewise[t][i] << "   ";
     cout << endl;
     cout << "colNamesStrict: ";
-    for (int i = 0; i < ncol_; i++)
-        cout << "[" << i << "]: " << colNamesStrict[i] << "   ";
+    int index(0);
+    for (auto const& name : colNamesStrict) {
+        cout << "[" << index << "]: " << name << "   ";
+        index++;
+    }
     cout << endl;
     cout << "colNamesFree: ";
-    for (int i = 0; i < ncol_; i++)
-        cout << "[" << i << "]: " << colNamesFree[i] << "   ";
+    index = 0;
+    for (auto const& name : colNamesFree) {
+        cout << "[" << index << "]: " << name << "   ";
+        index++;
+    }
     cout << endl;
     cout << "rowNamesStrict: ";
-    for (int i = 0; i < nrow_; i++)
-        cout << "[" << i << "]: " << rowNamesStrict[i] << "   ";
+    index = 0;
+    for (auto const& name : rowNamesStrict) {
+        cout << "[" << index << "]: " << name << "   ";
+        index++;
+    }
     cout << endl;
     cout << "rowNamesFree: ";
-    for (int i = 0; i < nrow_; i++)
-        cout << "[" << i << "]: " << rowNamesFree[i] << "   ";
+    index = 0;
+    for (auto const& name : rowNamesFree) {
+        cout << "[" << index << "]: " << name << "   ";
+        index++;
+    }
     cout << endl;
 //    cout << "nodes_:" << endl; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes
     for (SmiStageIndex t = 0; t < nstag_; t++) {
