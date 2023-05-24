@@ -315,6 +315,8 @@ public:
 
     const char* getColumnName(int index);
 
+    void fixColumn(int stg, int column_index, float value);
+
 
     // constructor: Lesson from Effective C++: Initialize values in the same order as declared in .hpp file.
     SmiScnModel() :
@@ -326,6 +328,7 @@ public:
     {
 
     };
+    
 
     // destructor
     ~SmiScnModel();

@@ -167,6 +167,27 @@ int SmiScnNode::getCoreRowIndex(int i){
 //	return core->getRowInternalIndex(i-coffset_+core->getColStart(node_->getStage()));
 //}
 
+void SmiScnModel::fixColumn(int stg, int column_index, float value)
+{
+    if (stg != 0) {
+        throw std::invalid_argument("SmiScnModel::fixColum method implemented for the first stage only(stg = 0)."
+                                    "If implement for other stages, think about stochastic UBand LB.");
+    }
+    
+	if (column_index < 0 || column_index >= core_->getNumCols(stg)) {
+        throw std::invalid_argument("column_index arguments should have the value from 0 to num columns in stage - 1.");
+    }
+    
+	SmiNodeData* stage_node = core_->getNode(stg);
+    double* dense_col_upper = stage_node->getMutableColUpperElements();
+    dense_col_upper[column_index] = value;
+    double* dense_col_lower = stage_node->getMutableColLowerElements();
+    dense_col_lower[column_index] = value;
+    
+    // Update core data based on the updated node data.
+    core_->regenerateCoreArrays();
+}
+
 SmiScnModel::~SmiScnModel()
 {
     // loop to deleteNodes
