@@ -110,7 +110,9 @@ public:
     const double *getRowLowerElements()   {return getElements(this->getRloStart());}
     const double *getRowUpperElements()   {return getElements(this->getRupStart());}
     const double *getColLowerElements()   {return getElements(this->getCloStart());}
+    double* getMutableColLowerElements()  {return getMutableElements(this->getCloStart());}
     const double *getColUpperElements()   {return getElements(this->getCupStart());}
+    double* getMutableColUpperElements() { return getMutableElements(this->getCupStart()); }
     const double *getObjectiveElements()  {return getElements(this->getObjStart());}
 
 
@@ -160,6 +162,9 @@ public:
     //Return double array that starts at row/bounds/ranges/objective istart
     inline const double *getElements(int istart){
         return this->dels_+this->strt_[istart];
+    }
+    inline double* getMutableElements(int istart) {
+        return this->dels_ + this->strt_[istart];
     }
     inline const int * getStarts(int istart){
         return this->strt_+istart;
