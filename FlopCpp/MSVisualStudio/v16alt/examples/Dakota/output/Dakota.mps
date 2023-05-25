@@ -1,0 +1,7 @@
+* ENCODING=ISO-8859-1
+NAME          OsiDefaultName
+ROWS
+ N  obj1    
+COLUMNS
+RHS
+ENDATA
