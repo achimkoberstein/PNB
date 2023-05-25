@@ -1,0 +1,15 @@
+STOCH         .\smps\D
+SCENARIOS     DISCRETE
+ SC Scen_0      'ROOT'    0.2999999999999999889 STAGE_0
+    RHS       demandConstr_1_0 50
+    RHS       demandConstr_1_1 20
+    RHS       demandConstr_1_2 200
+ SC Scen_1      Scen_0    0.4000000000000000222 STAGE_1
+    RHS       demandConstr_1_0 150
+    RHS       demandConstr_1_1 110
+    RHS       demandConstr_1_2 225
+ SC Scen_2      Scen_0    0.2999999999999999889 STAGE_1
+    RHS       demandConstr_1_0 250
+    RHS       demandConstr_1_1 250
+    RHS       demandConstr_1_2 500
+ENDATA

@@ -1,0 +1,5 @@
+TIME          .\Output
+PERIODS
+    x_0 productionConstr_1_0     STAGE_0
+    y_1_0 productionConstr_1_0     STAGE_1
+ENDATA
