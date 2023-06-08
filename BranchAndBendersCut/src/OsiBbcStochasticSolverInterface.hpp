@@ -46,7 +46,7 @@ public:
 
 	int getSolutionCode() const override;
 
-	void fixFirstStageVariables(const double* solution) override;
+	void FixFirstStageVariables(const double* solution) override;
 
 	double getSolutionValueForScenario(int scenario) override;
 
