@@ -403,10 +403,10 @@ void OsiStochasticBranchAndBendersCutSolverInterface::assertTriedToSolve() const
 	}
 }
 
-void OsiStochasticBranchAndBendersCutSolverInterface::fixFirstStageVariables(const double* solution)
+void OsiStochasticBranchAndBendersCutSolverInterface::FixFirstStageVariables(const double* solution)
 {
 	assert(false);
-	nested_benders_->fixFirstStageVariables(solution);
+	nested_benders_->FixFirstStageVariables(solution);
 }
 
 double OsiStochasticBranchAndBendersCutSolverInterface::getSolutionValueForScenario(int scenario)

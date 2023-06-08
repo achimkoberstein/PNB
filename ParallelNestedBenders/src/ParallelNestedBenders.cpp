@@ -8078,7 +8078,7 @@ namespace parallel_benders {
 
     }
 
-    void ParallelNestedBenders::fixFirstStageVariables( const double* solution )
+    void ParallelNestedBenders::FixFirstStageVariables( const double* solution )
     {
         // Copy old bounds
         first_stage_original_col_lower_.reset(new double[smi_->getCore()->getNumCols(0)]);

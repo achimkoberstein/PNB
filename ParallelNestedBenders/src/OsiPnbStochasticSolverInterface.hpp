@@ -36,7 +36,7 @@ public:
 	void setTestsetProblemInstanceNames(std::string path); // use path to the .sto file
 	std::vector<std::string> getTestsetProblemInstanceNames() const;	
 
-    virtual void fixFirstStageVariables(const double* solution);
+    virtual void FixFirstStageVariables(const double* solution);
 	virtual void giveStartSolution(const double* solution, int num_cols_given = 0);
 
     virtual double getSolutionValueForScenario(int scenario);
