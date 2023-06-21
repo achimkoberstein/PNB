@@ -95,6 +95,8 @@ private:
 	- set up CPLEX callback
 	*/
 	void SetUpMPSolver();
+
+	void LoadSolutionAndObjectiveValueFromOsiSolver();
 	
 	// Obj values of integer feasible node solutions
 	// For these UB == LB in Benders because other
