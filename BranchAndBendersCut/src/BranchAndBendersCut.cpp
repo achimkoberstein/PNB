@@ -439,6 +439,7 @@ namespace branch_and_benders_cut {
 			//LOG(FATAL) << "Unknown solution code";
 			solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
 		}
+		solved_counter_++;
 
 		if (pretty_printing_)
 			std::cout << "\n";
