@@ -18,7 +18,7 @@ public:
     //OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model, BendersParameter& params);
     ~OsiStochasticParallelNestedBendersSolverInterface();
 
-    virtual void initialSolve();
+    void initialSolve();
     void printProblemCharacteristics() const ;
 
     double getObjValue() const;
@@ -31,32 +31,32 @@ public:
     //const double * getDualsByNodeAndStage(int node_number, int stage) const;
 
 	virtual void printSolutionToFile(const char* filename) const;
-	virtual void setInstanceSpecsFile(const std::string& filename); //create if not exists
-	virtual void setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance); // strings will be transformed to lower case
+	void setInstanceSpecsFile(const std::string& filename); //create if not exists
+	void setTestsetProblemInstanceNames(std::string testset, std::string problem, std::string instance); // strings will be transformed to lower case
 	void setTestsetProblemInstanceNames(std::string path); // use path to the .sto file
 	std::vector<std::string> getTestsetProblemInstanceNames() const;	
 
-    virtual void FixFirstStageVariables(const double* solution);
-	virtual void giveStartSolution(const double* solution, int num_cols_given = 0);
+    void FixFirstStageVariables(const double* solution);
+	void giveStartSolution(const double* solution, int num_cols_given = 0);
 
     virtual double getSolutionValueForScenario(int scenario);
 
-    virtual int getNumOptimalityCuts() const;
-	virtual int getNumContinuousOptimalityCuts() const;
-	virtual int getNumFeasibilityCuts() const;
-	virtual int getNumEpigraphCuts() const;
-	virtual int getNumStrengthenedEpigraphCuts() const;
-	virtual int getNumPlainEpigraphCuts() const;
-	virtual int getNumDomainCuts() const;
-	virtual int getLpCgpCounter() const;
-    virtual void setParameters(const parallel_benders::Parameter& parameters);
+    int getNumOptimalityCuts() const;
+	int getNumContinuousOptimalityCuts() const;
+	int getNumFeasibilityCuts() const;
+	int getNumEpigraphCuts() const;
+	int getNumStrengthenedEpigraphCuts() const;
+	int getNumPlainEpigraphCuts() const;
+	int getNumDomainCuts() const;
+	int getLpCgpCounter() const;
+    void setParameters(const parallel_benders::Parameter& parameters);
     int getNumIterations() const;
-    virtual int getNumContPhasePnbIterations() const;
+    int getNumContPhasePnbIterations() const;
 	const parallel_benders::Parameter& getParameters() const;
-    virtual const parallel_benders::Timer& getTimer() const;
-    virtual const parallel_benders::Timer& getBuildTimer() const;
-    virtual const parallel_benders::Timer& getComputingTimer() const;
-    virtual const parallel_benders::Timer& getLiftAndProjectCutsTimer() const;
+    const parallel_benders::Timer& getTimer() const;
+	const parallel_benders::Timer& getBuildTimer() const;
+    const parallel_benders::Timer& getComputingTimer() const;
+    const parallel_benders::Timer& getLiftAndProjectCutsTimer() const;
 
     SmiScnModel* getSmiModel();
 	parallel_benders::ParallelNestedBenders* getPNB();
@@ -66,8 +66,8 @@ public:
 	double getUBForIteration(int iteration) const;
 	double getLBForIteration(int iteration) const;
 
-	virtual double getUB() const;
-	virtual double getLB() const;
+	double getUB() const;
+	double getLB() const;
 
 	double getRelativeGap() const;
     virtual double getIntegerGap() const;
@@ -75,7 +75,7 @@ public:
     int getNumCriticalIteration() const ;
     int getMaximalLengthOfCriticalIterationSequence() const;
 
-    virtual int getSolutionCode() const;
+    int getSolutionCode() const;
 
 protected:
     parallel_benders::ParallelNestedBenders* nested_benders_;
