@@ -82,21 +82,7 @@ branch_and_benders_cut::BranchAndBendersCut* OsiStochasticBranchAndBendersCutSol
 
 const double* OsiStochasticBranchAndBendersCutSolverInterface::getSolutionByNodeAndStage(int node_number, int stage) const
 {
-	assert(false);
-	//assert(nested_benders_);
-	//if (getParameters().parameter_.get(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ) {
-	//	if (node_number > 0 || stage > 0)
-	//		assert(false); // Not yet done
-	//	return osi_->getColSolution();
-	//}
-	//else {
-	//	assert(stage < nested_benders_->num_stages_);
-	//	assert(node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
-	//	if (nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_.empty())
-	//		return nullptr;
-	//	else
-	//		return &nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_[0];
-	//}
+	assert(false && "Not tested for BBC.");
 	return 0;
 }
 

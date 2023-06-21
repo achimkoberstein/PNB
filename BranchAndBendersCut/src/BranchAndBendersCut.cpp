@@ -393,8 +393,6 @@ namespace branch_and_benders_cut {
 		}
 
 		LOG_IF(FATAL, !dynamic_cast<OsiCpxSolverInterface*>(osi_solver_)) << "osi_solver_ should be OsiCpxSolverInterface for BranchAndBendersCut";
-
-		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
 		
 		// Construct continuous optimality, L&P cuts or
 		// one round of Benders cuts (to avoid unboundness)
@@ -414,8 +412,7 @@ namespace branch_and_benders_cut {
 		
 		if (osi_solver_->isProvenOptimal()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_OPTIMAL;
-			//TODO: the line below still generates error, even though the solution is correct
-			//LOG_IF(FATAL, !parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), osi_solver_->getObjValue(), 0.001)) << "UB != solution";
+			LoadSolutionAndObjectiveValueFromOsiSolver();
 		}
 		else if (osi_solver_->isProvenPrimalInfeasible()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
@@ -431,9 +428,11 @@ namespace branch_and_benders_cut {
 		}
 		else if (osi_solver_->isIterationLimitReached()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_ITERATION_LIMIT;
+			LoadSolutionAndObjectiveValueFromOsiSolver();
 		}
 		else if (osi_solver_->isTimeLimitReached()) {
 			solution_code_ = parallel_benders::PNB_SOLUTION_TIME_LIMIT;
+			LoadSolutionAndObjectiveValueFromOsiSolver();
 		}
 		else {
 			//LOG(FATAL) << "Unknown solution code";
@@ -836,6 +835,14 @@ namespace branch_and_benders_cut {
 		//CPXsetintparam(env_ptr, CPX_PARAM_HEURFREQ, -1); // for older CPLEX version
 		CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_RINSHeur, -1); // turn off RINS heuristic
 		CPXsetintparam(env_ptr, CPX_PARAM_RINSHEUR, -1); // for older CPLEX version	
+	}
+
+	void BranchAndBendersCut::LoadSolutionAndObjectiveValueFromOsiSolver()
+	{
+		parallel_benders::BendersNodeData* mp_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
+		StoreValuesFromSolverInVector(mp_node_pointer->incumbent_col_solution_, osi_solver_->getColSolution(), osi_solver_->getNumCols());
+		assert(parallel_benders::CompareForEquality(benders_optimal_incumbents_.back(), osi_solver_->getObjValue(), absolute_epsilon_));
+		upper_bound_ = osi_solver_->getObjValue();
 	}
 
 	std::shared_ptr<ThreadBranchAndBendersCut> BranchAndBendersCut::getCopyForThread(int thread_id)
