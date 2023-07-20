@@ -673,50 +673,168 @@ class SolveInstances : public ::testing::Test { // this is the Test set, e.g.,  
 		int repetitions_;
 };
 
-TEST_F(SolveInstances, unitTest) {
-	
-	//SmiScnModel smi;
-	std::string folder("../../../../Data/Benders/");
-	std::string core_name;
-	std::string time_name;
-	std::string stoch_name;
-	std::string total_core_string;
-	std::string total_time_string;
-	std::string total_stoch_string;
+class UnitTest : public ::testing::Test {
+public:
+	std::string PATH_SNDP_TESTCASE_0 = "glushko/sndp_mini_tests/SNDP_TestCase_0";
 
-	// Parameter file
-	parallel_benders::Parameter param;
-	param.init();
-	param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
-	param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, true);
+	enum class ParameterSet {BRANCH_AND_BENDERS,
+						BRANCH_AND_BENDERS_WITH_FIRST_PHASE,
+						PARAMETER_SET_DETEQ
+	};
 
-	core_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
-	time_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
-	stoch_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
-	total_core_string = folder + core_name;
-	total_time_string = folder + time_name;
-	total_stoch_string = folder + stoch_name;
+	OsiStochasticBranchAndBendersCutSolverInterface* SolveBbcInterfaceWithFirstStageVariablesFixed(const std::string& problem_relative_path, 
+		ParameterSet parameter_set_name, const std::vector<int>& fixed_column_indices, const std::vector<double>& fixed_column_values) const 
+	{
+		OsiStochasticBranchAndBendersCutSolverInterface* bbc_interface = GetBbcInterface(problem_relative_path, parameter_set_name);
+		branch_and_benders_cut::BranchAndBendersCut* bbc = bbc_interface->getBBC();
+		bbc->FixFirstStageVariables(fixed_column_indices, fixed_column_values);
+		bbc_interface->initialSolve();
 
-	int smps_read_in = 0;
-	SmiScnModel smi_model;
-	smps_read_in = smi_model.readSmps(total_core_string.c_str(), total_time_string.c_str(), total_stoch_string.c_str());
-
-	if (smps_read_in != 0) {
-		LOG(ERROR) << "Reading in your SMPS file failed.";
+		return bbc_interface;
 	}
 
-	// Create a new OsiStochasticPNB interface
-	OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
-	OsiStochasticBranchAndBendersCutSolverInterface bbc_interface(osi_solver, &smi_model);
-	bbc_interface.setParameters(param);
+	OsiStochasticBranchAndBendersCutSolverInterface* GetBbcInterface(const std::string& problem_relative_path, ParameterSet parameter_set_name) const {
+		SmiScnModel* smi_model = ReadSmps(problem_relative_path);
+		parallel_benders::Parameter param = GetParameter(parameter_set_name);
+		OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
+		
+		OsiStochasticBranchAndBendersCutSolverInterface* bbc_interface = new OsiStochasticBranchAndBendersCutSolverInterface(osi_solver, smi_model);
+		bbc_interface->setParameters(param);
 
-	branch_and_benders_cut::BranchAndBendersCut* bbc = bbc_interface.getBBC();
-	bbc->Init();
-	bbc->Solve();
+		return bbc_interface;
+	}
 
-	//bbc->Reset(-1, true);
+	parallel_benders::Parameter GetParameter(ParameterSet parameter_set_name) const {
+		// Parameter file
+		parallel_benders::Parameter param;
+		param.init();
 
-	delete osi_solver;
+		if (parameter_set_name == ParameterSet::BRANCH_AND_BENDERS) {
+			param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+			param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, false);
+			param.SetParameterValue(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT);
+		}
+		else if (parameter_set_name == ParameterSet::BRANCH_AND_BENDERS_WITH_FIRST_PHASE){
+			param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+			param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, true);
+			param.SetParameterValue(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT);
+		}
+		else if (parameter_set_name == ParameterSet::PARAMETER_SET_DETEQ) {
+			param.SetParameterValue(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+		}
+		
+		return param;
+	}
+
+	void DeleteBbcInterfaceData(OsiStochasticBranchAndBendersCutSolverInterface* bbc_interface) const {
+		delete bbc_interface->getOsiSolverInterface();
+		delete bbc_interface->getSmiModel();
+		delete bbc_interface;
+	}
+
+	SmiScnModel* ReadSmps(const std::string& relative_path) const {
+		std::string folder("../../../../Data/Benders/");
+		std::string core_name = relative_path;
+		std::string time_name = relative_path;
+		std::string stoch_name = relative_path;
+		std::string total_core_string = folder + core_name;
+		std::string total_time_string = folder + time_name;
+		std::string total_stoch_string = folder + stoch_name;
+
+		int smps_read_in = 0;
+		SmiScnModel* smi_model = new SmiScnModel();
+		smps_read_in = smi_model->readSmps(total_core_string.c_str(), total_time_string.c_str(), total_stoch_string.c_str());
+
+		if (smps_read_in != 0) {
+			LOG(ERROR) << "Reading in your SMPS file failed.";
+			throw std::runtime_error("Reading in your SMPS file failed.");
+		}
+
+		return smi_model;
+	}
+
+	~UnitTest() {}
+	void TearDown() {}
+};
+
+TEST_F(UnitTest, initialSolve) {
+	OsiStochasticBranchAndBendersCutSolverInterface* bbc_interface = GetBbcInterface(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet:: BRANCH_AND_BENDERS_WITH_FIRST_PHASE);
+
+	bbc_interface->initialSolve();
+	EXPECT_EQ(bbc_interface->getColSolution(0, 0, 0), 1);
+	EXPECT_EQ(bbc_interface->getColSolution(0, 0, 1), 1);
+	EXPECT_EQ(bbc_interface->getObjValue(), -15250.0);
+
+	DeleteBbcInterfaceData(bbc_interface);
+}
+
+TEST_F(UnitTest, wrongPnbBendersParameter) {
+	OsiStochasticBranchAndBendersCutSolverInterface* bbc_interface = GetBbcInterface(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet::PARAMETER_SET_DETEQ);
+
+	EXPECT_THROW(bbc_interface->initialSolve(), std::invalid_argument);
+
+	DeleteBbcInterfaceData(bbc_interface);
+}
+
+TEST_F(UnitTest, FixFirstStageVariables) {
+	// None variables are fixed.
+	OsiStochasticBranchAndBendersCutSolverInterface* bbc_interface = GetBbcInterface(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet::BRANCH_AND_BENDERS_WITH_FIRST_PHASE);
+	bbc_interface->initialSolve();
+	EXPECT_EQ(1, bbc_interface->getColSolution(0, 0, 0));
+	EXPECT_EQ(1, bbc_interface->getColSolution(0, 0, 1));
+	EXPECT_EQ(-15250.0, bbc_interface->getObjValue());
+	DeleteBbcInterfaceData(bbc_interface);
+
+	// Fix first 
+	std::vector<int>col_indices_fix_first{ 0 };
+	std::vector<double>col_values_fix_first{ 0 };
+	bbc_interface = SolveBbcInterfaceWithFirstStageVariablesFixed(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet::BRANCH_AND_BENDERS,
+		col_indices_fix_first, col_values_fix_first);
+	EXPECT_EQ(0, bbc_interface->getColSolution(0, 0, 0));
+	EXPECT_EQ(1, bbc_interface->getColSolution(0, 0, 1));
+	EXPECT_EQ(-15000.0, bbc_interface->getObjValue());
+	DeleteBbcInterfaceData(bbc_interface);
+
+	bbc_interface = SolveBbcInterfaceWithFirstStageVariablesFixed(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet::BRANCH_AND_BENDERS_WITH_FIRST_PHASE,
+		col_indices_fix_first, col_values_fix_first);
+	EXPECT_EQ(0, bbc_interface->getColSolution(0, 0, 0));
+	EXPECT_EQ(1, bbc_interface->getColSolution(0, 0, 1));
+	EXPECT_EQ(-15000.0, bbc_interface->getObjValue());
+	DeleteBbcInterfaceData(bbc_interface);
+
+	// Fix second 
+	std::vector<int>col_indices_fix_second{ 1 };
+	std::vector<double>col_values_fix_second{ 0 };
+	bbc_interface = SolveBbcInterfaceWithFirstStageVariablesFixed(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet::BRANCH_AND_BENDERS,
+		col_indices_fix_second, col_values_fix_second);
+	EXPECT_EQ(1, bbc_interface->getColSolution(0, 0, 0));
+	EXPECT_EQ(0, bbc_interface->getColSolution(0, 0, 1));
+	EXPECT_EQ(-10750.0, bbc_interface->getObjValue());
+	DeleteBbcInterfaceData(bbc_interface);
+
+	bbc_interface = SolveBbcInterfaceWithFirstStageVariablesFixed(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet::BRANCH_AND_BENDERS_WITH_FIRST_PHASE,
+		col_indices_fix_second, col_values_fix_second);
+	EXPECT_EQ(1, bbc_interface->getColSolution(0, 0, 0));
+	EXPECT_EQ(0, bbc_interface->getColSolution(0, 0, 1));
+	EXPECT_EQ(-10750.0, bbc_interface->getObjValue());
+	DeleteBbcInterfaceData(bbc_interface);
+
+	// Fix both
+	std::vector<int>col_indices_fix_both{ 0, 1 };
+	std::vector<double>col_values_fix_both{ 0, 0 };
+	bbc_interface = SolveBbcInterfaceWithFirstStageVariablesFixed(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet::BRANCH_AND_BENDERS,
+		col_indices_fix_both, col_values_fix_both);
+	EXPECT_EQ(0, bbc_interface->getColSolution(0, 0, 0));
+	EXPECT_EQ(0, bbc_interface->getColSolution(0, 0, 1));
+	EXPECT_EQ(0.0, bbc_interface->getObjValue());
+	DeleteBbcInterfaceData(bbc_interface);
+
+	bbc_interface = SolveBbcInterfaceWithFirstStageVariablesFixed(PATH_SNDP_TESTCASE_0, UnitTest::ParameterSet::BRANCH_AND_BENDERS_WITH_FIRST_PHASE,
+		col_indices_fix_both, col_values_fix_both);
+	EXPECT_EQ(0, bbc_interface->getColSolution(0, 0, 0));
+	EXPECT_EQ(0, bbc_interface->getColSolution(0, 0, 1));
+	EXPECT_EQ(0.0, bbc_interface->getObjValue());
+	DeleteBbcInterfaceData(bbc_interface);
 }
 
 TEST_F(SolveInstances, fast) {
