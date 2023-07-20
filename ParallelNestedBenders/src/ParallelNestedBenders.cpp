@@ -300,7 +300,7 @@ namespace parallel_benders {
         stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
         cvar_constr_decomp_(false),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),cvar_feasible_first_stage_solution_(false),cvar_next_iterate_problem_(false),change_cvar_alpha_(false),stop_cvar_(false),osi_stopping_criterion_solver_(nullptr),
-        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(0),debug_test_duplicate_indices_(false),log_level_(google::INFO),pretty_printing_(false),pretty_printing_verbose_(true),print_subproblems_(false),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(1000)
+        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(0),debug_test_duplicate_indices_(false),log_level_(google::INFO),pretty_printing_(false),pretty_printing_verbose_(true),print_subproblems_(false),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_col_lower_(nullptr),fixed_col_upper_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(1000)
     {
 
     }
@@ -3876,8 +3876,8 @@ namespace parallel_benders {
                 delete [] benders_node_pointer->column_lower_;
             if ( node_pointer->getColUpperLength())
                 delete [] benders_node_pointer->column_upper_;
-            benders_node_pointer->column_upper_ = fixed_solution_.get();
-            benders_node_pointer->column_lower_ = fixed_solution_.get();
+            benders_node_pointer->column_upper_ = fixed_col_upper_.get();
+            benders_node_pointer->column_lower_ = fixed_col_lower_.get();
         }
 
 		// Objective function coefficients
@@ -8078,21 +8078,49 @@ namespace parallel_benders {
 
     }
 
-    void ParallelNestedBenders::FixFirstStageVariables( const double* solution )
+    void ParallelNestedBenders::FixFirstStageVariables(const std::vector<int>& column_indices, const std::vector<double>& column_values)
     {
+        if (column_indices.size() > smi_->getCore()->getNumCols(0)) {
+            throw std::invalid_argument("Size of column_indices argument should be less or equal to the number of columns on the first stage.");
+        }
+        if (column_values.size() > smi_->getCore()->getNumCols(0)) {
+            throw std::invalid_argument("Size of column_values argument should  be less or equal to the number of columns on the first stage.");
+        }
+        if (column_indices.size() != column_values.size()) {
+            throw std::invalid_argument("Size of column_indices and column_values must be the same.");
+        }
+
         // Copy old bounds
         first_stage_original_col_lower_.reset(new double[smi_->getCore()->getNumCols(0)]);
         first_stage_original_col_upper_.reset(new double[smi_->getCore()->getNumCols(0)]);
-        fixed_solution_.reset(new double[smi_->getCore()->getNumCols(0)]);
-        memcpy(first_stage_original_col_lower_.get(),smi_->getCore()->getDenseColLower(0),sizeof(double)*smi_->getCore()->getNumCols(0));
-        memcpy(first_stage_original_col_upper_.get(),smi_->getCore()->getDenseColUpper(0),sizeof(double)*smi_->getCore()->getNumCols(0));
-        memcpy(fixed_solution_.get(),solution,sizeof(double)*smi_->getCore()->getNumCols(0));
-        for (int i = 0; i< smi_->getCore()->getNumCols(0);i++){
-            if ( CompareWithZero(fixed_solution_[i]) )
-                fixed_solution_[i] = 0.0;
+        fixed_col_lower_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        fixed_col_upper_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        memcpy(first_stage_original_col_lower_.get(), smi_->getCore()->getDenseColLower(0), sizeof(double) * smi_->getCore()->getNumCols(0));
+        memcpy(first_stage_original_col_upper_.get(), smi_->getCore()->getDenseColUpper(0), sizeof(double) * smi_->getCore()->getNumCols(0));
+        
+        memcpy(fixed_col_lower_.get(), first_stage_original_col_lower_.get(), sizeof(double) * smi_->getCore()->getNumCols(0));
+        memcpy(fixed_col_upper_.get(), first_stage_original_col_upper_.get(), sizeof(double) * smi_->getCore()->getNumCols(0));
+        for (int i = 0; i < column_indices.size(); i++) {
+            int column_index = column_indices[i];
+            int column_value = column_values[i];
+            if (CompareWithZero(column_value)) {
+                fixed_col_lower_[column_index] = 0.0;
+                fixed_col_upper_[column_index] = 0.0;
+            }
+            else {
+                fixed_col_lower_[column_index] = column_value;
+                fixed_col_upper_[column_index] = column_value;
+            }
         }
         fixed_first_stage_ = true;
+    }
 
+    void ParallelNestedBenders::FixFirstStageVariables(const double* solution)
+    {
+        std:vector<int> column_indices(smi_->getCore()->getNumCols(0));
+        std::iota(column_indices.begin(), column_indices.end(), 0);
+        std::vector<double> column_values(solution, solution + smi_->getCore()->getNumCols(0));
+        FixFirstStageVariables(column_indices, column_values);
     }
 
 	int ParallelNestedBenders::getNumContPhasePnbIterations() const

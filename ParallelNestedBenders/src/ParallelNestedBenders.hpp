@@ -68,6 +68,7 @@ public:
     
     // Access solution methods
     double computeScenarioValue(int scenario);
+    void FixFirstStageVariables(const std::vector<int>& column_indices, const std::vector<double>& column_values);
     void FixFirstStageVariables(const double* solution);
 	int getNumContPhasePnbIterations() const;
 	int getNumContinuousOptimalityCuts() const;
@@ -501,7 +502,8 @@ protected:
     // Fixing first-stage variables : If unfixed write back to Smi->Core->cdclo
     boost::scoped_array<double> first_stage_original_col_lower_;
     boost::scoped_array<double> first_stage_original_col_upper_;
-    boost::scoped_array<double> fixed_solution_;
+    boost::scoped_array<double> fixed_col_lower_;
+    boost::scoped_array<double> fixed_col_upper_;
     bool fixed_first_stage_;
 
     // Help Containers for the transformation of non-staircase problems to staircase problems ( so that we can handle it )
