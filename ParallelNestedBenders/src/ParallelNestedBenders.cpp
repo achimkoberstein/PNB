@@ -2815,12 +2815,13 @@ namespace parallel_benders {
         assert(num_scenarios_ >= 1);
         // we do not change 1st stage osi solver, keep the threads and reset their solvers
         assert(osi_solver_ != nullptr && "Did you call Solve()?");
-        for (auto id_solver_pair : osi_solver_map_) {
-            //id_solver_pair.second->reset(); // This method throws exception with Cplex
-            id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-            // Workaround: Load empty problem. 
-            assert(id_solver_pair.second->getNumCols() == 0);
-        }
+        osi_solver_map_.clear();
+        //for (auto id_solver_pair : osi_solver_map_) {
+        //    //id_solver_pair.second->reset(); // This method throws exception with Cplex
+        //    id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+        //    // Workaround: Load empty problem. 
+        //    assert(id_solver_pair.second->getNumCols() == 0);
+        //}
         assert(tree_.getNumScenarios() > 0);
         assert(tree_nodes_by_stage_.size() == num_stages_);
         assert(stage_data_.size() == num_stages_);
@@ -2947,6 +2948,7 @@ namespace parallel_benders {
         optimality_cut_counter_ = 0;
         current_solution_value_ = 0.0;
         solution_similiarity_counter_ = 0;
+        cont_phase_pnb_.reset();
 
         stopTimer(INT_TIMER_ID_TIMER_INIT);
     }
