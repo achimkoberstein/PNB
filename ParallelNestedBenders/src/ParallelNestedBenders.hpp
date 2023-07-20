@@ -64,7 +64,7 @@ public:
      The aim of Reset() is to clear the pnb and prepare it for one more Solve() but avoid reinitialization of all the internal structures.
      We keep solvers
     */
-	void Reset(int delete_cuts_start_it = -1, bool keep_warm_start = false, Parameter* parameter = nullptr);
+	virtual void Reset(int delete_cuts_start_it = -1, bool keep_warm_start = false, Parameter* parameter = nullptr);
     
     // Access solution methods
     double computeScenarioValue(int scenario);

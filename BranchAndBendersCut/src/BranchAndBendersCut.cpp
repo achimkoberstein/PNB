@@ -982,6 +982,14 @@ namespace branch_and_benders_cut {
 		return lb;
 	}
 
+	void BranchAndBendersCut::Reset(int delete_cuts_start_it, bool keep_warm_start, parallel_benders::Parameter* parameter)
+	{
+		ParallelNestedBenders::Reset(delete_cuts_start_it, keep_warm_start, parameter);
+		num_processed_nodes_ = 0;
+		root_node_obj_value_ = 0.0;
+
+	}
+
 	ThreadBranchAndBendersCut::ThreadBranchAndBendersCut(SmiScnModel* smi_model_ptr)
 		: BranchAndBendersCut(smi_model_ptr),lp_cuts_constructed_(false),current_context_(nullptr),current_contextid_(-1),fixed_to_one_(),fixed_to_zero_()
 	{

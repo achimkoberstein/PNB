@@ -72,6 +72,8 @@ public:
 	// Cannot be called withing callback
 	double getLB();
 
+	void Reset(int delete_cuts_start_it = -1, bool keep_warm_start = false, parallel_benders::Parameter* parameter = nullptr) override;
+
 	BranchAndBendersCut* clone() = delete;
 
 protected:
