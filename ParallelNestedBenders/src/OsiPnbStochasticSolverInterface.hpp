@@ -18,7 +18,7 @@ public:
     //OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model, BendersParameter& params);
     ~OsiStochasticParallelNestedBendersSolverInterface();
 
-    void initialSolve();
+    virtual void initialSolve();
     void printProblemCharacteristics() const ;
 
     double getObjValue() const;

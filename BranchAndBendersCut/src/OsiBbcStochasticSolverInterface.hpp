@@ -32,6 +32,8 @@ public:
 
 	const double* getSolutionByNodeAndStage(int node_number, int stage) const override;
 
+	void initialSolve() override;
+
 private:
 	OsiSolverInterface* osi_;
 	int last_used_algorithm_;
