@@ -86,6 +86,20 @@ const double* OsiStochasticBranchAndBendersCutSolverInterface::getSolutionByNode
 	return 0;
 }
 
+void OsiStochasticBranchAndBendersCutSolverInterface::initialSolve()
+{
+	int algorithm = getBBC()->parameter_.GetIntParamValue(parallel_benders::PNB_BENDERS);
+	if (algorithm != parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT) {
+		throw std::invalid_argument("PNB_BENDERS parameter is invalid. It can have only PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT value.");
+	}
+	if (getBBC()->parameter_.GetBoolParamValue(parallel_benders::PNB_SAVE_INSTANCE_SPECS)) {
+		setInstanceSpecsFile(instance_specification_file_);
+	}
+	nested_benders_->Init();
+	nested_benders_->Solve();
+	last_used_algorithm_ = algorithm;
+}
+
 void OsiStochasticBranchAndBendersCutSolverInterface::assertTriedToSolve() const
 {
 	if (last_used_algorithm_ == -1) {
