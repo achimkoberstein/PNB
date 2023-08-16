@@ -509,13 +509,6 @@ class SolveInstances : public ::testing::Test { // this is the Test set, e.g.,  
 				values_map[critical_iterations_string] += bbc_interface.getNumCriticalIteration();
 				values_map[critical_iteration_sequence_length_string] += bbc_interface.getMaximalLengthOfCriticalIterationSequence();
 
-				ub_for_iteration_.clear();
-				lb_for_iteration_.clear();
-				for (int i = 0; i < bbc_interface.getNumIterations(); i++) {
-					ub_for_iteration_.push_back(bbc_interface.getUBForIteration(i + 1));
-					lb_for_iteration_.push_back(bbc_interface.getLBForIteration(i + 1));
-				}
-
 				// Write parameter values
 				// Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
 				BOOST_FOREACH(boost::property_tree::ptree::value_type & v, bbc_parameter_.parameter_)
@@ -675,8 +668,6 @@ class SolveInstances : public ::testing::Test { // this is the Test set, e.g.,  
 		boost::shared_array<double> current_start_solution_;
 		boost::shared_array<double> best_case_solution_;
 		boost::shared_array<double> worst_case_solution_;
-		std::vector<double> ub_for_iteration_;
-		std::vector<double> lb_for_iteration_;
 		int num_stages_;
 		int num_single_scenario_cols_;
 		int repetitions_;
