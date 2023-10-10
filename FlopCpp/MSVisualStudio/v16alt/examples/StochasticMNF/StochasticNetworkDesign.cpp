@@ -114,13 +114,21 @@ int main(int argc, char* argv[]) {
 
 
     //vector<vector<vector<double>>> scenDemand;
-    vector<vector<vector<double>>> scenDemand(numnodes, vector<vector<double>>(numcoms, vector<double>(numScenarios)));
+    //vector<vector<vector<vector<double>>>> scenDemand(1, vector<vector<vector<double>>>(numnodes, vector<vector<double>>(numcoms, vector<double>(numScenarios))));
     // x = number of elements in 1D vector
     // y = number of 1D vectors in 2D vector
     // z = number of 2D vectors in 3D vector
     // value = value for each element
-
-
+    
+    //double** a = new double[numnodes][numcoms];
+    double**** scenDemand = new double*** [1];
+    scenDemand[0] = new double** [numnodes];
+    for (int i = 0; i < numnodes; i++) {
+        scenDemand[0][i] = new double* [numcoms];
+        for (int j = 0; j < numcoms; j++) {
+            scenDemand[0][i][j] = new double[numScenarios];
+        }
+    }
 
     //double** scenDemand = new double[1][numcoms];
     //double*** scenDemand[1][numcoms][numScenarios];
@@ -152,13 +160,13 @@ int main(int argc, char* argv[]) {
         for (int k = 0; k < numcoms; k++) {
             for (int i = 0; i < numScenarios; i++) {
                 if (n == O(k)) {
-                    scenDemand[n][k][i] = stochasticDemand[i][k];
+                    scenDemand[0][n][k][i] = stochasticDemand[i][k];
                 }
                 else if (i == D(k)) {
-                    scenDemand[n][k][i] = -stochasticDemand[i][k];
+                    scenDemand[0][n][k][i] = -stochasticDemand[i][k];
                 }
                 else {
-                    scenDemand[n][k][i] = 0;
+                    scenDemand[0][n][k][i] = 0;
                 }
             }
         }
@@ -170,7 +178,7 @@ int main(int argc, char* argv[]) {
     cout << "SCEN DEMAND:" << endl;
     
 
-    MP_random_data demand(&scenDemand[0][0][0], T, N, K);
+    MP_random_data demand(&scenDemand[0][0][0][0], T, N, K);
     demand.setName("demand");
 
 
@@ -178,24 +186,24 @@ int main(int argc, char* argv[]) {
 
     //demand.display();
 
-    MP_variable	x(A, K); //transportation cost variable
+    MP_variable	x(T, A, K); //transportation cost variable
     MP_binary_variable	y(A); //design cost variable
 
     x.setName("x");
-    x.setName("y");
+    y.setName("y");
 
 
     MP_constraint
-        demand_constraint(N, K), //demand constraint for each node should be satisfied      
-        capacity_constraint(A, K);
+        demand_constraint(T, N, K), //demand constraint for each node should be satisfied      
+        capacity_constraint(T, A, K);
 
-    MP_index s,i, j, k;
+    MP_index s, i, j, k;
 
 
-    //demand_constraint(i, k) = sum(N(j), x(A(i, j), k)) - sum(N(j), x(A(j, i), k)) == demand(k, i, s);
-    //capacity_constraint(A, K) = sum(K, x(A, K)) <= y(A) * U(A);
+    demand_constraint(T + 1, i, k) = sum(N(j), x(T, A(i, j), k)) - sum(N(j), x(T, A(j, i), k)) == demand(T,i,k);
+    capacity_constraint(T + 1, A, K) = sum(K, x(T, A, K)) <= y(A) * U(A);
 
-    m.setObjective(sum(K, sum(A, x(A, K) * C(A))) + sum(A, F(A) * y(A)));
+    m.setObjective(sum(K, sum(A, x(T + 1, A, K) * C(A))) + sum(A, F(A) * y(A)));
 
     m.attach();
     m.Solver->writeLp(".\\StochasticNetworkDesign");
