@@ -55,8 +55,8 @@ int main(int argc, char* argv[]) {
 	//		{20}  // sugar beets
 	//	}
 	//};
-	MP_random_data yield(&scenYield[0][0][0], T, C);
-	yield.setName("yield");
+    MP_random_data yield(&scenYield[0][0][0], T, C);
+    yield.setName("yield");
 
 	MP_data plantingCost(C);
 	plantingCost.setName("plantingCost");
@@ -146,7 +146,8 @@ int main(int argc, char* argv[]) {
 	parallel_benders::Parameter benders_param;
 	benders_param.init();
 	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-//	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+
+    //	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
 	// benders_param.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION, parallel_benders::PNB_INT_USE_EV_SOLUTION);
 //	benders_param.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION, true);  //CRASHES
 	benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
