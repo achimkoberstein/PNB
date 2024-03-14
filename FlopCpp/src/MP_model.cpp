@@ -546,7 +546,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             continue;
         }
         int size = (*it)->size();
-        boost::dynamic_bitset<> indicator(size);
+//        boost::dynamic_bitset<> indicator(size);
+        (*it)->nocoefs = new boost::dynamic_bitset<>(size);
+        boost::dynamic_bitset<>& indicator = *((*it)->nocoefs);
+
         // Iterate over all cfs to see if we got empty indices. This is only necessary if the Index_exp we stored in the coefficient is not the same as the set.
         // What about such_that constraints that are at work?
         // We can check for this.
@@ -1098,6 +1101,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         delete [] bl;  
         delete [] bu;
     }  
+
+    for (conIt it = Constraints.begin(); it != Constraints.end(); ++it)
+        delete (*it)->nocoefs; // only created and used during this routine
+    
 #pragma endregion cleanUp;
     messenger->generationTime(CoinCpuTime()-time);
 }

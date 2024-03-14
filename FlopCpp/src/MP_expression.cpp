@@ -249,7 +249,8 @@ namespace flopc {
         Expression_plus(const MP_expression& e1, const MP_expression& e2) : 
            Expression_operator(e1,e2) {}
            double level() const { 
-               return std::pow(left->level(),right->level()); 
+               // return std::pow(left->level(), right->level());     ///////// Why not +??????
+               return left->level() + right->level();  
            }
            void generate(const MP_domain& domain,
                vector<TerminalExpression *> multiplicators,

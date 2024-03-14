@@ -11,6 +11,8 @@ using std::set;
 #include <map>
 using std::map;
 
+#include <boost/dynamic_bitset.hpp>
+
 #include "MP_set.hpp"
 #include "MP_domain.hpp"
 #include "MP_utilities.hpp"
@@ -316,6 +318,7 @@ namespace flopc {
         int real_size;
         MP_expression left,right;
         Sense_enum sense;
+        boost::dynamic_bitset<>* nocoefs;  // used in MP_model::attach and generateNames. If true, constraint has not coefficients.
     private:
         //Disabling copy constructor and assignment
         MP_constraint(const MP_constraint&);
