@@ -2350,7 +2350,7 @@ namespace flopc {
         cout<<"Test bid passed."<<endl;
     }
 
-    TEST_F(FlopCppExamples, DISABLED_coex){ // takes too long
+    TEST_F(FlopCppExamples, coex){ // takes too long
         /* Peacefully Coexisting Armies of Queens 
 
         Two armies of queens (balvk and white) peacefully coexsit on a
@@ -3713,7 +3713,7 @@ namespace flopc {
         }
     }//end namesprace multiProduct
 
-    TEST_F(FlopCppExamples, DISABLED_stochBenders){ // takes too long
+    TEST_F(FlopCppExamples, stochBenders){ // takes too long
         /* Benders decomposition for a simple transportation problem
         with stochastic demands. For details see: Erwin Kalvelagen:
         "Benders decomposition for stochastic programming with GAMS"
@@ -3859,7 +3859,7 @@ namespace flopc {
         cout<<"Test stochbenders passed."<<endl;
     }
 
-    TEST_F(FlopCppExamples, DISABLED_sudoku){ // takes too long
+    TEST_F(FlopCppExamples, sudoku){ // takes too long
         MP_model testModel(new OsiCpxSolverInterface);
 
         const int p = 3;
@@ -4335,11 +4335,11 @@ namespace flopc {
         }
 
         TEST_F(SmiUnitTest, FixColumns) {
-#ifdef _MSC_VER
-            std::string dataDir = "../../../../Data/Benders/other";
-#else
-            std::string dataDir = "../../Data/Benders/other";
-#endif
+//#ifdef _MSC_VER
+//            std::string dataDir = "../../../../Data/Benders/other";
+//#else
+            std::string dataDir = "../../../Data/Benders/other";
+//#endif
             int nrows, ncols;
 
             SmiScnModel smi;
@@ -7677,8 +7677,8 @@ namespace flopc {
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
-    ::testing::InitGoogleTest(&argc, argv); // use in command line arguments --gtest_filter="<>" with one of: UnitTest.*, FlopCppExamples.*, IntegerTest.*, MP_modelTest.*, RandomVariableTest.*, UseCaseTest.*
-    //::testing::GTEST_FLAG(filter) = "UnitTest.*"; // UnitTest.*, FlopCppExamples.*, IntegerTest.*, MP_modelTest.*, RandomVariableTest.*, UseCaseTest.*
+    ::testing::InitGoogleTest(&argc, argv); // use in command line arguments --gtest_filter="<>" with one of: UnitTest.*, FlopCppExamples.*, IntegerTest.*, MP_modelTest.*, RandomVariableTest.*, UseCaseTest.*, SmiUnitTest.*
+    //::testing::GTEST_FLAG(filter) = "UnitTest.*"; // UnitTest.*, FlopCppExamples.*, IntegerTest.*, MP_modelTest.*, RandomVariableTest.*, UseCaseTest.*, SmiUnitTest.*
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
@@ -7686,7 +7686,7 @@ int main(int argc, char *argv[]) {
     //google::LogToStderr();
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
     int result = RUN_ALL_TESTS();
-    //_CrtMemDumpAllObjectsSince(&memstate);
-    //_CrtDumpMemoryLeaks();
+//    _CrtMemDumpAllObjectsSince(&memstate);
+//    _CrtDumpMemoryLeaks();
     return result;
 }
