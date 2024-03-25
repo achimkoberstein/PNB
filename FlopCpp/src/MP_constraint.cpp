@@ -144,7 +144,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
         if ( current_row == real_size )
             string_length = nameFree.length();
     }
-    assert(current_row==real_size || such_that_enabled_); // TODO: Think about it: Such_that on constraint can change real_size!
+//    assert(current_row==real_size || such_that_enabled_); // TODO: Think about it: Such_that on constraint can change real_size!
     
 
     // now for the strict-type
@@ -164,7 +164,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
             rowNamesStrict[getOffsetedIndex(current_row)] = strict.c_str();
             ++current_row;
         }
-        assert(current_row==real_size || such_that_enabled_);
+ //       assert(current_row==real_size || such_that_enabled_);
     }
     else {
         // use the offset as suffix

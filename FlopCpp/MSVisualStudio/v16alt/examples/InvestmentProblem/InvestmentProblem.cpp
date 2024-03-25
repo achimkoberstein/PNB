@@ -55,9 +55,8 @@ void runInvestmentModel() {
 
     initialWealthConstr() = sum(assets, x(0, assets)) == start();
     allocationConstr(T) = sum(assets, x(T, assets)) == wealth(T);
-    returnConstr(T).such_that(T > 0) = sum(assets, returns(T, assets) * x(T - 1, assets)) == wealth(T);
-    //   returnConstr(T) = sum(assets, returns(T, assets) * x(T, assets)) == wealth(T);
-    //   returnConstr(T+1) = sum(assets, returns(T+1, assets) * x(T, assets)) == wealth(T+1);
+//    returnConstr(T).such_that(T > 0) = sum(assets, returns(T, assets) * x(T - 1, assets)) == wealth(T);  // works as well
+    returnConstr(T+1) = sum(assets, returns(T, assets) * x(T-1, assets)) == wealth(T);
     goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last());
 
     MP_expression valueFunction(-4.0 * shortage(T.last()) + 1.0 * overage(T.last()));
