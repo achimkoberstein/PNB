@@ -1494,8 +1494,10 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     //BendersNodeData.hpp - check for the parameters
     parallel_benders::Parameter param;
     param.init();
-    param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
-    param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, true);
+	param.SetParameterValue(parallel_benders::PNB_BENDERS, 12); // PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT
+	param.SetParameterValue(parallel_benders::PNB_NUM_CPU, 1); // single thread
+	param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relax bin variables on Stage 2 and set their bounds to (0, 1)
+    param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, false); // do not solve integer relaxatio
 
     // Create a new OsiStochasticPNB interface
     OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
