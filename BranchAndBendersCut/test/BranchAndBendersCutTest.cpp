@@ -1313,7 +1313,9 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     MP_model m(new OsiCpxSolverInterface);
 
     // path : D:\STUDENT_JOB\PNB\Data\Benders
-    std::string fname = "../../../Data/Benders/networkDesignTest/r01.1.dow";
+	std::string base_dir("../../../../Data/Benders/");
+
+    std::string fname = base_dir + "networkDesignTest/r01.1.dow";
     std::ifstream file(fname);
 
     if (!file.is_open()) {
@@ -1361,7 +1363,7 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     }
     file.close();
 
-    std::string scenfname = "../../../Data/Benders/networkDesignTest/r01-0.2-16";
+    std::string scenfname = base_dir + "networkDesignTest/r01-0.2-16";
     std::ifstream scenfile(scenfname.c_str());
 
     enum { stage1, stage2, numStages };
@@ -1466,12 +1468,14 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
 
     m.setObjective(sum(K, sum(A, x(T + 1, A, K) * C(A))) + sum(A, F(A) * y(A)));
     m.attach();
-    m.Solver->writeLp("../../../Data/Benders/networkDesignTest/StochasticNetworkDesign");
+	std::string write_lp_dir = base_dir + "networkDesignTest/StochasticNetworkDesign";
+    m.Solver->writeLp(write_lp_dir.c_str());
 
     std::cout << "Writing SMPS" << std::endl;
-    m.getSmi()->writeSmps("../../../Data/Benders/networkDesignTest/NetworkDesign_smps", false, false);
+	std::string write_mps_dir = base_dir + "networkDesignTest/NetworkDesign_smps";
+    m.getSmi()->writeSmps(write_mps_dir.c_str(), false, false);
 
-    std::string total_string = "../../../Data/Benders/networkDesignTest/NetworkDesign_smps";
+    std::string total_string = base_dir + "networkDesignTest/NetworkDesign_smps";
 
    // int smps_read_in = 0;
     //SmiScnModel smi_model;
