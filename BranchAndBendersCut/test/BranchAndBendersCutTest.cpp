@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <array>
 
+
 #define GOOGLE_GLOG_DLL_DECL // Has to be done to correct linking issues
 #include <glog/logging.h>
 #include <boost/foreach.hpp>
@@ -44,6 +45,7 @@ using namespace flopc;
 #include "ilcplex/cpxconst.h"
 
 #include "OsiRowCut.hpp"
+
 
 class TimerTest : public ::testing::Test {
 public:
@@ -1309,18 +1311,14 @@ TEST_F(BranchAndBendersTest, mcfndsd_cr_RAHMANIANI) {
 
 
 TEST_F(BranchAndBendersTest, NetworkDesign) {
+    OsiCpxSolverInterface osi_solver;
+    MP_model m(&osi_solver);
+    
 
-    MP_model m(new OsiCpxSolverInterface);
+    std::string folder("../../../../Data/Benders/networkDesignTest/");
 
-    // path : D:\STUDENT_JOB\PNB\Data\Benders
-	std::string base_dir("../../../../Data/Benders/");
-
-    std::string fname = base_dir + "networkDesignTest/r01.1.dow";
-    std::ifstream file(fname);
-
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << fname << std::endl;
-     }
+    std::string fname = "r01.1.dow";
+    std::ifstream file(folder + fname.c_str());
 
     std::string line;
     std::getline(file, line);
@@ -1363,8 +1361,8 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     }
     file.close();
 
-    std::string scenfname = base_dir + "networkDesignTest/r01-0.2-16";
-    std::ifstream scenfile(scenfname.c_str());
+    std::string scenfname = "r01-0.2-16";
+    std::ifstream scenfile(folder + scenfname.c_str());
 
     enum { stage1, stage2, numStages };
     MP_stage T(numStages);
@@ -1380,6 +1378,7 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
 
     MP_data prob(scen);
     prob.setName("prob");
+
 
     MP_subset<2> A(N, N); //arcs
     for (int i = 0; i < numarcs; i++) {
@@ -1404,15 +1403,9 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
         D(k) = commodityData[k][1];
     }
 
-    double**** scenDemand = new double*** [1];
-    scenDemand[0] = new double** [numnodes];
-    for (int i = 0; i < numnodes; i++) {
-        scenDemand[0][i] = new double* [numcoms];
-        for (int j = 0; j < numcoms; j++) {
-            scenDemand[0][i][j] = new double[numScenarios];
-        }
-    }
+    std::vector<double> scenDemand((numStages - 1) * numnodes * numcoms * numScenarios);
 
+    //MISTAKE HERE
     vector<double> probability(numScenarios);
     vector<vector<double>> stochasticDemand(numScenarios, vector<double>(numcoms));
 
@@ -1432,24 +1425,26 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
         for (int k = 0; k < numcoms; k++) {
             for (int i = 0; i < numScenarios; i++) {
                 if (n == O(k)) {
-                    scenDemand[0][n][k][i] = stochasticDemand[i][k];
+                    scenDemand[((0 * numnodes + n) * numcoms + k) * numScenarios + i] = stochasticDemand[i][k];
                 }
-                else if (i == D(k)) {
-                    scenDemand[0][n][k][i] = -stochasticDemand[i][k];
+                else if (n == D(k)) {
+                    scenDemand[((0 * numnodes + n) * numcoms + k) * numScenarios + i] = -stochasticDemand[i][k];
                 }
                 else {
-                    scenDemand[0][n][k][i] = 0;
+                    scenDemand[((0 * numnodes + n) * numcoms + k) * numScenarios + i] = 0;
                 }
+                cout << scenDemand[((0 * numnodes + n) * numcoms + k) * numScenarios + i] << " ";
             }
+            cout << "|";
         }
     }
 
     m.setProbabilities(prob);
     cout << "SCEN DEMAND:" << endl;
 
-    MP_random_data demand(&scenDemand[0][0][0][0], T, N, K);
-    demand.setName("demand");
 
+    MP_random_data demand(&scenDemand[0], T, N, K);
+    demand.setName("demand");
     file.close();
 
     MP_variable	x(T, A, K); //transportation cost variable
@@ -1458,38 +1453,31 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     x.setName("x");
     y.setName("y");
 
-    MP_constraint
-        demand_constraint(T, N, K), //demand constraint for each node should be satisfied      
-        capacity_constraint(T, A, K);
-    MP_index s, i, j, k;
+
+    MP_constraint  demand_constraint(T, N, K); //demand constraint for each node should be satisfied      
+    MP_constraint  capacity_constraint(T, A);
+
+    MP_index i, j, k;
+
 
     demand_constraint(T + 1, i, k) = sum(N(j), x(T, A(i, j), k)) - sum(N(j), x(T, A(j, i), k)) == demand(T, i, k);
-    capacity_constraint(T + 1, A, K) = sum(K, x(T, A, K)) <= y(A) * U(A);
+    capacity_constraint(T + 1, A) = sum(K, x(T, A, K)) <= y(A) * U(A);
 
     m.setObjective(sum(K, sum(A, x(T + 1, A, K) * C(A))) + sum(A, F(A) * y(A)));
+
     m.attach();
-	std::string write_lp_dir = base_dir + "networkDesignTest/StochasticNetworkDesign";
-    m.Solver->writeLp(write_lp_dir.c_str());
+    std::string lpname = "StochasticNetworkDesign";
+    m.Solver->writeLp((folder + lpname).c_str());
 
+    SmiScnModel smi = *m.getSmi();
     std::cout << "Writing SMPS" << std::endl;
-	std::string write_mps_dir = base_dir + "networkDesignTest/NetworkDesign_smps";
-    m.getSmi()->writeSmps(write_mps_dir.c_str(), false, false);
-
-    std::string total_string = base_dir + "networkDesignTest/NetworkDesign_smps";
-
-   // int smps_read_in = 0;
-    //SmiScnModel smi_model;
-    //smps_read_in = smi_model.readSmps(total_string.c_str(), total_string.c_str(), total_string.c_str());
-
-    //if (smps_read_in != 0) {
-    //    LOG(ERROR) << "Reading in your SMPS file failed.";
-    //}
-
+    std::string smpsname = "StochasticNetworkDesign_smps";
+    smi.writeSmps((folder + smpsname).c_str(), false, false);
 
     // ---------------------------------------
     // ---------- use PNB solver -------------
     // ---------------------------------------
-
+    
     // Parameter file
     //BendersNodeData.hpp - check for the parameters
     parallel_benders::Parameter param;
@@ -1499,9 +1487,9 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
 	param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relax bin variables on Stage 2 and set their bounds to (0, 1)
     param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, false); // do not solve integer relaxatio
 
+
     // Create a new OsiStochasticPNB interface
-    OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
-    OsiStochasticBranchAndBendersCutSolverInterface bbc_interface(osi_solver, m.getSmi());
+    OsiStochasticBranchAndBendersCutSolverInterface bbc_interface(&osi_solver, &smi);
     bbc_interface.setParameters(param);
 
     branch_and_benders_cut::BranchAndBendersCut* bbc = bbc_interface.getBBC();
@@ -1509,41 +1497,7 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     bbc->Solve();
 
     //bbc->Reset(-1, true);
-
-    delete osi_solver;
-
-
-    /*
-    OsiCpxSolverInterface osi_cpx;
-    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
-    m.setSolver(m.getSmi()->getOsiSolverInterface()); // therefore model solver object needs to be reset
-
-    m.setStochasticSolver(&nested_benders);
-
-    // Declare parameter file
-    parallel_benders::Parameter benders_param;
-    benders_param.init();
-    //    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-    //	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-        // benders_param.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION, parallel_benders::PNB_INT_USE_EV_SOLUTION);
-    //	benders_param.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION, true);  //CRASHES
-    benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
-
-    benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, 1);
-
-    // To set a parameter look in NestedBendersTest.cpp
-    m.StochSolver->setParameters(benders_param);
-
-    double pnbtime = CoinCpuTime();
-    m.StochSolver->initialSolve();
-    pnbtime = CoinCpuTime() - pnbtime;
-
-    std::cout << "Objective-Value " << nested_benders.getObjValue() << std::endl;
-    x.display();
-    y.display();
-    */
-
+    delete &osi_solver;
 }
 
 
@@ -1555,7 +1509,7 @@ int main(int argc, char* argv[]) {
 	int result = 0;
 
 	::testing::GTEST_FLAG(output) = "xml:../../../../Data/Benders/NestedBendersTestLog.xml"; // store results in xml file //
-	//::testing::GTEST_FLAG(filter) = "UnitTest.*";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
+    ::testing::GTEST_FLAG(filter) = "BranchAndBendersTest.NetworkDesign";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
 	::testing::InitGoogleTest(&argc, argv);
 	google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
