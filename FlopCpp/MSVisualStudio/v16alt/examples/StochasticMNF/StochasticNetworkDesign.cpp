@@ -16,8 +16,9 @@ using std::endl;
 
 
 int main(int argc, char* argv[]) {
-    MP_model m(new OsiCpxSolverInterface);
-
+    //MP_model m(new OsiCpxSolverInterface);
+    OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
+    MP_model m(osi_solver);
 
     std::string fname = "r01.1.dow";
     std::ifstream file(fname.c_str());
@@ -68,7 +69,7 @@ int main(int argc, char* argv[]) {
 
     std::string scenfname = "r01-0.2-16";
     std::ifstream scenfile(scenfname.c_str());
-   
+
     enum { stage1, stage2, numStages };
     MP_stage T(numStages);
     T.setName("T");
@@ -89,7 +90,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < numarcs; i++) {
         A.insert(arcData[i][0] - 1, arcData[i][1] - 1);
     }
-   // A.display();
+    // A.display();
 
     MP_data C(A); //transportation costs
     MP_data U(A); //capacity
@@ -113,32 +114,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    //vector<vector<vector<double>>> scenDemand;
-    //vector<vector<vector<vector<double>>>> scenDemand(1, vector<vector<vector<double>>>(numnodes, vector<vector<double>>(numcoms, vector<double>(numScenarios))));
-    // x = number of elements in 1D vector
-    // y = number of 1D vectors in 2D vector
-    // z = number of 2D vectors in 3D vector
-    // value = value for each element
-    
-    //double** a = new double[numnodes][numcoms];
-    double**** scenDemand = new double*** [1];
-    scenDemand[0] = new double** [numnodes];
-    for (int i = 0; i < numnodes; i++) {
-        scenDemand[0][i] = new double* [numcoms];
-        for (int j = 0; j < numcoms; j++) {
-            scenDemand[0][i][j] = new double[numScenarios];
-        }
-    }
-
-    //double** scenDemand = new double[1][numcoms];
-    //double*** scenDemand[1][numcoms][numScenarios];
-    //{// Second Stage , First Stage is always omitted
-    //    { // scen L M H
-    //        {2 , 2.5 , 3} , // wheat
-    //        {2.4 , 3 , 3.6} , // corn
-    //        {16 , 20 , 24}  // sugar beets
-    //    }
-    //};
+    std::vector<double> scenDemand((numStages - 1) * numnodes * numcoms * numScenarios);
 
     //MISTAKE HERE
     vector<double> probability(numScenarios);
@@ -160,25 +136,25 @@ int main(int argc, char* argv[]) {
         for (int k = 0; k < numcoms; k++) {
             for (int i = 0; i < numScenarios; i++) {
                 if (n == O(k)) {
-                    scenDemand[0][n][k][i] = stochasticDemand[i][k];
+                    scenDemand[((0 * numnodes + n) * numcoms + k) * numScenarios + i] = stochasticDemand[i][k];
                 }
-                else if (i == D(k)) {
-                    scenDemand[0][n][k][i] = -stochasticDemand[i][k];
+                else if (n == D(k)) {
+                    scenDemand[((0 * numnodes + n) * numcoms + k) * numScenarios + i] = -stochasticDemand[i][k];
                 }
                 else {
-                    scenDemand[0][n][k][i] = 0;
+                    scenDemand[((0 * numnodes + n) * numcoms + k) * numScenarios + i] = 0;
                 }
+                cout << scenDemand[((0 * numnodes + n) * numcoms + k) * numScenarios + i] << " ";
             }
+            cout << "|";
         }
     }
 
-
-
     m.setProbabilities(prob);
     cout << "SCEN DEMAND:" << endl;
-    
 
-    MP_random_data demand(&scenDemand[0][0][0][0], T, N, K);
+
+    MP_random_data demand(&scenDemand[0], T, N, K);
     demand.setName("demand");
 
 
@@ -193,15 +169,14 @@ int main(int argc, char* argv[]) {
     y.setName("y");
 
 
-    MP_constraint
-        demand_constraint(T, N, K), //demand constraint for each node should be satisfied      
-        capacity_constraint(T, A, K);
+    MP_constraint  demand_constraint(T, N, K); //demand constraint for each node should be satisfied      
+    MP_constraint  capacity_constraint(T, A);
 
-    MP_index s, i, j, k;
+    MP_index i, j, k;
 
 
-    demand_constraint(T + 1, i, k) = sum(N(j), x(T, A(i, j), k)) - sum(N(j), x(T, A(j, i), k)) == demand(T,i,k);
-    capacity_constraint(T + 1, A, K) = sum(K, x(T, A, K)) <= y(A) * U(A);
+    demand_constraint(T + 1, i, k) = sum(N(j), x(T, A(i, j), k)) - sum(N(j), x(T, A(j, i), k)) == demand(T, i, k);
+    capacity_constraint(T + 1, A) = sum(K, x(T, A, K)) <= y(A) * U(A);
 
     m.setObjective(sum(K, sum(A, x(T + 1, A, K) * C(A))) + sum(A, F(A) * y(A)));
 
@@ -210,7 +185,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Writing SMPS" << std::endl;
 
-    m.getSmi()->writeSmps(".\\NetworkDesign_smps", false, false);
+    m.getSmi()->writeSmps(".\\StochasticNetworkDesign_smps", false, false);
 
     // ---------------------------------------
     // ---------- use PNB solver -------------
@@ -225,11 +200,7 @@ int main(int argc, char* argv[]) {
     // Declare parameter file
     parallel_benders::Parameter benders_param;
     benders_param.init();
-//    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);
     benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-    //	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-        // benders_param.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION, parallel_benders::PNB_INT_USE_EV_SOLUTION);
-    //	benders_param.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION, true);  //CRASHES
     benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
 
     benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, 1);
@@ -242,7 +213,7 @@ int main(int argc, char* argv[]) {
     pnbtime = CoinCpuTime() - pnbtime;
 
     std::cout << "Objective-Value " << nested_benders.getObjValue() << std::endl;
-    x.display();
+    //x.display();
     y.display();
     
 }
