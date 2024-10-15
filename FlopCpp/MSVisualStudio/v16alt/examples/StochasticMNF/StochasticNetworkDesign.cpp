@@ -20,7 +20,8 @@ int main(int argc, char* argv[]) {
     OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
     MP_model m(osi_solver);
 
-    std::string fname = "r01.1.dow";
+    //std::string fname = "r01.1.dow";
+    std::string fname = "simpleProblem.dow";
     std::ifstream file(fname.c_str());
 
     std::string line;
@@ -67,7 +68,8 @@ int main(int argc, char* argv[]) {
 
 
 
-    std::string scenfname = "r01-0.2-16";
+    //std::string scenfname = "r01-0.2-16";
+    std::string scenfname = "simpleScenarioSet.2-2";
     std::ifstream scenfile(scenfname.c_str());
 
     enum { stage1, stage2, numStages };
@@ -181,11 +183,12 @@ int main(int argc, char* argv[]) {
     m.setObjective(sum(K, sum(A, x(T + 1, A, K) * C(A))) + sum(A, F(A) * y(A)));
 
     m.attach();
-    m.Solver->writeLp(".\\StochasticNetworkDesign");
-
+    //m.Solver->writeLp(".\\StochasticNetworkDesign");
+    m.Solver->writeLp(".\\simpleStochasticNetworkDesign");
     std::cout << "Writing SMPS" << std::endl;
 
-    m.getSmi()->writeSmps(".\\StochasticNetworkDesign_smps", false, false);
+    //m.getSmi()->writeSmps(".\\StochasticNetworkDesign_smps", false, false);
+    m.getSmi()->writeSmps(".\\simpleStochasticNetworkDesign_smps", true, true);
 
     // ---------------------------------------
     // ---------- use PNB solver -------------

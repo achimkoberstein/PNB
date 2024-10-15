@@ -315,7 +315,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 			//parameter_strings_.push_back("{}"); // default parameters
 
 			// DETEQ
-			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
+			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
 
 			// BENDERS CPLEX
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_SOLVER_BENDERS\", \"PNB_NUM_CPU\" : 1 }");
@@ -378,7 +378,7 @@ class BranchAndBendersTest : public ::testing::Test { // this is the Test set, e
 
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 0,  \"PNB_LP_CUTS_FOR_FRACT\" : 4  }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : true, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 1,  \"PNB_LP_CUTS_FOR_FRACT\" : 4  }");
-			parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROOT_ROUNDS_LIMIT\" : 10, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 4, \"PNB_LP_OPT_CUTS_AFTER_LP_CUTS\" : true}");
+			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROOT_ROUNDS_LIMIT\" : 10, \"PNB_LP_ROUNDS_LIMIT\" : 5,  \"PNB_LP_CUTS_FOR_FRACT\" : 4, \"PNB_LP_OPT_CUTS_AFTER_LP_CUTS\" : true}");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 10,  \"PNB_LP_CUTS_FOR_FRACT\" : 4  }");
 			//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT\", \"PNB_NUM_CPU\" : 1, \"PNB_USE_FIRST_PHASE\" : false, \"PNB_LIFT_AND_P_METHOD\" : 2, \"PNB_LP_ROUNDS_LIMIT\" : 20,  \"PNB_LP_CUTS_FOR_FRACT\" : 4  }");
 			
@@ -874,6 +874,13 @@ TEST_F(BranchAndBendersTest, unitTest) {
 	param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 	param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, true);
 
+    /*
+    param.SetParameterValue(parallel_benders::PNB_BENDERS, 12); // PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT
+    param.SetParameterValue(parallel_benders::PNB_NUM_CPU, 1); // single thread
+    param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relax bin variables on Stage 2 and set their bounds to (0, 1)
+    param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, false); // do not solve integer relaxation
+    */
+
 	core_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
 	time_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
 	stoch_name = "glushko/sndp_mini_tests/SNDP_TestCase_0";
@@ -1311,13 +1318,9 @@ TEST_F(BranchAndBendersTest, mcfndsd_cr_RAHMANIANI) {
 
 
 TEST_F(BranchAndBendersTest, NetworkDesign) {
-    OsiCpxSolverInterface osi_solver;
-    MP_model m(&osi_solver);
-    
-
-    std::string folder("../../../../Data/Benders/networkDesignTest/");
-
-    std::string fname = "r01.1.dow";
+    /*
+    //std::string fname = "r01.1.dow";
+    std::string fname = "simpleProblem.dow";
     std::ifstream file(folder + fname.c_str());
 
     std::string line;
@@ -1361,7 +1364,8 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     }
     file.close();
 
-    std::string scenfname = "r01-0.2-16";
+    //std::string scenfname = "r01-0.2-16";
+    std::string scenfname = "simpleScenarioSet.2-2";
     std::ifstream scenfile(folder + scenfname.c_str());
 
     enum { stage1, stage2, numStages };
@@ -1466,13 +1470,29 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     m.setObjective(sum(K, sum(A, x(T + 1, A, K) * C(A))) + sum(A, F(A) * y(A)));
 
     m.attach();
-    std::string lpname = "StochasticNetworkDesign";
+    //std::string lpname = "StochasticNetworkDesign";
+    std::string lpname = "simpleStochasticNetworkDesign";
     m.Solver->writeLp((folder + lpname).c_str());
 
-    SmiScnModel smi = *m.getSmi();
-    std::cout << "Writing SMPS" << std::endl;
-    std::string smpsname = "StochasticNetworkDesign_smps";
-    smi.writeSmps((folder + smpsname).c_str(), false, false);
+
+    //SmiScnModel smi = *m.getSmi();
+    //std::cout << "Writing SMPS" << std::endl;
+    //std::string smpsname = "StochasticNetworkDesign_smps";
+    //smi.writeSmps((folder + smpsname).c_str(), false, false);
+    */
+
+    std::string folder("../../../../Data/Benders/networkDesignTest/");
+
+    std::string name = "simpleStochasticNetworkDesign_smps";
+    std::string total_string = folder + name;
+
+    int smps_read_in = 0;
+    SmiScnModel smi_model;
+    smps_read_in = smi_model.readSmps(total_string.c_str(), total_string.c_str(), total_string.c_str());
+
+    if (smps_read_in != 0) {
+        LOG(ERROR) << "Reading in your SMPS file failed.";
+    }
 
     // ---------------------------------------
     // ---------- use PNB solver -------------
@@ -1482,24 +1502,40 @@ TEST_F(BranchAndBendersTest, NetworkDesign) {
     //BendersNodeData.hpp - check for the parameters
     parallel_benders::Parameter param;
     param.init();
-	param.SetParameterValue(parallel_benders::PNB_BENDERS, 12); // PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT
+    param.SetParameterValue(parallel_benders::PNB_BENDERS, 12); // PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT
 	param.SetParameterValue(parallel_benders::PNB_NUM_CPU, 1); // single thread
 	param.SetParameterValue(parallel_benders::PNB_RELAXATION, 2); // relax bin variables on Stage 2 and set their bounds to (0, 1)
-    param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, false); // do not solve integer relaxatio
-
+    param.SetParameterValue(parallel_benders::PNB_USE_FIRST_PHASE, false); // do not solve integer relaxation
+    
 
     // Create a new OsiStochasticPNB interface
-    OsiStochasticBranchAndBendersCutSolverInterface bbc_interface(&osi_solver, &smi);
+    OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
+    OsiStochasticBranchAndBendersCutSolverInterface bbc_interface(osi_solver, &smi_model);
     bbc_interface.setParameters(param);
+    //osi_solver->writeLp("../../../../Data/Benders/networkDesignTest/simpleStochasticNetworkDesign");
+    OsiSolverInterface* osi_solver2 = smi_model.getOsiSolverInterface();
+    osi_solver2->writeLp("../../../../Data/Benders/networkDesignTest/simpleStochasticNetworkDesign");
+  
 
     branch_and_benders_cut::BranchAndBendersCut* bbc = bbc_interface.getBBC();
     bbc->Init();
     bbc->Solve();
 
     //bbc->Reset(-1, true);
-    delete &osi_solver;
+
+    delete osi_solver;
 }
 
+
+TEST_F(BranchAndBendersTest, NetworkDesign_subtest) {
+    // Binary 1st stage
+    bbc_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 300);
+    bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
+    
+    //Comment line 381, uncomment line 318 to check if DETEQ algorithm would work
+    EXPECT_NEAR(solveSMPS("networkDesignTest/simpleStochasticNetworkDesign_smps"), 8335, 0.3);
+    EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
+}
 
 
 

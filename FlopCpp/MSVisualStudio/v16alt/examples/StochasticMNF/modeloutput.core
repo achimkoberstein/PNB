@@ -1,0 +1,43 @@
+NAME          modelout  FREE
+ROWS
+ N  OBJROW
+ E  
+ E  
+ E  
+ E  
+ E  
+ E  
+ L  
+ L  
+ L  
+ L  
+COLUMNS
+    y_0 OBJROW 595  -613
+    y_1 OBJROW 595  -613
+    y_2 OBJROW 554  -265
+    y_3 OBJROW 143  -129
+    x_1_0_0 OBJROW 100  1
+    x_1_0_0  -1  1
+    x_1_0_1 OBJROW 100  1
+    x_1_0_1  -1  1
+    x_1_1_0 OBJROW 100  1
+    x_1_1_0  -1  1
+    x_1_1_1 OBJROW 100  1
+    x_1_1_1  -1  1
+    x_1_2_0 OBJROW 27  -1
+    x_1_2_0  1  1
+    x_1_2_1 OBJROW 27  -1
+    x_1_2_1  1  1
+    x_1_3_0 OBJROW 76  -1
+    x_1_3_0  1  1
+    x_1_3_1 OBJROW 76  -1
+    x_1_3_1  1  1
+RHS
+    RHS  -70.33199999999999  -12.7952
+    RHS  12.7952  70.33199999999999
+BOUNDS
+ BV BOUND y_0 1
+ BV BOUND y_1 1
+ BV BOUND y_2 1
+ BV BOUND y_3 1
+ENDATA

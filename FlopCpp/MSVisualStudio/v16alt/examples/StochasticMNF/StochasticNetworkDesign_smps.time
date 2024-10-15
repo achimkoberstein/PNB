@@ -1,4 +1,4 @@
-TIME          ../../..
+TIME          .\Stocha
 PERIODS
     y_0                          STAGE_0
     x_1_0_0                          STAGE_1

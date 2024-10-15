@@ -1,0 +1,10 @@
+STOCH         .\simple
+SCENARIOS     DISCRETE
+ SC Scen_0      'ROOT'    1 STAGE_0
+    RHS         cons0        -70.331999999999993634
+    RHS         cons1        -12.795199999999999463
+    RHS         cons2        0
+    RHS         cons3        12.795199999999999463
+    RHS         cons4        70.331999999999993634
+    RHS         cons5        0
+ENDATA

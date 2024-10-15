@@ -1,0 +1,43 @@
+NAME          .\simple
+ROWS
+ N  OBJROW
+ E  cons0
+ E  cons1
+ E  cons2
+ E  cons3
+ E  cons4
+ E  cons5
+ L  cons6
+ L  cons7
+ L  cons8
+ L  cons9
+COLUMNS
+    y_0 OBJROW 595 cons6 -613
+    y_1 OBJROW 595 cons7 -613
+    y_2 OBJROW 554 cons8 -265
+    y_3 OBJROW 143 cons9 -129
+ x_1_0_0 OBJROW 100 cons0 1
+ x_1_0_0 cons2 -1 cons6 1
+ x_1_0_1 OBJROW 100 cons1 1
+ x_1_0_1 cons3 -1 cons6 1
+ x_1_1_0 OBJROW 100 cons2 1
+ x_1_1_0 cons4 -1 cons7 1
+ x_1_1_1 OBJROW 100 cons3 1
+ x_1_1_1 cons5 -1 cons7 1
+ x_1_2_0 OBJROW 27 cons2 -1
+ x_1_2_0 cons4 1 cons8 1
+ x_1_2_1 OBJROW 27 cons3 -1
+ x_1_2_1 cons5 1 cons8 1
+ x_1_3_0 OBJROW 76 cons0 -1
+ x_1_3_0 cons4 1 cons9 1
+ x_1_3_1 OBJROW 76 cons1 -1
+ x_1_3_1 cons5 1 cons9 1
+RHS
+    RHS  cons0 -70.33199999999999 cons1 -12.7952
+    RHS  cons3 12.7952  cons4 70.33199999999999
+BOUNDS
+ BV BOUND y_0 1
+ BV BOUND y_1 1
+ BV BOUND y_2 1
+ BV BOUND y_3 1
+ENDATA
