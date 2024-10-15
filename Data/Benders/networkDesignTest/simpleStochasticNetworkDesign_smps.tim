@@ -1,0 +1,5 @@
+TIME          .\simple (MIN)
+PERIODS      
+    y_0      cons0                    STAGE_0
+    x_1_0_0  cons0                        STAGE_1
+ENDATA
