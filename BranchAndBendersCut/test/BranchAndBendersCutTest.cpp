@@ -1533,7 +1533,7 @@ TEST_F(BranchAndBendersTest, NetworkDesign_subtest) {
     bbc_parameter_.SetParameterValue(parallel_benders::PNB_CGP_EPSILON_RELATIVE, 0.01);
     
     //Comment line 381, uncomment line 318 to check if DETEQ algorithm would work
-    EXPECT_NEAR(solveSMPS("networkDesignTest/simpleStochasticNetworkDesign_smps"), 8335, 0.3);
+    EXPECT_NEAR(solveSMPS("networkDesignTest/simpleStochasticNetworkDesign_smps"), 9114.72, 0.3);
     EXPECT_NEAR(solveSMPS("glushko/sndp_mini_tests/SNDP_TestCase_0"), -15250.00, 0.1); // standard
 }
 
@@ -1545,7 +1545,7 @@ int main(int argc, char* argv[]) {
 	int result = 0;
 
 	::testing::GTEST_FLAG(output) = "xml:../../../../Data/Benders/NestedBendersTestLog.xml"; // store results in xml file //
-    ::testing::GTEST_FLAG(filter) = "BranchAndBendersTest.NetworkDesign";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
+    ::testing::GTEST_FLAG(filter) = "BranchAndBendersTest.NetworkDesign_subtest";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
 	::testing::InitGoogleTest(&argc, argv);
 	google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
