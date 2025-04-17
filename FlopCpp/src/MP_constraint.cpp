@@ -225,8 +225,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
         I1->getIndex()->unInstantiate();
         if ( S1.check(value) != outOfBound )
             ss << "_" << value;
-        else
-            return "";
+        //else
+         //   return "";
         if (&S2 != &MP_set::getEmpty()) {
             I2->getIndex()->assign(ik.i2);
             I2->getIndex()->instantiate();
@@ -234,8 +234,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
             I2->getIndex()->unInstantiate();
             if ( S2.check(value) != outOfBound )
                 ss << "_" << value;
-            else
-                return "";
+           // else
+           //     return "";
             if (&S3 != &MP_set::getEmpty()) {
                 I3->getIndex()->assign(ik.i3);
                 I3->getIndex()->instantiate();
@@ -243,8 +243,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
                 I3->getIndex()->unInstantiate();
                 if ( S3.check(value) != outOfBound )
                     ss << "_" << value;
-                else
-                    return "";
+            //    else
+            //        return "";
                 if (&S4 != &MP_set::getEmpty()) {
                     I4->getIndex()->assign(ik.i4);
                     I4->getIndex()->instantiate();
@@ -252,8 +252,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
                     I4->getIndex()->unInstantiate();
                     if ( S4.check(value) != outOfBound )
                         ss << "_" << value;
-                    else
-                        return "";
+            //        else
+            //            return "";
                     if (&S5 != &MP_set::getEmpty()) {
                         I5->getIndex()->assign(ik.i5);
                         I5->getIndex()->instantiate();
@@ -261,8 +261,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
                         I5->getIndex()->unInstantiate();
                         if ( S1.check(value) != outOfBound )
                             ss << "_" << value;
-                        else
-                            return "";
+            //            else
+            //                return "";
                     }
                 }
             }

@@ -136,8 +136,9 @@ void MP_variable::operator()() const {
         i5.evaluate());
     if ( offset > M->N()) // should take realn anyway
         assert(false);
-    if ( M->colIndirection[curOffset] == outOfBound )
+    if (M->getStochastic() && M->colIndirection[curOffset] == outOfBound) {
         return;
+    }
 
     std::stringstream string_stream; // Store everything in a string stream!
     if (S1!=&MP_set::getEmpty()) string_stream << i1.evaluate() << " ";
