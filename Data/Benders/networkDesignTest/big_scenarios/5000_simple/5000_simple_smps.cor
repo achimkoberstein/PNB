@@ -1,0 +1,46 @@
+NAME          big_scen  FREE
+ROWS
+ N  OBJROW
+ E  dcons_0_0
+ E  dcons_0_1
+ E  dcons_1_0
+ E  dcons_1_1
+ E  dcons_2_0
+ E  dcons_2_1
+ L  ccons_0
+ L  ccons_1
+ L  ccons_2
+ L  ccons_3
+COLUMNS
+    y_0 OBJROW 595 ccons_0 -613
+    y_1 OBJROW 595 ccons_1 -613
+    y_2 OBJROW 554 ccons_2 -265
+    y_3 OBJROW 143 ccons_3 -129
+    x_1_0_0 OBJROW 100 dcons_0_0 1
+    x_1_0_0 dcons_1_0 -1 ccons_0 1
+    x_1_0_1 OBJROW 100 dcons_0_1 1
+    x_1_0_1 dcons_1_1 -1 ccons_0 1
+    x_1_1_0 OBJROW 100 dcons_1_0 1
+    x_1_1_0 dcons_2_0 -1 ccons_1 1
+    x_1_1_1 OBJROW 100 dcons_1_1 1
+    x_1_1_1 dcons_2_1 -1 ccons_1 1
+    x_1_2_0 OBJROW 27 dcons_1_0 -1
+    x_1_2_0 dcons_2_0 1 ccons_2 1
+    x_1_2_1 OBJROW 27 dcons_1_1 -1
+    x_1_2_1 dcons_2_1 1 ccons_2 1
+    x_1_3_0 OBJROW 76 dcons_0_0 -1
+    x_1_3_0 dcons_2_0 1 ccons_3 1
+    x_1_3_1 OBJROW 76 dcons_0_1 -1
+    x_1_3_1 dcons_2_1 1 ccons_3 1
+    z_1 OBJROW 1000 ccons_0 -1
+    z_1 ccons_1 -1 ccons_2 -1
+    z_1 ccons_3 -1
+RHS
+    RHS dcons_0_0 -54.94594398000003 dcons_0_1 -55.2322217800002
+    RHS dcons_1_1 55.2322217800002 dcons_2_0 54.94594398000003
+BOUNDS
+ BV BOUND y_0 1
+ BV BOUND y_1 1
+ BV BOUND y_2 1
+ BV BOUND y_3 1
+ENDATA

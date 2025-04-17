@@ -1,0 +1,940 @@
+NAME          64_scena  FREE
+ROWS
+ N  OBJROW
+ E  dcons_0_0
+ E  dcons_0_1
+ E  dcons_0_2
+ E  dcons_0_3
+ E  dcons_0_4
+ E  dcons_0_5
+ E  dcons_0_6
+ E  dcons_0_7
+ E  dcons_0_8
+ E  dcons_0_9
+ E  dcons_1_0
+ E  dcons_1_1
+ E  dcons_1_2
+ E  dcons_1_3
+ E  dcons_1_4
+ E  dcons_1_5
+ E  dcons_1_6
+ E  dcons_1_7
+ E  dcons_1_8
+ E  dcons_1_9
+ E  dcons_2_0
+ E  dcons_2_1
+ E  dcons_2_2
+ E  dcons_2_3
+ E  dcons_2_4
+ E  dcons_2_5
+ E  dcons_2_6
+ E  dcons_2_7
+ E  dcons_2_8
+ E  dcons_2_9
+ E  dcons_3_0
+ E  dcons_3_1
+ E  dcons_3_2
+ E  dcons_3_3
+ E  dcons_3_4
+ E  dcons_3_5
+ E  dcons_3_6
+ E  dcons_3_7
+ E  dcons_3_8
+ E  dcons_3_9
+ E  dcons_4_0
+ E  dcons_4_1
+ E  dcons_4_2
+ E  dcons_4_3
+ E  dcons_4_4
+ E  dcons_4_5
+ E  dcons_4_6
+ E  dcons_4_7
+ E  dcons_4_8
+ E  dcons_4_9
+ E  dcons_5_0
+ E  dcons_5_1
+ E  dcons_5_2
+ E  dcons_5_3
+ E  dcons_5_4
+ E  dcons_5_5
+ E  dcons_5_6
+ E  dcons_5_7
+ E  dcons_5_8
+ E  dcons_5_9
+ E  dcons_6_0
+ E  dcons_6_1
+ E  dcons_6_2
+ E  dcons_6_3
+ E  dcons_6_4
+ E  dcons_6_5
+ E  dcons_6_6
+ E  dcons_6_7
+ E  dcons_6_8
+ E  dcons_6_9
+ E  dcons_7_0
+ E  dcons_7_1
+ E  dcons_7_2
+ E  dcons_7_3
+ E  dcons_7_4
+ E  dcons_7_5
+ E  dcons_7_6
+ E  dcons_7_7
+ E  dcons_7_8
+ E  dcons_7_9
+ E  dcons_8_0
+ E  dcons_8_1
+ E  dcons_8_2
+ E  dcons_8_3
+ E  dcons_8_4
+ E  dcons_8_5
+ E  dcons_8_6
+ E  dcons_8_7
+ E  dcons_8_8
+ E  dcons_8_9
+ E  dcons_9_0
+ E  dcons_9_1
+ E  dcons_9_2
+ E  dcons_9_3
+ E  dcons_9_4
+ E  dcons_9_5
+ E  dcons_9_6
+ E  dcons_9_7
+ E  dcons_9_8
+ E  dcons_9_9
+ L  ccons_0
+ L  ccons_1
+ L  ccons_2
+ L  ccons_3
+ L  ccons_4
+ L  ccons_5
+ L  ccons_6
+ L  ccons_7
+ L  ccons_8
+ L  ccons_9
+ L  ccons_10
+ L  ccons_11
+ L  ccons_12
+ L  ccons_13
+ L  ccons_14
+ L  ccons_15
+ L  ccons_16
+ L  ccons_17
+ L  ccons_18
+ L  ccons_19
+ L  ccons_20
+ L  ccons_21
+ L  ccons_22
+ L  ccons_23
+ L  ccons_24
+ L  ccons_25
+ L  ccons_26
+ L  ccons_27
+ L  ccons_28
+ L  ccons_29
+ L  ccons_30
+ L  ccons_31
+ L  ccons_32
+ L  ccons_33
+ L  ccons_34
+COLUMNS
+    y_0 OBJROW 595 ccons_0 -613
+    y_1 OBJROW 244 ccons_1 -81
+    y_2 OBJROW 375 ccons_2 -151
+    y_3 OBJROW 369 ccons_3 -223
+    y_4 OBJROW 595 ccons_4 -613
+    y_5 OBJROW 441 ccons_5 -198
+    y_6 OBJROW 340 ccons_6 -115
+    y_7 OBJROW 179 ccons_7 -215
+    y_8 OBJROW 363 ccons_8 -193
+    y_9 OBJROW 595 ccons_9 -613
+    y_10 OBJROW 554 ccons_10 -265
+    y_11 OBJROW 143 ccons_11 -129
+    y_12 OBJROW 238 ccons_12 -143
+    y_13 OBJROW 518 ccons_13 -129
+    y_14 OBJROW 595 ccons_14 -613
+    y_15 OBJROW 108 ccons_15 -232
+    y_16 OBJROW 322 ccons_16 -179
+    y_17 OBJROW 595 ccons_17 -613
+    y_18 OBJROW 125 ccons_18 -73
+    y_19 OBJROW 536 ccons_19 -232
+    y_20 OBJROW 524 ccons_20 -276
+    y_21 OBJROW 595 ccons_21 -613
+    y_22 OBJROW 304 ccons_22 -101
+    y_23 OBJROW 393 ccons_23 -173
+    y_24 OBJROW 595 ccons_24 -613
+    y_25 OBJROW 286 ccons_25 -198
+    y_26 OBJROW 572 ccons_26 -221
+    y_27 OBJROW 595 ccons_27 -613
+    y_28 OBJROW 340 ccons_28 -134
+    y_29 OBJROW 357 ccons_29 -134
+    y_30 OBJROW 256 ccons_30 -201
+    y_31 OBJROW 595 ccons_31 -613
+    y_32 OBJROW 298 ccons_32 -240
+    y_33 OBJROW 595 ccons_33 -613
+    y_34 OBJROW 375 ccons_34 -156
+    x_1_0_0 OBJROW 100 dcons_0_0 1
+    x_1_0_0 dcons_1_0 -1 ccons_0 1
+    x_1_0_1 OBJROW 100 dcons_0_1 1
+    x_1_0_1 dcons_1_1 -1 ccons_0 1
+    x_1_0_2 OBJROW 100 dcons_0_2 1
+    x_1_0_2 dcons_1_2 -1 ccons_0 1
+    x_1_0_3 OBJROW 100 dcons_0_3 1
+    x_1_0_3 dcons_1_3 -1 ccons_0 1
+    x_1_0_4 OBJROW 100 dcons_0_4 1
+    x_1_0_4 dcons_1_4 -1 ccons_0 1
+    x_1_0_5 OBJROW 100 dcons_0_5 1
+    x_1_0_5 dcons_1_5 -1 ccons_0 1
+    x_1_0_6 OBJROW 100 dcons_0_6 1
+    x_1_0_6 dcons_1_6 -1 ccons_0 1
+    x_1_0_7 OBJROW 100 dcons_0_7 1
+    x_1_0_7 dcons_1_7 -1 ccons_0 1
+    x_1_0_8 OBJROW 100 dcons_0_8 1
+    x_1_0_8 dcons_1_8 -1 ccons_0 1
+    x_1_0_9 OBJROW 100 dcons_0_9 1
+    x_1_0_9 dcons_1_9 -1 ccons_0 1
+    x_1_1_0 OBJROW 54 dcons_0_0 1
+    x_1_1_0 dcons_9_0 -1 ccons_1 1
+    x_1_1_1 OBJROW 54 dcons_0_1 1
+    x_1_1_1 dcons_9_1 -1 ccons_1 1
+    x_1_1_2 OBJROW 54 dcons_0_2 1
+    x_1_1_2 dcons_9_2 -1 ccons_1 1
+    x_1_1_3 OBJROW 54 dcons_0_3 1
+    x_1_1_3 dcons_9_3 -1 ccons_1 1
+    x_1_1_4 OBJROW 54 dcons_0_4 1
+    x_1_1_4 dcons_9_4 -1 ccons_1 1
+    x_1_1_5 OBJROW 54 dcons_0_5 1
+    x_1_1_5 dcons_9_5 -1 ccons_1 1
+    x_1_1_6 OBJROW 54 dcons_0_6 1
+    x_1_1_6 dcons_9_6 -1 ccons_1 1
+    x_1_1_7 OBJROW 54 dcons_0_7 1
+    x_1_1_7 dcons_9_7 -1 ccons_1 1
+    x_1_1_8 OBJROW 54 dcons_0_8 1
+    x_1_1_8 dcons_9_8 -1 ccons_1 1
+    x_1_1_9 OBJROW 54 dcons_0_9 1
+    x_1_1_9 dcons_9_9 -1 ccons_1 1
+    x_1_2_0 OBJROW 45 dcons_0_0 1
+    x_1_2_0 dcons_7_0 -1 ccons_2 1
+    x_1_2_1 OBJROW 45 dcons_0_1 1
+    x_1_2_1 dcons_7_1 -1 ccons_2 1
+    x_1_2_2 OBJROW 45 dcons_0_2 1
+    x_1_2_2 dcons_7_2 -1 ccons_2 1
+    x_1_2_3 OBJROW 45 dcons_0_3 1
+    x_1_2_3 dcons_7_3 -1 ccons_2 1
+    x_1_2_4 OBJROW 45 dcons_0_4 1
+    x_1_2_4 dcons_7_4 -1 ccons_2 1
+    x_1_2_5 OBJROW 45 dcons_0_5 1
+    x_1_2_5 dcons_7_5 -1 ccons_2 1
+    x_1_2_6 OBJROW 45 dcons_0_6 1
+    x_1_2_6 dcons_7_6 -1 ccons_2 1
+    x_1_2_7 OBJROW 45 dcons_0_7 1
+    x_1_2_7 dcons_7_7 -1 ccons_2 1
+    x_1_2_8 OBJROW 45 dcons_0_8 1
+    x_1_2_8 dcons_7_8 -1 ccons_2 1
+    x_1_2_9 OBJROW 45 dcons_0_9 1
+    x_1_2_9 dcons_7_9 -1 ccons_2 1
+    x_1_3_0 OBJROW 18 dcons_0_0 1
+    x_1_3_0 dcons_6_0 -1 ccons_3 1
+    x_1_3_1 OBJROW 18 dcons_0_1 1
+    x_1_3_1 dcons_6_1 -1 ccons_3 1
+    x_1_3_2 OBJROW 18 dcons_0_2 1
+    x_1_3_2 dcons_6_2 -1 ccons_3 1
+    x_1_3_3 OBJROW 18 dcons_0_3 1
+    x_1_3_3 dcons_6_3 -1 ccons_3 1
+    x_1_3_4 OBJROW 18 dcons_0_4 1
+    x_1_3_4 dcons_6_4 -1 ccons_3 1
+    x_1_3_5 OBJROW 18 dcons_0_5 1
+    x_1_3_5 dcons_6_5 -1 ccons_3 1
+    x_1_3_6 OBJROW 18 dcons_0_6 1
+    x_1_3_6 dcons_6_6 -1 ccons_3 1
+    x_1_3_7 OBJROW 18 dcons_0_7 1
+    x_1_3_7 dcons_6_7 -1 ccons_3 1
+    x_1_3_8 OBJROW 18 dcons_0_8 1
+    x_1_3_8 dcons_6_8 -1 ccons_3 1
+    x_1_3_9 OBJROW 18 dcons_0_9 1
+    x_1_3_9 dcons_6_9 -1 ccons_3 1
+    x_1_4_0 OBJROW 100 dcons_1_0 1
+    x_1_4_0 dcons_2_0 -1 ccons_4 1
+    x_1_4_1 OBJROW 100 dcons_1_1 1
+    x_1_4_1 dcons_2_1 -1 ccons_4 1
+    x_1_4_2 OBJROW 100 dcons_1_2 1
+    x_1_4_2 dcons_2_2 -1 ccons_4 1
+    x_1_4_3 OBJROW 100 dcons_1_3 1
+    x_1_4_3 dcons_2_3 -1 ccons_4 1
+    x_1_4_4 OBJROW 100 dcons_1_4 1
+    x_1_4_4 dcons_2_4 -1 ccons_4 1
+    x_1_4_5 OBJROW 100 dcons_1_5 1
+    x_1_4_5 dcons_2_5 -1 ccons_4 1
+    x_1_4_6 OBJROW 100 dcons_1_6 1
+    x_1_4_6 dcons_2_6 -1 ccons_4 1
+    x_1_4_7 OBJROW 100 dcons_1_7 1
+    x_1_4_7 dcons_2_7 -1 ccons_4 1
+    x_1_4_8 OBJROW 100 dcons_1_8 1
+    x_1_4_8 dcons_2_8 -1 ccons_4 1
+    x_1_4_9 OBJROW 100 dcons_1_9 1
+    x_1_4_9 dcons_2_9 -1 ccons_4 1
+    x_1_5_0 OBJROW 13 dcons_1_0 1
+    x_1_5_0 dcons_3_0 -1 ccons_5 1
+    x_1_5_1 OBJROW 13 dcons_1_1 1
+    x_1_5_1 dcons_3_1 -1 ccons_5 1
+    x_1_5_2 OBJROW 13 dcons_1_2 1
+    x_1_5_2 dcons_3_2 -1 ccons_5 1
+    x_1_5_3 OBJROW 13 dcons_1_3 1
+    x_1_5_3 dcons_3_3 -1 ccons_5 1
+    x_1_5_4 OBJROW 13 dcons_1_4 1
+    x_1_5_4 dcons_3_4 -1 ccons_5 1
+    x_1_5_5 OBJROW 13 dcons_1_5 1
+    x_1_5_5 dcons_3_5 -1 ccons_5 1
+    x_1_5_6 OBJROW 13 dcons_1_6 1
+    x_1_5_6 dcons_3_6 -1 ccons_5 1
+    x_1_5_7 OBJROW 13 dcons_1_7 1
+    x_1_5_7 dcons_3_7 -1 ccons_5 1
+    x_1_5_8 OBJROW 13 dcons_1_8 1
+    x_1_5_8 dcons_3_8 -1 ccons_5 1
+    x_1_5_9 OBJROW 13 dcons_1_9 1
+    x_1_5_9 dcons_3_9 -1 ccons_5 1
+    x_1_6_0 OBJROW 92 dcons_1_0 1
+    x_1_6_0 dcons_6_0 -1 ccons_6 1
+    x_1_6_1 OBJROW 92 dcons_1_1 1
+    x_1_6_1 dcons_6_1 -1 ccons_6 1
+    x_1_6_2 OBJROW 92 dcons_1_2 1
+    x_1_6_2 dcons_6_2 -1 ccons_6 1
+    x_1_6_3 OBJROW 92 dcons_1_3 1
+    x_1_6_3 dcons_6_3 -1 ccons_6 1
+    x_1_6_4 OBJROW 92 dcons_1_4 1
+    x_1_6_4 dcons_6_4 -1 ccons_6 1
+    x_1_6_5 OBJROW 92 dcons_1_5 1
+    x_1_6_5 dcons_6_5 -1 ccons_6 1
+    x_1_6_6 OBJROW 92 dcons_1_6 1
+    x_1_6_6 dcons_6_6 -1 ccons_6 1
+    x_1_6_7 OBJROW 92 dcons_1_7 1
+    x_1_6_7 dcons_6_7 -1 ccons_6 1
+    x_1_6_8 OBJROW 92 dcons_1_8 1
+    x_1_6_8 dcons_6_8 -1 ccons_6 1
+    x_1_6_9 OBJROW 92 dcons_1_9 1
+    x_1_6_9 dcons_6_9 -1 ccons_6 1
+    x_1_7_0 OBJROW 13 dcons_1_0 1
+    x_1_7_0 dcons_8_0 -1 ccons_7 1
+    x_1_7_1 OBJROW 13 dcons_1_1 1
+    x_1_7_1 dcons_8_1 -1 ccons_7 1
+    x_1_7_2 OBJROW 13 dcons_1_2 1
+    x_1_7_2 dcons_8_2 -1 ccons_7 1
+    x_1_7_3 OBJROW 13 dcons_1_3 1
+    x_1_7_3 dcons_8_3 -1 ccons_7 1
+    x_1_7_4 OBJROW 13 dcons_1_4 1
+    x_1_7_4 dcons_8_4 -1 ccons_7 1
+    x_1_7_5 OBJROW 13 dcons_1_5 1
+    x_1_7_5 dcons_8_5 -1 ccons_7 1
+    x_1_7_6 OBJROW 13 dcons_1_6 1
+    x_1_7_6 dcons_8_6 -1 ccons_7 1
+    x_1_7_7 OBJROW 13 dcons_1_7 1
+    x_1_7_7 dcons_8_7 -1 ccons_7 1
+    x_1_7_8 OBJROW 13 dcons_1_8 1
+    x_1_7_8 dcons_8_8 -1 ccons_7 1
+    x_1_7_9 OBJROW 13 dcons_1_9 1
+    x_1_7_9 dcons_8_9 -1 ccons_7 1
+    x_1_8_0 OBJROW 93 dcons_1_0 1
+    x_1_8_0 dcons_7_0 -1 ccons_8 1
+    x_1_8_1 OBJROW 93 dcons_1_1 1
+    x_1_8_1 dcons_7_1 -1 ccons_8 1
+    x_1_8_2 OBJROW 93 dcons_1_2 1
+    x_1_8_2 dcons_7_2 -1 ccons_8 1
+    x_1_8_3 OBJROW 93 dcons_1_3 1
+    x_1_8_3 dcons_7_3 -1 ccons_8 1
+    x_1_8_4 OBJROW 93 dcons_1_4 1
+    x_1_8_4 dcons_7_4 -1 ccons_8 1
+    x_1_8_5 OBJROW 93 dcons_1_5 1
+    x_1_8_5 dcons_7_5 -1 ccons_8 1
+    x_1_8_6 OBJROW 93 dcons_1_6 1
+    x_1_8_6 dcons_7_6 -1 ccons_8 1
+    x_1_8_7 OBJROW 93 dcons_1_7 1
+    x_1_8_7 dcons_7_7 -1 ccons_8 1
+    x_1_8_8 OBJROW 93 dcons_1_8 1
+    x_1_8_8 dcons_7_8 -1 ccons_8 1
+    x_1_8_9 OBJROW 93 dcons_1_9 1
+    x_1_8_9 dcons_7_9 -1 ccons_8 1
+    x_1_9_0 OBJROW 100 dcons_2_0 1
+    x_1_9_0 dcons_3_0 -1 ccons_9 1
+    x_1_9_1 OBJROW 100 dcons_2_1 1
+    x_1_9_1 dcons_3_1 -1 ccons_9 1
+    x_1_9_2 OBJROW 100 dcons_2_2 1
+    x_1_9_2 dcons_3_2 -1 ccons_9 1
+    x_1_9_3 OBJROW 100 dcons_2_3 1
+    x_1_9_3 dcons_3_3 -1 ccons_9 1
+    x_1_9_4 OBJROW 100 dcons_2_4 1
+    x_1_9_4 dcons_3_4 -1 ccons_9 1
+    x_1_9_5 OBJROW 100 dcons_2_5 1
+    x_1_9_5 dcons_3_5 -1 ccons_9 1
+    x_1_9_6 OBJROW 100 dcons_2_6 1
+    x_1_9_6 dcons_3_6 -1 ccons_9 1
+    x_1_9_7 OBJROW 100 dcons_2_7 1
+    x_1_9_7 dcons_3_7 -1 ccons_9 1
+    x_1_9_8 OBJROW 100 dcons_2_8 1
+    x_1_9_8 dcons_3_8 -1 ccons_9 1
+    x_1_9_9 OBJROW 100 dcons_2_9 1
+    x_1_9_9 dcons_3_9 -1 ccons_9 1
+    x_1_10_0 OBJROW 27 dcons_1_0 -1
+    x_1_10_0 dcons_2_0 1 ccons_10 1
+    x_1_10_1 OBJROW 27 dcons_1_1 -1
+    x_1_10_1 dcons_2_1 1 ccons_10 1
+    x_1_10_2 OBJROW 27 dcons_1_2 -1
+    x_1_10_2 dcons_2_2 1 ccons_10 1
+    x_1_10_3 OBJROW 27 dcons_1_3 -1
+    x_1_10_3 dcons_2_3 1 ccons_10 1
+    x_1_10_4 OBJROW 27 dcons_1_4 -1
+    x_1_10_4 dcons_2_4 1 ccons_10 1
+    x_1_10_5 OBJROW 27 dcons_1_5 -1
+    x_1_10_5 dcons_2_5 1 ccons_10 1
+    x_1_10_6 OBJROW 27 dcons_1_6 -1
+    x_1_10_6 dcons_2_6 1 ccons_10 1
+    x_1_10_7 OBJROW 27 dcons_1_7 -1
+    x_1_10_7 dcons_2_7 1 ccons_10 1
+    x_1_10_8 OBJROW 27 dcons_1_8 -1
+    x_1_10_8 dcons_2_8 1 ccons_10 1
+    x_1_10_9 OBJROW 27 dcons_1_9 -1
+    x_1_10_9 dcons_2_9 1 ccons_10 1
+    x_1_11_0 OBJROW 76 dcons_0_0 -1
+    x_1_11_0 dcons_2_0 1 ccons_11 1
+    x_1_11_1 OBJROW 76 dcons_0_1 -1
+    x_1_11_1 dcons_2_1 1 ccons_11 1
+    x_1_11_2 OBJROW 76 dcons_0_2 -1
+    x_1_11_2 dcons_2_2 1 ccons_11 1
+    x_1_11_3 OBJROW 76 dcons_0_3 -1
+    x_1_11_3 dcons_2_3 1 ccons_11 1
+    x_1_11_4 OBJROW 76 dcons_0_4 -1
+    x_1_11_4 dcons_2_4 1 ccons_11 1
+    x_1_11_5 OBJROW 76 dcons_0_5 -1
+    x_1_11_5 dcons_2_5 1 ccons_11 1
+    x_1_11_6 OBJROW 76 dcons_0_6 -1
+    x_1_11_6 dcons_2_6 1 ccons_11 1
+    x_1_11_7 OBJROW 76 dcons_0_7 -1
+    x_1_11_7 dcons_2_7 1 ccons_11 1
+    x_1_11_8 OBJROW 76 dcons_0_8 -1
+    x_1_11_8 dcons_2_8 1 ccons_11 1
+    x_1_11_9 OBJROW 76 dcons_0_9 -1
+    x_1_11_9 dcons_2_9 1 ccons_11 1
+    x_1_12_0 OBJROW 11 dcons_2_0 1
+    x_1_12_0 dcons_6_0 -1 ccons_12 1
+    x_1_12_1 OBJROW 11 dcons_2_1 1
+    x_1_12_1 dcons_6_1 -1 ccons_12 1
+    x_1_12_2 OBJROW 11 dcons_2_2 1
+    x_1_12_2 dcons_6_2 -1 ccons_12 1
+    x_1_12_3 OBJROW 11 dcons_2_3 1
+    x_1_12_3 dcons_6_3 -1 ccons_12 1
+    x_1_12_4 OBJROW 11 dcons_2_4 1
+    x_1_12_4 dcons_6_4 -1 ccons_12 1
+    x_1_12_5 OBJROW 11 dcons_2_5 1
+    x_1_12_5 dcons_6_5 -1 ccons_12 1
+    x_1_12_6 OBJROW 11 dcons_2_6 1
+    x_1_12_6 dcons_6_6 -1 ccons_12 1
+    x_1_12_7 OBJROW 11 dcons_2_7 1
+    x_1_12_7 dcons_6_7 -1 ccons_12 1
+    x_1_12_8 OBJROW 11 dcons_2_8 1
+    x_1_12_8 dcons_6_8 -1 ccons_12 1
+    x_1_12_9 OBJROW 11 dcons_2_9 1
+    x_1_12_9 dcons_6_9 -1 ccons_12 1
+    x_1_13_0 OBJROW 25 dcons_2_0 1
+    x_1_13_0 dcons_9_0 -1 ccons_13 1
+    x_1_13_1 OBJROW 25 dcons_2_1 1
+    x_1_13_1 dcons_9_1 -1 ccons_13 1
+    x_1_13_2 OBJROW 25 dcons_2_2 1
+    x_1_13_2 dcons_9_2 -1 ccons_13 1
+    x_1_13_3 OBJROW 25 dcons_2_3 1
+    x_1_13_3 dcons_9_3 -1 ccons_13 1
+    x_1_13_4 OBJROW 25 dcons_2_4 1
+    x_1_13_4 dcons_9_4 -1 ccons_13 1
+    x_1_13_5 OBJROW 25 dcons_2_5 1
+    x_1_13_5 dcons_9_5 -1 ccons_13 1
+    x_1_13_6 OBJROW 25 dcons_2_6 1
+    x_1_13_6 dcons_9_6 -1 ccons_13 1
+    x_1_13_7 OBJROW 25 dcons_2_7 1
+    x_1_13_7 dcons_9_7 -1 ccons_13 1
+    x_1_13_8 OBJROW 25 dcons_2_8 1
+    x_1_13_8 dcons_9_8 -1 ccons_13 1
+    x_1_13_9 OBJROW 25 dcons_2_9 1
+    x_1_13_9 dcons_9_9 -1 ccons_13 1
+    x_1_14_0 OBJROW 100 dcons_3_0 1
+    x_1_14_0 dcons_4_0 -1 ccons_14 1
+    x_1_14_1 OBJROW 100 dcons_3_1 1
+    x_1_14_1 dcons_4_1 -1 ccons_14 1
+    x_1_14_2 OBJROW 100 dcons_3_2 1
+    x_1_14_2 dcons_4_2 -1 ccons_14 1
+    x_1_14_3 OBJROW 100 dcons_3_3 1
+    x_1_14_3 dcons_4_3 -1 ccons_14 1
+    x_1_14_4 OBJROW 100 dcons_3_4 1
+    x_1_14_4 dcons_4_4 -1 ccons_14 1
+    x_1_14_5 OBJROW 100 dcons_3_5 1
+    x_1_14_5 dcons_4_5 -1 ccons_14 1
+    x_1_14_6 OBJROW 100 dcons_3_6 1
+    x_1_14_6 dcons_4_6 -1 ccons_14 1
+    x_1_14_7 OBJROW 100 dcons_3_7 1
+    x_1_14_7 dcons_4_7 -1 ccons_14 1
+    x_1_14_8 OBJROW 100 dcons_3_8 1
+    x_1_14_8 dcons_4_8 -1 ccons_14 1
+    x_1_14_9 OBJROW 100 dcons_3_9 1
+    x_1_14_9 dcons_4_9 -1 ccons_14 1
+    x_1_15_0 OBJROW 95 dcons_2_0 -1
+    x_1_15_0 dcons_3_0 1 ccons_15 1
+    x_1_15_1 OBJROW 95 dcons_2_1 -1
+    x_1_15_1 dcons_3_1 1 ccons_15 1
+    x_1_15_2 OBJROW 95 dcons_2_2 -1
+    x_1_15_2 dcons_3_2 1 ccons_15 1
+    x_1_15_3 OBJROW 95 dcons_2_3 -1
+    x_1_15_3 dcons_3_3 1 ccons_15 1
+    x_1_15_4 OBJROW 95 dcons_2_4 -1
+    x_1_15_4 dcons_3_4 1 ccons_15 1
+    x_1_15_5 OBJROW 95 dcons_2_5 -1
+    x_1_15_5 dcons_3_5 1 ccons_15 1
+    x_1_15_6 OBJROW 95 dcons_2_6 -1
+    x_1_15_6 dcons_3_6 1 ccons_15 1
+    x_1_15_7 OBJROW 95 dcons_2_7 -1
+    x_1_15_7 dcons_3_7 1 ccons_15 1
+    x_1_15_8 OBJROW 95 dcons_2_8 -1
+    x_1_15_8 dcons_3_8 1 ccons_15 1
+    x_1_15_9 OBJROW 95 dcons_2_9 -1
+    x_1_15_9 dcons_3_9 1 ccons_15 1
+    x_1_16_0 OBJROW 50 dcons_3_0 1
+    x_1_16_0 dcons_9_0 -1 ccons_16 1
+    x_1_16_1 OBJROW 50 dcons_3_1 1
+    x_1_16_1 dcons_9_1 -1 ccons_16 1
+    x_1_16_2 OBJROW 50 dcons_3_2 1
+    x_1_16_2 dcons_9_2 -1 ccons_16 1
+    x_1_16_3 OBJROW 50 dcons_3_3 1
+    x_1_16_3 dcons_9_3 -1 ccons_16 1
+    x_1_16_4 OBJROW 50 dcons_3_4 1
+    x_1_16_4 dcons_9_4 -1 ccons_16 1
+    x_1_16_5 OBJROW 50 dcons_3_5 1
+    x_1_16_5 dcons_9_5 -1 ccons_16 1
+    x_1_16_6 OBJROW 50 dcons_3_6 1
+    x_1_16_6 dcons_9_6 -1 ccons_16 1
+    x_1_16_7 OBJROW 50 dcons_3_7 1
+    x_1_16_7 dcons_9_7 -1 ccons_16 1
+    x_1_16_8 OBJROW 50 dcons_3_8 1
+    x_1_16_8 dcons_9_8 -1 ccons_16 1
+    x_1_16_9 OBJROW 50 dcons_3_9 1
+    x_1_16_9 dcons_9_9 -1 ccons_16 1
+    x_1_17_0 OBJROW 100 dcons_4_0 1
+    x_1_17_0 dcons_5_0 -1 ccons_17 1
+    x_1_17_1 OBJROW 100 dcons_4_1 1
+    x_1_17_1 dcons_5_1 -1 ccons_17 1
+    x_1_17_2 OBJROW 100 dcons_4_2 1
+    x_1_17_2 dcons_5_2 -1 ccons_17 1
+    x_1_17_3 OBJROW 100 dcons_4_3 1
+    x_1_17_3 dcons_5_3 -1 ccons_17 1
+    x_1_17_4 OBJROW 100 dcons_4_4 1
+    x_1_17_4 dcons_5_4 -1 ccons_17 1
+    x_1_17_5 OBJROW 100 dcons_4_5 1
+    x_1_17_5 dcons_5_5 -1 ccons_17 1
+    x_1_17_6 OBJROW 100 dcons_4_6 1
+    x_1_17_6 dcons_5_6 -1 ccons_17 1
+    x_1_17_7 OBJROW 100 dcons_4_7 1
+    x_1_17_7 dcons_5_7 -1 ccons_17 1
+    x_1_17_8 OBJROW 100 dcons_4_8 1
+    x_1_17_8 dcons_5_8 -1 ccons_17 1
+    x_1_17_9 OBJROW 100 dcons_4_9 1
+    x_1_17_9 dcons_5_9 -1 ccons_17 1
+    x_1_18_0 OBJROW 34 dcons_1_0 -1
+    x_1_18_0 dcons_4_0 1 ccons_18 1
+    x_1_18_1 OBJROW 34 dcons_1_1 -1
+    x_1_18_1 dcons_4_1 1 ccons_18 1
+    x_1_18_2 OBJROW 34 dcons_1_2 -1
+    x_1_18_2 dcons_4_2 1 ccons_18 1
+    x_1_18_3 OBJROW 34 dcons_1_3 -1
+    x_1_18_3 dcons_4_3 1 ccons_18 1
+    x_1_18_4 OBJROW 34 dcons_1_4 -1
+    x_1_18_4 dcons_4_4 1 ccons_18 1
+    x_1_18_5 OBJROW 34 dcons_1_5 -1
+    x_1_18_5 dcons_4_5 1 ccons_18 1
+    x_1_18_6 OBJROW 34 dcons_1_6 -1
+    x_1_18_6 dcons_4_6 1 ccons_18 1
+    x_1_18_7 OBJROW 34 dcons_1_7 -1
+    x_1_18_7 dcons_4_7 1 ccons_18 1
+    x_1_18_8 OBJROW 34 dcons_1_8 -1
+    x_1_18_8 dcons_4_8 1 ccons_18 1
+    x_1_18_9 OBJROW 34 dcons_1_9 -1
+    x_1_18_9 dcons_4_9 1 ccons_18 1
+    x_1_19_0 OBJROW 72 dcons_4_0 1
+    x_1_19_0 dcons_7_0 -1 ccons_19 1
+    x_1_19_1 OBJROW 72 dcons_4_1 1
+    x_1_19_1 dcons_7_1 -1 ccons_19 1
+    x_1_19_2 OBJROW 72 dcons_4_2 1
+    x_1_19_2 dcons_7_2 -1 ccons_19 1
+    x_1_19_3 OBJROW 72 dcons_4_3 1
+    x_1_19_3 dcons_7_3 -1 ccons_19 1
+    x_1_19_4 OBJROW 72 dcons_4_4 1
+    x_1_19_4 dcons_7_4 -1 ccons_19 1
+    x_1_19_5 OBJROW 72 dcons_4_5 1
+    x_1_19_5 dcons_7_5 -1 ccons_19 1
+    x_1_19_6 OBJROW 72 dcons_4_6 1
+    x_1_19_6 dcons_7_6 -1 ccons_19 1
+    x_1_19_7 OBJROW 72 dcons_4_7 1
+    x_1_19_7 dcons_7_7 -1 ccons_19 1
+    x_1_19_8 OBJROW 72 dcons_4_8 1
+    x_1_19_8 dcons_7_8 -1 ccons_19 1
+    x_1_19_9 OBJROW 72 dcons_4_9 1
+    x_1_19_9 dcons_7_9 -1 ccons_19 1
+    x_1_20_0 OBJROW 59 dcons_2_0 -1
+    x_1_20_0 dcons_4_0 1 ccons_20 1
+    x_1_20_1 OBJROW 59 dcons_2_1 -1
+    x_1_20_1 dcons_4_1 1 ccons_20 1
+    x_1_20_2 OBJROW 59 dcons_2_2 -1
+    x_1_20_2 dcons_4_2 1 ccons_20 1
+    x_1_20_3 OBJROW 59 dcons_2_3 -1
+    x_1_20_3 dcons_4_3 1 ccons_20 1
+    x_1_20_4 OBJROW 59 dcons_2_4 -1
+    x_1_20_4 dcons_4_4 1 ccons_20 1
+    x_1_20_5 OBJROW 59 dcons_2_5 -1
+    x_1_20_5 dcons_4_5 1 ccons_20 1
+    x_1_20_6 OBJROW 59 dcons_2_6 -1
+    x_1_20_6 dcons_4_6 1 ccons_20 1
+    x_1_20_7 OBJROW 59 dcons_2_7 -1
+    x_1_20_7 dcons_4_7 1 ccons_20 1
+    x_1_20_8 OBJROW 59 dcons_2_8 -1
+    x_1_20_8 dcons_4_8 1 ccons_20 1
+    x_1_20_9 OBJROW 59 dcons_2_9 -1
+    x_1_20_9 dcons_4_9 1 ccons_20 1
+    x_1_21_0 OBJROW 100 dcons_5_0 1
+    x_1_21_0 dcons_6_0 -1 ccons_21 1
+    x_1_21_1 OBJROW 100 dcons_5_1 1
+    x_1_21_1 dcons_6_1 -1 ccons_21 1
+    x_1_21_2 OBJROW 100 dcons_5_2 1
+    x_1_21_2 dcons_6_2 -1 ccons_21 1
+    x_1_21_3 OBJROW 100 dcons_5_3 1
+    x_1_21_3 dcons_6_3 -1 ccons_21 1
+    x_1_21_4 OBJROW 100 dcons_5_4 1
+    x_1_21_4 dcons_6_4 -1 ccons_21 1
+    x_1_21_5 OBJROW 100 dcons_5_5 1
+    x_1_21_5 dcons_6_5 -1 ccons_21 1
+    x_1_21_6 OBJROW 100 dcons_5_6 1
+    x_1_21_6 dcons_6_6 -1 ccons_21 1
+    x_1_21_7 OBJROW 100 dcons_5_7 1
+    x_1_21_7 dcons_6_7 -1 ccons_21 1
+    x_1_21_8 OBJROW 100 dcons_5_8 1
+    x_1_21_8 dcons_6_8 -1 ccons_21 1
+    x_1_21_9 OBJROW 100 dcons_5_9 1
+    x_1_21_9 dcons_6_9 -1 ccons_21 1
+    x_1_22_0 OBJROW 41 dcons_5_0 1
+    x_1_22_0 dcons_9_0 -1 ccons_22 1
+    x_1_22_1 OBJROW 41 dcons_5_1 1
+    x_1_22_1 dcons_9_1 -1 ccons_22 1
+    x_1_22_2 OBJROW 41 dcons_5_2 1
+    x_1_22_2 dcons_9_2 -1 ccons_22 1
+    x_1_22_3 OBJROW 41 dcons_5_3 1
+    x_1_22_3 dcons_9_3 -1 ccons_22 1
+    x_1_22_4 OBJROW 41 dcons_5_4 1
+    x_1_22_4 dcons_9_4 -1 ccons_22 1
+    x_1_22_5 OBJROW 41 dcons_5_5 1
+    x_1_22_5 dcons_9_5 -1 ccons_22 1
+    x_1_22_6 OBJROW 41 dcons_5_6 1
+    x_1_22_6 dcons_9_6 -1 ccons_22 1
+    x_1_22_7 OBJROW 41 dcons_5_7 1
+    x_1_22_7 dcons_9_7 -1 ccons_22 1
+    x_1_22_8 OBJROW 41 dcons_5_8 1
+    x_1_22_8 dcons_9_8 -1 ccons_22 1
+    x_1_22_9 OBJROW 41 dcons_5_9 1
+    x_1_22_9 dcons_9_9 -1 ccons_22 1
+    x_1_23_0 OBJROW 73 dcons_5_0 1
+    x_1_23_0 dcons_7_0 -1 ccons_23 1
+    x_1_23_1 OBJROW 73 dcons_5_1 1
+    x_1_23_1 dcons_7_1 -1 ccons_23 1
+    x_1_23_2 OBJROW 73 dcons_5_2 1
+    x_1_23_2 dcons_7_2 -1 ccons_23 1
+    x_1_23_3 OBJROW 73 dcons_5_3 1
+    x_1_23_3 dcons_7_3 -1 ccons_23 1
+    x_1_23_4 OBJROW 73 dcons_5_4 1
+    x_1_23_4 dcons_7_4 -1 ccons_23 1
+    x_1_23_5 OBJROW 73 dcons_5_5 1
+    x_1_23_5 dcons_7_5 -1 ccons_23 1
+    x_1_23_6 OBJROW 73 dcons_5_6 1
+    x_1_23_6 dcons_7_6 -1 ccons_23 1
+    x_1_23_7 OBJROW 73 dcons_5_7 1
+    x_1_23_7 dcons_7_7 -1 ccons_23 1
+    x_1_23_8 OBJROW 73 dcons_5_8 1
+    x_1_23_8 dcons_7_8 -1 ccons_23 1
+    x_1_23_9 OBJROW 73 dcons_5_9 1
+    x_1_23_9 dcons_7_9 -1 ccons_23 1
+    x_1_24_0 OBJROW 100 dcons_6_0 1
+    x_1_24_0 dcons_7_0 -1 ccons_24 1
+    x_1_24_1 OBJROW 100 dcons_6_1 1
+    x_1_24_1 dcons_7_1 -1 ccons_24 1
+    x_1_24_2 OBJROW 100 dcons_6_2 1
+    x_1_24_2 dcons_7_2 -1 ccons_24 1
+    x_1_24_3 OBJROW 100 dcons_6_3 1
+    x_1_24_3 dcons_7_3 -1 ccons_24 1
+    x_1_24_4 OBJROW 100 dcons_6_4 1
+    x_1_24_4 dcons_7_4 -1 ccons_24 1
+    x_1_24_5 OBJROW 100 dcons_6_5 1
+    x_1_24_5 dcons_7_5 -1 ccons_24 1
+    x_1_24_6 OBJROW 100 dcons_6_6 1
+    x_1_24_6 dcons_7_6 -1 ccons_24 1
+    x_1_24_7 OBJROW 100 dcons_6_7 1
+    x_1_24_7 dcons_7_7 -1 ccons_24 1
+    x_1_24_8 OBJROW 100 dcons_6_8 1
+    x_1_24_8 dcons_7_8 -1 ccons_24 1
+    x_1_24_9 OBJROW 100 dcons_6_9 1
+    x_1_24_9 dcons_7_9 -1 ccons_24 1
+    x_1_25_0 OBJROW 96 dcons_0_0 -1
+    x_1_25_0 dcons_6_0 1 ccons_25 1
+    x_1_25_1 OBJROW 96 dcons_0_1 -1
+    x_1_25_1 dcons_6_1 1 ccons_25 1
+    x_1_25_2 OBJROW 96 dcons_0_2 -1
+    x_1_25_2 dcons_6_2 1 ccons_25 1
+    x_1_25_3 OBJROW 96 dcons_0_3 -1
+    x_1_25_3 dcons_6_3 1 ccons_25 1
+    x_1_25_4 OBJROW 96 dcons_0_4 -1
+    x_1_25_4 dcons_6_4 1 ccons_25 1
+    x_1_25_5 OBJROW 96 dcons_0_5 -1
+    x_1_25_5 dcons_6_5 1 ccons_25 1
+    x_1_25_6 OBJROW 96 dcons_0_6 -1
+    x_1_25_6 dcons_6_6 1 ccons_25 1
+    x_1_25_7 OBJROW 96 dcons_0_7 -1
+    x_1_25_7 dcons_6_7 1 ccons_25 1
+    x_1_25_8 OBJROW 96 dcons_0_8 -1
+    x_1_25_8 dcons_6_8 1 ccons_25 1
+    x_1_25_9 OBJROW 96 dcons_0_9 -1
+    x_1_25_9 dcons_6_9 1 ccons_25 1
+    x_1_26_0 OBJROW 22 dcons_6_0 1
+    x_1_26_0 dcons_8_0 -1 ccons_26 1
+    x_1_26_1 OBJROW 22 dcons_6_1 1
+    x_1_26_1 dcons_8_1 -1 ccons_26 1
+    x_1_26_2 OBJROW 22 dcons_6_2 1
+    x_1_26_2 dcons_8_2 -1 ccons_26 1
+    x_1_26_3 OBJROW 22 dcons_6_3 1
+    x_1_26_3 dcons_8_3 -1 ccons_26 1
+    x_1_26_4 OBJROW 22 dcons_6_4 1
+    x_1_26_4 dcons_8_4 -1 ccons_26 1
+    x_1_26_5 OBJROW 22 dcons_6_5 1
+    x_1_26_5 dcons_8_5 -1 ccons_26 1
+    x_1_26_6 OBJROW 22 dcons_6_6 1
+    x_1_26_6 dcons_8_6 -1 ccons_26 1
+    x_1_26_7 OBJROW 22 dcons_6_7 1
+    x_1_26_7 dcons_8_7 -1 ccons_26 1
+    x_1_26_8 OBJROW 22 dcons_6_8 1
+    x_1_26_8 dcons_8_8 -1 ccons_26 1
+    x_1_26_9 OBJROW 22 dcons_6_9 1
+    x_1_26_9 dcons_8_9 -1 ccons_26 1
+    x_1_27_0 OBJROW 100 dcons_7_0 1
+    x_1_27_0 dcons_8_0 -1 ccons_27 1
+    x_1_27_1 OBJROW 100 dcons_7_1 1
+    x_1_27_1 dcons_8_1 -1 ccons_27 1
+    x_1_27_2 OBJROW 100 dcons_7_2 1
+    x_1_27_2 dcons_8_2 -1 ccons_27 1
+    x_1_27_3 OBJROW 100 dcons_7_3 1
+    x_1_27_3 dcons_8_3 -1 ccons_27 1
+    x_1_27_4 OBJROW 100 dcons_7_4 1
+    x_1_27_4 dcons_8_4 -1 ccons_27 1
+    x_1_27_5 OBJROW 100 dcons_7_5 1
+    x_1_27_5 dcons_8_5 -1 ccons_27 1
+    x_1_27_6 OBJROW 100 dcons_7_6 1
+    x_1_27_6 dcons_8_6 -1 ccons_27 1
+    x_1_27_7 OBJROW 100 dcons_7_7 1
+    x_1_27_7 dcons_8_7 -1 ccons_27 1
+    x_1_27_8 OBJROW 100 dcons_7_8 1
+    x_1_27_8 dcons_8_8 -1 ccons_27 1
+    x_1_27_9 OBJROW 100 dcons_7_9 1
+    x_1_27_9 dcons_8_9 -1 ccons_27 1
+    x_1_28_0 OBJROW 41 dcons_2_0 -1
+    x_1_28_0 dcons_7_0 1 ccons_28 1
+    x_1_28_1 OBJROW 41 dcons_2_1 -1
+    x_1_28_1 dcons_7_1 1 ccons_28 1
+    x_1_28_2 OBJROW 41 dcons_2_2 -1
+    x_1_28_2 dcons_7_2 1 ccons_28 1
+    x_1_28_3 OBJROW 41 dcons_2_3 -1
+    x_1_28_3 dcons_7_3 1 ccons_28 1
+    x_1_28_4 OBJROW 41 dcons_2_4 -1
+    x_1_28_4 dcons_7_4 1 ccons_28 1
+    x_1_28_5 OBJROW 41 dcons_2_5 -1
+    x_1_28_5 dcons_7_5 1 ccons_28 1
+    x_1_28_6 OBJROW 41 dcons_2_6 -1
+    x_1_28_6 dcons_7_6 1 ccons_28 1
+    x_1_28_7 OBJROW 41 dcons_2_7 -1
+    x_1_28_7 dcons_7_7 1 ccons_28 1
+    x_1_28_8 OBJROW 41 dcons_2_8 -1
+    x_1_28_8 dcons_7_8 1 ccons_28 1
+    x_1_28_9 OBJROW 41 dcons_2_9 -1
+    x_1_28_9 dcons_7_9 1 ccons_28 1
+    x_1_29_0 OBJROW 78 dcons_6_0 -1
+    x_1_29_0 dcons_7_0 1 ccons_29 1
+    x_1_29_1 OBJROW 78 dcons_6_1 -1
+    x_1_29_1 dcons_7_1 1 ccons_29 1
+    x_1_29_2 OBJROW 78 dcons_6_2 -1
+    x_1_29_2 dcons_7_2 1 ccons_29 1
+    x_1_29_3 OBJROW 78 dcons_6_3 -1
+    x_1_29_3 dcons_7_3 1 ccons_29 1
+    x_1_29_4 OBJROW 78 dcons_6_4 -1
+    x_1_29_4 dcons_7_4 1 ccons_29 1
+    x_1_29_5 OBJROW 78 dcons_6_5 -1
+    x_1_29_5 dcons_7_5 1 ccons_29 1
+    x_1_29_6 OBJROW 78 dcons_6_6 -1
+    x_1_29_6 dcons_7_6 1 ccons_29 1
+    x_1_29_7 OBJROW 78 dcons_6_7 -1
+    x_1_29_7 dcons_7_7 1 ccons_29 1
+    x_1_29_8 OBJROW 78 dcons_6_8 -1
+    x_1_29_8 dcons_7_8 1 ccons_29 1
+    x_1_29_9 OBJROW 78 dcons_6_9 -1
+    x_1_29_9 dcons_7_9 1 ccons_29 1
+    x_1_30_0 OBJROW 30 dcons_1_0 -1
+    x_1_30_0 dcons_7_0 1 ccons_30 1
+    x_1_30_1 OBJROW 30 dcons_1_1 -1
+    x_1_30_1 dcons_7_1 1 ccons_30 1
+    x_1_30_2 OBJROW 30 dcons_1_2 -1
+    x_1_30_2 dcons_7_2 1 ccons_30 1
+    x_1_30_3 OBJROW 30 dcons_1_3 -1
+    x_1_30_3 dcons_7_3 1 ccons_30 1
+    x_1_30_4 OBJROW 30 dcons_1_4 -1
+    x_1_30_4 dcons_7_4 1 ccons_30 1
+    x_1_30_5 OBJROW 30 dcons_1_5 -1
+    x_1_30_5 dcons_7_5 1 ccons_30 1
+    x_1_30_6 OBJROW 30 dcons_1_6 -1
+    x_1_30_6 dcons_7_6 1 ccons_30 1
+    x_1_30_7 OBJROW 30 dcons_1_7 -1
+    x_1_30_7 dcons_7_7 1 ccons_30 1
+    x_1_30_8 OBJROW 30 dcons_1_8 -1
+    x_1_30_8 dcons_7_8 1 ccons_30 1
+    x_1_30_9 OBJROW 30 dcons_1_9 -1
+    x_1_30_9 dcons_7_9 1 ccons_30 1
+    x_1_31_0 OBJROW 100 dcons_8_0 1
+    x_1_31_0 dcons_9_0 -1 ccons_31 1
+    x_1_31_1 OBJROW 100 dcons_8_1 1
+    x_1_31_1 dcons_9_1 -1 ccons_31 1
+    x_1_31_2 OBJROW 100 dcons_8_2 1
+    x_1_31_2 dcons_9_2 -1 ccons_31 1
+    x_1_31_3 OBJROW 100 dcons_8_3 1
+    x_1_31_3 dcons_9_3 -1 ccons_31 1
+    x_1_31_4 OBJROW 100 dcons_8_4 1
+    x_1_31_4 dcons_9_4 -1 ccons_31 1
+    x_1_31_5 OBJROW 100 dcons_8_5 1
+    x_1_31_5 dcons_9_5 -1 ccons_31 1
+    x_1_31_6 OBJROW 100 dcons_8_6 1
+    x_1_31_6 dcons_9_6 -1 ccons_31 1
+    x_1_31_7 OBJROW 100 dcons_8_7 1
+    x_1_31_7 dcons_9_7 -1 ccons_31 1
+    x_1_31_8 OBJROW 100 dcons_8_8 1
+    x_1_31_8 dcons_9_8 -1 ccons_31 1
+    x_1_31_9 OBJROW 100 dcons_8_9 1
+    x_1_31_9 dcons_9_9 -1 ccons_31 1
+    x_1_32_0 OBJROW 50 dcons_5_0 -1
+    x_1_32_0 dcons_8_0 1 ccons_32 1
+    x_1_32_1 OBJROW 50 dcons_5_1 -1
+    x_1_32_1 dcons_8_1 1 ccons_32 1
+    x_1_32_2 OBJROW 50 dcons_5_2 -1
+    x_1_32_2 dcons_8_2 1 ccons_32 1
+    x_1_32_3 OBJROW 50 dcons_5_3 -1
+    x_1_32_3 dcons_8_3 1 ccons_32 1
+    x_1_32_4 OBJROW 50 dcons_5_4 -1
+    x_1_32_4 dcons_8_4 1 ccons_32 1
+    x_1_32_5 OBJROW 50 dcons_5_5 -1
+    x_1_32_5 dcons_8_5 1 ccons_32 1
+    x_1_32_6 OBJROW 50 dcons_5_6 -1
+    x_1_32_6 dcons_8_6 1 ccons_32 1
+    x_1_32_7 OBJROW 50 dcons_5_7 -1
+    x_1_32_7 dcons_8_7 1 ccons_32 1
+    x_1_32_8 OBJROW 50 dcons_5_8 -1
+    x_1_32_8 dcons_8_8 1 ccons_32 1
+    x_1_32_9 OBJROW 50 dcons_5_9 -1
+    x_1_32_9 dcons_8_9 1 ccons_32 1
+    x_1_33_0 OBJROW 100 dcons_0_0 -1
+    x_1_33_0 dcons_9_0 1 ccons_33 1
+    x_1_33_1 OBJROW 100 dcons_0_1 -1
+    x_1_33_1 dcons_9_1 1 ccons_33 1
+    x_1_33_2 OBJROW 100 dcons_0_2 -1
+    x_1_33_2 dcons_9_2 1 ccons_33 1
+    x_1_33_3 OBJROW 100 dcons_0_3 -1
+    x_1_33_3 dcons_9_3 1 ccons_33 1
+    x_1_33_4 OBJROW 100 dcons_0_4 -1
+    x_1_33_4 dcons_9_4 1 ccons_33 1
+    x_1_33_5 OBJROW 100 dcons_0_5 -1
+    x_1_33_5 dcons_9_5 1 ccons_33 1
+    x_1_33_6 OBJROW 100 dcons_0_6 -1
+    x_1_33_6 dcons_9_6 1 ccons_33 1
+    x_1_33_7 OBJROW 100 dcons_0_7 -1
+    x_1_33_7 dcons_9_7 1 ccons_33 1
+    x_1_33_8 OBJROW 100 dcons_0_8 -1
+    x_1_33_8 dcons_9_8 1 ccons_33 1
+    x_1_33_9 OBJROW 100 dcons_0_9 -1
+    x_1_33_9 dcons_9_9 1 ccons_33 1
+    x_1_34_0 OBJROW 48 dcons_5_0 -1
+    x_1_34_0 dcons_9_0 1 ccons_34 1
+    x_1_34_1 OBJROW 48 dcons_5_1 -1
+    x_1_34_1 dcons_9_1 1 ccons_34 1
+    x_1_34_2 OBJROW 48 dcons_5_2 -1
+    x_1_34_2 dcons_9_2 1 ccons_34 1
+    x_1_34_3 OBJROW 48 dcons_5_3 -1
+    x_1_34_3 dcons_9_3 1 ccons_34 1
+    x_1_34_4 OBJROW 48 dcons_5_4 -1
+    x_1_34_4 dcons_9_4 1 ccons_34 1
+    x_1_34_5 OBJROW 48 dcons_5_5 -1
+    x_1_34_5 dcons_9_5 1 ccons_34 1
+    x_1_34_6 OBJROW 48 dcons_5_6 -1
+    x_1_34_6 dcons_9_6 1 ccons_34 1
+    x_1_34_7 OBJROW 48 dcons_5_7 -1
+    x_1_34_7 dcons_9_7 1 ccons_34 1
+    x_1_34_8 OBJROW 48 dcons_5_8 -1
+    x_1_34_8 dcons_9_8 1 ccons_34 1
+    x_1_34_9 OBJROW 48 dcons_5_9 -1
+    x_1_34_9 dcons_9_9 1 ccons_34 1
+    z_1 OBJROW 1000 ccons_0 -1
+    z_1 ccons_1 -1 ccons_2 -1
+    z_1 ccons_3 -1 ccons_4 -1
+    z_1 ccons_5 -1 ccons_6 -1
+    z_1 ccons_7 -1 ccons_8 -1
+    z_1 ccons_9 -1 ccons_10 -1
+    z_1 ccons_11 -1 ccons_12 -1
+    z_1 ccons_13 -1 ccons_14 -1
+    z_1 ccons_15 -1 ccons_16 -1
+    z_1 ccons_17 -1 ccons_18 -1
+    z_1 ccons_19 -1 ccons_20 -1
+    z_1 ccons_21 -1 ccons_22 -1
+    z_1 ccons_23 -1 ccons_24 -1
+    z_1 ccons_25 -1 ccons_26 -1
+    z_1 ccons_27 -1 ccons_28 -1
+    z_1 ccons_29 -1 ccons_30 -1
+    z_1 ccons_31 -1 ccons_32 -1
+    z_1 ccons_33 -1 ccons_34 -1
+RHS
+    RHS dcons_0_6 -45.71018593749999 dcons_0_7 -56.871230625
+    RHS dcons_0_8 -41.21233 dcons_1_2 -59.35848390624999
+    RHS dcons_1_4 41.65202187499997 dcons_2_6 45.71018593749999
+    RHS dcons_3_2 59.35848390624999 dcons_3_3 29.67603359375
+    RHS dcons_3_5 -61.29835781249999 dcons_5_0 -52.23096859375
+    RHS dcons_5_1 23.33270609375001 dcons_5_8 41.21233
+    RHS dcons_6_3 -29.67603359375 dcons_7_0 52.23096859375
+    RHS dcons_7_4 -41.65202187499997 dcons_7_7 56.871230625
+    RHS dcons_7_9 -53.64112500000002 dcons_8_9 53.64112500000002
+    RHS dcons_9_1 -23.33270609375001 dcons_9_5 61.29835781249999
+BOUNDS
+ BV BOUND y_0 1
+ BV BOUND y_1 1
+ BV BOUND y_2 1
+ BV BOUND y_3 1
+ BV BOUND y_4 1
+ BV BOUND y_5 1
+ BV BOUND y_6 1
+ BV BOUND y_7 1
+ BV BOUND y_8 1
+ BV BOUND y_9 1
+ BV BOUND y_10 1
+ BV BOUND y_11 1
+ BV BOUND y_12 1
+ BV BOUND y_13 1
+ BV BOUND y_14 1
+ BV BOUND y_15 1
+ BV BOUND y_16 1
+ BV BOUND y_17 1
+ BV BOUND y_18 1
+ BV BOUND y_19 1
+ BV BOUND y_20 1
+ BV BOUND y_21 1
+ BV BOUND y_22 1
+ BV BOUND y_23 1
+ BV BOUND y_24 1
+ BV BOUND y_25 1
+ BV BOUND y_26 1
+ BV BOUND y_27 1
+ BV BOUND y_28 1
+ BV BOUND y_29 1
+ BV BOUND y_30 1
+ BV BOUND y_31 1
+ BV BOUND y_32 1
+ BV BOUND y_33 1
+ BV BOUND y_34 1
+ENDATA

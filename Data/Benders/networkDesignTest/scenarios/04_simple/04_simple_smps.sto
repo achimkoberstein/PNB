@@ -1,0 +1,31 @@
+STOCH         .\04_sim
+SCENARIOS     DISCRETE
+ SC Scen_0      'ROOT'    0.25 STAGE_0
+    RHS       dcons_0_0 -70.331999999999993634
+    RHS       dcons_0_1 -12.795199999999999463
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 12.795199999999999463
+    RHS       dcons_2_0 70.331999999999993634
+    RHS       dcons_2_1 0
+ SC Scen_1      Scen_0    0.25 STAGE_1
+    RHS       dcons_0_0 -66.787000000000006139
+    RHS       dcons_0_1 -23.184300000000000352
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 23.184300000000000352
+    RHS       dcons_2_0 66.787000000000006139
+    RHS       dcons_2_1 0
+ SC Scen_2      Scen_0    0.25 STAGE_1
+    RHS       dcons_0_0 -29.949799999999999756
+    RHS       dcons_0_1 -11.443099999999999383
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 11.443099999999999383
+    RHS       dcons_2_0 29.949799999999999756
+    RHS       dcons_2_1 0
+ SC Scen_3      Scen_0    0.25 STAGE_1
+    RHS       dcons_0_0 -15.908799999999999386
+    RHS       dcons_0_1 -25.781900000000000261
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 25.781900000000000261
+    RHS       dcons_2_0 15.908799999999999386
+    RHS       dcons_2_1 0
+ENDATA
