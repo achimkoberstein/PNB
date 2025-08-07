@@ -116,13 +116,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>../../../../../ParallelNestedBenders/src;../../../../../ThirdParty/cplex/cplex124/include/ilcplex;../../../../../Smi/src;../../../../../Osi/src/Osi;../../../../../FlopCpp/src;../../../../../Cbc/src;../../../../../Clp/src;../../../../../Cbc/src/OsiCbc;../../../../../Osi/src/OsiCpx;../../../../../Clp/src/OsiClp;../../../../../BuildTools/headers;../../../../../CoinUtils/src;../../../../../ThirdParty/gtest/include;../../../../../ThirdParty/boost; ../../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../ParallelNestedBenders/src;../../../../../ThirdParty/cplex/cplex124/include/ilcplex;../../../../../Smi/src;../../../../../Osi/src/Osi;../../../../../FlopCpp/src;../../../../../Cbc/src;../../../../../Clp/src;../../../../../Cbc/src/OsiCbc;../../../../../Osi/src/OsiCpx;../../../../../Osi/src/OsiGrb;../../../../../Clp/src/OsiClp;../../../../../BuildTools/headers;../../../../../CoinUtils/src;../../../../../ThirdParty/gtest/include;../../../../../ThirdParty/boost;../../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>cplex2010.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../../../../../ThirdParty/cplex/cplex2010/lib/x64;../../../../../ThirdParty/boost/stage/lib64;../../../../../ThirdParty/boost/stage/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cplex2010.lib;libOsiGrb.lib;gurobi_c++mdd2017.lib;gurobi120.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../../../../ThirdParty/cplex/cplex2010/lib/x64;../../../../../ThirdParty/boost/stage/lib64;../../../../../ThirdParty/boost/stage/lib;../../../../../Osi/MSVisualStudio/v16alt/libOsiGrb/Debug;C:\gurobi1203\win64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,6 +150,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\Osi\MSVisualStudio\v16alt\libOsiCpx\libOsiCpx.vcxproj">
       <Project>{d984cc99-8a07-4ee0-8654-5c03459b2b37}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Osi\MSVisualStudio\v16alt\libOsiGrb\libOsiGrb.vcxproj">
+      <Project>{969f512f-fc75-4bc5-bfaa-4103fa4905ae}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\..\ParallelNestedBenders\MSVisualStudio\v16alt\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
       <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>

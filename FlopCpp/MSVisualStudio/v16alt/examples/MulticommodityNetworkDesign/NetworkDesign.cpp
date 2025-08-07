@@ -1,17 +1,22 @@
 #include "flopc.hpp"
+#include "CoinTime.hpp"
 using namespace flopc;
 using namespace std;
 #include <OsiCpxSolverInterface.hpp>
+#include <OsiGrbSolverInterface.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
 
 
+
 int main(int argc, char* argv[]) {
     //MP_model::getDefaultModel().setSolver(new OsiCpxSolverInterface);
-    MP_model m(new OsiCpxSolverInterface);
+    //MP_model m(new OsiCpxSolverInterface);
+    MP_model m(new OsiGrbSolverInterface);
 
-    std::string fname = "simple_example.dow";
+    //std::string fname = "simple_example.dow";
+    std::string fname = "r01.1.dow";
     std::ifstream file(fname.c_str());
     
     std::string line;
@@ -129,15 +134,19 @@ int main(int argc, char* argv[]) {
     m.setObjective(sum(K, sum(A, x(A, K) * C(A))) + sum(A, F(A) * y(A)));
     m.attach(m.Solver);
 
-    m.Solver->writeLp(".\\Network1");
-
+    //m.Solver->writeLp(".\\Network1");
+    double solve_time = CoinCpuTime();
     m.solve(MP_model::MINIMIZE);
+    solve_time = CoinCpuTime() - solve_time;
+
+    std::cout << "Solve time = " << solve_time << std::endl;
+    
 
     m.Solver->writeMps(".\\Network");
     m.Solver->writeLp(".\\Network");
     cout << "Optimal objective: " << m.Solver->getObjValue() << endl;
     x.display();
-    y.display();
+    //y.display();
 
 }
 
