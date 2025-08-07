@@ -2,6 +2,7 @@
 
 #include "flopc.hpp"
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
 
 #include "SmiScnModel.hpp"
 
@@ -12,9 +13,14 @@
 using namespace flopc;
 
 int main(int argc, char* argv[]) {
+	
+	/*
 	const double myInfty = 1e5;
 
+	
 	MP_model m(new OsiCpxSolverInterface());
+	//MP_model m(new OsiGrbSolverInterface());
+
 
 	enum { stage1, stage2, numStages };
 	MP_stage T(numStages);
@@ -25,13 +31,12 @@ int main(int argc, char* argv[]) {
 	C.setName("C");
 
 	enum { low, normal, high, numScenarios };
-//	enum { normal, numScenarios };
 	MP_scenario_set scen(numScenarios);
 	scen.setName("Scen");
 
 	MP_data prob(scen);
 	prob.setName("prob");
-//	prob(normal) = 1.0;
+
 	prob(low) = 1.0/3;
 	prob(normal) = 1.0/3;
 	prob(high) = 1.0/3;
@@ -47,14 +52,7 @@ int main(int argc, char* argv[]) {
 			{16 , 20 , 24}  // sugar beets
 		}
 	};
-	//double scenYield[1][numCrops][numScenarios] =
-	//{// Second Stage , First Stage is always omitted
-	//	{ // scen L M H
-	//		{2.5} , // wheat
-	//		{3} , // corn
-	//		{20}  // sugar beets
-	//	}
-	//};
+	
     MP_random_data yield(&scenYield[0][0][0], T, C);
     yield.setName("yield");
 
@@ -109,7 +107,6 @@ int main(int argc, char* argv[]) {
 		sum(C, plantingCost(C)* x(C))
 		- sum(C, sellingPrice(C) * w(T + 1, C) + sellingPrice_aQ(C) * z(T + 1, C) - purchPrice(C) * y(T + 1, C)));
 
-	//	m.attach(m.Solver);
 	m.attach();
 	m.Solver->writeLp(".\\Farmer1");
 
@@ -117,26 +114,8 @@ int main(int argc, char* argv[]) {
 
 	m.getSmi()->writeSmps(".\\Farmer_smps", false, false);
 
-
-	//double cpxtime = CoinCpuTime();
-	//m.solve(MP_model::MINIMIZE);
-	//cpxtime = CoinCpuTime() - cpxtime;
-
-	//m.Solver->writeMps(".\\Farmer");
-	//m.Solver->writeLp(".\\Farmer");
-
-	//cout << "Optimal objective: " << m.Solver->getObjValue() << endl;
-	//x.display("Display x:\n");
-	//w.display("Display w:\n");
-	//z.display("Display z:\n");
-	//y.display("Display y:\n");
-
-
-	// ---------------------------------------
-	// ---------- use PNB solver -------------
-	// ---------------------------------------
-
 	OsiCpxSolverInterface osi_cpx;
+	//OsiGrbSolverInterface osi_grb;
 	OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
 	m.setSolver(m.getSmi()->getOsiSolverInterface()); // therefore model solver object needs to be reset
 
@@ -160,7 +139,8 @@ int main(int argc, char* argv[]) {
 	pnbtime = CoinCpuTime() - pnbtime;
 
 	std::cout << "Objective-Value " << nested_benders.getObjValue() << std::endl;
-	//	std::cout << "Cplex time = " << cpxtime << "     Benders time = " << pnbtime << std::endl;
+	//std::cout << "Cplex time = " << cpxtime << "     Benders time = " << pnbtime << std::endl;
+	std::cout << "Benders time = " << pnbtime << std::endl;
 
 	m.StochSolver->printSolutionToFile("PNB_solution.txt");
 
@@ -169,11 +149,13 @@ int main(int argc, char* argv[]) {
 	z.display("Display z:\n");
 	y.display("Display y:\n");
 
-	m.getSmi()->printout();
-	
+	//m.getSmi()->printout();
+*/
 
-/*
-	MP_model m(new OsiCpxSolverInterface);
+
+    OsiSolverInterface* osi_solver = new OsiGrbSolverInterface();
+    MP_model m(osi_solver);
+	//MP_model m(new OsiGrbSolverInterface);
 	const double myInfty = 1e5;
 
 	enum { wheat, corn, sbeets, numCrops };
@@ -243,12 +225,14 @@ int main(int argc, char* argv[]) {
 	quotaConstraint(C) = w(C) <= quota(C);
 
 	m.setObjective(	//minimization problem
-		sum(C, plantingCost(C) * x(C)) - sum(C, sellingPrice(C) * w(C)
-			+ sellingPrice_aQ(C) * z(C) - purchPrice(C) * y(C)));
+		sum(C, plantingCost(C) * x(C)) 
+		- sum(C, sellingPrice(C) * w(C)	+ sellingPrice_aQ(C) * z(C) - purchPrice(C) * y(C)));
+			
+
 
 	m.attach(m.Solver);
 
-	m.Solver->writeLp(".\\Farmer1");
+
 
 	double cpxtime = CoinCpuTime();
 	m.solve(MP_model::MINIMIZE);
@@ -256,13 +240,15 @@ int main(int argc, char* argv[]) {
 
 	m.Solver->writeMps(".\\Farmer");
 	m.Solver->writeLp(".\\Farmer");
-
+	
 	cout << "Optimal objective: " << m.Solver->getObjValue() << endl;
+	cout << "Time elapsed: " << cpxtime << endl;
+
 	x.display("Display x:\n");
 	//w.display("Display w:\n");
 	//z.display("Display z:\n");
-	//y.display("Display y:\n");
-*/
+	y.display("Display y:\n");
+	
 
 
 }

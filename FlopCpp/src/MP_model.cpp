@@ -732,7 +732,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (size_t i=0; i<coefsObj.size(); i++) {
         assert(coefsObj[i]->row == m);
         if ( coefsObj[i]->col >= 0){
-            c[coefsObj[i]->col] += coefsObj[i]->val; // a simple = should to the trick, as all coefficents are already added during the assemble step.
+           c[coefsObj[i]->col] += coefsObj[i]->val; // a simple = should to the trick, as all coefficents are already added during the assemble step.
+           //c[coefsObj[i]->col] == coefsObj[i]->val;
         }
     } 
 

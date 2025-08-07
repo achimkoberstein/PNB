@@ -91,7 +91,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\..\Clp\src;..\..\..\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\gurobi1203\win64\include;..\..\..\..\Clp\src;..\..\..\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src;..\..\..\..\Osi\src\OsiGrb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
