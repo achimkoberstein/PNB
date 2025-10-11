@@ -1,4 +1,4 @@
-#include "ParallelNestedBenders.hpp"
+﻿#include "ParallelNestedBenders.hpp"
 
 #include <assert.h>
 #include <array>
@@ -52,10 +52,10 @@
 
 
 // Gurobi stuff
-/*#include "OsiGrbSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
 extern "C" {
 #include "gurobi_c.h"
-}*/
+}
 
 
 namespace parallel_benders {
@@ -6653,6 +6653,28 @@ namespace parallel_benders {
                     }
                 }
                 if ( (*it)->to_use_ ){
+                    //ADDED FOR DEBUGGING
+                   /* auto rowCut = (*it)->getCut();
+                    int nz = rowCut.row().getNumElements(); // number of nonzero coefficients
+                    const int* idx = rowCut.row().getIndices();
+                    const double* coef = rowCut.row().getElements();
+
+                    std::ostringstream oss;
+                    oss << "Cut: ";
+                    for (int k = 0; k < nz; ++k) {
+                        oss << coef[k] << "*x[" << idx[k] << "] ";
+                        if (k < nz - 1) oss << "+ ";
+                    }
+
+                    // Depending on the API, rowCut has lb()/ub() or lhs()/rhs()
+                    double lb = rowCut.lb();
+                    double ub = rowCut.ub();
+
+                    oss << " in [ " << lb << " , " << ub << " ]";
+
+                    LOG(INFO) << oss.str();
+                    */
+
                     assert( (*it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
 					ApplyCut(osi_solver, **it, append_type);
                 }
@@ -8609,50 +8631,50 @@ namespace parallel_benders {
         cut.reset(std::as_const(new_cut));
     }
 
-    void ParallelNestedBenders::BuildAndSolveLevelProblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    void ParallelNestedBenders::BuildAndSolveLevelProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer)
     {
-        if ( current_stage_ == num_stages_-1) // No need for a level problem in the last stage!
+        if (current_stage_ == num_stages_ - 1) // No need for a level problem in the last stage!
             return;
 
-		assert(!lp_main_loop_iteration_round_ && "Never tested in CGP with prime/double prime UB and LB");
+        assert(!lp_main_loop_iteration_round_ && "Never tested in CGP with prime/double prime UB and LB");
         double lower_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->lower_bound_ : lower_bound_);
         double upper_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->upper_bound_ : upper_bound_);
 
-        if ( level_decomp_ && (lower_bound <= -infinity_ || upper_bound >= infinity_)) // We do not call the projection problem, when we have not yet achieved finite upper and/or lower bounds?!
+        if (level_decomp_ && (lower_bound <= -infinity_ || upper_bound >= infinity_)) // We do not call the projection problem, when we have not yet achieved finite upper and/or lower bounds?!
             return;
 
-        if ( current_stage_ > 0 ){
+        if (current_stage_ > 0) {
             // Compute discrepancy ( all child nodes must have been solved!)
             double discrepancy = 0.0;
             auto node = benders_tree_node_pointer->getChild();
-            do 
+            do
             {
-                discrepancy += node->getDataPtr()->lower_bound_*node->getDataPtr()->conditional_probability_;
+                discrepancy += node->getDataPtr()->lower_bound_ * node->getDataPtr()->conditional_probability_;
                 node = node->getSibling();
-            } while ( node!= nullptr );
+            } while (node != nullptr);
 
             upper_bound = benders_tree_node_pointer->getDataPtr()->solution_value_ + discrepancy;
         }
 
-        if ( cvar_constr_decomp_ ) {
-            lower_bound = cvar_alpha_*cvar_problem_lower_bound_;
-            upper_bound = lower_bound+cvar_h_i_;
+        if (cvar_constr_decomp_) {
+            lower_bound = cvar_alpha_ * cvar_problem_lower_bound_;
+            upper_bound = lower_bound + cvar_h_i_;
         }
 
         // Alternative approach? 
 
 
 
-        if ( level_decomp_ && lower_bound > upper_bound && !cvar_constr_decomp_)
+        if (level_decomp_ && lower_bound > upper_bound && !cvar_constr_decomp_)
             return;
 
-        assert( !benders_tree_node_pointer->getDataPtr()->level_regularized_solution_.empty() ); // We need a regularization point! 
+        assert(!benders_tree_node_pointer->getDataPtr()->level_regularized_solution_.empty()); // We need a regularization point! 
 
-        if ( num_stages_ == 2)
+        if (num_stages_ == 2)
             startTimer(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS);
 
-        // We assume that the first stage problem is present!
-        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+        // We assume that the first stage problem is present!  
+        /*OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         CPXENVptr env_ptr = nullptr;
         CPXLPptr lp_ptr = nullptr;
         int cpx_stat = 0;
@@ -8660,7 +8682,16 @@ namespace parallel_benders {
             // Get Environment and LP Pointer
             env_ptr = cpx_ptr->getEnvironmentPtr();
             lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+        }*/
+
+        OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+        GRBmodel* lp_ptr = nullptr;
+        GRBenv* env_ptr = nullptr;
+        if (grb_ptr != nullptr) {
+            lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
+            env_ptr = grb_ptr->getEnvironmentPtr();
         }
+        GRBupdatemodel(lp_ptr);
 
         // We need to set a quadratic objective, ||x-x'||_2^2, similar to the regularized decomposition, when we use level_euclidean_
         // We have the objective ||x-x'||_1, when we use level_manhattan_
@@ -8668,35 +8699,35 @@ namespace parallel_benders {
 
         // Move the current objective function into a row constraint (theta constraints included)
         int number_of_problem_cols = stage_data_[current_stage_]->num_columns_ + getNumThetasByStage(benders_tree_node_pointer);
-        if ( cvar_constr_decomp_ ){ // If we have cvar_constr_decomp, we have one aggregate variable more!
+        if (cvar_constr_decomp_) { // If we have cvar_constr_decomp, we have one aggregate variable more!
             // We need to set cvar aggregate variable to a free variable so that we can measure the cvar with it
-            osi_solver->setColBounds(number_of_problem_cols,-infinity_,infinity_);
+            osi_solver->setColBounds(number_of_problem_cols, -infinity_, infinity_);
             number_of_problem_cols += 1;
         }
         int solver_cols = osi_solver->getNumCols();
-        assert( number_of_problem_cols <= solver_cols);
+        assert(number_of_problem_cols <= solver_cols);
         const double* obj_coefs = osi_solver->getObjCoefficients();
         std::vector<int> obj_indices(solver_cols);
-        std::iota(obj_indices.begin(),obj_indices.end(),0);
+        std::iota(obj_indices.begin(), obj_indices.end(), 0);
 
         std::unique_ptr<OsiRowCut> osi_cut(new OsiRowCut);
         osi_cut->setLb(-infinity_);
-        double descent_target = (1-level_lambda_)*lower_bound+level_lambda_*upper_bound; 
+        double descent_target = (1 - level_lambda_) * lower_bound + level_lambda_ * upper_bound;
         osi_cut->setUb(descent_target);
-        osi_cut->setRow(number_of_problem_cols,&obj_indices[0],obj_coefs,debug_test_duplicate_indices_);
-        if ( cvar_constr_decomp_ ){ // We need to modify this cut: cvar_alpha * c^tx+theta + (1-cvar_alpha)* cvar_approximation
+        osi_cut->setRow(number_of_problem_cols, &obj_indices[0], obj_coefs, debug_test_duplicate_indices_);
+        if (cvar_constr_decomp_) { // We need to modify this cut: cvar_alpha * c^tx+theta + (1-cvar_alpha)* cvar_approximation
             osi_cut->mutableRow() *= cvar_alpha_;
-            osi_cut->mutableRow().setElement(number_of_problem_cols-1,1-cvar_alpha_);
+            osi_cut->mutableRow().setElement(number_of_problem_cols - 1, 1 - cvar_alpha_);
         }
         int number_of_variables = stage_data_[current_stage_]->num_columns_;
 
         // Store old objective coefs
-        const double * osi_obj_coefs = osi_solver->getObjCoefficients();
-        std::vector<double> original_obj_coefs(osi_obj_coefs,osi_obj_coefs+solver_cols);
+        const double* osi_obj_coefs = osi_solver->getObjCoefficients();
+        std::vector<double> original_obj_coefs(osi_obj_coefs, osi_obj_coefs + solver_cols);
 
         // Due to the algorithm it always hold that approximation_solution <= solution_qx
         // Update regularized solution value, when upper bound is available! Only needed once, in the second iteration!
-        if ( regularization_ && regularized_solution_value_ >= infinity_ && upper_bound_ < infinity_ ){
+        if (regularization_ && regularized_solution_value_ >= infinity_ && upper_bound_ < infinity_) {
             regularized_solution_value_ = upper_bound_; // Compute the regularized solution value! 
             // Works only for the first stage!
         }
@@ -8705,159 +8736,226 @@ namespace parallel_benders {
         double solution_qx = 0;
         double approximation_solution = stage_lower_upper_bounds_[current_stage_].first;
         bool change_sigma = true;// If we had an infeasible solution earlier, we do not change sigma and do not update the incumbent!
-        for (int i = 0; i < num_stages_; i++){
+        for (int i = 0; i < num_stages_; i++) {
             solution_qx += stage_lower_upper_bounds_[i].second;
-            if ( stage_lower_upper_bounds_[i].second <= -infinity_ ) 
+            if (stage_lower_upper_bounds_[i].second <= -infinity_)
                 change_sigma = false;
         }
 
-        assert( regularized_gamma_ > 0.5 && regularized_gamma_ < 1.0);
+        assert(regularized_gamma_ > 0.5 && regularized_gamma_ < 1.0);
         double old_sigma = regularized_sigma_;
-        
+
         // TODO_CHRISTIAN: Test values of Vladimirou! When no new cut was added, set *= 100
         // Test if we should update the regularized solution
-        if ( regularization_ && approximation_solution > -infinity_  && change_sigma){
+        if (regularization_ && approximation_solution > -infinity_ && change_sigma) {
             // Otherwise we have not yet added theta variables
-            if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_ + (regularized_gamma_)*approximation_solution ){
+            if (solution_qx < (1 - regularized_gamma_) * regularized_solution_value_ + (regularized_gamma_)*approximation_solution) {
                 // Update the solution!
-                assert( benders_tree_node_pointer->getDataPtr()->col_solution_.size() == stage_data_[current_stage_]->num_columns_);
-                memcpy(&benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[0],&benders_tree_node_pointer->getDataPtr()->col_solution_[0],sizeof(double)*stage_data_[current_stage_]->num_columns_);
+                assert(benders_tree_node_pointer->getDataPtr()->col_solution_.size() == stage_data_[current_stage_]->num_columns_);
+                memcpy(&benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[0], &benders_tree_node_pointer->getDataPtr()->col_solution_[0], sizeof(double) * stage_data_[current_stage_]->num_columns_);
                 // Update the solution value
                 regularized_solution_value_ = solution_qx;
                 regularized_update_incumbent_ = true;
-                if ( 1.0/regularized_sigma_ > 0.0125 ) // TODO_CHRISTIAN: Hard-fixed value, should be replaced by something else!
+                if (1.0 / regularized_sigma_ > 0.0125) // TODO_CHRISTIAN: Hard-fixed value, should be replaced by something else!
                     regularized_sigma_ *= 2; // Vladimirou: *= 10;
                 LOG(INFO) << "Exact serious step";
 
             }
-            else if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution ){
-                if ( 1.0/regularized_sigma_ < 1024 ) // TODO_CHRISTIAN: Hard-fixed value, should be replaced by something else!
+            else if (solution_qx > regularized_gamma_ * regularized_solution_value_ + (1 - regularized_gamma_) * approximation_solution) {
+                if (1.0 / regularized_sigma_ < 1024) // TODO_CHRISTIAN: Hard-fixed value, should be replaced by something else!
                     regularized_sigma_ *= 0.5; // Vladimirou: *= 0.25
                 LOG_IF(INFO, log_level_ <= google::INFO) << "Null Step";
 
             }
-            else 
+            else
                 LOG_IF(INFO, log_level_ <= google::INFO) << "Approximate Step";
         }
-       
+
 
         // Quadratic Objective
-        if ( cpx_ptr != nullptr){
-            if ( level_euclidean_ || regularization_ ){
+        if (grb_ptr != nullptr) {
+            if (level_euclidean_ || regularization_) {
                 // Compute quadratic coefficient matrix!
                 double term = 2.0;
-                if ( regularization_ )
-                    term = 1.0/regularized_sigma_;
+                if (regularization_)
+                    term = 1.0 / regularized_sigma_;
 
-                std::vector<double> quadratic_coefs(number_of_problem_cols,term); // Cplex alway calculates 1/2 ||x||^2, so we need to anticipate this
+                std::vector<double> quadratic_coefs(number_of_problem_cols, term); // Cplex alway calculates 1/2 ||x||^2, so we need to anticipate this
                 for (int i = number_of_variables; i < number_of_problem_cols; i++) // Set theta variables to zero
                     quadratic_coefs[i] = 0.0;
 
                 // Compute normal objective function elements! -2x_i'
                 std::vector<double> linear_coefs;
-                if ( regularization_ )
-                    linear_coefs.assign(original_obj_coefs.begin(),original_obj_coefs.begin()+number_of_problem_cols);
-                else 
-                    linear_coefs.assign(number_of_problem_cols,0.0);
+                if (regularization_)
+                    linear_coefs.assign(original_obj_coefs.begin(), original_obj_coefs.begin() + number_of_problem_cols);
+                else
+                    linear_coefs.assign(number_of_problem_cols, 0.0);
 
-                for (int i = 0; i < number_of_variables; i++){
-                    linear_coefs[i] -= benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[i]*term;
+                for (int i = 0; i < number_of_variables; i++) {
+                    linear_coefs[i] -= benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[i] * term;
                 }
 
-                // Set new linear objective : invalidates old warm_start
-                CPXchgobj(env_ptr,lp_ptr,number_of_problem_cols,&obj_indices[0],&linear_coefs[0]);
 
+                // Set new linear objective : invalidates old warm_start
+                //CPXchgobj(env_ptr,lp_ptr,number_of_problem_cols,&obj_indices[0],&linear_coefs[0]);
                 // Set quadratic objective
-                CPXcopyqpsep(env_ptr,lp_ptr,&quadratic_coefs[0]); // Also changes problem accordingly!
+                //CPXcopyqpsep(env_ptr,lp_ptr,&quadratic_coefs[0]); // Also changes problem accordingly!
+
+
+                // --- 1. Set new linear objective coefficients ---
+                for (int i = 0; i < number_of_problem_cols; ++i) {
+                    GRBsetdblattrelement(lp_ptr, GRB_DBL_ATTR_OBJ, obj_indices[i], linear_coefs[i]);
+                }
+                // OR: if you want to overwrite the whole objective vector at once:
+                //GRBsetdblattrarray(lp_ptr, GRB_DBL_ATTR_OBJ, 0, number_of_problem_cols, linear_coefs.data());
+
+
+                // --- 2. Set quadratic objective Q matrix ---
+                // Gurobi expects triplets (i, j, value) for Q entries (upper triangle only).
+                std::vector<int> qrow, qcol;
+                std::vector<double> qval;
+
+                for (int i = 0; i < number_of_problem_cols; ++i) {
+                    if (quadratic_coefs[i] != 0.0) {
+                        qrow.push_back(i);
+                        qcol.push_back(i);
+                        qval.push_back(quadratic_coefs[i] / 2.0);
+                        // Gurobi defines obj = 0.5 x'Qx + c'x, so we divide by 2 to match your CPXcopyqpsep usage
+                    }
+                }
+
+                if (!qrow.empty()) {
+                    GRBaddqpterms(lp_ptr,
+                        (int)qrow.size(),
+                        qrow.data(),
+                        qcol.data(),
+                        qval.data());
+                }
+
+                // --- 3. Update model after changes ---
+                GRBupdatemodel(lp_ptr);
             }
         }
 
-        if ( level_manhattan_ || level_infinity_ ){
+        if (level_manhattan_ || level_infinity_) {
             // Update the obj_coefficients (null out the others, keep only the added |w| variables)
             // Compute normal objective function elements! -2x_i'
-            std::vector<double> linear_coefs(number_of_problem_cols+number_of_variables,0.0);
-            assert( solver_cols-number_of_problem_cols > 0);
-            std::fill_n(linear_coefs.begin()+number_of_problem_cols,solver_cols-number_of_problem_cols,1.0);
+            std::vector<double> linear_coefs(number_of_problem_cols + number_of_variables, 0.0);
+            assert(solver_cols - number_of_problem_cols > 0);
+            std::fill_n(linear_coefs.begin() + number_of_problem_cols, solver_cols - number_of_problem_cols, 1.0);
 
             // Set new linear objective
-            osi_solver->setObjCoeffSet(&obj_indices[0],&obj_indices[0]+solver_cols,&linear_coefs[0]);
+            osi_solver->setObjCoeffSet(&obj_indices[0], &obj_indices[0] + solver_cols, &linear_coefs[0]);
             //CPXchgobj(env_ptr,lp_ptr,number_of_problem_cols+number_of_variables,&obj_indices[0],&linear_coefs[0]);
 
             // We need to set the row_bounds for the constraints, i.e. set the equivalent of -w <= x-x' <= w, where x' = regularized_solution_
-            for (int index = 0; index < stage_data_[current_stage_]->num_columns_; index++){
-                osi_solver->setRowBounds(stage_data_[current_stage_]->num_rows_+2*index,benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[index],infinity_);
-                osi_solver->setRowBounds(stage_data_[current_stage_]->num_rows_+2*index+1,-benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[index],infinity_);
+            for (int index = 0; index < stage_data_[current_stage_]->num_columns_; index++) {
+                osi_solver->setRowBounds(stage_data_[current_stage_]->num_rows_ + 2 * index, benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[index], infinity_);
+                osi_solver->setRowBounds(stage_data_[current_stage_]->num_rows_ + 2 * index + 1, -benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[index], infinity_);
             }
         }
 
 
         // We really want to set the warm_start
-        if ( level_decomp_ )
+        if (level_decomp_)
             assert(benders_tree_node_pointer->getDataPtr()->warm_start_added_ == false);
 
         // If feasibility cuts where added in the meantime, we should remove them also?!
 
         // Remove all the cuts from the last iteration, so we get back the problem to which we can apply our warmstart!
-        if ( benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() && !cvar_constr_decomp_){
+        if (benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() && !cvar_constr_decomp_) {
             // Get distance
-            int num_cuts = std::distance(++benders_tree_node_pointer->getDataPtr()->level_opt_iterator_,benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end());
-            if ( num_cuts > 0 ){
+            int num_cuts = std::distance(++benders_tree_node_pointer->getDataPtr()->level_opt_iterator_, benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end());
+            if (num_cuts > 0) {
                 int num_rows = osi_solver->getNumRows();
                 std::vector<int> cut_indices(num_cuts);
-                std::iota(cut_indices.begin(),cut_indices.end(),num_rows-num_cuts);
-                osi_solver->deleteRows(num_cuts,&cut_indices[0]);
+                std::iota(cut_indices.begin(), cut_indices.end(), num_rows - num_cuts);
+                osi_solver->deleteRows(num_cuts, &cut_indices[0]);
             }
         }
 
         int level_row_index = -1;
-        if ( level_decomp_){
+        if (level_decomp_) {
             // Apply level decomposition constraint.
-            osi_solver->applyRowCuts(1,osi_cut.get());
-            level_row_index = osi_solver->getNumRows()-1;
+            osi_solver->applyRowCuts(1, osi_cut.get());
+            level_row_index = osi_solver->getNumRows() - 1;
         }
 
-		if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX){
-			// Now problem is exactly as it was before the added optimality cuts! (except for the eventual present bounding optimality cut when problem was unbounded otherwise..)
-			if ( (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false){
-				if ( cpx_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0){
-					int number_of_rows_temp = CPXgetnumrows(env_ptr,lp_ptr);
-					if ( number_of_rows_temp == benders_tree_node_pointer->getDataPtr()->level_warm_start_length_)
-						CPXcopybasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
-					else 
+        if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX) {
+            // Now problem is exactly as it was before the added optimality cuts! (except for the eventual present bounding optimality cut when problem was unbounded otherwise..)
+            if ((level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false) {
+                if (grb_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0) {
+
+                    //int number_of_rows_temp = CPXgetnumrows(env_ptr,lp_ptr);
+                    int number_of_rows_temp = 0;
+                    GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &number_of_rows_temp);
+                    int number_of_columns_temp = 0;
+                    GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &number_of_columns_temp);
+
+                    if (number_of_rows_temp == benders_tree_node_pointer->getDataPtr()->level_warm_start_length_) {
+                        //CPXcopybasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
+
+                        // 2️. Map CPLEX basis statuses to Gurobi
+                        auto map_cplex_to_grb = [](int status) -> int {
+                            switch (status) {
+                            case 1: return 0;   // BASIC
+                            case 0: return -1;  // AT_LOWER
+                            case 2: return -2;  // AT_UPPER
+                            case 3: return -3;  // FREE_SUPER
+                            default: return -1; // fallback
+                            }
+                        };
+
+                        std::vector<int> cstat(number_of_columns_temp);
+                        std::vector<int> rstat(number_of_rows_temp);
+
+                        for (int i = 0; i < number_of_columns_temp; ++i)
+                            cstat[i] = map_cplex_to_grb(benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_[i]);
+
+                        for (int i = 0; i < number_of_rows_temp; ++i)
+                            rstat[i] = map_cplex_to_grb(benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i]);
+
+                        // 3️⃣ Set Gurobi warm start
+                        GRBupdatemodel(lp_ptr);
+                        GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, number_of_columns_temp, cstat.data());
+                        GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, number_of_rows_temp, rstat.data());
+                        GRBupdatemodel(lp_ptr);
+                    }
+                    else
                         LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_solver->getNumRows() << " and had " << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_;
-					// Question is: Can we really apply this call?
-				}
-			}
-			else {
-				osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->level_warm_start_.get());
-			}
-		}
+                    // Question is: Can we really apply this call?
+                }
+            }
+            else {
+                osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->level_warm_start_.get());
+            }
+        }
 
 
         // Add the optimality cuts we deleted earlier
-        if ( !cvar_constr_decomp_)
-            for (BendersNodeData::cut_container::iterator it = benders_tree_node_pointer->getDataPtr()->level_opt_iterator_; it != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();++it)
-                osi_solver->applyRowCuts(1,&(*it)->getCut());
+        if (!cvar_constr_decomp_)
+            for (BendersNodeData::cut_container::iterator it = benders_tree_node_pointer->getDataPtr()->level_opt_iterator_; it != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end(); ++it)
+                osi_solver->applyRowCuts(1, &(*it)->getCut());
 
         // If problem was unbounded, we do not care about it in the projection problem case?!
-        PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
+        PrintSubproblem(osi_solver, benders_tree_node_pointer->scenario(), "level");
 
         // This makes no sense for multi-stage cases
-        if ( num_stages_ == 2){
+        if (num_stages_ == 2) {
             stopTimer(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS);
             startTimer(INT_TIMER_ID_SOLVE_PROJECTIONS);
         }
 
         // Think about calling this method!
-        if ( level_euclidean_ || regularization_ )
-            SolveSolverInterface(osi_solver,false,true); // Solve with quadratic solver
-        else if ( level_infinity_ || level_manhattan_ )
+        if (level_euclidean_ || regularization_)
+            SolveSolverInterface(osi_solver, false, true); // Solve with quadratic solver
+        else if (level_infinity_ || level_manhattan_)
             SolveSolverInterface(osi_solver);
 
         // If problem was infeasible, we can not go on!
 
         // Check for correctly solved problem ( if we need feas cuts, we should do so )
-        if ( regularization_ ){
+        /*if (regularization_) {
             if ( cpx_ptr != nullptr ){
                 benders_tree_node_pointer->getDataPtr()->feasible_ = true;
                 cpx_stat = CPXgetstat(env_ptr,lp_ptr);
@@ -8869,59 +8967,137 @@ namespace parallel_benders {
                     regularized_sigma_ *= 100; // This way we practically disable regularization..
 
             }
+        }*/
+        if (regularization_) {
+            if (grb_ptr != nullptr) {
+                benders_tree_node_pointer->getDataPtr()->feasible_ = true;
+
+                int grb_status = 0;
+                GRBgetintattr(lp_ptr, GRB_INT_ATTR_STATUS, &grb_status);
+
+                switch (grb_status) {
+                case GRB_INFEASIBLE:
+                case GRB_INF_OR_UNBD:
+                    benders_tree_node_pointer->getDataPtr()->feasible_ = false;
+                    break;
+
+                case GRB_OPTIMAL:
+                    // Check if solution is “practically infeasible” (like CPX_STAT_OPTIMAL_INFEAS)
+                    // In Gurobi, you can check the quality if needed:
+                    // double prim_obj; GRBgetdblattr(lp_ptr, GRB_DBL_ATTR_OBJVAL, &prim_obj);
+                    // For now, mimic CPLEX behavior:
+                    regularized_sigma_ *= 100;
+                    break;
+
+                default:
+                    // other statuses (time limit, etc.)
+                    break;
+                }
+            }
         }
 
-        if ( num_stages_ == 2){
+        if (num_stages_ == 2) {
             stopTimer(INT_TIMER_ID_SOLVE_PROJECTIONS);
             startTimer(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS);
         }
 
-		if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX ){
-			// Get the warm start and store it for the next iteration! This means put the value for the level-cut at the end!
-			benders_tree_node_pointer->getDataPtr()->level_warm_start_.reset(osi_solver->getWarmStart());
-			if ( cpx_ptr != nullptr && (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false){
-				// Check for primal feasibility
-				cpx_stat = CPXgetstat(env_ptr,lp_ptr);
-				if ( cpx_stat != CPX_STAT_OPTIMAL ){
-					double kappa_value;
-					int status = CPXgetdblquality(env_ptr, lp_ptr, &kappa_value, CPX_KAPPA);
+        if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX) {
+            // Get the warm start and store it for the next iteration! This means put the value for the level-cut at the end!
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_.reset(osi_solver->getWarmStart());
+            /*if (cpx_ptr != nullptr && (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false) {
+                // Check for primal feasibility
+                cpx_stat = CPXgetstat(env_ptr,lp_ptr);
+                if ( cpx_stat != CPX_STAT_OPTIMAL ){
+                    double kappa_value;
+                    int status = CPXgetdblquality(env_ptr, lp_ptr, &kappa_value, CPX_KAPPA);
                     LOG_IF(INFO, log_level_ <= google::INFO) << "Level projection problem returned with status " << cpx_stat << " and has a basis condition number of " << kappa_value << ".";
 
-				}
+                }
+                */
 
-				benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.reset(new int[osi_solver->getNumCols()]); // This might be unnecessary, when problem is fully initialized, as number of cols does not change. TODO: Change these to vectors?
-				benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.reset(new int[osi_solver->getNumRows()]);
-				benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.reset(new double[osi_solver->getNumRows()]);
 
-				cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
-				benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
-				LOG_IF(WARNING, log_level_ <= google::WARNING && cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
-				// Now we need to switch the entries of the new optimality cuts with the extra row 
-				int num_current_rows = osi_solver->getNumRows();
-				benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ = num_current_rows;
-				int temp_rstat = benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[level_row_index];
-				double temp_dnorm = benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[level_row_index];
-				for (int i = level_row_index; i < num_current_rows-1; i++){
-					benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i] = benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i+1];
-					benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[i] = benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[i+1];
-				}
-				benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[num_current_rows-1] = temp_rstat;
-				benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[num_current_rows-1] = temp_dnorm;
-			}
-			if ( level_euclidean_ && integer_problems_[current_stage_] == false){// We need to restructure the warm start in the same way
-				// We need to modify the warm start!
-				CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_tree_node_pointer->getDataPtr()->level_warm_start_.get());
-				if ( warm_start_basis != nullptr){
-					int num_current_rows = osi_solver->getNumRows();
-					CoinWarmStartBasis::Status temp_stat = warm_start_basis->getArtifStatus(level_row_index);
-					for (int i = level_row_index; i < num_current_rows-1; i++){
-						warm_start_basis->setArtifStatus(i,warm_start_basis->getArtifStatus(i+1));
-					}
-					warm_start_basis->setArtifStatus(num_current_rows-1,temp_stat);
-				}
-			}
-		}
+            if (grb_ptr != nullptr && (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false) {
+                int grb_status = 0;
+                GRBgetintattr(lp_ptr, GRB_INT_ATTR_STATUS, &grb_status);
 
+                if (grb_status != GRB_OPTIMAL) {
+                    LOG_IF(INFO, log_level_ <= google::INFO)
+                        << "Level projection problem returned with status " << grb_status;
+
+                    // Optional: log primal/dual infeasibilities
+                    int num_rows = 0, num_cols = 0;
+                    GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
+                    GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
+
+                    std::vector<double> x(num_cols), pi(num_rows);
+                    GRBgetdblattrarray(lp_ptr, GRB_DBL_ATTR_X, 0, num_cols, x.data());
+                    GRBgetdblattrarray(lp_ptr, GRB_DBL_ATTR_PI, 0, num_rows, pi.data());
+
+                    double max_prim = *std::max_element(x.begin(), x.end(), [](double a, double b) { return std::abs(a) < std::abs(b); });
+                    double max_dual = *std::max_element(pi.begin(), pi.end(), [](double a, double b) { return std::abs(a) < std::abs(b); });
+
+                    LOG_IF(INFO, log_level_ <= google::INFO)
+                        << "Max primal infeasibility: " << max_prim
+                        << ", Max dual infeasibility: " << max_dual;
+                }
+            }
+
+
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.reset(new int[osi_solver->getNumCols()]); // This might be unnecessary, when problem is fully initialized, as number of cols does not change. TODO: Change these to vectors?
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.reset(new int[osi_solver->getNumRows()]);
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.reset(new double[osi_solver->getNumRows()]);
+
+            //cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
+            int num_rows = 0, num_cols = 0;
+            GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
+            GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
+
+            std::vector<int> cstat(num_cols), rstat(num_rows);
+            GRBgetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, num_cols, cstat.data());
+            GRBgetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, rstat.data());
+
+            std::copy(cstat.begin(), cstat.end(), benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get());
+            std::copy(rstat.begin(), rstat.end(), benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get());
+
+
+
+            benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
+            //LOG_IF(WARNING, log_level_ <= google::WARNING && cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
+
+            LOG_IF(WARNING, log_level_ <= google::WARNING)
+                << "Gurobi basis retrieved for warm start: "
+                << num_cols << " columns, "
+                << num_rows << " rows.";
+
+
+
+
+
+            // Now we need to switch the entries of the new optimality cuts with the extra row 
+            int num_current_rows = osi_solver->getNumRows();
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ = num_current_rows;
+            int temp_rstat = benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[level_row_index];
+            double temp_dnorm = benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[level_row_index];
+            for (int i = level_row_index; i < num_current_rows - 1; i++) {
+                benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i] = benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i + 1];
+                benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[i] = benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[i + 1];
+            }
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[num_current_rows - 1] = temp_rstat;
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[num_current_rows - 1] = temp_dnorm;
+        }
+        if (level_euclidean_ && integer_problems_[current_stage_] == false) {// We need to restructure the warm start in the same way
+                // We need to modify the warm start!
+            CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_tree_node_pointer->getDataPtr()->level_warm_start_.get());
+            if (warm_start_basis != nullptr) {
+                int num_current_rows = osi_solver->getNumRows();
+                CoinWarmStartBasis::Status temp_stat = warm_start_basis->getArtifStatus(level_row_index);
+                for (int i = level_row_index; i < num_current_rows - 1; i++) {
+                    warm_start_basis->setArtifStatus(i, warm_start_basis->getArtifStatus(i + 1));
+                }
+                warm_start_basis->setArtifStatus(num_current_rows - 1, temp_stat);
+            }
+        }
+        
         // Store column solution and theta solution
         StoreValuesFromSolverInVector(benders_tree_node_pointer->getDataPtr()->col_solution_,osi_solver->getColSolution(),number_of_variables);
         // Copy solution to the incumbent as well!
@@ -8962,11 +9138,26 @@ namespace parallel_benders {
         osi_solver->setObjCoeffSet(&obj_indices[0],&obj_indices[0]+solver_cols,&original_obj_coefs[0]);
         //CPXchgobj(env_ptr,lp_ptr,number_of_problem_cols,&obj_indices[0],&original_obj_coefs[0]);
         // Setting problem to MILP or LP removes quadratic objective function
-        if ( cpx_ptr != nullptr){
+        /*if (cpx_ptr != nullptr) {
             if (integer_problems_[current_stage_])
                 CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_MILP );
             else
                 CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_LP );
+        }*/
+        if (grb_ptr != nullptr) {
+            int num_cols = osi_solver->getNumCols();
+            if (integer_problems_[current_stage_]) {
+                // Set all variables to integer (binary/integer) if needed
+                std::vector<char> vtype(num_cols, GRB_INTEGER);
+                GRBsetcharattrarray(lp_ptr, GRB_CHAR_ATTR_VTYPE, 0, num_cols, vtype.data());
+            }
+            else {
+                // Set all variables to continuous
+                std::vector<char> vtype(num_cols, GRB_CONTINUOUS);
+                GRBsetcharattrarray(lp_ptr, GRB_CHAR_ATTR_VTYPE, 0, num_cols, vtype.data());
+            }
+            // Update model after changes
+            GRBupdatemodel(lp_ptr);
         }
 
         if ( cvar_constr_decomp_ ){
