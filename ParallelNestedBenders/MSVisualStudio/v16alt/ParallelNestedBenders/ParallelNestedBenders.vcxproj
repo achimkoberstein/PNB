@@ -181,6 +181,9 @@
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16alt\libOsiGrb\libOsiGrb.vcxproj">
+      <Project>{969f512f-fc75-4bc5-bfaa-4103fa4905ae}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16\libOsiCpx\libOsiCpx.vcxproj">
       <Project>{d984cc99-8a07-4ee0-8654-5c03459b2b37}</Project>
     </ProjectReference>

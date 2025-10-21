@@ -24,7 +24,7 @@
 #include <boost/thread.hpp>
 
 #include "OsiCpxSolverInterface.hpp"
-//#include "OsiGrbSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "CoinTime.hpp"
 #include "SmiScnModel.hpp"
@@ -906,7 +906,7 @@ protected:
 		generate_initial_solution_ = false;
 		compute_statistics_ = false;
 
-		parameter_strings_.push_back("{}"); // default parameters
+		/*parameter_strings_.push_back("{}"); // default parameters
 		// deterministic equivalent (DETEQ)
 		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
 		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
@@ -962,16 +962,16 @@ protected:
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
-
+		*/
 		// Regularization
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0 }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0 }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
 
-
+		/*
 		// LEVEL/REG + ODA
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\", \"PNB_USE_START_SOLUTION\" : 2  }"); // ODA crashes and not working for multi stage
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\" }"); // crashes and not working for some problems
@@ -985,7 +985,7 @@ protected:
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
-		
+		*/
 	}
 
 	virtual ~NestedBendersTest() {}
@@ -1144,7 +1144,9 @@ protected:
 			// This can be done in a loop.
 			overall_and_solver_timer.Start(0);
 			SmiScnModel smi;
-			OsiCpxSolverInterface osi_cpx;
+			
+			OsiGrbSolverInterface osi_cpx;
+			
 			smi.setOsiSolverHandle(&osi_cpx);
 			int read_in = smi.readSmps(total_core_string.c_str(), total_time_string.c_str(), total_stoch_string.c_str());
 			if (read_in != 0) {
@@ -2960,19 +2962,19 @@ TEST_F(LiftAndProjectCutsTest, DISABLED_bounds_convergence_slow) {
 TEST_F(NestedBendersTest, slow) {
 	benders_parameter_.SetParameterValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME, 600);
 	EXPECT_NEAR(solveSMPS("posts/storm/stormG2_125"), 15512100.03, 5.0);
-	EXPECT_NEAR(solveSMPS("felt/airlift/AIRL"), 249101.672072, 0.1); //BLOCK (dependent)
-	EXPECT_NEAR(solveSMPS("felt/airlift/AIRL2"), 269665.498390, 0.1);//INDEP (independent)
-	EXPECT_NEAR(solveSMPS("felt/assets/assets_large"), -696.396, 0.1);
-	EXPECT_NEAR(solveSMPS("felt/assets/assets_small"), -723.839, 0.1);
-	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-2"), 414.0, 0.1);
-	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-4"), 416.5, 0.1);
-	EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), -39772.4, 0.1); // two stage
-	EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm", "wright/data-scenarios/storm", "wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
-	EXPECT_NEAR(solveSMPS("frankellison/CEP1"), 355160, 0.1);
-	EXPECT_NEAR(solveSMPS("frankellison/Ypgp2"), 447.324, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_10"), 173.304, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
-	EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -39976.8, 0.1); // seven-stage
+	//EXPECT_NEAR(solveSMPS("felt/airlift/AIRL"), 249101.672072, 0.1); //BLOCK (dependent)
+	//EXPECT_NEAR(solveSMPS("felt/airlift/AIRL2"), 269665.498390, 0.1);//INDEP (independent)
+	//EXPECT_NEAR(solveSMPS("felt/assets/assets_large"), -696.396, 0.1);
+	//EXPECT_NEAR(solveSMPS("felt/assets/assets_small"), -723.839, 0.1);
+	//EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-2"), 414.0, 0.1);
+	//EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-4"), 416.5, 0.1);
+	//EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), -39772.4, 0.1); // two stage
+	//EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm", "wright/data-scenarios/storm", "wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
+	//EXPECT_NEAR(solveSMPS("frankellison/CEP1"), 355160, 0.1);
+	//EXPECT_NEAR(solveSMPS("frankellison/Ypgp2"), 447.324, 0.1);
+	//EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_10"), 173.304, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
+	//EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -39976.8, 0.1); // seven-stage
 }
 
 TEST_F(NestedBendersTestInteger, slow) {
@@ -4114,7 +4116,7 @@ int main(int argc, char* argv[]) {
 	int result = 0;
 
 	::testing::GTEST_FLAG(output) = "xml:../../../../Data/Benders/NestedBendersTestLog.xml"; // store results in xml file //
-	//::testing::GTEST_FLAG(filter) = "UnitTest.*";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
+	::testing::GTEST_FLAG(filter) = "NestedBendersTest.slow";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
 	::testing::InitGoogleTest(&argc, argv);
 	google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

@@ -6395,21 +6395,22 @@ namespace parallel_benders {
             std::map<boost::thread::id,OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
             if ( it == osi_solver_map_.end() )
             {
-				OsiCpxSolverInterface* cpx_solver;
-				if (osi_solver) {
-					cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-					assert(cpx_solver);
+				//OsiCpxSolverInterface* cpx_solver;
+                OsiGrbSolverInterface* grb_solver;
+                if (osi_solver) {
+					grb_solver = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+					assert(grb_solver);
 				}
 				else {
-					cpx_solver = new OsiCpxSolverInterface();
+					grb_solver = new OsiGrbSolverInterface();
 				}
 				// Reset the solver
-				SetSolverOptions(cpx_solver);
-				cpx_solver->initialSolve();
-				cpx_solver->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-                osi_solver_map_[boost::this_thread::get_id()] = cpx_solver;
+				SetSolverOptions(grb_solver);
+				grb_solver->initialSolve();
+				grb_solver->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+                osi_solver_map_[boost::this_thread::get_id()] = grb_solver;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-				return cpx_solver;
+				return grb_solver;
             }
 			else {
 				return it->second;
