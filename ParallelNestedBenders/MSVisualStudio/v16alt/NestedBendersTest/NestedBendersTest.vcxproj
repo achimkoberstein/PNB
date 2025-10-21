@@ -126,7 +126,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../../../ParallelNestedBenders/src;../../../../Benders/src;../../../../ThirdParty/threadpool;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../ParallelNestedBenders/src;../../../../Benders/src;../../../../ThirdParty/threadpool;C:\gurobi1203\win64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -138,9 +138,10 @@
       <AdditionalOptions>/Zm200 /FS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../../../../ThirdParty/boost/stage/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../../../ThirdParty/boost/stage/lib;C:\gurobi1203\win64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalDependencies>gurobi120.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
@@ -238,6 +239,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16alt\libOsiCpx\libOsiCpx.vcxproj">
       <Project>{d984cc99-8a07-4ee0-8654-5c03459b2b37}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16alt\libOsiGrb\libOsiGrb.vcxproj">
+      <Project>{969f512f-fc75-4bc5-bfaa-4103fa4905ae}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16alt\libOsi\libOsi.vcxproj">
       <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
