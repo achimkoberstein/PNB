@@ -8478,6 +8478,7 @@ namespace parallel_benders {
 					// === Get Gurobi environment and model pointers ===
 					GRBmodel* model_ptr = grb_ptr->getLpPtr();
 					GRBenv* env_ptr = GRBgetenv(model_ptr);
+	
 
 					// === Select QP/LP algorithm ===
 					if (lp_method_ == PNB_INT_DUAL_SIMPLEX)
@@ -8503,10 +8504,10 @@ namespace parallel_benders {
 					GRBsetdblparam(env_ptr, "TimeLimit", static_cast<double>(time_left));
 
 					// === Optional numerical settings ===
-					GRBsetintparam(env_ptr, "NumericFocus", 3);               // Conservative numerics
+					//GRBsetintparam(env_ptr, "NumericFocus", 0);               // Conservative numerics
 					GRBsetdblparam(env_ptr, "FeasibilityTol", zero_tolerance_); // Similar to EPRHS
 					GRBsetdblparam(env_ptr, "IntFeasTol", integer_tolerance_);  // Similar to EPINT
-					GRBsetintparam(env_ptr, "Presolve", 1);                    // Default presolve on
+					//GRBsetintparam(env_ptr, "Presolve", 1);                    // Default presolve on
 
 					// === Optimize the quadratic model ===
 					int error = GRBoptimize(model_ptr);
