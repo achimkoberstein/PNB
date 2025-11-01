@@ -951,26 +951,26 @@ protected:
 
 		// multithread (MCORE), PNB_INT_USE_EV_SOLUTION
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_USE_START_SOLUTION\" : 2 }"); // multi cut
-
+		*/
 		// Level
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
-		*/
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
+		
 		// Regularization
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0 }"); // all level methods require the start solution
+		/*parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0 }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0 }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
-
+		
 		/*
 		// LEVEL/REG + ODA
 		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\", \"PNB_USE_START_SOLUTION\" : 2  }"); // ODA crashes and not working for multi stage
