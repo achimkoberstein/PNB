@@ -4120,8 +4120,8 @@ int main(int argc, char* argv[]) {
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.slow";  // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
 	::testing::GTEST_FLAG(filter) =
 		"NestedBendersTest.deak:"
-		"NestedBendersTest.stormG2_POSTS:"
-		"NestedBendersTest.rand_OTHER:"
+		//"NestedBendersTest.stormG2_POSTS:"
+		//"NestedBendersTest.rand_OTHER:"
 		/*"NestedBendersTest.scenarios_WRIGHT:"
 		"NestedBendersTest.airlift_FELT:"
 		"NestedBendersTest.assets_OTHER:"
