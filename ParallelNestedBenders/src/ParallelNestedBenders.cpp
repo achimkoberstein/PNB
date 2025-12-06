@@ -8885,6 +8885,8 @@ namespace parallel_benders {
 				// OR: if you want to overwrite the whole objective vector at once:
 				//GRBsetdblattrarray(lp_ptr, GRB_DBL_ATTR_OBJ, 0, number_of_problem_cols, linear_coefs.data());
 
+                // CLEAR old Q matrix to match CPXcopyqpsep (THIS is the new line)
+				GRBdelq(lp_ptr);
 
 				// --- 2. Set quadratic objective Q matrix ---
 				// Gurobi expects triplets (i, j, value) for Q entries (upper triangle only).
