@@ -8480,9 +8480,12 @@ namespace parallel_benders {
 					GRBenv* env_ptr = GRBgetenv(model_ptr);
 	
 
+
 					// === Select QP/LP algorithm ===
-					if (lp_method_ == PNB_INT_DUAL_SIMPLEX)
-						GRBsetintparam(env_ptr, "Method", 1);  // Dual simplex
+					if (lp_method_ == PNB_INT_DUAL_SIMPLEX) {
+						GRBsetintparam(env_ptr, "Method", 2);	// Dual simplex
+						GRBsetintparam(env_ptr, "Crossover", 1); // Barrier + crossover
+					}
 					else if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX)
 						GRBsetintparam(env_ptr, "Method", 0);  // Primal simplex
 					else if (lp_method_ == PNB_INT_BARRIER) {
@@ -8508,6 +8511,9 @@ namespace parallel_benders {
 					GRBsetdblparam(env_ptr, "FeasibilityTol", zero_tolerance_); // Similar to EPRHS
 					GRBsetdblparam(env_ptr, "IntFeasTol", integer_tolerance_);  // Similar to EPINT
 					//GRBsetintparam(env_ptr, "Presolve", 1);                    // Default presolve on
+		
+					
+					GRBupdatemodel(model_ptr);
 
 					// === Optimize the quadratic model ===
 					int error = GRBoptimize(model_ptr);
@@ -8523,9 +8529,11 @@ namespace parallel_benders {
 					GRBgetintattr(model_ptr, "Status", &status);
 
 					// === Handle non-optimal cases (similar to CPLEX’s INForUNBD) ===
-					if (status == GRB_INF_OR_UNBD) {
+					if (status == GRB_INF_OR_UNBD || status == GRB_INFEASIBLE || status == GRB_UNBOUNDED) {
 						// Try disabling presolve to recheck feasibility
 						GRBsetintparam(env_ptr, "Presolve", 0);
+						GRBupdatemodel(model_ptr);
+						
 						GRBoptimize(model_ptr);
 						GRBgetintattr(model_ptr, "Status", &status);
 						GRBsetintparam(env_ptr, "Presolve", 1);  // Restore default
@@ -8872,6 +8880,16 @@ namespace parallel_benders {
 				}
 
 
+				for (int i = 0; i < number_of_problem_cols; ++i) {
+					if (quadratic_coefs[i] != 0.0)
+						std::cerr << "Q[" << i << "]=" << quadratic_coefs[i] << "\n";
+				}
+				for (int i = 0; i < number_of_problem_cols; ++i)
+					cout << std::setprecision(20) << "lin[" << i << "]=" << linear_coefs[i] << "\n";
+
+
+
+
 				// Set new linear objective : invalidates old warm_start
 				//CPXchgobj(env_ptr,lp_ptr,number_of_problem_cols,&obj_indices[0],&linear_coefs[0]);
 				// Set quadratic objective
@@ -8879,13 +8897,9 @@ namespace parallel_benders {
 
 
 				// --- 1. Set new linear objective coefficients ---
-				for (int i = 0; i < number_of_problem_cols; ++i) {
-					GRBsetdblattrelement(lp_ptr, GRB_DBL_ATTR_OBJ, obj_indices[i], linear_coefs[i]);
-				}
-				// OR: if you want to overwrite the whole objective vector at once:
-				//GRBsetdblattrarray(lp_ptr, GRB_DBL_ATTR_OBJ, 0, number_of_problem_cols, linear_coefs.data());
+				GRBsetdblattrarray(lp_ptr, GRB_DBL_ATTR_OBJ, 0, number_of_problem_cols, linear_coefs.data());
 
-                // CLEAR old Q matrix to match CPXcopyqpsep (THIS is the new line)
+                // CLEAR old Q matrix to match CPXcopyqpsep 
 				GRBdelq(lp_ptr);
 
 				// --- 2. Set quadratic objective Q matrix ---
@@ -8893,11 +8907,14 @@ namespace parallel_benders {
 				std::vector<int> qrow, qcol;
 				std::vector<double> qval;
 
-				for (int i = 0; i < number_of_problem_cols; ++i) {
+
+
+
+				for (int i = 0; i < number_of_problem_cols; i++) {
 					if (quadratic_coefs[i] != 0.0) {
 						qrow.push_back(i);
 						qcol.push_back(i);
-						qval.push_back(quadratic_coefs[i] / 2.0);
+						qval.push_back(quadratic_coefs[i]/term);
 						// Gurobi defines obj = 0.5 x'Qx + c'x, so we divide by 2 to match your CPXcopyqpsep usage
 					}
 				}
