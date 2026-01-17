@@ -6404,6 +6404,7 @@ namespace parallel_benders {
 				else {
 					grb_solver = new OsiGrbSolverInterface();
 				}
+				
 				// Reset the solver
 				SetSolverOptions(grb_solver);
 				grb_solver->initialSolve();
@@ -8373,12 +8374,15 @@ namespace parallel_benders {
 			CPXsetintparam(env_ptr, CPXPARAM_MIP_Strategy_RINSHeur, -1); // turn off RINS heuristic
 
 		}
-		// We need gurobi options, just in case..
-		//OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
-		//if ( grb_ptr){
-		//    GRBmodel* env_ptr = grb_ptr->getLpPtr();
-		//    GRBsetintattr(env_ptr,GRB_INT_PAR_THREADS,0);
-		//}
+		//We need gurobi options, just in case..
+		OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+		if ( grb_ptr){
+			GRBmodel* model_ptr = grb_ptr->getLpPtr();
+			GRBenv* env_ptr = GRBgetenv(model_ptr);
+			GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
+		    GRBsetintparam(env_ptr,GRB_INT_PAR_THREADS,0);
+			GRBupdatemodel(model_ptr);
+		}
 	}
 
 	int ParallelNestedBenders::getNumRowsProblem()
@@ -8431,48 +8435,6 @@ namespace parallel_benders {
 		}
 		else {
 			if (!use_coin && use_quadratic) {
-				// Solve quadratic problem
-				/*OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-				if (cpx_ptr) {
-					CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-					CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-					// Set this param for QPMETHOD according to lp_method_
-					if (lp_method_ == PNB_INT_DUAL_SIMPLEX)
-						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_DUAL);
-					else if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX)
-						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_PRIMAL);
-					else if (lp_method_ == PNB_INT_BARRIER) {
-						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_BARRIER);
-						CPXsetintparam(env_ptr, CPX_PARAM_BARCROSSALG, -1);
-					}
-					else if (lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD)
-						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_CONCURRENT);
-					else if (lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER) {
-						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_BARRIER);
-						CPXsetintparam(env_ptr, CPX_PARAM_BARCROSSALG, 0);
-					}
-					int time_left = std::min(maximal_solution_time_, maximal_solution_time_ - (int)std::floor(timer_.GetAggregatedTime()));
-					if (time_left <= 0)
-						time_left = 1;
-					CPXsetdblparam(env_ptr, CPX_PARAM_TILIM, time_left);
-					CPXqpopt(env_ptr, lp_ptr);
-					int code = CPXgetstat(env_ptr, lp_ptr);
-					if (code == CPX_STAT_INForUNBD) { // Solve without presolve to determine correct direction!
-						CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF);
-						// Discard presolve information by changing objective Sense (do we lose warmstart?!)
-						int objsen = CPXgetobjsen(env_ptr, lp_ptr);
-						CPXchgobjsen(env_ptr, lp_ptr, -objsen);
-						CPXchgobjsen(env_ptr, lp_ptr, objsen);
-						CPXqpopt(env_ptr, lp_ptr);
-						code = CPXgetstat(env_ptr, lp_ptr);
-						CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_ON);
-					}
-					if (code != CPX_STAT_OPTIMAL) {
-						double kappa_value;
-						CPXgetdblquality(env_ptr, lp_ptr, &kappa_value, CPX_KAPPA);
-						LOG_IF(WARNING, log_level_ <= google::WARNING) << "Quadratic problem solved with status " << code << " and has condition number " << kappa_value;
-					}
-				}*/
 				OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
 				if (grb_ptr) {
 					// === Get Gurobi environment and model pointers ===
@@ -8480,7 +8442,7 @@ namespace parallel_benders {
 					GRBenv* env_ptr = GRBgetenv(model_ptr);
 	
 
-
+				
 					// === Select QP/LP algorithm ===
 					if (lp_method_ == PNB_INT_DUAL_SIMPLEX) {
 						GRBsetintparam(env_ptr, "Method", 2);	// Dual simplex
@@ -8558,6 +8520,14 @@ namespace parallel_benders {
 
 			}
 			else {
+			   OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+			   if (grb_ptr) {
+				   // === Get Gurobi environment and model pointers ===
+				   GRBmodel* model_ptr = grb_ptr->getLpPtr();
+				   GRBenv* env_ptr = GRBgetenv(model_ptr);
+				   GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
+				   GRBdelq(model_ptr);
+			   }
 				osi_solver->initialSolve();
 			}
 		}
@@ -8774,6 +8744,7 @@ namespace parallel_benders {
 		if (grb_ptr != nullptr) {
 			lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
 			env_ptr = grb_ptr->getEnvironmentPtr();
+			GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
 		}
 		GRBupdatemodel(lp_ptr);
 
@@ -8879,23 +8850,6 @@ namespace parallel_benders {
 					linear_coefs[i] -= benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[i] * term;
 				}
 
-
-				for (int i = 0; i < number_of_problem_cols; ++i) {
-					if (quadratic_coefs[i] != 0.0)
-						std::cerr << "Q[" << i << "]=" << quadratic_coefs[i] << "\n";
-				}
-				for (int i = 0; i < number_of_problem_cols; ++i)
-					cout << std::setprecision(20) << "lin[" << i << "]=" << linear_coefs[i] << "\n";
-
-
-
-
-				// Set new linear objective : invalidates old warm_start
-				//CPXchgobj(env_ptr,lp_ptr,number_of_problem_cols,&obj_indices[0],&linear_coefs[0]);
-				// Set quadratic objective
-				//CPXcopyqpsep(env_ptr,lp_ptr,&quadratic_coefs[0]); // Also changes problem accordingly!
-
-
 				// --- 1. Set new linear objective coefficients ---
 				GRBsetdblattrarray(lp_ptr, GRB_DBL_ATTR_OBJ, 0, number_of_problem_cols, linear_coefs.data());
 
@@ -8906,9 +8860,6 @@ namespace parallel_benders {
 				// Gurobi expects triplets (i, j, value) for Q entries (upper triangle only).
 				std::vector<int> qrow, qcol;
 				std::vector<double> qval;
-
-
-
 
 				for (int i = 0; i < number_of_problem_cols; i++) {
 					if (quadratic_coefs[i] != 0.0) {
