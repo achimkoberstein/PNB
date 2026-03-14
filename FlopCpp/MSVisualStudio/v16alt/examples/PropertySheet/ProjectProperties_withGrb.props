@@ -15,7 +15,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../../../../../ThirdParty/cplex/cplex2010/lib/x64;../../../../../ThirdParty/boost/stage/lib64;../../../../../ThirdParty/boost/stage/lib;../../../../../Osi/MSVisualStudio/v16alt/libOsiGrb/Debug;C:\gurobi1203\win64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../../../../ThirdParty/cplex/cplex2010/lib/x64;../../../../../ThirdParty/boost/stage/lib64;../../../../../ThirdParty/boost/stage/lib;../../../../../Osi/MSVisualStudio/v16alt/libOsiGrb/Debug;../../../../../ThirdParty/gurobi/gurobi1203/win64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cplex2010.lib;libOsiGrb.lib;gurobi_c++mdd2017.lib;gurobi120.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
