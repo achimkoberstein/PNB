@@ -1,0 +1,8 @@
+<Project>
+  <Target Name="CopyCplexDll" AfterTargets="Build">
+    <Copy
+      SourceFiles="$(MSBuildThisFileDirectory)ThirdParty\cplex\cplex2010\lib\x64\cplex2010.dll"
+      DestinationFolder="$(SolutionDir)\x64\Debug" />
+    <Message Text="SolutionDir = $(SolutionDir)" Importance="high"/>
+  </Target>
+</Project>
