@@ -43,6 +43,9 @@
 #include "PseudoRandomGenerator.hpp"
 #include "OsiPnbStochasticSolverInterface.hpp"
 
+
+
+
 // Files necessary for cplex
 #include "ilcplex/cplex.h"
 #include "ilcplex/cpxconst.h"
@@ -51,12 +54,20 @@
 #include "OsiCpxSolverInterface.hpp"
 
 
-// Gurobi stuff
+// Files necessary for gurobi
 #include "OsiGrbSolverInterface.hpp"
 extern "C" {
 #include "gurobi_c.h"
 }
 
+
+// Files necessary for Coin-LP
+#include "OsiClpSolverInterface.hpp"
+#include "ClpQuadraticObjective.hpp"
+#include "ClpLinearObjective.hpp"
+
+
+int iteration = 1;
 
 namespace parallel_benders {
 
@@ -848,7 +859,7 @@ namespace parallel_benders {
 		current_stage_ = 1;
 		for (int i = 0; i < num_cpu_ * 4; i++) { // Should suffice to get every thread its own solver..
 			// Schedule the tasks for this stage
-			thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread, this, nullptr));
+			thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread, this, osi_solver_));
 		}
 		thread_pool_.wait(0); // We wait until all threads are done
 		current_stage_ = 0;
@@ -1106,6 +1117,7 @@ namespace parallel_benders {
 
 	void ParallelNestedBenders::Solve()
 	{
+
 		if (print_subproblems_) {
 			smi_->writeSmps("modeloutput");
 		}
@@ -1160,6 +1172,7 @@ namespace parallel_benders {
 		bool not_stop_loop = false;
 		while (true)
 		{
+
 			if (!regularization_ && !cvar_constr_decomp_)
 				not_stop_loop = lower_bound_ < upper_bound_&&
 				std::abs(upper_bound_ - lower_bound_) > absolute_epsilon_ &&
@@ -3268,8 +3281,7 @@ namespace parallel_benders {
 			if (osi_solver->isAbandoned()) {
 				assert(!(lp_rounds_limit_ > 0 || lp_main_loop_iteration_round_) && "Check what is going on here!");
 				
-				OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-				if (cpx_ptr) {
+				if (auto* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver)) { //CPLEX
 					// Get ENV and LP ptr
 					CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
 					CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
@@ -3283,6 +3295,36 @@ namespace parallel_benders {
 						LOG(FATAL) << "Solution process abandoned. Cplex returned with status code " << CPXgetstat(env_ptr, lp_ptr);
 					}
 				}
+				else if (auto* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver)) { //Gurobi
+					GRBmodel* lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
+					GRBupdatemodel(lp_ptr); // Make sure model is current
+
+					int status = 0;
+					GRBgetintattr(lp_ptr, GRB_INT_ATTR_STATUS, &status);
+
+					// Equivalent of "status == 0" (abandoned / not solved)
+					//GRB_INPROGRESS available ONLY in gurobi1203, in the win x64 version
+					if (status == GRB_LOADED || status == GRB_INPROGRESS) {
+						GRBoptimize(lp_ptr); 	// Try a re-optimize
+						GRBgetintattr(lp_ptr, GRB_INT_ATTR_STATUS, &status);
+					}
+					// Still not solved -> fatal
+					if (status == GRB_LOADED || status == GRB_INPROGRESS) {
+						std::lock_guard<std::mutex> lock(*console_mutex_ptr_);
+						GRBwrite(lp_ptr, "abandonedProblem.lp");
+						LOG(FATAL) << "Solution process abandoned. " << "Gurobi returned with status code " << status;
+					}
+				}
+				else if (auto* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver)) { //Coin-LP
+					if (clp_ptr->isAbandoned()) {
+						clp_ptr->resolve();
+					}
+					if (clp_ptr->isAbandoned()) {
+						clp_ptr->writeLp("abandonedProblem");
+						LOG(FATAL) << "CLP abandoned";
+					}
+				}
+
 			}
 			else if (osi_solver->isProvenDualInfeasible()) {
 				// Primal problem is unbounded. => dual infeasible
@@ -3535,9 +3577,8 @@ namespace parallel_benders {
 						return;
 					}
 					else {
-						// Get cplex status
-						OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-						if (cpx_ptr) {
+						// Get status
+						if (auto* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver)) {
 							// Get ENV and LP ptr
 							CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
 							CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
@@ -3546,14 +3587,36 @@ namespace parallel_benders {
 							std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
 							CPXwriteprob(env_ptr, lp_ptr, "not_optimal", "lp");
 						}
+						else if (auto* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver)) {
+							GRBmodel* lp_ptr = grb_ptr->getLpPtr();							
+							GRBupdatemodel(lp_ptr); // Make sure model is up to date
+
+							int status = 0;
+							GRBgetintattr(lp_ptr, GRB_INT_ATTR_STATUS, &status);
+							LOG_IF(ERROR, log_level_ <= google::ERROR && !(status == GRB_OPTIMAL || status == GRB_SUBOPTIMAL)) << "Gurobi returned solution process with status " << status;
+							std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
+							GRBwrite(lp_ptr, "not_optimal.lp");
+						}
+						if (auto* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver)) {
+							// CLP: check LP optimality
+							if (!clp_ptr->isProvenOptimal()) {
+								LOG_IF(ERROR, log_level_ <= google::ERROR) << "CLP returned non-optimal solution. " << "Status flags:" << " abandoned=" 
+									<< clp_ptr->isAbandoned() << " infeasible=" << clp_ptr->isProvenPrimalInfeasible() << " unbounded=" << clp_ptr->isProvenDualInfeasible();
+
+								std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
+								// Write LP for debugging
+								clp_ptr->writeLp("not_optimal");
+							}
+						}
+
+
 						LOG(FATAL) << "What do we have here if it is not Optimal, Infeasible, or Ubounded?";
 					}
 				}
 			}
 			else if (!osi_solver->isProvenOptimal()) {
-				// Get cplex status
-				OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-				if (cpx_ptr) {
+				// Get status
+				if (auto* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver)) {
 					// Get ENV and LP ptr
 					CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
 					CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
@@ -3561,6 +3624,27 @@ namespace parallel_benders {
 					LOG_IF(ERROR, log_level_ <= google::ERROR && !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
 					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
 					CPXwriteprob(env_ptr, lp_ptr, "not_optimal", "lp");
+				}
+				else if (auto* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver)) {
+					GRBmodel* lp_ptr = grb_ptr->getLpPtr();
+					GRBupdatemodel(lp_ptr); // Make sure model is up to date
+
+					int status = 0;
+					GRBgetintattr(lp_ptr, GRB_INT_ATTR_STATUS, &status);
+					LOG_IF(ERROR, log_level_ <= google::ERROR && !(status == GRB_OPTIMAL || status == GRB_SUBOPTIMAL)) << "Gurobi returned solution process with status " << status;
+					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
+					GRBwrite(lp_ptr, "not_optimal.lp");
+				}
+				if (auto* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver)) {
+					// CLP: check LP optimality
+					if (!clp_ptr->isProvenOptimal()) {
+						LOG_IF(ERROR, log_level_ <= google::ERROR) << "CLP returned non-optimal solution. " << "Status flags:" << " abandoned="
+							<< clp_ptr->isAbandoned() << " infeasible=" << clp_ptr->isProvenPrimalInfeasible() << " unbounded=" << clp_ptr->isProvenDualInfeasible();
+
+						std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
+						// Write LP for debugging
+						clp_ptr->writeLp("not_optimal");
+					}
 				}
 			}
 		}// if not provenOptimal end
@@ -6388,37 +6472,71 @@ namespace parallel_benders {
 		return nullptr;
 	}
 
-	OsiSolverInterface* ParallelNestedBenders::SetSolverByThread(OsiSolverInterface* osi_solver) {
-		// Used in the beginning to set a solver for every thread
-		{
-			std::lock_guard<std::mutex> lock_guardener(solver_map_mutex_);
-			std::map<boost::thread::id, OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
-			if (it == osi_solver_map_.end())
-			{
-				//OsiCpxSolverInterface* cpx_solver;
-				OsiGrbSolverInterface* grb_solver;
+	 OsiSolverInterface* ParallelNestedBenders::SetSolverByThread(OsiSolverInterface* osi_solver){
+        // Used in the beginning to set a solver for every thread
+        {
+            std::lock_guard<std::mutex> lock_guardener(solver_map_mutex_); 
+			auto tid = boost::this_thread::get_id();
+            std::map<boost::thread::id,OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
+            if ( it == osi_solver_map_.end() )
+            {
+				OsiSolverInterface* new_solver = nullptr;
+
 				if (osi_solver) {
-					grb_solver = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
-					assert(grb_solver);
+					// --- Detect solver type ---
+				    if (auto* cpx = dynamic_cast<OsiCpxSolverInterface*>(osi_solver)) {
+					    new_solver = new OsiCpxSolverInterface(*cpx);
+				    }
+					else if (auto* grb = dynamic_cast<OsiGrbSolverInterface*>(osi_solver)) {
+						new_solver = new OsiGrbSolverInterface(*grb);
+					}
+					else if (auto* clp = dynamic_cast<OsiClpSolverInterface*>(osi_solver)) {
+						new_solver = new OsiClpSolverInterface(*clp);
+					}
+					else {
+						LOG(FATAL) << "Unsupported OsiSolverInterface type";
+					}
 				}
 				else {
-					grb_solver = new OsiGrbSolverInterface();
+					// --- Default solver (choose one) ---
+					new_solver = new OsiGrbSolverInterface();
 				}
+
+				// --- Reset / initialize solver ---
+				SetSolverOptions(new_solver);
+				new_solver->initialSolve();
+				new_solver->loadProblem(0, 0, 0,
+					nullptr, nullptr, nullptr,
+					nullptr, nullptr, nullptr,
+					nullptr, nullptr);
+
+				osi_solver_map_[tid] = new_solver;
+				return new_solver;
 				
+				/*
+				OsiCpxSolverInterface* cpx_solver;
+				if (osi_solver) {
+					cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+					assert(cpx_solver);
+				}
+				else {
+					cpx_solver = new OsiCpxSolverInterface();
+				}
 				// Reset the solver
-				SetSolverOptions(grb_solver);
-				grb_solver->initialSolve();
-				grb_solver->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-				osi_solver_map_[boost::this_thread::get_id()] = grb_solver;
-				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-				return grb_solver;
-			}
+				SetSolverOptions(cpx_solver);
+				cpx_solver->initialSolve();
+				cpx_solver->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+                osi_solver_map_[boost::this_thread::get_id()] = cpx_solver;
+                boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+				return cpx_solver;
+				*/
+            }
 			else {
 				return it->second;
 			}
-		}
+        }
 		return nullptr;
-	}
+    }
 
 	void ParallelNestedBenders::ComputeCutCoefficients(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const std::vector<double>& dual_solution, std::vector<double>* cut_coefficients_pointer)
 	{
@@ -6571,15 +6689,52 @@ namespace parallel_benders {
 						SetWarmStart(osi_solver, benders_tree_node_pointer);
 						benders_node_pointer->warm_start_added_ = true;
 						if (level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false) {
-							OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-							if (osi_cpx != nullptr && level_cstat_ != nullptr) {
-								CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-								CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-								if (level_length_ == osi_cpx->getNumRows())
+							OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+							OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+							OsiClpSolverInterface* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver);
+							if (cpx_ptr != nullptr && level_cstat_ != nullptr) {
+								CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+								CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+								if (level_length_ == cpx_ptr->getNumRows())
 									CPXcopybasednorms(env_ptr, lp_ptr, level_cstat_.get(), level_rstat_.get(), level_dnorm_.get());
 								else
-									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << cpx_ptr->getNumRows() << " rows and had " << level_length_;
 							}
+							else if (grb_ptr != nullptr && level_cstat_ != nullptr) {
+								GRBmodel* lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
+
+								int num_rows = 0;
+								int num_cols = 0;
+								GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
+								GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
+
+								if (level_length_ == num_rows) {
+									GRBupdatemodel(lp_ptr);     // Apply basis
+									GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, num_cols, level_cstat_.get());
+									GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, level_rstat_.get());
+									GRBupdatemodel(lp_ptr);
+								}
+								else 
+									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basis where problem has " << num_rows << " rows and had " << level_length_;
+								
+							}
+							else if (clp_ptr != nullptr && level_cstat_ != nullptr) {
+								if (level_length_ == clp_ptr->getNumRows()) {
+									CoinWarmStartBasis basis;               // default constructor
+									basis.resize(clp_ptr->getNumCols(), clp_ptr->getNumRows()); // correct order: cols, rows
+
+									for (int i = 0; i < clp_ptr->getNumRows(); ++i)
+										basis.setArtifStatus(i, static_cast<CoinWarmStartBasis::Status>(level_rstat_[i]));
+									for (int i = 0; i < clp_ptr->getNumCols(); ++i)
+										basis.setStructStatus(i, static_cast<CoinWarmStartBasis::Status>(level_cstat_[i]));
+
+									clp_ptr->setWarmStart(&basis);
+								}
+								else {
+									LOG_IF(WARNING, log_level_ <= google::WARNING) << "CLP warm start skipped (dimension mismatch: " << clp_ptr->getNumRows() << " rows vs " << level_length_ << ")";
+								}
+							}
+
 						}
 					}
 					assert((*feas_it)->getCut().row().getNumElements() <= osi_solver->getNumCols());
@@ -6603,15 +6758,53 @@ namespace parallel_benders {
 						SetWarmStart(osi_solver, benders_tree_node_pointer);
 						benders_node_pointer->warm_start_added_ = true;
 						if (level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false) {
-							OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-							if (osi_cpx != nullptr && level_cstat_ != nullptr) {
-								CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-								CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-								if (level_length_ == osi_cpx->getNumRows())
+							OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+							OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+							OsiClpSolverInterface* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver);
+							
+							if (cpx_ptr != nullptr && level_cstat_ != nullptr) {
+								CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+								CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+								if (level_length_ == cpx_ptr->getNumRows())
 									CPXcopybasednorms(env_ptr, lp_ptr, level_cstat_.get(), level_rstat_.get(), level_dnorm_.get());
 								else
-									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << cpx_ptr->getNumRows() << " rows and had " << level_length_;
 							}
+							else if (grb_ptr != nullptr && level_cstat_ != nullptr) {
+								GRBmodel* lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
+
+								int num_rows = 0;
+								int num_cols = 0;
+								GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
+								GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
+
+								if (level_length_ == num_rows) {
+									GRBupdatemodel(lp_ptr);     // Apply basis
+									GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, num_cols, level_cstat_.get());
+									GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, level_rstat_.get());
+									GRBupdatemodel(lp_ptr);
+								}
+								else
+									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basis where problem has " << num_rows << " rows and had " << level_length_;
+
+							}
+							else if (clp_ptr != nullptr && level_cstat_ != nullptr) {
+								if (level_length_ == clp_ptr->getNumRows()) {
+									CoinWarmStartBasis basis;               // default constructor
+									basis.resize(clp_ptr->getNumCols(), clp_ptr->getNumRows()); // correct order: cols, rows
+
+									for (int i = 0; i < clp_ptr->getNumRows(); ++i)
+										basis.setArtifStatus(i, static_cast<CoinWarmStartBasis::Status>(level_rstat_[i]));
+									for (int i = 0; i < clp_ptr->getNumCols(); ++i)
+										basis.setStructStatus(i, static_cast<CoinWarmStartBasis::Status>(level_cstat_[i]));
+
+									clp_ptr->setWarmStart(&basis);
+								}
+								else {
+									LOG_IF(WARNING, log_level_ <= google::WARNING) << "CLP warm start skipped (dimension mismatch: " << clp_ptr->getNumRows() << " rows vs " << level_length_ << ")";
+								}
+							}
+
 						}
 					}
 					ApplyCut(osi_solver, **domain_it, append_type);
@@ -6642,14 +6835,52 @@ namespace parallel_benders {
 					// When you got level decomposition, we use the same problem, so we might want to store/restore the dual norms!
 					// Works only with cplex
 					if (level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false) {
-						OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-						if (osi_cpx != nullptr && level_cstat_ != nullptr) {
-							CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-							CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-							if (level_length_ == osi_cpx->getNumRows())
+						OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+						OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+						OsiClpSolverInterface* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver);
+						
+						if (cpx_ptr != nullptr && level_cstat_ != nullptr) {
+							CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+							CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+							if (level_length_ == cpx_ptr->getNumRows())
 								CPXcopybasednorms(env_ptr, lp_ptr, level_cstat_.get(), level_rstat_.get(), level_dnorm_.get());
 							else
-								LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has now " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+								LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has now " << cpx_ptr->getNumRows() << " rows and had " << level_length_;
+						}
+						else if (grb_ptr != nullptr && level_cstat_ != nullptr) {
+							GRBmodel* lp_ptr = grb_ptr->getLpPtr();
+							GRBupdatemodel(lp_ptr);
+
+							int num_rows = 0;
+							int num_cols = 0;
+							GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
+							GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
+
+							if (level_length_ == num_rows) {
+								GRBupdatemodel(lp_ptr);     // Apply basis
+								GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, num_cols, level_cstat_.get());
+								GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, level_rstat_.get());
+								GRBupdatemodel(lp_ptr);
+							}
+							else 
+								LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basis where problem has now " << num_rows << " rows and had " << level_length_;
+						}
+						else if (clp_ptr != nullptr && level_cstat_ != nullptr) {
+							if (level_length_ == clp_ptr->getNumRows()) {
+								// Create warm start object
+								CoinWarmStartBasis basis;
+								basis.resize(clp_ptr->getNumCols(), clp_ptr->getNumRows()); // columns first, then rows
+
+								for (int i = 0; i < clp_ptr->getNumRows(); ++i)
+									basis.setArtifStatus(i, static_cast<CoinWarmStartBasis::Status>(level_rstat_[i]));
+								for (int j = 0; j < clp_ptr->getNumCols(); ++j)
+									basis.setStructStatus(j, static_cast<CoinWarmStartBasis::Status>(level_cstat_[j]));
+
+								clp_ptr->setWarmStart(&basis);
+							}
+							else {
+								LOG_IF(WARNING, log_level_ <= google::WARNING) << "CLP warm start skipped (dimension mismatch: " << clp_ptr->getNumRows() << " rows vs " << level_length_ << ")";
+							}
 						}
 
 					}
@@ -7956,10 +8187,12 @@ namespace parallel_benders {
 
 
 				// Get solution of first stage node?
-				OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-				if (osi_cpx != nullptr) {
-					CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-					CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+				OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+				OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+				OsiClpSolverInterface* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver);
+				if (cpx_ptr != nullptr) {
+					CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+					CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
 
 					int num_mipstarts = 1; // We only add one mipstart
 					int begin_mipstarts = 0; // First mipstart starts at location 0
@@ -7973,6 +8206,52 @@ namespace parallel_benders {
 						LOG_IF(WARNING, log_level_ <= google::WARNING && err != 0) << "CPXcopymipstart returned with " << err;
 					}
 				} // End OsiCpx
+				// Get solution of first stage node? — Gurobi version
+				else if (grb_ptr != nullptr) {
+					GRBmodel* lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
+					GRBenv* env_ptr = GRBgetenv(lp_ptr);
+					GRBupdatemodel(lp_ptr); // Ensure model is current
+
+					int numVars = 0;
+					GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &numVars);
+				
+					int numStarts = stage_data_[current_stage_]->mip_solution_.size();
+					GRBsetintattr(lp_ptr, GRB_INT_ATTR_NUMSTART, numStarts); 	// Tell Gurobi how many starts you'll supply
+
+					GRBupdatemodel(lp_ptr); // Update so Gurobi will accept subsequent Start changes
+
+					for (int s = 0; s < numStarts; ++s) {
+						GRBsetintparam(env_ptr, GRB_INT_PAR_STARTNUMBER, s); // Specify which start you're setting
+						double* mip_solution = &stage_data_[current_stage_]->mip_solution_[s][0]; // Get this start’s solution values
+
+						// Assign Start values to all variables
+						for (int j = 0; j < numVars; ++j) {
+							GRBsetdblattrelement(lp_ptr, GRB_DBL_ATTR_START, j, mip_solution[j]);
+						}
+						GRBupdatemodel(lp_ptr); // Optionally update per start (not strictly required every time)
+					}
+				} // End OsiGrb
+				if (clp_ptr != nullptr) {
+					ClpSimplex* lp_ptr = clp_ptr->getModelPtr();
+					int numCols = lp_ptr->numberColumns();
+					int numRows = lp_ptr->numberRows();
+
+					CoinWarmStartBasis basis;
+					basis.resize(numCols, numRows); // Resize basis storage
+
+					// Set column statuses
+					for (int j = 0; j < numCols; ++j) 
+						basis.setStructStatus(j, CoinWarmStartBasis::atLowerBound);
+						// or basic / atUpperBound / isFree
+					// Set row (artificial) statuses
+					for (int i = 0; i < numRows; ++i)
+						basis.setArtifStatus(i, CoinWarmStartBasis::basic);
+
+					// Install warm start
+					clp_ptr->setWarmStart(&basis);
+				} // End OsiClp
+
+
 			} // End If WarmStartAdded
 		} // End Else
 		std::cout << std::flush; // show CPLEX error messages (if any)
@@ -8025,6 +8304,7 @@ namespace parallel_benders {
 			if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX) {
 				// Store warm start for first stage
 				OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+				OsiGrbSolverInterface* osi_grb = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
 				if (osi_cpx != nullptr) {
 					CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
 					CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
@@ -8035,8 +8315,29 @@ namespace parallel_benders {
 					int cpx_stat = CPXgetbasednorms(env_ptr, lp_ptr, level_cstat_.get(), level_rstat_.get(), level_dnorm_.get());
 					level_length_ = CPXgetnumrows(env_ptr, lp_ptr);
 					LOG_IF(WARNING, log_level_ <= google::WARNING && cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
-
 				}
+				else if (osi_grb != nullptr) {
+
+					GRBmodel* lp_ptr = osi_grb->getLpPtr();
+					GRBupdatemodel(lp_ptr);
+
+					int num_cols = 0;
+					int num_rows = 0;
+					GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
+					GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
+
+					// Allocate storage (note: no dnorm in Gurobi)
+					level_cstat_.reset(new int[num_cols]);
+					level_rstat_.reset(new int[num_rows]);
+					level_dnorm_.reset();  // not used for Gurobi
+
+					// Get basis statuses
+					int err1 = GRBgetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, num_cols, level_cstat_.get());
+					int err2 = GRBgetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, level_rstat_.get());
+					level_length_ = num_rows;
+					LOG_IF(WARNING, log_level_ <= google::WARNING && (err1 || err2)) << "Failed to get Gurobi basis (VBASIS err=" << err1 << ", CBASIS err=" << err2 << ")";
+				}
+
 			}
 		}
 		std::cout << std::flush; // show CPLEX error messages (if any)
@@ -8398,6 +8699,10 @@ namespace parallel_benders {
 
 	void ParallelNestedBenders::SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin /*= true*/, bool use_quadratic /*= false*/)
 	{
+		OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+		OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+		OsiClpSolverInterface* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver);
+
 		// MIP Solving only at first stage..
 		if (integer_problems_[current_stage_] && !generate_lp_cuts_) {
 
@@ -8435,30 +8740,69 @@ namespace parallel_benders {
 		}
 		else {
 			if (!use_coin && use_quadratic) {
-				OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+				
+				if (cpx_ptr) {
+					CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+					CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+					// Set this param for QPMETHOD according to lp_method_
+					if (lp_method_ == PNB_INT_DUAL_SIMPLEX)
+						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_DUAL);
+					else if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX)
+						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_PRIMAL);
+					else if (lp_method_ == PNB_INT_BARRIER) {
+						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_BARRIER);
+						CPXsetintparam(env_ptr, CPX_PARAM_BARCROSSALG, -1);
+					}
+					else if (lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD)
+						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_CONCURRENT);
+					else if (lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER) {
+						CPXsetintparam(env_ptr, CPX_PARAM_QPMETHOD, CPX_ALG_BARRIER);
+						CPXsetintparam(env_ptr, CPX_PARAM_BARCROSSALG, 0);
+					}
+					int time_left = std::min(maximal_solution_time_, maximal_solution_time_ - (int)std::floor(timer_.GetAggregatedTime()));
+					if (time_left <= 0)
+						time_left = 1;
+					CPXsetdblparam(env_ptr, CPX_PARAM_TILIM, time_left);
+					CPXqpopt(env_ptr, lp_ptr);
+					int code = CPXgetstat(env_ptr, lp_ptr);
+					if (code == CPX_STAT_INForUNBD) { // Solve without presolve to determine correct direction!
+						CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_OFF);
+						// Discard presolve information by changing objective Sense (do we lose warmstart?!)
+						int objsen = CPXgetobjsen(env_ptr, lp_ptr);
+						CPXchgobjsen(env_ptr, lp_ptr, -objsen);
+						CPXchgobjsen(env_ptr, lp_ptr, objsen);
+						CPXqpopt(env_ptr, lp_ptr);
+						code = CPXgetstat(env_ptr, lp_ptr);
+						CPXsetintparam(env_ptr, CPX_PARAM_PREIND, CPX_ON);
+					}
+					if (code != CPX_STAT_OPTIMAL) {
+						double kappa_value;
+						CPXgetdblquality(env_ptr, lp_ptr, &kappa_value, CPX_KAPPA);
+						LOG_IF(WARNING, log_level_ <= google::WARNING) << "Quadratic problem solved with status " << code << " and has condition number " << kappa_value;
+					}
+				}
 				if (grb_ptr) {
 					// === Get Gurobi environment and model pointers ===
 					GRBmodel* model_ptr = grb_ptr->getLpPtr();
-					GRBenv* env_ptr = GRBgetenv(model_ptr);
-	
-
-				
+					GRBenv* env_ptr = GRBgetenv(model_ptr);			
 					// === Select QP/LP algorithm ===
 					if (lp_method_ == PNB_INT_DUAL_SIMPLEX) {
-						GRBsetintparam(env_ptr, "Method", 2);	// Dual simplex
-						GRBsetintparam(env_ptr, "Crossover", 1); // Barrier + crossover
+						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_DUAL);	// Dual simplex
 					}
 					else if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX)
-						GRBsetintparam(env_ptr, "Method", 0);  // Primal simplex
+						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_PRIMAL); // Primal simplex
 					else if (lp_method_ == PNB_INT_BARRIER) {
-						GRBsetintparam(env_ptr, "Method", 2);  // Barrier only
-						GRBsetintparam(env_ptr, "Crossover", 0);
+						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_BARRIER);   // Barrier only
+						GRBsetintparam(env_ptr, GRB_INT_PAR_CROSSOVER, 0);
 					}
 					else if (lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD)
-						GRBsetintparam(env_ptr, "Method", 3);  // Concurrent LP
+						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_CONCURRENT); // Concurrent LP
 					else if (lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER) {
-						GRBsetintparam(env_ptr, "Method", 2);  // Barrier
-						GRBsetintparam(env_ptr, "Crossover", 1); // Barrier + crossover
+						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_BARRIER);  // Barrier
+						GRBsetintparam(env_ptr, GRB_INT_PAR_CROSSOVER, 1); // Barrier + crossover
+					}
+					else {						
+						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_AUTO); // Automatic method selection (recommended fallback)
 					}
 
 					// === Set remaining time limit ===
@@ -8471,11 +8815,7 @@ namespace parallel_benders {
 					// === Optional numerical settings ===
 					//GRBsetintparam(env_ptr, "NumericFocus", 0);               // Conservative numerics
 					GRBsetdblparam(env_ptr, "FeasibilityTol", zero_tolerance_); // Similar to EPRHS
-					GRBsetdblparam(env_ptr, "IntFeasTol", integer_tolerance_);  // Similar to EPINT
-					//GRBsetintparam(env_ptr, "Presolve", 1);                    // Default presolve on
-		
-					
-					GRBupdatemodel(model_ptr);
+					GRBsetdblparam(env_ptr, "IntFeasTol", integer_tolerance_);  // Similar to EPINT			
 
 					// === Optimize the quadratic model ===
 					int error = GRBoptimize(model_ptr);
@@ -8489,13 +8829,11 @@ namespace parallel_benders {
 					// === Retrieve solver status ===
 					int status = 0;
 					GRBgetintattr(model_ptr, "Status", &status);
-
 					// === Handle non-optimal cases (similar to CPLEX’s INForUNBD) ===
 					if (status == GRB_INF_OR_UNBD || status == GRB_INFEASIBLE || status == GRB_UNBOUNDED) {
 						// Try disabling presolve to recheck feasibility
 						GRBsetintparam(env_ptr, "Presolve", 0);
-						GRBupdatemodel(model_ptr);
-						
+						//GRBupdatemodel(model_ptr);  DEBUG
 						GRBoptimize(model_ptr);
 						GRBgetintattr(model_ptr, "Status", &status);
 						GRBsetintparam(env_ptr, "Presolve", 1);  // Restore default
@@ -8517,16 +8855,99 @@ namespace parallel_benders {
 						}
 					}
 				}
+				if (clp_ptr != nullptr) {
+					ClpSimplex* clp_lp_ptr = clp_ptr->getModelPtr();
+
+					// 1. Set solver options
+					// CLP supports primal/dual simplex and barrier via setPrimal/Dual
+					// Your lp_method_ mapping:
+					switch (lp_method_) {
+					case PNB_INT_DUAL_SIMPLEX:
+						clp_lp_ptr->setOptimizationDirection(1); // Minimize
+						clp_lp_ptr->setDualTolerance(1e-9);
+						clp_lp_ptr->dual(); // Solve with dual simplex
+						break;
+
+					case PNB_INT_PRIMAL_SIMPLEX:
+						clp_lp_ptr->setOptimizationDirection(1); // Minimize
+						clp_lp_ptr->setPrimalTolerance(1e-9);
+						clp_lp_ptr->primal(); // Solve with primal simplex
+						break;
+
+					case PNB_INT_BARRIER:
+						// CLP has interior point only in ClpInterior, use:
+						// model->primal() with default settings, barrier not fully exposed
+						clp_lp_ptr->primal();
+						break;
+
+					default:
+						// fallback to dual simplex
+						clp_lp_ptr->dual();
+						break;
+					}
+
+					// 2. Set time limit
+					double elapsed = timer_.GetAggregatedTime();
+					double time_left = std::max(1.0, (double)maximal_solution_time_ - elapsed);
+					clp_lp_ptr->setMaximumSeconds(time_left);
+
+
+					// 3. Solve
+					int status = -1;
+					try {
+						// Solve convex QP in CLP
+						clp_lp_ptr->primal(); // use primal or dual as set above
+						status = clp_lp_ptr->status(); // 0 = optimal, 1 = primal infeasible, etc.
+					}
+					catch (...) {
+						LOG_IF(WARNING, log_level_ <= google::WARNING)
+							<< "Exception while solving CLP QP";
+						status = -1;
+					}
+
+					// 4. Check solution quality
+					if (status != 0) {
+						double kappa_estimate = 0.0;
+						// CLP does not provide CPX_KAPPA equivalent
+						// You can approximate condition number via:
+						const double* diagQ = nullptr;
+						ClpQuadraticObjective* qobj =
+							dynamic_cast<ClpQuadraticObjective*>(clp_lp_ptr->objectiveAsObject());
+					
+						LOG_IF(WARNING, log_level_ <= google::WARNING)
+							<< "Quadratic problem solved with status " << status
+							<< " (CLP does not provide exact condition number)";
+					}
+
+					// 5. Retrieve solution
+					const double* sol = clp_lp_ptr->primalColumnSolution();
+				}
+
 
 			}
 			else {
-			   OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
-			   if (grb_ptr) {
+			   if (grb_ptr && (level_euclidean_ || regularization_)){
 				   // === Get Gurobi environment and model pointers ===
 				   GRBmodel* model_ptr = grb_ptr->getLpPtr();
 				   GRBenv* env_ptr = GRBgetenv(model_ptr);
 				   GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
 				   GRBdelq(model_ptr);
+			   }
+			   else if (clp_ptr && (level_euclidean_ || regularization_)) {
+				   // Create a new quadratic objective with nullptr for Q
+				   ClpSimplex* clp_lp_ptr = clp_ptr->getModelPtr();
+				   ClpQuadraticObjective* qobj = dynamic_cast<ClpQuadraticObjective*>(clp_lp_ptr->objectiveAsObject());
+
+				   if (qobj) {
+					   int n = qobj->numberColumns(); // number of variables
+					   double* linear = qobj->linearObjective(); // linearObjective() returns double* to the linear part
+
+					  // Create a purely linear objective
+					   ClpLinearObjective* linObj = new ClpLinearObjective(linear, n);
+
+					   // Replace old quadratic objective
+					   clp_lp_ptr->setObjective(linObj);
+				   }
 			   }
 				osi_solver->initialSolve();
 			}
@@ -8728,25 +9149,37 @@ namespace parallel_benders {
 			startTimer(INT_TIMER_ID_DETAILED_BUILD_PROJECTIONS);
 
 		// We assume that the first stage problem is present!  
-		/*OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-		CPXENVptr env_ptr = nullptr;
-		CPXLPptr lp_ptr = nullptr;
+		OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+		CPXLPptr cpx_lp_ptr = nullptr;
+		CPXENVptr cpx_env_ptr = nullptr;
+		
+		OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+		GRBmodel* grb_lp_ptr = nullptr;
+		GRBenv* grb_env_ptr = nullptr;
+
+		OsiClpSolverInterface* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver);
+		ClpSimplex* clp_lp_ptr = nullptr;
+
+
 		int cpx_stat = 0;
 		if ( cpx_ptr != nullptr){
-			// Get Environment and LP Pointer
-			env_ptr = cpx_ptr->getEnvironmentPtr();
-			lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-		}*/
+			cpx_lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+			cpx_env_ptr = cpx_ptr->getEnvironmentPtr();
+		}		
+		else if (grb_ptr != nullptr) {
+			grb_lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
+			grb_env_ptr = grb_ptr->getEnvironmentPtr();
+			GRBsetintparam(grb_env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
+			GRBupdatemodel(grb_lp_ptr);
 
-		OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
-		GRBmodel* lp_ptr = nullptr;
-		GRBenv* env_ptr = nullptr;
-		if (grb_ptr != nullptr) {
-			lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
-			env_ptr = grb_ptr->getEnvironmentPtr();
-			GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
+			if (grb_lp_ptr == nullptr) {
+				throw std::runtime_error("Gurobi model pointer is null");
+			}
 		}
-		GRBupdatemodel(lp_ptr);
+		else if (clp_ptr != nullptr) {
+		    clp_lp_ptr = clp_ptr->getModelPtr();
+		}
+
 
 		// We need to set a quadratic objective, ||x-x'||_2^2, similar to the regularized decomposition, when we use level_euclidean_
 		// We have the objective ||x-x'||_1, when we use level_manhattan_
@@ -8827,34 +9260,41 @@ namespace parallel_benders {
 		}
 
 
-		// Quadratic Objective
-		if (grb_ptr != nullptr) {
-			if (level_euclidean_ || regularization_) {
-				// Compute quadratic coefficient matrix!
-				double term = 2.0;
-				if (regularization_)
-					term = 1.0 / regularized_sigma_;
 
-				std::vector<double> quadratic_coefs(number_of_problem_cols, term); // Cplex alway calculates 1/2 ||x||^2, so we need to anticipate this
-				for (int i = number_of_variables; i < number_of_problem_cols; i++) // Set theta variables to zero
-					quadratic_coefs[i] = 0.0;
+		if (level_euclidean_ || regularization_) {
+			// Compute quadratic coefficient matrix!
+			double term = 2.0;
+			if (regularization_)
+				term = 1.0 / regularized_sigma_;
 
-				// Compute normal objective function elements! -2x_i'
-				std::vector<double> linear_coefs;
-				if (regularization_)
-					linear_coefs.assign(original_obj_coefs.begin(), original_obj_coefs.begin() + number_of_problem_cols);
-				else
-					linear_coefs.assign(number_of_problem_cols, 0.0);
+			std::vector<double> quadratic_coefs(number_of_problem_cols, term); // Cplex alway calculates 1/2 ||x||^2, so we need to anticipate this
+			for (int i = number_of_variables; i < number_of_problem_cols; i++) // Set theta variables to zero
+				quadratic_coefs[i] = 0.0;
 
-				for (int i = 0; i < number_of_variables; i++) {
-					linear_coefs[i] -= benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[i] * term;
-				}
+			// Compute normal objective function elements! -2x_i'
+			std::vector<double> linear_coefs;
+			if (regularization_)
+				linear_coefs.assign(original_obj_coefs.begin(), original_obj_coefs.begin() + number_of_problem_cols);
+			else
+				linear_coefs.assign(number_of_problem_cols, 0.0);
 
+			for (int i = 0; i < number_of_variables; i++) {
+				linear_coefs[i] -= benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[i] * term;
+			}
+
+
+			if (cpx_ptr != nullptr) {
+				// Set new linear objective : invalidates old warm_start
+				CPXchgobj(cpx_env_ptr, cpx_lp_ptr, number_of_problem_cols, &obj_indices[0], &linear_coefs[0]);
+
+				// Set quadratic objective
+				CPXcopyqpsep(cpx_env_ptr, cpx_lp_ptr, &quadratic_coefs[0]); // Also changes problem accordingly!
+			}
+			else if (grb_ptr != nullptr) {
 				// --- 1. Set new linear objective coefficients ---
-				GRBsetdblattrarray(lp_ptr, GRB_DBL_ATTR_OBJ, 0, number_of_problem_cols, linear_coefs.data());
-
-                // CLEAR old Q matrix to match CPXcopyqpsep 
-				GRBdelq(lp_ptr);
+				GRBsetdblattrarray(grb_lp_ptr, GRB_DBL_ATTR_OBJ, 0, number_of_problem_cols, linear_coefs.data());
+				// CLEAR old Q matrix to match CPXcopyqpsep 
+				GRBdelq(grb_lp_ptr);
 
 				// --- 2. Set quadratic objective Q matrix ---
 				// Gurobi expects triplets (i, j, value) for Q entries (upper triangle only).
@@ -8865,13 +9305,11 @@ namespace parallel_benders {
 					if (quadratic_coefs[i] != 0.0) {
 						qrow.push_back(i);
 						qcol.push_back(i);
-						qval.push_back(quadratic_coefs[i]/term);
-						// Gurobi defines obj = 0.5 x'Qx + c'x, so we divide by 2 to match your CPXcopyqpsep usage
+						qval.push_back(quadratic_coefs[i] / term); // Gurobi defines obj = 0.5 x'Qx + c'x, so we divide by 2 to match CPXcopyqpsep usage
 					}
 				}
-
 				if (!qrow.empty()) {
-					GRBaddqpterms(lp_ptr,
+					GRBaddqpterms(grb_lp_ptr,
 						(int)qrow.size(),
 						qrow.data(),
 						qcol.data(),
@@ -8879,7 +9317,44 @@ namespace parallel_benders {
 				}
 
 				// --- 3. Update model after changes ---
-				GRBupdatemodel(lp_ptr);
+				GRBupdatemodel(grb_lp_ptr);
+			}
+			else if (clp_ptr != nullptr) {
+				const int n = number_of_problem_cols;
+
+				// Count nonzeros on diagonal
+				int nnz = 0;
+				for (int i = 0; i < n; ++i)
+					if (quadratic_coefs[i] != 0.0)
+						++nnz;
+
+				// Allocate CSC storage
+				std::vector<CoinBigIndex> start(n + 1);
+				std::vector<int> column(nnz);
+				std::vector<double> element(nnz);
+
+				CoinBigIndex pos = 0;
+				for (int i = 0; i < n; ++i) {
+					start[i] = pos;
+					if (quadratic_coefs[i] != 0.0) {
+						column[pos] = i;                  // row index
+						element[pos] = quadratic_coefs[i]; // Q(i,i)
+						++pos;
+					}
+				}
+				start[n] = pos;
+
+				// Build quadratic objective
+				ClpQuadraticObjective* quadObj =
+					new ClpQuadraticObjective(linear_coefs.data(),
+						n,
+						start.data(),
+						column.data(),
+						element.data()
+					);
+
+				// Attach to model (CLP takes ownership)
+				clp_lp_ptr->setObjective(quadObj);
 			}
 		}
 
@@ -8930,18 +9405,24 @@ namespace parallel_benders {
 		if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX) {
 			// Now problem is exactly as it was before the added optimality cuts! (except for the eventual present bounding optimality cut when problem was unbounded otherwise..)
 			if ((level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false) {
-				if (grb_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0) {
 
-					//int number_of_rows_temp = CPXgetnumrows(env_ptr,lp_ptr);
+				if (cpx_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0) {
+					int number_of_rows_temp = CPXgetnumrows(cpx_env_ptr, cpx_lp_ptr);
+					if (number_of_rows_temp == benders_tree_node_pointer->getDataPtr()->level_warm_start_length_)
+						CPXcopybasednorms(cpx_env_ptr, cpx_lp_ptr, benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(), benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(), benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
+					else
+						LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_solver->getNumRows() << " and had " << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_;
+					// Question is: Can we really apply this call?
+				}
+				
+				else if (grb_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0) {
 					int number_of_rows_temp = 0;
-					GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &number_of_rows_temp);
+					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &number_of_rows_temp);
 					int number_of_columns_temp = 0;
-					GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &number_of_columns_temp);
+					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMVARS, &number_of_columns_temp);
 
 					if (number_of_rows_temp == benders_tree_node_pointer->getDataPtr()->level_warm_start_length_) {
-						//CPXcopybasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
-
-						// 2️. Map CPLEX basis statuses to Gurobi
+						//Map CPLEX basis statuses to Gurobi
 						auto map_cplex_to_grb = [](int status) -> int {
 							switch (status) {
 							case 1: return 0;   // BASIC
@@ -8957,19 +9438,60 @@ namespace parallel_benders {
 
 						for (int i = 0; i < number_of_columns_temp; ++i)
 							cstat[i] = map_cplex_to_grb(benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_[i]);
-
 						for (int i = 0; i < number_of_rows_temp; ++i)
 							rstat[i] = map_cplex_to_grb(benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i]);
 
-						// 3️⃣ Set Gurobi warm start
-						GRBupdatemodel(lp_ptr);
-						GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, number_of_columns_temp, cstat.data());
-						GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, number_of_rows_temp, rstat.data());
-						GRBupdatemodel(lp_ptr);
+						//Set Gurobi warm start
+						GRBupdatemodel(grb_lp_ptr);
+						GRBsetintattrarray(grb_lp_ptr, GRB_INT_ATTR_VBASIS, 0, number_of_columns_temp, cstat.data());
+						GRBsetintattrarray(grb_lp_ptr, GRB_INT_ATTR_CBASIS, 0, number_of_rows_temp, rstat.data());
+						GRBupdatemodel(grb_lp_ptr);
 					}
 					else
-						LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << osi_solver->getNumRows() << " and had " << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_;
-					// Question is: Can we really apply this call?
+						LOG_IF(WARNING, log_level_ <= google::WARNING)
+						<< "Skipping Gurobi basis warm start: number of constraints changed "
+						<< "(current=" << number_of_rows_temp
+						<< ", saved=" << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_
+						<< ")"; // Question is: Can we really apply this call?
+				}
+
+				else if (clp_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0) {
+					int number_of_rows_temp = clp_lp_ptr->numberRows();
+					int number_of_columns_temp = clp_lp_ptr->numberColumns();
+
+					if (number_of_rows_temp == benders_tree_node_pointer->getDataPtr()->level_warm_start_length_) {
+						CoinWarmStartBasis basis;
+						basis.resize(number_of_columns_temp, number_of_rows_temp);
+
+						// --- Map CPLEX status -> CoinWarmStartBasis ---
+						auto map_cplex_to_clp = [](int status)
+							-> CoinWarmStartBasis::Status {
+							switch (status) {
+							case 1:  return CoinWarmStartBasis::basic;         // BASIC
+							case 0:  return CoinWarmStartBasis::atLowerBound;  // AT_LOWER
+							case 2:  return CoinWarmStartBasis::atUpperBound;  // AT_UPPER
+							case 3:  return CoinWarmStartBasis::isFree;        // FREE_SUPER
+							default: return CoinWarmStartBasis::atLowerBound; // fallback
+							}
+						};
+
+						// Columns (structural variables)
+						for (int j = 0; j < number_of_columns_temp; ++j)
+							basis.setStructStatus(j, map_cplex_to_clp(benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_[j]));
+						// Rows (artificial variables / constraints)
+						for (int i = 0; i < number_of_rows_temp; ++i) 
+							basis.setArtifStatus(i, map_cplex_to_clp(benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i]));
+
+						// Install basis
+						clp_ptr->setWarmStart(&basis);
+					}
+					else {
+						LOG_IF(WARNING, log_level_ <= google::WARNING)
+							<< "Skipping CLP basis warm start: number of constraints changed "
+							<< "(current=" << number_of_rows_temp
+							<< ", saved=" << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_
+							<< ")";
+					}
 				}
 			}
 			else {
@@ -9001,27 +9523,41 @@ namespace parallel_benders {
 		// If problem was infeasible, we can not go on!
 
 		// Check for correctly solved problem ( if we need feas cuts, we should do so )
-		/*if (regularization_) {
-			if ( cpx_ptr != nullptr ){
-				benders_tree_node_pointer->getDataPtr()->feasible_ = true;
-				cpx_stat = CPXgetstat(env_ptr,lp_ptr);
-				if ( cpx_stat == CPX_STAT_INFEASIBLE )
-					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
-				else if ( cpx_stat == CPX_STAT_UNBOUNDED )
-					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
-				else if ( cpx_stat == CPX_STAT_OPTIMAL_INFEAS )
-					regularized_sigma_ *= 100; // This way we practically disable regularization..
-
-			}
-		}*/
 		if (regularization_) {
-			if (grb_ptr != nullptr) {
+			if (cpx_ptr != nullptr) {
 				benders_tree_node_pointer->getDataPtr()->feasible_ = true;
+				cpx_stat = CPXgetstat(cpx_env_ptr, cpx_lp_ptr);
+				if (cpx_stat == CPX_STAT_INFEASIBLE)
+					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
+				else if (cpx_stat == CPX_STAT_UNBOUNDED)
+					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
+				else if (cpx_stat == CPX_STAT_OPTIMAL_INFEAS)
+					regularized_sigma_ *= 100; // This way we practically disable regularization..
+			}
 
-				int grb_status = 0;
-				GRBgetintattr(lp_ptr, GRB_INT_ATTR_STATUS, &grb_status);
+			else if (grb_ptr != nullptr) {
+				benders_tree_node_pointer->getDataPtr()->feasible_ = true;
+				int grb_stat = 0;
+				GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_STATUS, &grb_stat);
 
-				switch (grb_status) {
+				if (grb_stat == GRB_INFEASIBLE || grb_stat == GRB_INF_OR_UNBD) {
+					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
+				}
+				else if (grb_stat == GRB_NUMERIC || grb_stat == GRB_SUBOPTIMAL) {
+					regularized_sigma_ *= 100;
+				}
+				else if (grb_stat == GRB_OPTIMAL) {
+					double max_viol = 0.0;
+					GRBgetdblattr(grb_lp_ptr, GRB_DBL_ATTR_CONSTR_VIO, &max_viol);
+
+					if (max_viol > 1e-6)
+						regularized_sigma_ *= 100;
+				}
+				
+				
+				/*int grb_stat = 0;
+				GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_STATUS, &grb_stat);
+				switch (grb_stat) {
 				case GRB_INFEASIBLE:
 				case GRB_INF_OR_UNBD:
 					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
@@ -9029,8 +9565,6 @@ namespace parallel_benders {
 
 				case GRB_OPTIMAL:
 					// Check if solution is “practically infeasible” (like CPX_STAT_OPTIMAL_INFEAS)
-					// In Gurobi, you can check the quality if needed:
-					// double prim_obj; GRBgetdblattr(lp_ptr, GRB_DBL_ATTR_OBJVAL, &prim_obj);
 					// For now, mimic CPLEX behavior:
 					regularized_sigma_ *= 100;
 					break;
@@ -9038,6 +9572,31 @@ namespace parallel_benders {
 				default:
 					// other statuses (time limit, etc.)
 					break;
+				}*/
+			}
+			else if (clp_ptr != nullptr) {
+				benders_tree_node_pointer->getDataPtr()->feasible_ = true;
+				int clp_status = clp_lp_ptr->status();
+
+				// Infeasible
+				if (clp_lp_ptr->isProvenPrimalInfeasible()) 
+					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
+				// Unbounded (dual infeasible)
+				else if (clp_lp_ptr->isProvenDualInfeasible()) 
+					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
+
+				// Optimal
+				else if (clp_status == 0) {
+					// CLP has no direct equivalent of CPX_STAT_OPTIMAL_INFEAS
+					// Best approximation: optimal but with numerical issues
+					if (clp_lp_ptr->problemStatus() == 0 &&
+						clp_lp_ptr->secondaryStatus() != 0) {
+						regularized_sigma_ *= 100; // mimic CPLEX behavior
+					}
+				}
+				else {
+					// Other statuses: stopped, numerical trouble, etc.
+					// Leave feasible_ = true (same philosophy as your other blocks)
 				}
 			}
 		}
@@ -9050,74 +9609,136 @@ namespace parallel_benders {
 		if (lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX) {
 			// Get the warm start and store it for the next iteration! This means put the value for the level-cut at the end!
 			benders_tree_node_pointer->getDataPtr()->level_warm_start_.reset(osi_solver->getWarmStart());
-			/*if (cpx_ptr != nullptr && (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false) {
-				// Check for primal feasibility
-				cpx_stat = CPXgetstat(env_ptr,lp_ptr);
-				if ( cpx_stat != CPX_STAT_OPTIMAL ){
-					double kappa_value;
-					int status = CPXgetdblquality(env_ptr, lp_ptr, &kappa_value, CPX_KAPPA);
-					LOG_IF(INFO, log_level_ <= google::INFO) << "Level projection problem returned with status " << cpx_stat << " and has a basis condition number of " << kappa_value << ".";
-
+			if ((cpx_ptr != nullptr || grb_ptr != nullptr) && (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false) {
+				
+				if (cpx_ptr != nullptr) {
+					// Check for primal feasibility
+					cpx_stat = CPXgetstat(cpx_env_ptr, cpx_lp_ptr);
+					if (cpx_stat != CPX_STAT_OPTIMAL) {
+						double kappa_value;
+						int status = CPXgetdblquality(cpx_env_ptr, cpx_lp_ptr, &kappa_value, CPX_KAPPA);
+						LOG_IF(INFO, log_level_ <= google::INFO) << "Level projection problem returned with status " << cpx_stat << " and has a basis condition number of " << kappa_value << ".";
+					}
 				}
-				*/
+				else if (grb_ptr != nullptr) {
+					int grb_status = 0;
+					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_STATUS, &grb_status);
 
+					if (grb_status != GRB_OPTIMAL) {
+						LOG_IF(INFO, log_level_ <= google::INFO)
+							<< "Level projection problem returned with status " << grb_status;
 
-			if (grb_ptr != nullptr && (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false) {
-				int grb_status = 0;
-				GRBgetintattr(lp_ptr, GRB_INT_ATTR_STATUS, &grb_status);
+						// Optional: log primal/dual infeasibilities
+						int num_rows = 0, num_cols = 0;
+						GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
+						GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
 
-				if (grb_status != GRB_OPTIMAL) {
-					LOG_IF(INFO, log_level_ <= google::INFO)
-						<< "Level projection problem returned with status " << grb_status;
+						std::vector<double> x(num_cols), pi(num_rows);
+						GRBgetdblattrarray(grb_lp_ptr, GRB_DBL_ATTR_X, 0, num_cols, x.data());
+						GRBgetdblattrarray(grb_lp_ptr, GRB_DBL_ATTR_PI, 0, num_rows, pi.data());
 
-					// Optional: log primal/dual infeasibilities
-					int num_rows = 0, num_cols = 0;
-					GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
-					GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
+						double max_prim = *std::max_element(x.begin(), x.end(), [](double a, double b) { return std::abs(a) < std::abs(b); });
+						double max_dual = *std::max_element(pi.begin(), pi.end(), [](double a, double b) { return std::abs(a) < std::abs(b); });
 
-					std::vector<double> x(num_cols), pi(num_rows);
-					GRBgetdblattrarray(lp_ptr, GRB_DBL_ATTR_X, 0, num_cols, x.data());
-					GRBgetdblattrarray(lp_ptr, GRB_DBL_ATTR_PI, 0, num_rows, pi.data());
-
-					double max_prim = *std::max_element(x.begin(), x.end(), [](double a, double b) { return std::abs(a) < std::abs(b); });
-					double max_dual = *std::max_element(pi.begin(), pi.end(), [](double a, double b) { return std::abs(a) < std::abs(b); });
-
-					LOG_IF(INFO, log_level_ <= google::INFO)
-						<< "Max primal infeasibility: " << max_prim
-						<< ", Max dual infeasibility: " << max_dual;
+						LOG_IF(INFO, log_level_ <= google::INFO)
+							<< "Max primal infeasibility: " << max_prim
+							<< ", Max dual infeasibility: " << max_dual;
+					}
 				}
+				else if (clp_ptr != nullptr) {
+					int clp_status = clp_lp_ptr->status();
 
+					if (clp_status != 0) { // CLP: status == 0 means optimal
+
+						LOG_IF(INFO, log_level_ <= google::INFO) << "Level projection problem returned with CLP status " << clp_status;
+
+						// --- Primal infeasibility ---
+						double max_primal_inf = clp_lp_ptr->primalTolerance();
+						double sum_primal_inf = clp_lp_ptr->sumPrimalInfeasibilities();
+
+						// --- Dual infeasibility ---
+						double max_dual_inf = clp_lp_ptr->dualTolerance();
+						double sum_dual_inf = clp_lp_ptr->sumDualInfeasibilities();
+
+						LOG_IF(INFO, log_level_ <= google::INFO)
+							<< "Sum primal infeasibility: " << sum_primal_inf
+							<< ", Sum dual infeasibility: " << sum_dual_inf
+							<< ", Primal tol: " << max_primal_inf
+							<< ", Dual tol: " << max_dual_inf;
+					}
+				}
 
 				benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.reset(new int[osi_solver->getNumCols()]); // This might be unnecessary, when problem is fully initialized, as number of cols does not change. TODO: Change these to vectors?
 				benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.reset(new int[osi_solver->getNumRows()]);
 				benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.reset(new double[osi_solver->getNumRows()]);
 
-				//cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
-				int num_rows = 0, num_cols = 0;
-				GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
-				GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
 
-				std::vector<int> cstat(num_cols), rstat(num_rows);
-				GRBgetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, num_cols, cstat.data());
-				GRBgetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, rstat.data());
+				if (cpx_ptr != nullptr) {
+					cpx_stat = CPXgetbasednorms(cpx_env_ptr, cpx_lp_ptr, benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(), benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(), benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
+					benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
+					LOG_IF(WARNING, log_level_ <= google::WARNING && cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
 
-				std::copy(cstat.begin(), cstat.end(), benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get());
-				std::copy(rstat.begin(), rstat.end(), benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get());
+				}
+				else if (grb_ptr != nullptr) {
+					int num_rows = 0, num_cols = 0;
+					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
+					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
+
+					std::vector<int> cstat(num_cols), rstat(num_rows);
+					GRBgetintattrarray(grb_lp_ptr, GRB_INT_ATTR_VBASIS, 0, num_cols, cstat.data());
+					GRBgetintattrarray(grb_lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, rstat.data());
+
+					std::copy(cstat.begin(), cstat.end(), benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get());
+					std::copy(rstat.begin(), rstat.end(), benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get());
+
+					benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
+					LOG_IF(WARNING, log_level_ <= google::WARNING)
+						<< "Gurobi basis retrieved for warm start: "
+						<< num_cols << " columns, "
+						<< num_rows << " rows.";
+				}
+				else if (clp_ptr != nullptr) {
+					// --- CLP: retrieve basis for warm start via OSI ---
+					int num_cols = clp_ptr->getNumCols();
+					int num_rows = clp_ptr->getNumRows();
+
+					auto& cstat = benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_;
+					auto& rstat = benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_;
+
+					// Columns
+					for (int j = 0; j < num_cols; ++j) {
+						ClpSimplex::Status st = clp_lp_ptr->getColumnStatus(j);
+						switch (st) {
+						case ClpSimplex::basic:        cstat[j] = 1; break;
+						case ClpSimplex::atLowerBound: cstat[j] = 0; break;
+						case ClpSimplex::atUpperBound: cstat[j] = 2; break;
+						case ClpSimplex::isFree:       cstat[j] = 3; break;
+						default:                       cstat[j] = 0;
+						}
+					}
+					// Rows
+					for (int i = 0; i < num_rows; ++i) {
+						ClpSimplex::Status st = clp_lp_ptr->getRowStatus(i);
+						switch (st) {
+						case ClpSimplex::basic:        rstat[i] = 1; break;
+						case ClpSimplex::atLowerBound: rstat[i] = 0; break;
+						case ClpSimplex::atUpperBound: rstat[i] = 2; break;
+						case ClpSimplex::isFree:       rstat[i] = 3; break;
+						default:                       rstat[i] = 0;
+						}
+					}
+
+					// Update iterator for Benders cuts
+					benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
+
+					LOG_IF(WARNING, log_level_ <= google::WARNING)
+						<< "CLP basis retrieved for warm start: "
+						<< num_cols << " columns, "
+						<< num_rows << " rows.";
+				}
 
 
-
-				benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
-				//LOG_IF(WARNING, log_level_ <= google::WARNING && cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
-
-				LOG_IF(WARNING, log_level_ <= google::WARNING)
-					<< "Gurobi basis retrieved for warm start: "
-					<< num_cols << " columns, "
-					<< num_rows << " rows.";
-
-
-
-
-
+				
 				// Now we need to switch the entries of the new optimality cuts with the extra row 
 				int num_current_rows = osi_solver->getNumRows();
 				benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ = num_current_rows;
@@ -9130,6 +9751,8 @@ namespace parallel_benders {
 				benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[num_current_rows - 1] = temp_rstat;
 				benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[num_current_rows - 1] = temp_dnorm;
 			}
+
+
 			if (level_euclidean_ && integer_problems_[current_stage_] == false) {// We need to restructure the warm start in the same way
 					// We need to modify the warm start!
 				CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_tree_node_pointer->getDataPtr()->level_warm_start_.get());
@@ -9182,28 +9805,42 @@ namespace parallel_benders {
 
 		// Reset original objective function, when the problem should be reused! This resets solution status!
 		osi_solver->setObjCoeffSet(&obj_indices[0], &obj_indices[0] + solver_cols, &original_obj_coefs[0]);
-		//CPXchgobj(env_ptr,lp_ptr,number_of_problem_cols,&obj_indices[0],&original_obj_coefs[0]);
+		
 		// Setting problem to MILP or LP removes quadratic objective function
-		/*if (cpx_ptr != nullptr) {
+		if (cpx_ptr != nullptr) {
 			if (integer_problems_[current_stage_])
-				CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_MILP );
+				CPXchgprobtype( cpx_env_ptr, cpx_lp_ptr, CPXPROB_MILP );
 			else
-				CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_LP );
-		}*/
-		if (grb_ptr != nullptr) {
+				CPXchgprobtype( cpx_env_ptr, cpx_lp_ptr, CPXPROB_LP );
+		}
+		else if (grb_ptr != nullptr) {
 			int num_cols = osi_solver->getNumCols();
 			if (integer_problems_[current_stage_]) {
 				// Set all variables to integer (binary/integer) if needed
 				std::vector<char> vtype(num_cols, GRB_INTEGER);
-				GRBsetcharattrarray(lp_ptr, GRB_CHAR_ATTR_VTYPE, 0, num_cols, vtype.data());
+				GRBsetcharattrarray(grb_lp_ptr, GRB_CHAR_ATTR_VTYPE, 0, num_cols, vtype.data());
 			}
 			else {
 				// Set all variables to continuous
 				std::vector<char> vtype(num_cols, GRB_CONTINUOUS);
-				GRBsetcharattrarray(lp_ptr, GRB_CHAR_ATTR_VTYPE, 0, num_cols, vtype.data());
+				GRBsetcharattrarray(grb_lp_ptr, GRB_CHAR_ATTR_VTYPE, 0, num_cols, vtype.data());
 			}
 			// Update model after changes
-			GRBupdatemodel(lp_ptr);
+			GRBupdatemodel(grb_lp_ptr);
+		}
+		else if (clp_ptr != nullptr) {
+			int num_cols = clp_ptr->getNumCols();
+
+			if (integer_problems_[current_stage_]) {
+				// Set all variables to integer
+				std::vector<double> obj(num_cols); // optional: just keeping structure
+				std::vector<char> integer_flags(num_cols, 1); // 1 = integer
+
+				clp_ptr->setInteger(0, num_cols - 1); 	// Use OSI method to mark integer variables
+			}
+			else {
+				clp_ptr->setContinuous(0, num_cols - 1); // Set all variables to continuous
+			}
 		}
 
 		if (cvar_constr_decomp_) {
@@ -10282,6 +10919,7 @@ namespace parallel_benders {
 			//std::lock_guard<std::mutex> lock(*console_mutex_ptr_);
 			//osi_solver->writeLp(stream.str().c_str());
 			OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+			OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
 			if (cpx_ptr) {
 				CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
 				CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
@@ -10293,6 +10931,14 @@ namespace parallel_benders {
 				//CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"mps");
 				//name = stream.str()+"sav";
 				//CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"sav");
+			}
+			else if (grb_ptr) {
+				GRBmodel* lp_ptr = grb_ptr->getLpPtr();
+				GRBupdatemodel(lp_ptr);	// Make sure model is up to date
+
+				std::lock_guard<std::mutex> lock(*console_mutex_ptr_);
+				std::string name = stream.str() + ".lp";
+				GRBwrite(lp_ptr, name.c_str());
 			}
 			else {
 				// we could delete this block but than for L&P MP relaxation integer vars are printed as ints
