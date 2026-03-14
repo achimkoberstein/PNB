@@ -12,11 +12,11 @@
   <ItemDefinitionGroup>
     <ClCompile>
     <!--$(CplexVersion) is not supported in ItemDefinitionGroup-->
-      <AdditionalIncludeDirectories>../../../../ThirdParty/cplex/cplex2010/include/;../../../../ThirdParty/gurobi/gurobi501/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../ThirdParty/cplex/cplex2010/include/;../../../../ThirdParty/gurobi/gurobi1203/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cplex2010.lib;gurobi50.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../../../../ThirdParty/cplex/cplex2010/lib/x64;../../../../ThirdParty/gurobi/gurobi501/win64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cplex2010.lib;gurobi120.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../../../ThirdParty/cplex/cplex2010/lib/x64;../../../../ThirdParty/gurobi/gurobi1203/win64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
