@@ -15,20 +15,11 @@ using namespace flopc;
 #pragma message("USE_GUROBI is NOT defined")
 #endif
 
-bool useGurobi = true;
-
-
 int main(int argc, char* argv[]) {
 	const double myInfty = 1e5;
 
 #ifdef USE_GUROBI
-	OsiSolverInterface* first_solver;
-	if (useGurobi)
-		first_solver = new OsiGrbSolverInterface();
-	else
-		first_solver = new OsiCpxSolverInterface();
-
-	MP_model m(first_solver);
+	MP_model m(new OsiGrbSolverInterface());
 #else 
     MP_model m(new OsiCpxSolverInterface());
 #endif
@@ -130,16 +121,12 @@ int main(int argc, char* argv[]) {
 	// ---------------------------------------
 
 #ifdef USE_GUROBI
-	OsiSolverInterface* osi_solver;
-	if (useGurobi)
-		osi_solver = new OsiGrbSolverInterface();
-	else
-		osi_solver = new OsiCpxSolverInterface();
+	OsiGrbSolverInterface osi_solver;
 #else
 	OsiCpxSolverInterface osi_solver;
 #endif 
 	
-	OsiStochasticParallelNestedBendersSolverInterface nested_benders(osi_solver, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
+	OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_solver, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
 	m.setSolver(m.getSmi()->getOsiSolverInterface()); // therefore model solver object needs to be reset
 
 	m.setStochasticSolver(&nested_benders);

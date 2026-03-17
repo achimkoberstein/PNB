@@ -18,7 +18,7 @@
 		  ../../../../../Clp/src;
 		  ../../../../../Cbc/src/OsiCbc;
 		  ../../../../../Osi/src/OsiCpx;
-		  <!--../../../../../Osi/src/OsiGrb; added to avoid linker problems-->
+		  ../../../../../Osi/src/OsiGrb; <!--added to avoid linker problems-->
 		  ../../../../../Clp/src/OsiClp;
 		  ../../../../../BuildTools/headers;
 		  ../../../../../CoinUtils/src;
