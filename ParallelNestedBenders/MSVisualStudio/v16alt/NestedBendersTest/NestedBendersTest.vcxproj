@@ -63,11 +63,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\IncludeFiles.props" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\CplexConfiguration-x64.props" />
+	<Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\GurobiConfiguration-x64.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\IncludeFiles.props" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\CplexConfiguration-x64.props" />
+	<Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\GurobiConfiguration-x64.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -230,6 +232,9 @@
     <ProjectReference Include="..\..\..\..\Cgl\MSVisualStudio\v16\libCgl\libCgl.vcxproj">
       <Project>{dbea3904-f0b8-408a-9e1a-6497febe8c42}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v16\libOsiClp\libOsiClp.vcxproj">
+      <Project>{02d45875-a8cf-41b9-990b-3699c0ecfe10}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v16\libCoinUtils\libCoinUtils.vcxproj">
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_PropertySheetDisplayName>ProjectProperties_withGrb</_PropertySheetDisplayName>
+ </PropertyGroup>
+	<Target Name="CheckGurobiMacro" BeforeTargets="ClCompile">
+		<Message Text="GUROBI_HOME=$(GUROBI_HOME)" Importance="High"/>
+		<Message Text="USE_GUROBI defined? $(PreprocessorDefinitions)" Importance="High"/>
+	</Target>
+  <ItemDefinitionGroup  Condition="Exists('$(GUROBI_HOME)\lib\gurobi120.lib')">
+    <ClCompile>
+	    <PreprocessorDefinitions>
+			USE_GUROBI;
+			_DEBUG;_CONSOLE;
+			%(PreprocessorDefinitions)
+		</PreprocessorDefinitions>
+		<AdditionalIncludeDirectories>
+		  ../../../../../ParallelNestedBenders/src;
+		  ../../../../../ThirdParty/cplex/cplex124/include/ilcplex;
+		  ../../../../../Smi/src;
+		  ../../../../../Osi/src/Osi;
+		  ../../../../../FlopCpp/src;
+		  ../../../../../Cbc/src;
+		  ../../../../../Clp/src;
+		  ../../../../../Cbc/src/OsiCbc;
+		  ../../../../../Osi/src/OsiCpx;
+		  ../../../../../Clp/src/OsiClp;
+		  ../../../../../Osi/src/OsiGrb;
+		  ../../../../../BuildTools/headers;
+		  ../../../../../CoinUtils/src;
+		  ../../../../../ThirdParty/gtest/include;
+		  ../../../../../ThirdParty/boost;
+		  ../../../../../ThirdParty/glog/src/windows;
+		  %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MinimalRebuild>false</MinimalRebuild>
+      <AdditionalOptions>/permissive</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>
+		  ../../../../../ThirdParty/cplex/cplex2010/lib/x64;
+		  ../../../../../ThirdParty/boost/stage/lib64;
+		  ../../../../../ThirdParty/boost/stage/lib;
+		  ../../../../../Osi/MSVisualStudio/v16alt/libOsiGrb/Debug;
+		 <!-- ../../../../../ThirdParty/gurobi/gurobi1203/win64/lib;  -->
+		  $(GUROBI_HOME)/lib;
+		  %(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+		  cplex2010.lib;
+		  libOsiGrb.lib;          <!-- builds from Osi/src/OsiGrb/libOsiGrb.vcxproj -->
+		  gurobi_c++mdd2017.lib;  <!--done -->
+		  gurobi120.lib;          <!--done -->
+		  %(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

@@ -6,19 +6,31 @@ using std::endl;
 #include "OsiPnbStochasticSolverInterface.hpp"
 #include "CoinTime.hpp"
 
-#include <OsiCpxSolverInterface.hpp>
+#include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include<vector>
 
-
+bool useGurobi = false;
 
 
 int main(int argc, char* argv[]) {
-    //MP_model m(new OsiCpxSolverInterface);
-    OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
-    MP_model m(osi_solver);
+
+
+#ifdef USE_GUROBI
+    OsiSolverInterface* first_solver;
+    if (useGurobi)
+        first_solver = new OsiGrbSolverInterface();
+    else
+        first_solver = new OsiCpxSolverInterface();
+
+    MP_model m(first_solver);
+#else 
+    MP_model m(new OsiCpxSolverInterface());
+#endif
 
     //std::string fname = "r01.1.dow";
     std::string fname = "simpleProblem.dow";
@@ -194,8 +206,17 @@ int main(int argc, char* argv[]) {
     // ---------- use PNB solver -------------
     // ---------------------------------------
 
-    OsiCpxSolverInterface osi_cpx;
-    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
+#ifdef USE_GUROBI
+    OsiSolverInterface* osi_solver;
+    if (useGurobi)
+        osi_solver = new OsiGrbSolverInterface();
+    else
+        osi_solver = new OsiCpxSolverInterface();
+#else
+    OsiCpxSolverInterface osi_solver;
+#endif 
+
+    OsiStochasticParallelNestedBendersSolverInterface nested_benders(osi_solver, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
     m.setSolver(m.getSmi()->getOsiSolverInterface()); // therefore model solver object needs to be reset
 
     m.setStochasticSolver(&nested_benders);
@@ -203,7 +224,8 @@ int main(int argc, char* argv[]) {
     // Declare parameter file
     parallel_benders::Parameter benders_param;
     benders_param.init();
-    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+   //benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);
     benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
 
     benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, 1);

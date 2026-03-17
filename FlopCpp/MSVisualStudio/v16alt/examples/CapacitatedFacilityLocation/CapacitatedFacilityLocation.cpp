@@ -6,7 +6,9 @@ using std::endl;
 #include "OsiPnbStochasticSolverInterface.hpp"
 #include "CoinTime.hpp"
 
-#include <OsiCpxSolverInterface.hpp>
+#include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -17,8 +19,12 @@ static double HUGE_COST = 10000.00;
 static int NULL_DEMAND = 0;
 
 int main(int argc, char* argv[]) {
-    OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
-    MP_model m(osi_solver);
+#ifdef USE_GUROBI
+    MP_model m(new OsiGrbSolverInterface());
+#else 
+    MP_model m(new OsiCpxSolverInterface());
+#endif
+
 
 
     std::string fname = "1Cap10.txt";
@@ -112,7 +118,7 @@ int main(int argc, char* argv[]) {
     m.Solver->writeLp(".\\solution");
 
     cout << "Optimal objective: " << m.Solver->getObjValue() << endl;
-    x.display("Display x:\n");
+   // x.display("Display x:\n");
     y.display("Display y:\n");
 
 }

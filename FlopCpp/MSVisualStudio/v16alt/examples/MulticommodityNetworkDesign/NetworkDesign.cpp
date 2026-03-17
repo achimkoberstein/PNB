@@ -11,9 +11,13 @@ using namespace std;
 
 
 int main(int argc, char* argv[]) {
-    //MP_model::getDefaultModel().setSolver(new OsiCpxSolverInterface);
-    //MP_model m(new OsiCpxSolverInterface);
-    MP_model m(new OsiGrbSolverInterface);
+
+#ifdef USE_GUROBI
+    MP_model m(new OsiGrbSolverInterface());
+#else 
+    MP_model m(new OsiCpxSolverInterface());
+#endif
+
 
     //std::string fname = "simple_example.dow";
     std::string fname = "r01.1.dow";

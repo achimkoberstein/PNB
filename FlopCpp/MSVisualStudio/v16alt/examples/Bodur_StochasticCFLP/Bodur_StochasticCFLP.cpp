@@ -6,7 +6,9 @@ using std::endl;
 #include "OsiPnbStochasticSolverInterface.hpp"
 #include "CoinTime.hpp"
 
-#include <OsiCpxSolverInterface.hpp>
+#include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -46,10 +48,11 @@ int main(int argc, char* argv[]) {
     static int numScenarios = 250;
     static int numCustomers = 50;
 
-
-
-    OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
-    MP_model m(osi_solver);
+#ifdef USE_GUROBI
+    MP_model m(new OsiGrbSolverInterface());
+#else 
+    MP_model m(new OsiCpxSolverInterface());
+#endif
 
     enum { stage1, stage2, numStages };
     MP_stage ST(numStages);
@@ -214,8 +217,13 @@ int main(int argc, char* argv[]) {
     m.Solver->writeLp(".\\simpleProblemTest");
 
 
-    OsiCpxSolverInterface osi_cpx;
-    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
+#ifdef USE_GUROBI
+    OsiGrbSolverInterface osi_solver;
+#else
+    OsiCpxSolverInterface osi_solver;
+#endif 
+
+    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_solver, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
     m.setSolver(m.getSmi()->getOsiSolverInterface()); // therefore model solver object needs to be reset
 
     m.setStochasticSolver(&nested_benders);

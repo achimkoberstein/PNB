@@ -62,11 +62,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\IncludeFiles.props" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\CplexConfiguration-x64.props" />
+	<Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\GurobiConfiguration-x64.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\IncludeFiles.props" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\CplexConfiguration-x64.props" />
+	<Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\GurobiConfiguration-x64.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>

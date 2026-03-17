@@ -7,7 +7,9 @@ using std::endl;
 #include "CoinTime.hpp"
 
 
-#include <OsiCpxSolverInterface.hpp>
+#include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
+
 #include <iomanip>
 #include <iostream>
 #include <fstream>
@@ -416,7 +418,7 @@ for (int j = 0; j < numNodes; j++) {
 
     //PROBLEM: We need to minimize sum of scenarios probabilities
     m.attach();
-    m.Solver->writeLp(".\\simpleProblemTest");
+   //m.Solver->writeLp(".\\simpleProblemTest");
 
 
   
@@ -433,8 +435,8 @@ for (int j = 0; j < numNodes; j++) {
     // Declare parameter file
     parallel_benders::Parameter benders_param;
     benders_param.init();
-    //benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT);
+    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+    //benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT);
     //benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
    
 
