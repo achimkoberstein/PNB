@@ -56,10 +56,11 @@
 
 // Files necessary for gurobi
 #include "OsiGrbSolverInterface.hpp"
+#ifdef USE_GUROBI
 extern "C" {
 #include "gurobi_c.h"
 }
-
+#endif
 
 // Files necessary for Coin-LP
 #include "OsiClpSolverInterface.hpp"
@@ -3296,6 +3297,7 @@ namespace parallel_benders {
 					}
 				}
 				else if (auto* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver)) { //Gurobi
+                    #ifdef USE_GUROBI
 					GRBmodel* lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
 					GRBupdatemodel(lp_ptr); // Make sure model is current
 
@@ -3314,6 +3316,7 @@ namespace parallel_benders {
 						GRBwrite(lp_ptr, "abandonedProblem.lp");
 						LOG(FATAL) << "Solution process abandoned. " << "Gurobi returned with status code " << status;
 					}
+                    #endif
 				}
 				else if (auto* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver)) { //Coin-LP
 					if (clp_ptr->isAbandoned()) {
@@ -3588,6 +3591,7 @@ namespace parallel_benders {
 							CPXwriteprob(env_ptr, lp_ptr, "not_optimal", "lp");
 						}
 						else if (auto* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver)) {
+                            #ifdef USE_GUROBI
 							GRBmodel* lp_ptr = grb_ptr->getLpPtr();							
 							GRBupdatemodel(lp_ptr); // Make sure model is up to date
 
@@ -3596,6 +3600,7 @@ namespace parallel_benders {
 							LOG_IF(ERROR, log_level_ <= google::ERROR && !(status == GRB_OPTIMAL || status == GRB_SUBOPTIMAL)) << "Gurobi returned solution process with status " << status;
 							std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
 							GRBwrite(lp_ptr, "not_optimal.lp");
+                            #endif
 						}
 						if (auto* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver)) {
 							// CLP: check LP optimality
@@ -3626,6 +3631,8 @@ namespace parallel_benders {
 					CPXwriteprob(env_ptr, lp_ptr, "not_optimal", "lp");
 				}
 				else if (auto* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver)) {
+                #ifdef USE_GUROBI
+
 					GRBmodel* lp_ptr = grb_ptr->getLpPtr();
 					GRBupdatemodel(lp_ptr); // Make sure model is up to date
 
@@ -3634,6 +3641,7 @@ namespace parallel_benders {
 					LOG_IF(ERROR, log_level_ <= google::ERROR && !(status == GRB_OPTIMAL || status == GRB_SUBOPTIMAL)) << "Gurobi returned solution process with status " << status;
 					std::unique_lock<std::mutex> u_lock(*console_mutex_ptr_);
 					GRBwrite(lp_ptr, "not_optimal.lp");
+                #endif
 				}
 				if (auto* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver)) {
 					// CLP: check LP optimality
@@ -6488,7 +6496,9 @@ namespace parallel_benders {
 					    new_solver = new OsiCpxSolverInterface(*cpx);
 				    }
 					else if (auto* grb = dynamic_cast<OsiGrbSolverInterface*>(osi_solver)) {
+                    #ifdef USE_GUROBI
 						new_solver = new OsiGrbSolverInterface(*grb);
+                    #endif
 					}
 					else if (auto* clp = dynamic_cast<OsiClpSolverInterface*>(osi_solver)) {
 						new_solver = new OsiClpSolverInterface(*clp);
@@ -6499,7 +6509,7 @@ namespace parallel_benders {
 				}
 				else {
 					// --- Default solver (choose one) ---
-					new_solver = new OsiGrbSolverInterface();
+					new_solver = new OsiCpxSolverInterface();
 				}
 
 				// --- Reset / initialize solver ---
@@ -6701,6 +6711,7 @@ namespace parallel_benders {
 									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << cpx_ptr->getNumRows() << " rows and had " << level_length_;
 							}
 							else if (grb_ptr != nullptr && level_cstat_ != nullptr) {
+                            #ifdef USE_GUROBI
 								GRBmodel* lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
 
 								int num_rows = 0;
@@ -6716,7 +6727,7 @@ namespace parallel_benders {
 								}
 								else 
 									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basis where problem has " << num_rows << " rows and had " << level_length_;
-								
+                            #endif
 							}
 							else if (clp_ptr != nullptr && level_cstat_ != nullptr) {
 								if (level_length_ == clp_ptr->getNumRows()) {
@@ -6771,6 +6782,7 @@ namespace parallel_benders {
 									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has " << cpx_ptr->getNumRows() << " rows and had " << level_length_;
 							}
 							else if (grb_ptr != nullptr && level_cstat_ != nullptr) {
+                            #ifdef USE_GUROBI
 								GRBmodel* lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
 
 								int num_rows = 0;
@@ -6786,7 +6798,7 @@ namespace parallel_benders {
 								}
 								else
 									LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basis where problem has " << num_rows << " rows and had " << level_length_;
-
+                            #endif
 							}
 							else if (clp_ptr != nullptr && level_cstat_ != nullptr) {
 								if (level_length_ == clp_ptr->getNumRows()) {
@@ -6848,6 +6860,7 @@ namespace parallel_benders {
 								LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basednorms where problem has now " << cpx_ptr->getNumRows() << " rows and had " << level_length_;
 						}
 						else if (grb_ptr != nullptr && level_cstat_ != nullptr) {
+                        #ifdef USE_GUROBI
 							GRBmodel* lp_ptr = grb_ptr->getLpPtr();
 							GRBupdatemodel(lp_ptr);
 
@@ -6864,6 +6877,7 @@ namespace parallel_benders {
 							}
 							else 
 								LOG_IF(WARNING, log_level_ <= google::WARNING) << "Trying to copy basis where problem has now " << num_rows << " rows and had " << level_length_;
+                        #endif
 						}
 						else if (clp_ptr != nullptr && level_cstat_ != nullptr) {
 							if (level_length_ == clp_ptr->getNumRows()) {
@@ -8208,6 +8222,7 @@ namespace parallel_benders {
 				} // End OsiCpx
 				// Get solution of first stage node? — Gurobi version
 				else if (grb_ptr != nullptr) {
+                #ifdef USE_GUROBI
 					GRBmodel* lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
 					GRBenv* env_ptr = GRBgetenv(lp_ptr);
 					GRBupdatemodel(lp_ptr); // Ensure model is current
@@ -8230,6 +8245,7 @@ namespace parallel_benders {
 						}
 						GRBupdatemodel(lp_ptr); // Optionally update per start (not strictly required every time)
 					}
+                #endif
 				} // End OsiGrb
 				if (clp_ptr != nullptr) {
 					ClpSimplex* lp_ptr = clp_ptr->getModelPtr();
@@ -8317,7 +8333,7 @@ namespace parallel_benders {
 					LOG_IF(WARNING, log_level_ <= google::WARNING && cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
 				}
 				else if (osi_grb != nullptr) {
-
+                #ifdef USE_GUROBI
 					GRBmodel* lp_ptr = osi_grb->getLpPtr();
 					GRBupdatemodel(lp_ptr);
 
@@ -8336,8 +8352,8 @@ namespace parallel_benders {
 					int err2 = GRBgetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, level_rstat_.get());
 					level_length_ = num_rows;
 					LOG_IF(WARNING, log_level_ <= google::WARNING && (err1 || err2)) << "Failed to get Gurobi basis (VBASIS err=" << err1 << ", CBASIS err=" << err2 << ")";
+                #endif
 				}
-
 			}
 		}
 		std::cout << std::flush; // show CPLEX error messages (if any)
@@ -8677,12 +8693,14 @@ namespace parallel_benders {
 		}
 		//We need gurobi options, just in case..
 		OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
-		if ( grb_ptr){
+		if (grb_ptr){
+        #ifdef USE_GUROBI
 			GRBmodel* model_ptr = grb_ptr->getLpPtr();
 			GRBenv* env_ptr = GRBgetenv(model_ptr);
 			GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
 		    GRBsetintparam(env_ptr,GRB_INT_PAR_THREADS,0);
 			GRBupdatemodel(model_ptr);
+        #endif
 		}
 	}
 
@@ -8782,6 +8800,7 @@ namespace parallel_benders {
 					}
 				}
 				if (grb_ptr) {
+                #ifdef USE_GUROBI
 					// === Get Gurobi environment and model pointers ===
 					GRBmodel* model_ptr = grb_ptr->getLpPtr();
 					GRBenv* env_ptr = GRBgetenv(model_ptr);			
@@ -8854,6 +8873,7 @@ namespace parallel_benders {
 								<< " (Kappa not available)";
 						}
 					}
+                #endif
 				}
 				if (clp_ptr != nullptr) {
 					ClpSimplex* clp_lp_ptr = clp_ptr->getModelPtr();
@@ -8927,11 +8947,13 @@ namespace parallel_benders {
 			}
 			else {
 			   if (grb_ptr && (level_euclidean_ || regularization_)){
+               #ifdef USE_GUROBI
 				   // === Get Gurobi environment and model pointers ===
 				   GRBmodel* model_ptr = grb_ptr->getLpPtr();
 				   GRBenv* env_ptr = GRBgetenv(model_ptr);
 				   GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
 				   GRBdelq(model_ptr);
+               #endif
 			   }
 			   else if (clp_ptr && (level_euclidean_ || regularization_)) {
 				   // Create a new quadratic objective with nullptr for Q
@@ -9167,6 +9189,7 @@ namespace parallel_benders {
 			cpx_env_ptr = cpx_ptr->getEnvironmentPtr();
 		}		
 		else if (grb_ptr != nullptr) {
+        #ifdef USE_GUROBI
 			grb_lp_ptr = grb_ptr->getLpPtr(OsiGrbSolverInterface::KEEPCACHED_ALL);
 			grb_env_ptr = grb_ptr->getEnvironmentPtr();
 			GRBsetintparam(grb_env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
@@ -9175,6 +9198,7 @@ namespace parallel_benders {
 			if (grb_lp_ptr == nullptr) {
 				throw std::runtime_error("Gurobi model pointer is null");
 			}
+        #endif
 		}
 		else if (clp_ptr != nullptr) {
 		    clp_lp_ptr = clp_ptr->getModelPtr();
@@ -9291,6 +9315,7 @@ namespace parallel_benders {
 				CPXcopyqpsep(cpx_env_ptr, cpx_lp_ptr, &quadratic_coefs[0]); // Also changes problem accordingly!
 			}
 			else if (grb_ptr != nullptr) {
+            #ifdef USE_GUROBI
 				// --- 1. Set new linear objective coefficients ---
 				GRBsetdblattrarray(grb_lp_ptr, GRB_DBL_ATTR_OBJ, 0, number_of_problem_cols, linear_coefs.data());
 				// CLEAR old Q matrix to match CPXcopyqpsep 
@@ -9318,6 +9343,7 @@ namespace parallel_benders {
 
 				// --- 3. Update model after changes ---
 				GRBupdatemodel(grb_lp_ptr);
+            #endif
 			}
 			else if (clp_ptr != nullptr) {
 				const int n = number_of_problem_cols;
@@ -9416,6 +9442,7 @@ namespace parallel_benders {
 				}
 				
 				else if (grb_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0) {
+                #ifdef USE_GUROBI
 					int number_of_rows_temp = 0;
 					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &number_of_rows_temp);
 					int number_of_columns_temp = 0;
@@ -9453,8 +9480,8 @@ namespace parallel_benders {
 						<< "(current=" << number_of_rows_temp
 						<< ", saved=" << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_
 						<< ")"; // Question is: Can we really apply this call?
+                #endif
 				}
-
 				else if (clp_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0) {
 					int number_of_rows_temp = clp_lp_ptr->numberRows();
 					int number_of_columns_temp = clp_lp_ptr->numberColumns();
@@ -9536,6 +9563,7 @@ namespace parallel_benders {
 			}
 
 			else if (grb_ptr != nullptr) {
+            #ifdef USE_GUROBI
 				benders_tree_node_pointer->getDataPtr()->feasible_ = true;
 				int grb_stat = 0;
 				GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_STATUS, &grb_stat);
@@ -9554,7 +9582,7 @@ namespace parallel_benders {
 						regularized_sigma_ *= 100;
 				}
 				
-				
+            #endif
 				/*int grb_stat = 0;
 				GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_STATUS, &grb_stat);
 				switch (grb_stat) {
@@ -9621,6 +9649,7 @@ namespace parallel_benders {
 					}
 				}
 				else if (grb_ptr != nullptr) {
+                #ifdef USE_GUROBI
 					int grb_status = 0;
 					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_STATUS, &grb_status);
 
@@ -9644,6 +9673,7 @@ namespace parallel_benders {
 							<< "Max primal infeasibility: " << max_prim
 							<< ", Max dual infeasibility: " << max_dual;
 					}
+                #endif
 				}
 				else if (clp_ptr != nullptr) {
 					int clp_status = clp_lp_ptr->status();
@@ -9680,6 +9710,7 @@ namespace parallel_benders {
 
 				}
 				else if (grb_ptr != nullptr) {
+                #ifdef USE_GUROBI
 					int num_rows = 0, num_cols = 0;
 					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMCONSTRS, &num_rows);
 					GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
@@ -9696,6 +9727,7 @@ namespace parallel_benders {
 						<< "Gurobi basis retrieved for warm start: "
 						<< num_cols << " columns, "
 						<< num_rows << " rows.";
+                #endif
 				}
 				else if (clp_ptr != nullptr) {
 					// --- CLP: retrieve basis for warm start via OSI ---
@@ -9814,6 +9846,7 @@ namespace parallel_benders {
 				CPXchgprobtype( cpx_env_ptr, cpx_lp_ptr, CPXPROB_LP );
 		}
 		else if (grb_ptr != nullptr) {
+        #ifdef USE_GUROBI
 			int num_cols = osi_solver->getNumCols();
 			if (integer_problems_[current_stage_]) {
 				// Set all variables to integer (binary/integer) if needed
@@ -9827,6 +9860,7 @@ namespace parallel_benders {
 			}
 			// Update model after changes
 			GRBupdatemodel(grb_lp_ptr);
+        #endif
 		}
 		else if (clp_ptr != nullptr) {
 			int num_cols = clp_ptr->getNumCols();
@@ -10933,12 +10967,14 @@ namespace parallel_benders {
 				//CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"sav");
 			}
 			else if (grb_ptr) {
+            #ifdef USE_GUROBI
 				GRBmodel* lp_ptr = grb_ptr->getLpPtr();
 				GRBupdatemodel(lp_ptr);	// Make sure model is up to date
 
 				std::lock_guard<std::mutex> lock(*console_mutex_ptr_);
 				std::string name = stream.str() + ".lp";
 				GRBwrite(lp_ptr, name.c_str());
+            #endif
 			}
 			else {
 				// we could delete this block but than for L&P MP relaxation integer vars are printed as ints

@@ -1,22 +1,37 @@
 #include <iostream>
-
 #include "flopc.hpp"
+using namespace flopc;
+
 #include "OsiCpxSolverInterface.hpp"
 #include "OsiGrbSolverInterface.hpp"
 
 #include "SmiScnModel.hpp"
-
 #include "OsiPnbStochasticSolverInterface.hpp"
 #include "CoinTime.hpp"
 
+#ifdef USE_GUROBI
+#pragma message("USE_GUROBI is defined")
+#else
+#pragma message("USE_GUROBI is NOT defined")
+#endif
 
-using namespace flopc;
+bool useGurobi = true;
+
 
 int main(int argc, char* argv[]) {
 	const double myInfty = 1e5;
 
-	MP_model m(new OsiGrbSolverInterface());
+#ifdef USE_GUROBI
+	OsiSolverInterface* first_solver;
+	if (useGurobi)
+		first_solver = new OsiGrbSolverInterface();
+	else
+		first_solver = new OsiCpxSolverInterface();
 
+	MP_model m(first_solver);
+#else 
+    MP_model m(new OsiCpxSolverInterface());
+#endif
 	enum { stage1, stage2, numStages };
 	MP_stage T(numStages);
 	T.setName("T");
@@ -114,8 +129,17 @@ int main(int argc, char* argv[]) {
 	// ---------- use PNB solver -------------
 	// ---------------------------------------
 
-	OsiGrbSolverInterface osi_grb;
-	OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_grb, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
+#ifdef USE_GUROBI
+	OsiSolverInterface* osi_solver;
+	if (useGurobi)
+		osi_solver = new OsiGrbSolverInterface();
+	else
+		osi_solver = new OsiCpxSolverInterface();
+#else
+	OsiCpxSolverInterface osi_solver;
+#endif 
+	
+	OsiStochasticParallelNestedBendersSolverInterface nested_benders(osi_solver, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
 	m.setSolver(m.getSmi()->getOsiSolverInterface()); // therefore model solver object needs to be reset
 
 	m.setStochasticSolver(&nested_benders);
@@ -123,13 +147,14 @@ int main(int argc, char* argv[]) {
 	// Declare parameter file
 	parallel_benders::Parameter benders_param;
 	benders_param.init();
+	//benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
 	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);
 
     //	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
 	// benders_param.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION, parallel_benders::PNB_INT_USE_EV_SOLUTION);
 //	benders_param.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION, true);  //CRASHES
 	benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
-	benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, true);
+	//benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, true);
 
 	// To set a parameter look in NestedBendersTest.cpp
 	m.StochSolver->setParameters(benders_param);
@@ -147,9 +172,9 @@ int main(int argc, char* argv[]) {
 	z.display("Display z:\n");
 	y.display("Display y:\n");
 
-	m.getSmi()->printout();
-	
+	//m.getSmi()->printout();
 
+	cout << "done" << endl;
 /*
 	MP_model m(new OsiCpxSolverInterface);
 	const double myInfty = 1e5;

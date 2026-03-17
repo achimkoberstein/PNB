@@ -2,7 +2,10 @@
 #include "flopc.hpp"
 using namespace flopc;
 using namespace std;
-#include <OsiCpxSolverInterface.hpp>
+#include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
+
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -11,7 +14,11 @@ using namespace std;
 
 
 int main(int argc, char* argv[]) {
-    MP_model::getDefaultModel().setSolver(new OsiCpxSolverInterface);
+#ifdef GUROBI_USE
+    MP_model::getDefaultModel().setSolver(new OsiGrbSolverInterface());
+#else
+    MP_model::getDefaultModel().setSolver(new OsiCpxSolverInterface());
+#endif
 
     const int p = 3;
 

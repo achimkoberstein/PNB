@@ -2,6 +2,7 @@
 
 #include "flopc.hpp"
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
 
 #include "SmiScnModel.hpp"
 
@@ -12,7 +13,11 @@
 using namespace flopc;
 
 int main(int argc, char* argv[]) {
+#ifdef USE_GUROBI
+	MP_model dakota(new OsiGrbSolverInterface());
+#else 
 	MP_model dakota(new OsiCpxSolverInterface());
+#endif
 	
 	enum { stage1, stage2, numStages};
 	MP_stage T(numStages);
@@ -138,8 +143,13 @@ int main(int argc, char* argv[]) {
 
 	dakota.Solver->writeMps(".\\Output\\Dakota");
 
-	OsiCpxSolverInterface osi_cpx;
-	OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, dakota.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
+#ifdef USE_GUROBI
+	OsiGrbSolverInterface osi_solver;
+#else
+	OsiCpxSolverInterface osi_solver;
+#endif 
+	
+	OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_solver, dakota.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
 	dakota.setSolver(dakota.getSmi()->getOsiSolverInterface()); // therefore model osi solver object needs to be reset
 
 	dakota.setStochasticSolver(&nested_benders);

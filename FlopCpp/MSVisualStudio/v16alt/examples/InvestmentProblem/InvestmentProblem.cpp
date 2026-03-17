@@ -2,6 +2,7 @@
 
 #include "flopc.hpp"
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
 
 #include "SmiScnModel.hpp"
 
@@ -13,7 +14,14 @@ using namespace flopc;
 
 void runInvestmentModel() {
 
+#ifdef USE_GUROBI
+    MP_model investmentModel(new OsiGrbSolverInterface());
+#else 
     MP_model investmentModel(new OsiCpxSolverInterface());
+#endif
+
+
+  
     MP_data start, goal;
     start() = 55; goal() = 80;
 
