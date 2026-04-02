@@ -41,12 +41,29 @@ double getMaxValue(const std::vector<double>& values) {
 
 
 
+bool simpleProblem = true;
+
 int main(int argc, char* argv[]) {
 
     static int maxScenarios = 5000;
     //Use first K rows for scenarios!
     static int numScenarios = 250;
     static int numCustomers = 50;
+
+    std::string folder = "Data/";
+    //std::string fname = "cap101.dat";
+    std::string fname = "cap102.dat";
+    //std::string fname = "cap103.dat";
+    //std::string fname = "cap104.dat";
+
+
+    if (simpleProblem) {
+        maxScenarios = 3;
+        numScenarios = 3;
+        numCustomers = 2;
+        folder = "Data_simple/";
+        fname = "simple_problem.dat";
+    }
 
 #ifdef USE_GUROBI
     MP_model m(new OsiGrbSolverInterface());
@@ -61,11 +78,7 @@ int main(int argc, char* argv[]) {
     scen.setName("Scen");
 
 
-    std::string folder = "Data/";
-    //std::string fname = "cap101.dat";
-    std::string fname = "cap102.dat";
-    //std::string fname = "cap103.dat";
-    //std::string fname = "cap104.dat";
+  
     
 
     std::ifstream file((folder + fname).c_str());
@@ -180,6 +193,7 @@ int main(int argc, char* argv[]) {
 
 
     MP_binary_variable x(I); //1 if facility I is opened
+    //MP_variable x(I); //1 if facility I is opened
     MP_variable y(ST, I, J); //how much facility I gives to client J in scenario K
 
 
@@ -214,7 +228,7 @@ int main(int argc, char* argv[]) {
 
     m.setObjective(sum(I(i), F(i)* x(i)) + sum(ST, sum(I(i), sum(J(j), Q(i, j) * y(ST + 1, i, j)))));
     m.attach();
-    m.Solver->writeLp(".\\simpleProblemTest");
+    //m.Solver->writeLp(".\\simpleProblemTest");
 
 
 #ifdef USE_GUROBI
@@ -231,9 +245,9 @@ int main(int argc, char* argv[]) {
     // Declare parameter file
     parallel_benders::Parameter benders_param;
     benders_param.init();
-    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+    //benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);
     benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
-
     //benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, 1);
 
     // To set a parameter look in NestedBendersTest.cpp

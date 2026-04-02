@@ -14,14 +14,20 @@ using std::endl;
 #include <string>
 #include<vector>
 
+bool useGurobi = false;
 
 int main(int argc, char* argv[]) {
 
 
 #ifdef USE_GUROBI
-    MP_model m(new OsiGrbSolverInterface());
+	OsiSolverInterface* first_solver;
+	if (useGurobi)
+		first_solver = new OsiGrbSolverInterface();
+	else
+		first_solver = new OsiCpxSolverInterface();
+	MP_model m(first_solver);
 #else 
-    MP_model m(new OsiCpxSolverInterface());
+	MP_model m(new OsiGrbSolverInterface());
 #endif
 
     //std::string fname = "r01.1.dow";
@@ -169,7 +175,10 @@ int main(int argc, char* argv[]) {
     //demand.display();
 
     MP_variable	x(T, A, K); //transportation cost variable
-    MP_binary_variable	y(A); //design cost variable
+    MP_binary_variable y(A); //design cost variable
+    //MP_variable y(A); //design cost variable
+
+    MP_variable z(T); //surplus variable to achieve full recourse
 
     x.setName("x");
     y.setName("y");
@@ -182,9 +191,9 @@ int main(int argc, char* argv[]) {
 
 
     demand_constraint(T + 1, i, k) = sum(N(j), x(T, A(i, j), k)) - sum(N(j), x(T, A(j, i), k)) == demand(T, i, k);
-    capacity_constraint(T + 1, A) = sum(K, x(T, A, K)) <= y(A) * U(A);
+    capacity_constraint(T + 1, A) = sum(K, x(T, A, K)) <= y(A) * U(A) + z(T);
 
-    m.setObjective(sum(K, sum(A, x(T + 1, A, K) * C(A))) + sum(A, F(A) * y(A)));
+    m.setObjective(sum(K, sum(A, x(T + 1, A, K) * C(A))) + sum(A, F(A) * y(A)) + 1000* z(T+1));
 
     m.attach();
     //m.Solver->writeLp(".\\StochasticNetworkDesign");
@@ -192,31 +201,37 @@ int main(int argc, char* argv[]) {
     std::cout << "Writing SMPS" << std::endl;
 
     //m.getSmi()->writeSmps(".\\StochasticNetworkDesign_smps", false, false);
-    m.getSmi()->writeSmps(".\\simpleStochasticNetworkDesign_smps", true, true);
+    //m.getSmi()->writeSmps(".\\simpleStochasticNetworkDesign_smps", true, true);
 
     // ---------------------------------------
     // ---------- use PNB solver -------------
     // ---------------------------------------
 
 #ifdef USE_GUROBI
-    OsiGrbSolverInterface osi_solver;
+    OsiSolverInterface* osi_solver;
+    if (useGurobi)
+        osi_solver = new OsiGrbSolverInterface();
+    else
+        osi_solver = new OsiCpxSolverInterface();
 #else
     OsiCpxSolverInterface osi_solver;
 #endif 
 
-    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_solver, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
+    OsiStochasticParallelNestedBendersSolverInterface nested_benders(osi_solver, m.getSmi()); //side effect: smi osi solver object is recreated (old one is deleted)
     m.setSolver(m.getSmi()->getOsiSolverInterface()); // therefore model solver object needs to be reset
 
     m.setStochasticSolver(&nested_benders);
 
+
+    cout << nested_benders.getSmiModel()->getIntegerLen() << endl;
+
     // Declare parameter file
     parallel_benders::Parameter benders_param;
     benders_param.init();
-   //benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-    benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
-
-    benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, 1);
+    //benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+    benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);   
+    //benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
+    //benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, 1);
 
     // To set a parameter look in NestedBendersTest.cpp
     m.StochSolver->setParameters(benders_param);
@@ -228,5 +243,4 @@ int main(int argc, char* argv[]) {
     std::cout << "Objective-Value " << nested_benders.getObjValue() << std::endl;
     //x.display();
     y.display();
-    
 }
