@@ -8751,7 +8751,6 @@ namespace parallel_benders {
 				}
 			}
 			else {
-				osi_solver->writeLp("main_problem");
 				osi_solver->branchAndBound();
 			}
 		}
@@ -8970,7 +8969,6 @@ namespace parallel_benders {
 					   clp_lp_ptr->setObjective(linObj);
 				   }
 			   }
-			   osi_solver->writeLp("scenario_1");
 	   	 	   osi_solver->initialSolve();
 			}
 		}
