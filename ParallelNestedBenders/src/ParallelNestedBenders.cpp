@@ -66,6 +66,8 @@ extern "C" {
 #include "OsiClpSolverInterface.hpp"
 #include "ClpQuadraticObjective.hpp"
 #include "ClpLinearObjective.hpp"
+#include "ClpFactorization.hpp"
+
 
 
 namespace parallel_benders {
@@ -6868,7 +6870,6 @@ namespace parallel_benders {
 							GRBgetintattr(lp_ptr, GRB_INT_ATTR_NUMVARS, &num_cols);
 
 							if (level_length_ == num_rows) {
-								GRBupdatemodel(lp_ptr);     // Apply basis
 								GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_VBASIS, 0, num_cols, level_cstat_.get());
 								GRBsetintattrarray(lp_ptr, GRB_INT_ATTR_CBASIS, 0, num_rows, level_rstat_.get());
 								GRBupdatemodel(lp_ptr);
@@ -8695,10 +8696,80 @@ namespace parallel_benders {
         #ifdef USE_GUROBI
 			GRBmodel* model_ptr = grb_ptr->getLpPtr();
 			GRBenv* env_ptr = GRBgetenv(model_ptr);
-			GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 0);
-		    GRBsetintparam(env_ptr,GRB_INT_PAR_THREADS,0);
+
+			// Numerical stability
+			GRBsetintparam(env_ptr, GRB_INT_PAR_NUMERICFOCUS, 3);
+			GRBsetdblparam(env_ptr, GRB_DBL_PAR_MARKOWITZTOL, 0.999);
+			GRBsetintparam(env_ptr, GRB_DBL_PAR_FEASIBILITYTOL, zero_tolerance_);
+			GRBsetintparam(env_ptr, GRB_DBL_PAR_INTFEASTOL, integer_tolerance_);
+			// Time
+			GRBsetintparam(env_ptr, GRB_DBL_PAR_TIMELIMIT, maximal_solution_time_);
+			// LP method
+			if (lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER) {
+				GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, 2);
+				GRBsetintparam(env_ptr, GRB_INT_PAR_CROSSOVER,
+					(lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ? 1 : 0));
+			}
+			// Concurrent
+			if (lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD) {
+				GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, 3);
+			}
+			// Threads
+			GRBsetintparam(env_ptr, GRB_INT_PAR_THREADS, 1);
+			// Scaling
+			GRBsetintparam(env_ptr, GRB_INT_PAR_SCALEFLAG, 2);
+			// Warm start
+			GRBsetintparam(env_ptr, GRB_INT_PAR_LPWARMSTART, 1);
+			// Memory
+			GRBsetdblparam(env_ptr, GRB_DBL_PAR_NODEFILESTART, 0.5);
+			// Disable solver features
+			GRBsetintparam(env_ptr, GRB_INT_PAR_PRESOLVE, 0);
+			GRBsetintparam(env_ptr, GRB_INT_PAR_CUTS, 0);
+			GRBsetdblparam(env_ptr, GRB_DBL_PAR_HEURISTICS, 0.0);
+			GRBsetintparam(env_ptr, GRB_INT_PAR_RINS, 0);
+			// Logging
+			//GRBsetintparam(env_ptr, GRB_INT_PAR_DISPLAYINTERVAL, 1);
+			//GRBsetintparam(env_ptr, GRB_INT_PAR_OUTPUTFLAG, 1);
+			
 			GRBupdatemodel(model_ptr);
         #endif
+		}
+		OsiClpSolverInterface* clp_ptr = dynamic_cast<OsiClpSolverInterface*>(osi_solver);
+		if (clp_ptr) {
+			ClpSimplex* model_ptr = clp_ptr->getModelPtr();
+
+			// Time limit (CLP uses seconds via maximumSeconds)
+			model_ptr->setMaximumSeconds(maximal_solution_time_);
+
+			// Numerical tolerances
+			model_ptr->setPrimalTolerance(zero_tolerance_);
+			model_ptr->setDualTolerance(zero_tolerance_);
+
+			// Scaling (0 = off, 1 = equilibrium, 2 = geometric, 3 = auto)
+			model_ptr->scaling(2); // similar to "aggressive-ish" scaling
+
+			// Perturbation for numerical stability
+			model_ptr->setPerturbation(50); // default is 50, can increase if unstable
+
+			// Factorization (Markowitz tolerance equivalent is internal, but can tweak)
+			model_ptr->factorization()->maximumPivots(200); // helps stability
+
+			// LP algorithm selection
+			if (lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER) {
+
+				model_ptr->primal(); 	// CLP does NOT support barrier → fallback to dual simplex
+			}
+			if (lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD) {
+				// No concurrent mode in CLP → fallback
+				model_ptr->dual();
+			}
+
+			// Threads (CLP is mostly single-threaded anyway)
+			model_ptr->setNumberThreads(1);
+			ClpSolve options;
+			options.setPresolveType(ClpSolve::presolveOff); //probably doesn't work
+			// Logging
+			//model_ptr->setLogLevel(4); // detailed output
 		}
 	}
 
@@ -8751,6 +8822,7 @@ namespace parallel_benders {
 				}
 			}
 			else {
+
 				osi_solver->branchAndBound();
 			}
 		}
@@ -8779,6 +8851,7 @@ namespace parallel_benders {
 					if (time_left <= 0)
 						time_left = 1;
 					CPXsetdblparam(env_ptr, CPX_PARAM_TILIM, time_left);
+
 					CPXqpopt(env_ptr, lp_ptr);
 					int code = CPXgetstat(env_ptr, lp_ptr);
 					if (code == CPX_STAT_INForUNBD) { // Solve without presolve to determine correct direction!
@@ -8798,10 +8871,10 @@ namespace parallel_benders {
 					}
 				}
 				if (grb_ptr) {
-                #ifdef USE_GUROBI
+#ifdef USE_GUROBI
 					// === Get Gurobi environment and model pointers ===
 					GRBmodel* model_ptr = grb_ptr->getLpPtr();
-					GRBenv* env_ptr = GRBgetenv(model_ptr);			
+					GRBenv* env_ptr = GRBgetenv(model_ptr);
 					// === Select QP/LP algorithm ===
 					if (lp_method_ == PNB_INT_DUAL_SIMPLEX) {
 						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_DUAL);	// Dual simplex
@@ -8818,7 +8891,7 @@ namespace parallel_benders {
 						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_BARRIER);  // Barrier
 						GRBsetintparam(env_ptr, GRB_INT_PAR_CROSSOVER, 1); // Barrier + crossover
 					}
-					else {						
+					else {
 						GRBsetintparam(env_ptr, GRB_INT_PAR_METHOD, GRB_METHOD_AUTO); // Automatic method selection (recommended fallback)
 					}
 
@@ -8944,7 +9017,7 @@ namespace parallel_benders {
 
 			}
 			else {
-			   if (grb_ptr && (level_euclidean_ || regularization_)){
+			   if (grb_ptr && (level_euclidean_ || regularization_)) {
                #ifdef USE_GUROBI
 				   // === Get Gurobi environment and model pointers ===
 				   GRBmodel* model_ptr = grb_ptr->getLpPtr();
@@ -9311,6 +9384,7 @@ namespace parallel_benders {
 
 				// Set quadratic objective
 				CPXcopyqpsep(cpx_env_ptr, cpx_lp_ptr, &quadratic_coefs[0]); // Also changes problem accordingly!
+
 			}
 			else if (grb_ptr != nullptr) {
             #ifdef USE_GUROBI
@@ -9328,7 +9402,7 @@ namespace parallel_benders {
 					if (quadratic_coefs[i] != 0.0) {
 						qrow.push_back(i);
 						qcol.push_back(i);
-						qval.push_back(quadratic_coefs[i] / term); // Gurobi defines obj = 0.5 x'Qx + c'x, so we divide by 2 to match CPXcopyqpsep usage
+						qval.push_back(quadratic_coefs[i] * 0.5);//Gurobi defines obj = 0.5 x'Qx + c'x, so we divide by 2 to match CPXcopyqpsep usage
 					}
 				}
 				if (!qrow.empty()) {
@@ -9381,6 +9455,7 @@ namespace parallel_benders {
 				clp_lp_ptr->setObjective(quadObj);
 			}
 		}
+
 
 		if (level_manhattan_ || level_infinity_) {
 			// Update the obj_coefficients (null out the others, keep only the added |w| variables)
@@ -9561,54 +9636,55 @@ namespace parallel_benders {
 			}
 
 			else if (grb_ptr != nullptr) {
-            #ifdef USE_GUROBI
-				benders_tree_node_pointer->getDataPtr()->feasible_ = true;
+#ifdef USE_GUROBI
 				int grb_stat = 0;
-				GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_STATUS, &grb_stat);
-
-				if (grb_stat == GRB_INFEASIBLE || grb_stat == GRB_INF_OR_UNBD) {
-					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
-				}
-				else if (grb_stat == GRB_NUMERIC || grb_stat == GRB_SUBOPTIMAL) {
-					regularized_sigma_ *= 100;
-				}
-				else if (grb_stat == GRB_OPTIMAL) {
-					double max_viol = 0.0;
-					GRBgetdblattr(grb_lp_ptr, GRB_DBL_ATTR_CONSTR_VIO, &max_viol);
-
-					if (max_viol > 1e-6)
-						regularized_sigma_ *= 100;
-				}
-				
-            #endif
-				/*int grb_stat = 0;
 				GRBgetintattr(grb_lp_ptr, GRB_INT_ATTR_STATUS, &grb_stat);
 				switch (grb_stat) {
 				case GRB_INFEASIBLE:
+					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
+					break;
 				case GRB_INF_OR_UNBD:
 					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
 					break;
+				case GRB_OPTIMAL: {
+					double constr_viol;    
+					double bound_viol;
+					double kappa;
+					double constr_residual;
+					double dual_residual;
 
-				case GRB_OPTIMAL:
+					GRBgetdblattr(grb_lp_ptr, GRB_DBL_ATTR_CONSTR_VIO, &constr_viol);
+					GRBgetdblattr(grb_lp_ptr, GRB_DBL_ATTR_BOUND_VIO, &bound_viol);
+					GRBgetdblattr(grb_lp_ptr, GRB_DBL_ATTR_KAPPA, &kappa);
+
+					GRBgetdblattr(grb_lp_ptr, GRB_DBL_ATTR_CONSTR_RESIDUAL, &constr_residual);
+					GRBgetdblattr(grb_lp_ptr, GRB_DBL_ATTR_DUAL_RESIDUAL, &dual_residual);
+
+
+
+					if (constr_viol > zero_tolerance_ || bound_viol > zero_tolerance_ || kappa > 1e10 ||
+						constr_residual > 1e-6 || dual_residual > 1e-6)
+						regularized_sigma_ *= 100;
 					// Check if solution is “practically infeasible” (like CPX_STAT_OPTIMAL_INFEAS)
 					// For now, mimic CPLEX behavior:
-					regularized_sigma_ *= 100;
+					//regularized_sigma_ *= 100;
 					break;
-
+					}
 				default:
 					// other statuses (time limit, etc.)
 					break;
-				}*/
+				}
+#endif
 			}
 			else if (clp_ptr != nullptr) {
 				benders_tree_node_pointer->getDataPtr()->feasible_ = true;
 				int clp_status = clp_lp_ptr->status();
 
 				// Infeasible
-				if (clp_lp_ptr->isProvenPrimalInfeasible()) 
+				if (clp_lp_ptr->isProvenPrimalInfeasible())
 					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
 				// Unbounded (dual infeasible)
-				else if (clp_lp_ptr->isProvenDualInfeasible()) 
+				else if (clp_lp_ptr->isProvenDualInfeasible())
 					benders_tree_node_pointer->getDataPtr()->feasible_ = false;
 
 				// Optimal
