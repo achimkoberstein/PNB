@@ -94,3 +94,37 @@ std::cout << nested_benders.getObjValue() << std::endl;
 
 x.display();  w.display();   z.display();  y.display();
 ```
+
+## Core parameters of the PNB:
+
+__PNB_BENDERS__ 
+Choice of the method of solving. Possible basic options are:
+
+PNB_INT_ALGORITHM_DETEQ = 0
+PNB_INT_ALGORITHM_BENDERS = 1;
+PNB_INT_ALGORITHM_REGULARIZATION = 2;
+PNB_INT_ALGORITHM_LEVEL = 3;
+PNB_INT_ALGORITHM_LEVEL_ODA = 4;
+PNB_INT_ALGORITHM_BENDERS_ODA = 5;
+PNB_INT_ALGORITHM_REGULARIZATION_ODA = 6;
+PNB_INT_ALGORITHM_LEVEL_MANHATTAN = 7;
+PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA = 8;
+PNB_INT_ALGORITHM_LEVEL_INFINITY = 9;
+PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA = 10;
+PNB_INT_ALGORITHM_SOLVER_BENDERS = 11;  -  use built-in Benders algorithm in solver (available in CPLEX)
+PNB_INT_ALGORITHM_BRANCH_AND_BENDERS_CUT = 12;
+
+__PNB_NUM_CPU__
+Number of threads used. 0 (default value) means  taking what hardware concurrency offers.
+
+__PNB_PRINT_SUBPROBLEMS__
+If == true, prints .lp file.
+
+__PNB_USE_START_SOLUTION__
+Choice of start solutions. Possible options are:
+
+PNB_INT_NO_START_SOLUTION = 0;
+PNB_INT_EV_SOLUTION_FROM_PNB = 1;  -  find EV solution using ev_pnb, use cuts from ev_pnb.  TODO: DOES NOT WORK PROPERLY YET
+PNB_INT_USE_EV_SOLUTION = 2;  -  benders started using ev solution from osi solver
+PNB_INT_USE_SUPPLIED_SOLUTION = 3;
+PNB_INT_EV_SOLUTION_FROM_PNB_WITH_EV = 4;  -  find EV solution using ev_pnb, use cuts from ev_pnb. ev_pnb is also started with ev solution from osi solver  TODO: DOES NOT WORK PROPERLY YET
