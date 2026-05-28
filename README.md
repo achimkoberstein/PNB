@@ -82,13 +82,16 @@ pnb.initialSolve();
 
 
 ## Stochastic examples:
-- [Farmers' problem](./FlopCpp/MSVisualStudio/v16alt/examples/Farmer) - check README for explanation and details about the PNB solver
-- [Dakota problem](./FlopCpp/MSVisualStudio/v16alt/examples/Dakota)
-- [Investment problem](./FlopCpp/MSVisualStudio/v16alt/examples/InvestmentProblem)
-- [Multicommodity Network Design problem](./FlopCpp/MSVisualStudio/v16alt/examples/StochasticMND)
-- [Capacitated Facility Location problem](./FlopCpp/MSVisualStudio/v16alt/examples/Bodur_StochasticCFLP)
-- [SAPHIR problem](./FlopCpp/MSVisualStudio/v16alt/examples/SAPHIR)
-- [SCDP problem](./FlopCpp/MSVisualStudio/v16alt/examples/SCDP)
+
+| Example | Description | Useful for |
+|----------|----------|--------------|
+|[Farmers' problem](./FlopCpp/MSVisualStudio/v16alt/examples/Farmer)|   | Explanation of basic example, details about the PNB solver check README)|   
+|[Dakota problem](./FlopCpp/MSVisualStudio/v16alt/examples/Dakota)|     |     |
+|[Investment problem](./FlopCpp/MSVisualStudio/v16alt/examples/InvestmentProblem)|    |example of a multi-stage problem (4 stages)|
+|[Multicommodity Network Design problem](./FlopCpp/MSVisualStudio/v16alt/examples/StochasticMNF)|  [Rahmaniani et.al (2017)](https://www.cirrelt.ca/documentstravail/cirrelt-2017-22.pdf)  |shows how to achieve full recourse in the objective with the help of a surplus variable|
+|[Capacitated Facility Location problem](./FlopCpp/MSVisualStudio/v16alt/examples/Bodur_StochasticCFLP)|  [Bodur et.al (2016), p.15](https://optimization-online.org/wp-content/uploads/2014/03/4263.pdf)   |      |
+|[SAPHIR problem](./FlopCpp/MSVisualStudio/v16alt/examples/SAPHIR)|     |     |
+|[SCDP problem](./FlopCpp/MSVisualStudio/v16alt/examples/SCDP)|    |     |   
 
 ## Deterministic examples:
 - [Sudoku problem](./FlopCpp/MSVisualStudio/v16alt/examples/Sudoku)
@@ -97,11 +100,14 @@ pnb.initialSolve();
 
 
 ## Examples in progress:
-- [Bikesharing problem](./FlopCpp/MSVisualStudio/v16alt/examples/Bikesharing)
-- [CapaOpt problem](./FlopCpp/MSVisualStudio/v16alt/examples/CapaOpt)
-- [FleetAssignment problem](./FlopCpp/MSVisualStudio/v16alt/examples/FleetAssignment)
-- [Network Interdiction problem](./FlopCpp/MSVisualStudio/v16alt/examples/StochasticNetworkInterdiction)
-- [SCDP_simple problem](./FlopCpp/MSVisualStudio/v16alt/examples/SCDP_simple)
+
+| Example | Description | Useful for |
+|----------|----------|--------------|
+|[Bikesharing problem](./FlopCpp/MSVisualStudio/v16alt/examples/Bikesharing)|    |     |
+|[CapaOpt problem](./FlopCpp/MSVisualStudio/v16alt/examples/CapaOpt)|    |    |
+|[FleetAssignment problem](./FlopCpp/MSVisualStudio/v16alt/examples/FleetAssignment)|     |    |
+|[Network Interdiction problem](./FlopCpp/MSVisualStudio/v16alt/examples/StochasticNetworkInterdiction)|   [Bodur et.al (2016), p.18](https://optimization-online.org/wp-content/uploads/2014/03/4263.pdf)    |     |
+|[SCDP_simple problem](./FlopCpp/MSVisualStudio/v16alt/examples/SCDP_simple)|    |    |
 
 
 
