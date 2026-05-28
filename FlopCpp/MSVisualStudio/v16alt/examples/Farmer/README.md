@@ -1,4 +1,4 @@
-'''cpp
+```cpp
 MP_model m(new OsiCpxSolverInterface());  //1. Create the model and attach the solver from the OSI framework
 
 //2. Define stages
@@ -93,4 +93,4 @@ m.StochSolver->initialSolve();
 std::cout << nested_benders.getObjValue() << std::endl;
 
 x.display();  w.display();   z.display();  y.display();
-'''
+```
