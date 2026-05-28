@@ -82,7 +82,7 @@ pnb.initialSolve();
 
 
 ## Stochastic examples:
-- [Farmers' problem](./FlopCpp/MSVisualStudio/v16alt/examples/Farmer)
+- [Farmers' problem](./FlopCpp/MSVisualStudio/v16alt/examples/Farmer) - check README for explanation and details about the PNB solver
 - [Dakota problem](./FlopCpp/MSVisualStudio/v16alt/examples/Dakota)
 - [Investment problem](./FlopCpp/MSVisualStudio/v16alt/examples/InvestmentProblem)
 - [Multicommodity Network Design problem](./FlopCpp/MSVisualStudio/v16alt/examples/StochasticMND)
