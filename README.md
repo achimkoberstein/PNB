@@ -7,9 +7,19 @@ Offers a range of advanced acceleration techniques for multi-stage stochastic pr
 
 Implemented for CPLEX, Gurobi and CLP solvers (interaction via OsiSolverInterface)
 
+## Solvers
+This project supports multiple optimization solvers:
+
+- IBM ILOG CPLEX (v. 20.1.0)
+- CLP (COIN-OR Linear Programming Solver), open-source (v. 1.14)
+- Gurobi Optimizer (v. 12.0.3)
+
+> Note: Commercial solvers require a valid license.
 
 
-# Installation
+
+
+## Installation
 
 INSTALL file is outdated and for CBC package.
 
