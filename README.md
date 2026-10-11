@@ -1,5 +1,5 @@
 ## Introduction
-SFlopC++ is an open-source stochastic programming modeling framework built as an extension of FlopC++, a C++ library for algebraic modeling of optimization problems, wutg a stochastic modeling interface (SMI).
+SFlopC++ is an open-source stochastic programming modeling framework built as an extension of FlopC++, a C++ library for algebraic modeling of optimization problems, with a stochastic modeling interface (SMI).
 Offers a range of advanced acceleration techniques for multi-stage stochastic problems (NestedBenders):
 - Level decomposition (Euclidean, manhattan, infinity distance)
 - Regularized decomposition
@@ -8,51 +8,58 @@ Offers a range of advanced acceleration techniques for multi-stage stochastic pr
 Implemented for CPLEX, Gurobi and CLP solvers (interaction via OsiSolverInterface)
 
 ## Solvers
-This project supports multiple optimization solvers:
-
-- IBM ILOG CPLEX (v. 20.1.0)
-- CLP (COIN-OR Linear Programming Solver), open-source (v. 1.14)
+- IBM ILOG CPLEX (v. 22.2.0)
 - Gurobi Optimizer (v. 12.0.3)
+- CLP (COIN-OR Linear Programming Solver) (v. 1.14)
 
-> Note: Commercial solvers require a valid license.
+> Note: Commercial solvers (CPLEX, Gurobi) require a valid license.
 
 
+## Solver licenses
+### CPLEX
+| License | Who it's for | Limits | Link |
+|---|---|---|---|
+| Community Edition (free) | Anyone, for learning and small models | 1000 variables and 1000 constraints | https://www.ibm.com/products/ilog-cplex-optimization-studio (use "Try free edition") |
+| Academic (free) | Students, faculty, and staff at degree-granting institutions | None | https://www.ibm.com/academic/topic/data-science ([tutorial](https://www.youtube.com/watch?v=BVWPhseMf-A&t=191s)) |
+| Paid | Production and commercial use | None | https://www.ibm.com/products/ilog-cplex-optimization-studio (use "Buy now") |
+
+Make sure you install the Academic Initiative build, not the Community Edition,
+or you will hit the size limits above (CPLEX error 1016).
+
+### Gurobi
+| License | Who it's for | Limits | Link |
+|---|---|---|---|
+| Commercial trial (free) | Companies evaluating Gurobi | 30-day trial | https://www.gurobi.com/free-trial/ |
+| Academic (free) | Students, faculty, and staff at degree-granting institutions | None | https://www.gurobi.com/academics |
+| Paid | Production and commercial use | None | https://www.gurobi.com/pricing/ |
 
 
-## Installation
-
-INSTALL file is outdated and for CBC package.
-
-This package contains several subdirectories corresponding to COIN-OR
-projects (www.coin-or.org). The AUTHORS, LICENSE and README files in 
-each of the subdirectories give more information about these projects.
-
-__PNB is tested and supported for Windows 10 x64 Pro and Visual Studio 2012 / 2019.__
+__PNB is tested and supported for Windows 10 x64 and Visual Studio 2026.__
 
 ## Prerequisites:
-Windows 10 x64 Pro, Visual Studio 2012 or 2019, Git version >= 2.19.1.windows.1
+Windows 10 x64, Visual Studio 2026
 
 ## Quick start:
 1. 	Clone the repository: git clone https://github.com/pavloglushko/PNB.
-2. 	Open it in Visual Studio 2012/2019, move to "easy_configuration" branch.
-3. Open solution FlopCpp.sln (FlopCpp/MSVisualStudio/v16alt/FlopCpp.sln). Here you will see the list of example optimization problems.	They can also be found in the following [folder](./FlopCpp/MSVisualStudio/v16alt/examples), but the launch of example is made only through FlopCpp.sln.
+2. 	Open it in Visual Studio 2026, move to "easy_configuration" branch.
+3. Open solution FlopCpp.sln (FlopCpp/MSVisualStudio/v16alt/FlopCpp.sln). Here you will see the list of example optimization problems.	They can also be found in the following [folder](./FlopCpp/MSVisualStudio/v16alt/examples), but the launch of examples is made only through FlopCpp.sln.
 4. Build the solution.
 5. Right-click "Farmer" project, select "Set as starting project".
    Confirm that:
    - Solution Configuration = "Debug"
    - Solution Platforms = "x64
-6. Go to "Property Manager" ("View" -> "Other Windows" -> "Property Manager"). 
-   Add one or both of the following files from the directory FlopCpp\MSVisualStudio\v16alt\ProjectConfiguration:
- - 3_ProjectProperties.props, if you'd like to use CPLEX solver
- - 3_ProjectProperties_withGrb.props, if you'd like to choose between CPLEX and Gurobi
+   Run the project. In case of unsuccessful compilation/linking, proceed with steps 6-8.
+6. In case you installed CPLEX or Gurobi license -> Go to "Property Manager" ("View" -> "Other Windows" -> "Property Manager"). 
+   Add one or both of the following files from the directory FlopCpp\MSVisualStudio\v16alt\ProjectConfiguration to the project:
+   - 3_ProjectProperties.props for use of the CPLEX solver
+   - 3_ProjectProperties_withGrb.props for use of the Gurobi solver
 7. Check project dependencies and references. Both should include:
    - libflopcpp
    - ParallelNestedBenders
    - libOsiCpx
    - libOsiGrb 
    - libOsiClp
-8. Run the program.
-
+8. Run the project.
 ## Starting a new project:
 1. Open solution FlopCpp.sln, right-click on it -> "Add" -> "New Project".
 2. Add an empty project in the directory FlopCpp/MSVisualStudio/v16alt/examples.
@@ -120,26 +127,3 @@ pnb.initialSolve();
 |[SCDP_simple problem](./FlopCpp/MSVisualStudio/v16alt/examples/SCDP_simple)|    |    |
 
 
-
-
-
-
-
-  ## Useful git script
-See scripts/
- 
- ### git_upd current branch (keep local changes).bat
-- will stash the local not commited changes
-- get the newest commits from the GitHub server for the current branch
-- reapply the local changes to keep them
-The script will crash:
-- in case of local commits not present on the remote branch
- 
- ### git_update VS2019 branch (discard local changes).bat
-- will __delete__ all the local not commited changes
-- get the newest commits from the GitHub server for the VS2019 branch
-- overwrite the local commit history with the remote one
- 
-  ## Branches
-1. __master__ - default production branch, protected
-1. __VS2019__ - postponed due to the low priority, transfer all projects to VS 2019 [done #7], use of COIN-OR and third party projects as git submodules
