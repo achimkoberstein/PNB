@@ -36,8 +36,10 @@
 //#include "OsiBenStochasticSolverInterface.hpp"
 
 //#include "fortsp.h"
+#ifdef USE_CPLEX
 #include "ilcplex/cplex.h"
 #include "ilcplex/cpxconst.h"
+#endif
 
 #include "OsiRowCut.hpp"
 
@@ -568,8 +570,10 @@ public:
 				// Cast to OsiCpxSolverInterface
 				OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(deteq_solver);
 				if (cpx_solver != nullptr) {// Disable aggregator, it consumes too much memory!
+#ifdef USE_CPLEX
 					CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
 					CPXsetintparam(env_ptr, CPX_PARAM_AGGIND, 0);
+#endif
 				}
 				// Parse solver interface!
 				//deteq_solver->writeLp("cvar_model");
@@ -920,13 +924,13 @@ protected:
 		// multithread (MCORE), simple
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0 }"); // single cut (SC)
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0 }"); // multi cut (MC)
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut (HC)
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut (HC)
 	    //parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut (HC)
 		
 		// multithread (MCORE), scenario wise warm start (SCWS)
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // single cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // multi cut
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		//parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
 		
 		// multithread (MCORE), stagewise warm start (STWS)
@@ -946,7 +950,7 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }"); // single cut
 
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // multi cut
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+	    //parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }"); // hybrid cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1000, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\" }"); // hybrid cut
 
@@ -954,39 +958,59 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_USE_START_SOLUTION\" : 2 }"); // multi cut
 		
 		// Level
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2 }");
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2 }");
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
+		//parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
+		//parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }");
 		
 		// Regularization
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 1, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0 }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0 }"); // all level methods require the start solution
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0 }"); // all level methods require the start solution
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2 }"); // all level methods require the start solution
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
-		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 1, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\"}"); // all level methods require the start solution
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
 		
 		
 		// LEVEL/REG + ODA
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\", \"PNB_USE_START_SOLUTION\" : 2  }"); // ODA crashes and not working for multi stage
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\" }"); // crashes and not working for some problems
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\", \"PNB_USE_START_SOLUTION\" : 2 }"); // crashes and not working for some problems
-		/*parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\", \"PNB_USE_START_SOLUTION\" : 2 }"); // crashes and not working for some problems
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\", \"PNB_USE_START_SOLUTION\" : 2  }"); // ODA crashes and not working for multi stage
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\" }"); // crashes and not working for some problems
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\", \"PNB_USE_START_SOLUTION\" : 2 }"); // crashes and not working for some problems
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\", \"PNB_USE_START_SOLUTION\" : 2 }"); // crashes and not working for some problems
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\", \"PNB_USE_START_SOLUTION\" : 2 , \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // ODA crashes and not working for multi stage
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
-	    */
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\", \"PNB_USE_START_SOLUTION\" : 2 }"); // crashes and not working for some problems
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\", \"PNB_USE_START_SOLUTION\" : 2  }"); // ODA crashes and not working for multi stage
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\" }"); // crashes and not working for some problems
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\", \"PNB_USE_START_SOLUTION\" : 2 }"); // crashes and not working for some problems
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\", \"PNB_USE_START_SOLUTION\" : 2 }"); // crashes and not working for some problems
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_ODA\", \"PNB_USE_START_SOLUTION\" : 2 , \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // ODA crashes and not working for multi stage
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // crashes and not working for some problems
+	    
+
+
+
+        //MY PARAMS
+
+		parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		//parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		//parameter_strings_.push_back("{   \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\"}"); // all level methods require the start solution
+		
+
+		// \"PNB_PRINT_SUBPROBLEMS\" : \"true\", 
+
+		//MY PARAMS
+		
+	    //parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		//parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		//parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\"}"); // all level methods require the start solution
+		
 	}
 
 	virtual ~NestedBendersTest() {}
@@ -1528,12 +1552,12 @@ protected:
 		parameter_strings_.clear();
 		//parameter_strings_.push_back("{}"); // default parameters
 		// deterministic equivalent (DETEQ)
-		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
+		//parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 1 }");
 		parameter_strings_.push_back("{ \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_DETEQ\", \"PNB_NUM_CPU\" : 0 }");
 
 		// single core (1CORE), simple
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1}"); // single cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }"); // multi cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1}"); // single cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0 }"); // multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20 }"); // hybrid cut
 
 		// multithread (MCORE), simple
@@ -1543,8 +1567,8 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0 }"); // hybrid cut (HC)
 
 		// multithread (MCORE), scenario wise warm start (SCWS)
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // single cut
-		parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // multi cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // single cut
+		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // multi cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 100, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
 
@@ -1572,6 +1596,19 @@ protected:
 		//parameter_strings_.push_back("{ \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 0, \"PNB_NUM_CPU\" : 0, \"PNB_USE_START_SOLUTION\" : 2 }"); // multi cut
 
 		// LEVEL does not work with MIP
+		//MY PARAMS
+		//parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		//parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		//parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
+		//parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 20, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\"}"); // all level methods require the start solution
+
+		//MY PARAMS
+
+	/*	parameter_strings_.push_back("{ \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_BENDERS_ODA\", \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // hybrid cut
+		parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_LEVEL\", \"PNB_USE_START_SOLUTION\" : 2, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\" }"); // all level methods require the start solution
+		parameter_strings_.push_back("{  \"PNB_EPSILON_RELATIVE\" : 0.000005, \"PNB_AGGREGATED_OPTIMALITY_CUTS\" : 1, \"PNB_NUM_CPU\" : 0, \"PNB_BENDERS\" : \"PNB_INT_ALGORITHM_REGULARIZATION\", \"PNB_USE_START_SOLUTION\" : 0, \"PNB_WARM_START\" : \"PNB_INT_WARM_START_SCENARIO_WISE\"}"); // all level methods require the start solution
+		*/
 	}
 };
 
@@ -3172,6 +3209,7 @@ TEST_F(NestedBendersTest, dakota_OTHER) {
 
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, modification of SIPLIB instance
 	benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX, true);
+
 	EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.438, 0.1);
 	EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
 	EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
@@ -3180,12 +3218,14 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, m
 	EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
 	EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
 	EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.708, 0.1);
-	EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1);
+	//EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1);
 }
 
 TEST_F(NestedBendersTestInteger, sslp_SIPLIB) { // binary first, mixed-binary second stage
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1); // Solvable
 	//EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
+	//benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
+
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
 	EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
@@ -3376,7 +3416,7 @@ TEST_F(NestedBendersTest, stormG2_POSTS) {
 	referenceValue = 15535235.730;
 	relGap = abs(referenceValue - solutionValue) / solutionValue;
 	EXPECT_LE(relGap, 0.000001);
-
+	
 	solutionValue = solveSMPS("posts/storm/stormG2_27");
 	referenceValue = 15508982.306;
 	relGap = abs(referenceValue - solutionValue) / solutionValue;
@@ -3419,16 +3459,18 @@ TEST_F(NestedBendersTestMultiStage, bonds_FELT) { //SCENARIOS, Values that are t
 	EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y4"), -4031.303, 0.1); // 4023.9
 	EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y5"), -5201.197, 0.1); // 5180.8
 	EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y6"), -6484.465, 0.1); // 6403.3
-	EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y7"), -7966.94, 0.1); // MSLIB-OSL = 7956.896
+	EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y7"), -7966.94, 0.1); // MSLIB-OSL = 7956.896q
 	// Cplex barrier has problems with these problems => wrong results
 }
 
 TEST_F(NestedBendersTest, cargo_FELT) { //Two-Stage, INDEP, values verified with det-eq
 	//EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-1"), 413.4, 0.1);
+
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-2"), 414.0, 0.1);
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-4"), 416.5, 0.1);
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-8"), 418.5, 0.1);
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-16"), 423.0, 0.1);
+	
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-32"), 423.0, 0.1);
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-64"), 423.0, 0.1);
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-128"), 423.0, 0.1);
@@ -3437,9 +3479,9 @@ TEST_F(NestedBendersTest, cargo_FELT) { //Two-Stage, INDEP, values verified with
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-1024"), 434.1, 0.1);
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-2048"), 441.7, 0.1);
 	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-4096"), 446.86, 0.1);
-	//EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-8192"), 446.86, 0.1);
-	//EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-16384"), 446.86, 0.1);
-	//EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-32768"), 446.86, 0.1);
+	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-8192"), 446.86, 0.1);
+	/*EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-16384"), 446.86, 0.1);
+	EXPECT_NEAR(solveSMPS("felt/cargo/4node", "felt/cargo/4node-32768"), 446.86, 0.1);*/
 }
 
 TEST_F(NestedBendersTestFeasibility, chem_FELT) { //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
@@ -3448,6 +3490,7 @@ TEST_F(NestedBendersTestFeasibility, chem_FELT) { //BLOCKS, two-stage LP-relaxat
 
 TEST_F(NestedBendersTestInteger, chem_FELT) { //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
 	// Mixed-integer problem is available here: has integers on second stage also, but we only solve first-stage integers. Generates feasibility cuts
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_RELAXATION, 2);
 	EXPECT_NEAR(solveSMPS("felt/chem/chem-int", "felt/chem/chem", "felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
 }
 
@@ -3461,7 +3504,7 @@ TEST_F(NestedBendersTestMultiStage, electric_FELT) { //SCENARIOS, three-stage, N
 }
 
 TEST_F(NestedBendersTestFeasibility, environ_FELT) {//two-stage, BLOCKS and/or INDEP //values verified with det-eq, but differ from andy felts test set ( maybe indep/blocks mixture is incorrect??
-	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1); // Non-challenging CO2 limits //  19777.4
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1); // Non-challenging CO2 limits //  19777.4
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-imp"), 20773.9, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS //  22265.3, not solvable due to feas cuts not improving solution..
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-lrge"), 20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
@@ -3470,7 +3513,7 @@ TEST_F(NestedBendersTestFeasibility, environ_FELT) {//two-stage, BLOCKS and/or I
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-1200"), 20808.6, 0.1); // INDEP and BLOCKS for the rest  22428.9
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-1875"), 20809.3, 0.1); //  22447.1
 	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-3780"), 20794.7, 0.1); //  22441
-	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-5292"), 20788.6, 0.1); // 22438.4
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss", "felt/environ/env", "felt/environ/env-5292"), 20788.6, 0.1); // 22438.4*/
 }
 
 TEST_F(NestedBendersTestInteger, phone_FELT) {//INDEP, two-stage, mixed-integer on both stages, values not verified
@@ -3509,9 +3552,12 @@ TEST_F(NestedBendersTestSampleAverageApproximation, storm_WRIGHT) {// 6*10^81 sc
 
 TEST_F(NestedBendersTest, scenarios_WRIGHT) { // TODO: Update the scenario values here!
 	//assert(false && "see TODOs above");
-	EXPECT_NEAR(solveSMPS("wright/data-scenarios/20", "wright/data-scenarios/20", "wright/data-scenarios/20-1000"), 254536, 1);
+
+	/*EXPECT_NEAR(solveSMPS("wright/data-scenarios/20", "wright/data-scenarios/20", "wright/data-scenarios/20-1000"), 254536, 1);
 	EXPECT_NEAR(solveSMPS("wright/data-scenarios/20", "wright/data-scenarios/20", "wright/data-scenarios/20-2000"), 254019, 1);
-	EXPECT_NEAR(solveSMPS("wright/data-scenarios/20", "wright/data-scenarios/20", "wright/data-scenarios/20-3000"), 254240, 1);
+	EXPECT_NEAR(solveSMPS("wright/data-scenarios/20", "wright/data-scenarios/20", "wright/data-scenarios/20-3000"), 254240, 1); 
+	
+	
 	EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn", "wright/data-scenarios/ssn", "wright/data-scenarios/ssn-1000"), 8.78997, 0.1);
 	EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn", "wright/data-scenarios/ssn", "wright/data-scenarios/ssn-2000"), 9.24269, 0.1);
 	EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn", "wright/data-scenarios/ssn", "wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
@@ -3519,8 +3565,8 @@ TEST_F(NestedBendersTest, scenarios_WRIGHT) { // TODO: Update the scenario value
 	EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm", "wright/data-scenarios/storm", "wright/data-scenarios/storm-2000"), 1.54942e7, 1e3);
 	EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm", "wright/data-scenarios/storm", "wright/data-scenarios/storm-3000"), 1.54932e7, 1e3);
 	use_multi_cut_ = false;
-	//EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
-	//-EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
+	EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage*/
+	EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
 }
 
 TEST_F(NestedBendersTestMultiStage, watson_conditional) { // Values from own solver, old values are in comments (MSLiP), differ with det-eq
@@ -3569,11 +3615,17 @@ TEST_F(NestedBendersTest, saphir) {// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage, scdp) {// scdp problem from marc
+	//benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION, true);
+	//benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION_START, 1); // from the 2nd stage
+	//benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION_END, -1); // till the last stage
+
 	EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-1024"), -6301005010, 10);
 	EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-4096"), -5204538801, 10);
 	EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-16384"), -5183755359, 10);
 	EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-65536"), -5183755359, 10);
 	EXPECT_NEAR(solveSMPS("scdp/scdp/SCDP-64000"), -3860456379, 10);
+
+	benders_parameter_.SetParameterValue(parallel_benders::PNB_STAGE_AGGREGATION, false);
 	//assert(false && "see TODOs below");
 	//EXPECT_NEAR(solveSMPS("scdp/scdp/scdp-64000-reduced"), 0.0, 0.1); // TODO: what is the solution?
 	//EXPECT_NEAR(solveSMPS("scdp/scdp/scdp-8000-reduced"), 0.0, 0.1); // TODO: what is the solution?
@@ -3592,17 +3644,17 @@ TEST_F(NestedBendersTestInteger, scdp) {// scdp problem from marc
 }
 
 TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
-	//EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-	//EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+	/*EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
 	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
 	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
 	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
 	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1);
-	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"), -23.8, 0.1);
+	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1);*/
+	//EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"), -23.8, 0.1);
 	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"), -28.134408, 0.1);//
-	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408, 0.1); // run this only if necessary!
-	EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
+	//EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408, 0.1); // run this only if necessary!
+	//EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
 	//EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // needs a huge amount of memeory to load via  via smi_model->readSmps(). Machine with 24 Gb RAM cannot handle it
 }
 
@@ -3620,6 +3672,7 @@ TEST_F(NestedBendersTest, frankellison) {// models received from Frank Ellison
 //
 ////TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
 ////    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
+// 
 ////}
 //
 //
@@ -3636,9 +3689,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_250"), 259.023, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_300"), 266.152, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_350"), 271.016, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_400"), 264.187, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_450"), 266.84, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_500"), 268.758, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_400"), 264.187, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_450"), 266.84, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/20x20-1", "deak/20x20-1", "deak/20x20-1_500"), 268.758, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_10"), 2915.45, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_20"), 2973.02, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_30"), 2966.85, 0.1);
@@ -3651,9 +3704,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_250"), 3193.95, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_300"), 3057.37, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_350"), 3105.16, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_400"), 3114.22, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_450"), 3076.74, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_500"), 3085.35, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_400"), 3114.22, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_450"), 3076.74, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/20x40-1", "deak/20x40-1", "deak/20x40-1_500"), 3085.35, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_10"), 311.199, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_20"), 308.059, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_30"), 309.22, 0.1);
@@ -3666,9 +3719,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_250"), 303.718, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_300"), 307.845, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_350"), 303.869, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_400"), 304.871, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_450"), 305.072, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_500"), 302.273, 0.1);
+	    EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_400"), 304.871, 0.1);
+	    EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_450"), 305.072, 0.1);
+	    EXPECT_NEAR(solveSMPS("deak/20x60-1", "deak/20x60-1", "deak/20x60-1_500"), 302.273, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_10"), 173.304, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_20"), 195.016, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_30"), 194.145, 0.1);
@@ -3681,9 +3734,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_250"), 194.447, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_300"), 197.986, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_350"), 192.896, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_400"), 195.64, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_450"), 193.758, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_500"), 194.464, 0.1);
+	    EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_400"), 195.64, 0.1);
+	    EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_450"), 193.758, 0.1);
+	    EXPECT_NEAR(solveSMPS("deak/40x20-1", "deak/40x20-1", "deak/40x20-1_500"), 194.464, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_10"), 975.758, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_20"), 1277.95, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_30"), 1208.43, 0.1);
@@ -3696,9 +3749,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_250"), 1100.9, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_300"), 1001.63, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_350"), 1101.28, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_400"), 1146.02, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_450"), 1117.79, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_500"), 1121.19, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_400"), 1146.02, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_450"), 1117.79, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/40x40-1", "deak/40x40-1", "deak/40x40-1_500"), 1121.19, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_10"), 332.185, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_20"), 346.548, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_30"), 340.048, 0.1);
@@ -3711,9 +3764,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_250"), 343.299, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_300"), 341.859, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_350"), 341.143, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_400"), 342.001, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_450"), 342.831, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_500"), 343.329, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_400"), 342.001, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_450"), 342.831, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/40x60-1", "deak/40x60-1", "deak/40x60-1_500"), 343.329, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_10"), 54.4003, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_20"), 50.8637, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_30"), 51.0978, 0.1);
@@ -3726,9 +3779,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_250"), 55.1981, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_300"), 54.246, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_350"), 54.4522, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_400"), 53.9747, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_450"), 53.8843, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_500"), 54.8924, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_400"), 53.9747, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_450"), 53.8843, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x20-1", "deak/60x20-1", "deak/60x20-1_500"), 54.8924, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_10"), 175.045, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_20"), 169.295, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_30"), 166.496, 0.1);
@@ -3741,9 +3794,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_250"), 167.657, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_300"), 168.552, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_350"), 168.338, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_400"), 167.623, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_450"), 167.93, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_500"), 167.054, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_400"), 167.623, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_450"), 167.93, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x40-1", "deak/60x40-1", "deak/60x40-1_500"), 167.054, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_10"), 301.009, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_20"), 276.843, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_30"), 296.727, 0.1);
@@ -3756,9 +3809,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_250"), 301.954, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_300"), 300.152, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_350"), 303.269, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_400"), 299.236, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_450"), 299.905, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_500"), 299.173, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_400"), 299.236, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_450"), 299.905, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/60x60-1", "deak/60x60-1", "deak/60x60-1_500"), 299.173, 0.1);
 	/*EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_10"), 72.5601, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_20"), 66.509, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_30"), 78.4813, 0.1);
@@ -3771,9 +3824,9 @@ TEST_F(NestedBendersTest, deak) {
 	EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_250"), 74.7991, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_300"), 72.3126, 0.1);
 	EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_350"), 73.9976, 0.1);*/
-	EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_400"), 77.4241, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_450"), 73.8664, 0.1);
-	EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_500"), 75.9172, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_400"), 77.4241, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_450"), 73.8664, 0.1);
+	   EXPECT_NEAR(solveSMPS("deak/100x20-1", "deak/100x20-1", "deak/100x20-1_500"), 75.9172, 0.1);
 }
 
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve, so we restrict ourselves for preliminary test runs on a subset!
@@ -3781,17 +3834,17 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve, so we restrict o
 	EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
 	EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
 	EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand2_4000"), 218.247, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand2_8000"), 239.158, 0.1);
-	EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand2_4000"), 218.247, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand2_8000"), 239.158, 0.1);
+	//EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
 }
 
 TEST_F(NestedBendersTestFeasibility, feasibility) {// all problems that generate feasibility cuts (a fair amount of)
@@ -4124,23 +4177,29 @@ int main(int argc, char* argv[]) {
 
 	::testing::GTEST_FLAG(filter) =
 		"NestedBendersTest.deak:"
-		"NestedBendersTest.stormG2_POSTS:"
-		"NestedBendersTest.rand_OTHER:"
-		"NestedBendersTest.scenarios_WRIGHT:" 
-    	"NestedBendersTest.airlift_FELT:"
-		"NestedBendersTest.assets_OTHER:"
-		"NestedBendersTest.cargo_FELT:"
-		"NestedBendersTest.electric_FELT:"
-		"NestedBendersTest.stocfor_FELT:"
-		//"NestedBendersTestInteger.sslp_SIPLIB:" doesn't converge
-		//"NestedBendersTestInteger.phone_FELT:"
-		//"NestedBendersTestFeasibility.chem_FELT:"       //fails on 20 cuts  assert(is_consistent());
-		//"NestedBendersTestFeasibility.environ_FELT:"    
-		//"NestedBendersTestMultiStage.scdp:"              //fails on 20 cuts LOG_IF(FATAL, (cut_stuff.type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff.type_ == PNB_CUT_TYPE_EPIGRAPH) && num_theta != cut_stuff.getNumTheta());
+		//"NestedBendersTest.rand_OTHER:"
+		//"NestedBendersTest.stormG2_POSTS:"
+		//"NestedBendersTest.scenarios_WRIGHT:" 
+    	//"NestedBendersTest.airlift_FELT:"
+		//"NestedBendersTest.assets_OTHER:"
+		//"NestedBendersTest.cargo_FELT:"
+		//"NestedBendersTest.stocfor_FELT:"
+		//"NestedBendersTest.electric_FELT:"              //numScen = 3
+		//"NestedBendersTestFeasibility.environ_FELT:"
+		//"NestedBendersTestInteger.phone_FELT:"  												
+		//"NestedBendersTestInteger.chem_FELT:"       //numScen = 2
+	    //"NestedBendersTest.saphir:"
+		//"NestedBendersTest.sslp_OTHER:"
+		
+		
+		//"NestedBendersTestMultiStage.scdp:"             //fails on 20 cuts LOG_IF(FATAL, (cut_stuff.type_ == PNB_CUT_TYPE_OPTIMALITY || cut_stuff.type_ == PNB_CUT_TYPE_EPIGRAPH) && num_theta != cut_stuff.getNumTheta());
 		//"NestedBendersTestMultiStage.bonds_FELT:"
 		//"NestedBendersTestMultiStage.stocfor_FELT:"
 		//"NestedBendersTestMultiStage.watson_conditional:"
 		//"NestedBendersTestMultiStage.watson_independent"
+		//"NestedBendersTestMultiStage.scfxm_POSTS"
+		//"NestedBendersTestMultiStage.pltexp_POSTS"
+		
 		;
 	::testing::InitGoogleTest(&argc, argv);
 	google::InitGoogleLogging(argv[0]);

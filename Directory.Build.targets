@@ -1,8 +1,8 @@
 <Project>
 	<!-- Copy CPLEX DLL after build -->
-	<Target Name="CopyCplexDll" AfterTargets="Build">
+	<Target Name="CopyCplexDll" AfterTargets="Build"  Condition="'$(CPLEX_STUDIO_DIR222)' != ''">
 		<PropertyGroup>
-			<CplexDll>$(MSBuildThisFileDirectory)ThirdParty\cplex\cplex2010\lib\x64\cplex2010.dll</CplexDll>
+			<CplexDll>$(CPLEX_STUDIO_DIR222)\cplex\bin\x64_win64\cplex2220.dll</CplexDll>
 			<OutputDir>$(SolutionDir)x64\$(Configuration)\</OutputDir>
 		</PropertyGroup>
 
@@ -14,26 +14,22 @@
 		<Message Text="Copied CPLEX DLL to $(OutputDir)" Importance="high"/>
 		<Message Text="SolutionDir = $(SolutionDir)" Importance="high"/>
 	</Target>
-
-
+	
 	<!-- Move Gurobi libOsiGrb.lib to correct Osi folder -->
 	<Target Name="FixGurobiLibLocation" AfterTargets="Build">
 		<PropertyGroup>
-			<!-- Current incorrect location -->
+			
 			<GurobiSource>
 				$(SolutionDir)PNB\FlopCpp\MSVisualStudio\v16alt\$(Configuration)\libOsiGrb.lib
 			</GurobiSource>
 
-			<!-- Desired correct location -->
 			<GurobiDestination>
 				$(SolutionDir)PNB\Osi\MSVisualStudio\v16alt\libOsiGrb\$(Configuration)\
 			</GurobiDestination>
 		</PropertyGroup>
 
-		<!-- Ensure destination folder exists -->
 		<MakeDir Directories="$(GurobiDestination)" Condition="!Exists('$(GurobiDestination)')" />
 
-		<!-- Copy file -->
 		<Copy
 		  SourceFiles="$(GurobiSource)"
 		  DestinationFolder="$(GurobiDestination)"

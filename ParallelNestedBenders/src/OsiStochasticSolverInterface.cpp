@@ -5,8 +5,9 @@
 #include "SmiScnModel.hpp"
 
 // Files necessary for cplex
+#ifdef USE_CPLEX
 #include "ilcplex/cplex.h"
-
+#endif
 
 OsiStochasticSolverInterface::OsiStochasticSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel ): osi_solver_(osiSolver),smi_model_(smiModel), log_file_("Log.csv"), instance_specification_file_("InstanceSpecs.csv") {}
 
@@ -113,6 +114,7 @@ void OsiStochasticDetEqSolverInterface::setParameters(const parallel_benders::Pa
 
 	OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
 	assert(cpx_ptr);
+#ifdef USE_CPLEX
 	CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
 
 	int lp_method(param_.GetIntParamValue(parallel_benders::PNB_LP_METHOD));
@@ -141,13 +143,14 @@ void OsiStochasticDetEqSolverInterface::setParameters(const parallel_benders::Pa
 	CPXsetdblparam(env_ptr, CPX_PARAM_TILIM, param_.GetDblParamValue(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME));
 	
 	assert(false && "setParameter for the OsiStochasticDetEqSolverInterface is not implemented. Some of the parameters should be passed to osi solver (Cplex)");
-
+#endif
 }
 
 int OsiStochasticDetEqSolverInterface::getSolutionCode() const
 {
 	OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
 	assert(cpx_ptr);
+#ifdef USE_CPLEX
 	// Get Cplex result code
 	CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
 	CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
@@ -177,7 +180,8 @@ int OsiStochasticDetEqSolverInterface::getSolutionCode() const
 	else {
 		return parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
 	}
-
+#endif
+	return parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
 	//Available codes in Osi interface
 	//virtual bool isDualObjectiveLimitReached() const;
 

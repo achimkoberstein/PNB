@@ -10,7 +10,7 @@
 		<Message Text="GUROBI_HOME=$(GUROBI_HOME)" Importance="High"/>
 		<Message Text="USE_GUROBI defined? $(PreprocessorDefinitions)" Importance="High"/>
 	</Target>
-  <ItemDefinitionGroup  Condition="Exists('$(GUROBI_HOME)\lib\gurobi120.lib')">
+  <ItemDefinitionGroup   Condition="'$(GUROBI_HOME)' != ''">
     <ClCompile>
 	    <PreprocessorDefinitions>
 			USE_GUROBI;
@@ -19,7 +19,6 @@
 		</PreprocessorDefinitions>
 		<AdditionalIncludeDirectories>
 		  ../../../../../ParallelNestedBenders/src;
-		  ../../../../../ThirdParty/cplex/cplex124/include/ilcplex;
 		  ../../../../../Smi/src;
 		  ../../../../../Osi/src/Osi;
 		  ../../../../../FlopCpp/src;
@@ -41,15 +40,12 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>
-		  ../../../../../ThirdParty/cplex/cplex2010/lib/x64;
 		  ../../../../../ThirdParty/boost/stage/lib64;
 		  ../../../../../ThirdParty/boost/stage/lib;
 		  ../../../../../Osi/MSVisualStudio/v16alt/libOsiGrb/Debug;
-		 <!-- ../../../../../ThirdParty/gurobi/gurobi1203/win64/lib;  -->
 		  $(GUROBI_HOME)/lib;
 		  %(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
-		  cplex2010.lib;
 		  libOsiGrb.lib;          <!-- builds from Osi/src/OsiGrb/libOsiGrb.vcxproj -->
 		  gurobi_c++mdd2017.lib;  <!--done -->
 		  gurobi120.lib;          <!--done -->

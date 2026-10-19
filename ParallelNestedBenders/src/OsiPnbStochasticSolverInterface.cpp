@@ -20,8 +20,7 @@
 
 #include "CoinTime.hpp";
 
-#define CPLEX_PRESENT
-#ifdef CPLEX_PRESENT
+#ifdef USE_CPLEX
 #include "ilcplex/cplex.h"
 #include "OsiCpxSolverInterface.hpp"
 #endif

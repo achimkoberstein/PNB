@@ -4,13 +4,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_PropertySheetDisplayName>ProjectProperties</_PropertySheetDisplayName>
+    <_PropertySheetDisplayName>ProjectProperties_withCpx</_PropertySheetDisplayName>
   </PropertyGroup>
-  <ItemDefinitionGroup>
+	<Target Name="CheckCplexMacro" BeforeTargets="ClCompile">
+		<Message Text="CPLEX_STUDIO_DIR222=$(CPLEX_STUDIO_DIR222)" Importance="High"/>
+		<Message Text="USE_CPLEX defined? $(PreprocessorDefinitions)" Importance="High"/>
+	</Target>
+   <ItemDefinitionGroup   Condition="'$(CPLEX_STUDIO_DIR222)' != ''">
     <ClCompile>
+		<PreprocessorDefinitions>
+			USE_CPLEX;
+			_DEBUG;_CONSOLE;
+			%(PreprocessorDefinitions)
+		</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
 		  ../../../../../ParallelNestedBenders/src;
-		  ../../../../../ThirdParty/cplex/cplex124/include/ilcplex;
+		  $(CPLEX_STUDIO_DIR222)\cplex\include\ilcplex;
 		  ../../../../../Smi/src;
 		  ../../../../../Osi/src/Osi;
 		  ../../../../../FlopCpp/src;
@@ -25,7 +34,8 @@
 		  ../../../../../ThirdParty/gtest/include;
 		  ../../../../../ThirdParty/boost;
 		  ../../../../../ThirdParty/glog/src/windows;
-		  %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+		  %(AdditionalIncludeDirectories)
+	  </AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MinimalRebuild>false</MinimalRebuild>
       <AdditionalOptions>/permissive</AdditionalOptions>
@@ -33,13 +43,13 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>
-		  ../../../../../ThirdParty/cplex/cplex2010/lib/x64;
+		  $(CPLEX_STUDIO_DIR222)\cplex\lib\x64_windows_msvc14\stat_mdd;
 		  ../../../../../ThirdParty/boost/stage/lib64;
 		  ../../../../../ThirdParty/boost/stage/lib;
 		  %(AdditionalLibraryDirectories)
 	  </AdditionalLibraryDirectories>
       <AdditionalDependencies>
-		  cplex2010.lib;
+		  cplex2220.lib;
 		  %(AdditionalDependencies)
 	  </AdditionalDependencies>
     </Link>

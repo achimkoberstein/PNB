@@ -14,7 +14,7 @@
 
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
-#include "Benders.hpp"
+//#include "Benders.hpp"
 
 
 using namespace flopc;
@@ -963,7 +963,7 @@ int main(int argc, char* argv[]) {
     //saphir->writeLp("saphir_lp");
     //saphir->writeMps("saphir_mps","mps",1);
     saphir.getSmi()->writeSmps("SaphirModel");
-    //saphir.solve(MP_model::MINIMIZE);
+    saphir.solve(MP_model::MINIMIZE);
 
     
 

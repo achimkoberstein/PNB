@@ -8,12 +8,16 @@
   <PropertyGroup>
     <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
   </PropertyGroup>
+	
+	
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>../../../../ThirdParty/cplex/cplex2010/include;../../../../ThirdParty/cplex/cplex2010/include/ilcplex;../../../../ThirdParty/gurobi/gurobi501/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+		  ../../../../ThirdParty/cplex/cplex2010/include;../../../../ThirdParty/cplex/cplex2010/include/ilcplex;../../../../ThirdParty/gurobi/gurobi501/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>IL_STD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <Link>
+    
+	  <Link>
       <AdditionalDependencies>cplex2010.lib;gurobi50.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../../../ThirdParty/cplex/cplex2010/lib/x86;../../../../ThirdParty/gurobi/gurobi501/win32/lib/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>

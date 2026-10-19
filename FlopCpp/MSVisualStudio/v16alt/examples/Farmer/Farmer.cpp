@@ -1,19 +1,21 @@
+#define NOMINMAX
+#include <cmath>
+#include <algorithm>
+
+
 #include <iostream>
 #include "flopc.hpp"
 using namespace flopc;
 
 #include "OsiCpxSolverInterface.hpp"
 #include "OsiGrbSolverInterface.hpp"
+#include "OsiClpSolverInterface.hpp"
 
 #include "SmiScnModel.hpp"
 #include "OsiPnbStochasticSolverInterface.hpp"
 #include "CoinTime.hpp"
 
-#ifdef USE_GUROBI
-#pragma message("USE_GUROBI is defined")
-#else
-#pragma message("USE_GUROBI is NOT defined")
-#endif
+
 
 int main(int argc, char* argv[]) {
 	const double myInfty = 1e5;
@@ -23,6 +25,7 @@ int main(int argc, char* argv[]) {
 #else 
     MP_model m(new OsiCpxSolverInterface());
 #endif
+
 	enum { stage1, stage2, numStages };
 	MP_stage T(numStages);
 	T.setName("T");
@@ -135,13 +138,18 @@ int main(int argc, char* argv[]) {
 	parallel_benders::Parameter benders_param;
 	benders_param.init();
 	//benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+	
+	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
+	benders_param.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS, 3);
+	//benders_param.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION, 2);
+
+
 
     //	benders_param.parameter_.put(parallel_benders::PNB_BENDERS, parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
 	// benders_param.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION, parallel_benders::PNB_INT_USE_EV_SOLUTION);
-//	benders_param.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION, true);  //CRASHES
-	benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
-	//benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, true);
+    //benders_param.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION, true);  //CRASHES
+	//benders_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS, parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
+	benders_param.parameter_.put(parallel_benders::PNB_PRINT_SUBPROBLEMS, true);
 
 	// To set a parameter look in NestedBendersTest.cpp
 	m.StochSolver->setParameters(benders_param);

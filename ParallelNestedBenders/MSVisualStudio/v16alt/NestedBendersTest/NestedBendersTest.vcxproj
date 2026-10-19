@@ -26,24 +26,24 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -63,13 +63,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\IncludeFiles.props" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\CplexConfiguration-x64.props" />
-	<Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\GurobiConfiguration-x64.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\GurobiConfiguration-x64.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\IncludeFiles.props" />
     <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\CplexConfiguration-x64.props" />
-	<Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\GurobiConfiguration-x64.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v16alt\GurobiConfiguration-x64.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -116,7 +116,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+      <Command>xcopy "$(CPLEX_STUDIO_DIR222)\cplex\bin\x64_win64\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copy cplex .dll to the location of .exe</Message>
@@ -128,7 +128,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../../../ParallelNestedBenders/src;../../../../Benders/src;../../../../ThirdParty/threadpool;C:\gurobi1203\win64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../ParallelNestedBenders/src;../../../../Benders/src;../../../../ThirdParty/threadpool;$(GUROBI_HOME)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -140,13 +140,13 @@
       <AdditionalOptions>/Zm200 /FS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../../../../ThirdParty/boost/stage/lib;C:\gurobi1203\win64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../../../ThirdParty/boost/stage/lib;$(GUROBI_HOME)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX64</TargetMachine>
       <AdditionalDependencies>gurobi120.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+      <Command>xcopy "$(CPLEX_STUDIO_DIR222)\cplex\bin\x64_win64\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copy cplex .dll to the location of .exe</Message>
@@ -180,7 +180,7 @@
       <AdditionalDependencies>cplex124.lib;gurobi50.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+      <Command>xcopy "$(CPLEX_STUDIO_DIR222)\cplex\bin\x64_win64\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copy cplex .dll to the location of .exe</Message>
@@ -210,7 +210,7 @@
       <AdditionalOptions>/fixed:no %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+      <Command>xcopy "$(CPLEX_STUDIO_DIR222)\cplex\bin\x64_win64\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copy cplex .dll to the location of .exe</Message>
