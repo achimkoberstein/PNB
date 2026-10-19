@@ -764,7 +764,10 @@ CoinWarmStart* OsiGrbSolverInterface::getWarmStart() const
 {
   debugMessage("OsiGrbSolverInterface::getWarmStart()\n");
 
-  assert(!probtypemip_);
+  //assert(!probtypemip_);
+  if (probtypemip_)
+      return getEmptyWarmStart();
+
 
   if( !basisIsAvailable() )
     return NULL;

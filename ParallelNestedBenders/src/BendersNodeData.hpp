@@ -8,6 +8,7 @@
 #include <atomic>
 #include <unordered_map>
 #include <bitset>
+#include <chrono>
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/property_tree/ptree.hpp>

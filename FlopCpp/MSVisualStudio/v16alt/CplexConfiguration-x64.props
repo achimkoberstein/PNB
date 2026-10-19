@@ -3,28 +3,37 @@
   <ImportGroup Label="PropertySheets">
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
-    <CplexVersion>2010</CplexVersion>
+    <CplexVersion>2220</CplexVersion>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
     <_PropertySheetDisplayName>CplexConfiguration</_PropertySheetDisplayName>
   </PropertyGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
+
+	<Target Name="CheckCplexMacro" BeforeTargets="ClCompile">
+		<Message Text="CPLEX_STUDIO_DIR222=$(CPLEX_STUDIO_DIR222)" Importance="High"/>
+		<Message Text="USE_CPLEX defined? $(PreprocessorDefinitions)" Importance="High"/>
+	</Target>
+	
+	<ItemDefinitionGroup   Condition="'$(CPLEX_STUDIO_DIR222)' != ''">
+		<ClCompile>
+			<PreprocessorDefinitions>
+				USE_CPLEX;
+				%(PreprocessorDefinitions)
+			</PreprocessorDefinitions>
     <!--$(CplexVersion) is not supported in ItemDefinitionGroup-->
       <AdditionalIncludeDirectories>
-		  ../../../../ThirdParty/cplex/cplex2010/include/;
-		  ../../../../ThirdParty/gurobi/gurobi1203/include/;  <!-- gurobi_c.h file that is in the repo to compile the code-->
-		  %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+		  $(CPLEX_STUDIO_DIR222)/cplex/include;
+		  %(AdditionalIncludeDirectories)
+	  </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
-		  cplex2010.lib;
-		  <!-- gurobi120.lib;-->
+		  cplex2220.lib;
 		  %(AdditionalDependencies)
 	  </AdditionalDependencies>
       <AdditionalLibraryDirectories>
-		  ../../../../ThirdParty/cplex/cplex2010/lib/x64;
+		  $(CPLEX_STUDIO_DIR222)/cplex/lib/x64_windows_msvc14/stat_mdd;
 		  %(AdditionalLibraryDirectories)
 	  </AdditionalLibraryDirectories>
     </Link>

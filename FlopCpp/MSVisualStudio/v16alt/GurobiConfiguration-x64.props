@@ -13,7 +13,7 @@
 		<Message Text="USE_GUROBI defined? $(PreprocessorDefinitions)" Importance="High"/>
 	</Target>
 	
-	<ItemDefinitionGroup  Condition="Exists('$(GUROBI_HOME)\lib\gurobi120.lib')">
+	<ItemDefinitionGroup   Condition="'$(GUROBI_HOME)' != ''">
 	<ClCompile>
 	   <PreprocessorDefinitions>
 			USE_GUROBI;
@@ -21,8 +21,7 @@
 	   </PreprocessorDefinitions>
     <!--$(GurobiVersion) is not supported in ItemDefinitionGroup-->
       <AdditionalIncludeDirectories>
-		  ../../../../ThirdParty/gurobi/gurobi1203/include/;  <!-- gurobi_c.h file that is in the repo -->
-		  <!--$(GUROBI_HOME)/include;-->
+		  $(GUROBI_HOME)/include;
 		  %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -31,7 +30,6 @@
 		  %(AdditionalDependencies)
 	  </AdditionalDependencies>
       <AdditionalLibraryDirectories>
-		  <!--../../../../ThirdParty/gurobi/gurobi1203/win64/lib;-->
 		  $(GUROBI_HOME)/lib;
 		  %(AdditionalLibraryDirectories)
 	  </AdditionalLibraryDirectories>
