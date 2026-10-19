@@ -1,62 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ImportGroup Label="PropertySheets">
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
-  <PropertyGroup>
-    <_PropertySheetDisplayName>ProjectProperties_withCpx</_PropertySheetDisplayName>
-  </PropertyGroup>
+	<ImportGroup Label="PropertySheets" />
+	<PropertyGroup Label="UserMacros" />
+	<PropertyGroup>
+		<_PropertySheetDisplayName>ProjectProperties_withCpx</_PropertySheetDisplayName>
+	</PropertyGroup>
+
 	<Target Name="CheckCplexMacro" BeforeTargets="ClCompile">
 		<Message Text="CPLEX_STUDIO_DIR222=$(CPLEX_STUDIO_DIR222)" Importance="High"/>
-		<Message Text="USE_CPLEX defined? $(PreprocessorDefinitions)" Importance="High"/>
+		<Message Text="Configuration=$(Configuration)" Importance="High"/>
 	</Target>
-   <ItemDefinitionGroup   Condition="'$(CPLEX_STUDIO_DIR222)' != ''">
-    <ClCompile>
-		<PreprocessorDefinitions>
-			USE_CPLEX;
-			_DEBUG;_CONSOLE;
-			%(PreprocessorDefinitions)
-		</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>
-		  ../../../../../ParallelNestedBenders/src;
-		  $(CPLEX_STUDIO_DIR222)\cplex\include\ilcplex;
-		  ../../../../../Smi/src;
-		  ../../../../../Osi/src/Osi;
-		  ../../../../../FlopCpp/src;
-		  ../../../../../Cbc/src;
-		  ../../../../../Clp/src;
-		  ../../../../../Cbc/src/OsiCbc;
-		  ../../../../../Osi/src/OsiCpx;
-		  ../../../../../Osi/src/OsiGrb; <!--added to avoid linker problems-->
-		  ../../../../../Clp/src/OsiClp;
-		  ../../../../../BuildTools/headers;
-		  ../../../../../CoinUtils/src;
-		  ../../../../../ThirdParty/gtest/include;
-		  ../../../../../ThirdParty/boost;
-		  ../../../../../ThirdParty/glog/src/windows;
-		  %(AdditionalIncludeDirectories)
-	  </AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <MinimalRebuild>false</MinimalRebuild>
-      <AdditionalOptions>/permissive</AdditionalOptions>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>
-		  $(CPLEX_STUDIO_DIR222)\cplex\lib\x64_windows_msvc14\stat_mdd;
-		  ../../../../../ThirdParty/boost/stage/lib64;
-		  ../../../../../ThirdParty/boost/stage/lib;
-		  %(AdditionalLibraryDirectories)
-	  </AdditionalLibraryDirectories>
-      <AdditionalDependencies>
-		  cplex2220.lib;
-		  %(AdditionalDependencies)
-	  </AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemGroup />
+
+	<!-- Shared by Debug and Release -->
+	<ItemDefinitionGroup Condition="'$(CPLEX_STUDIO_DIR222)' != ''">
+		<ClCompile>
+			<PreprocessorDefinitions>USE_CPLEX;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<!-- OsiGrb include added to avoid linker problems -->
+			<AdditionalIncludeDirectories>
+				../../../../../ParallelNestedBenders/src;
+				$(CPLEX_STUDIO_DIR222)\cplex\include\ilcplex;
+				../../../../../Smi/src;
+				../../../../../Osi/src/Osi;
+				../../../../../FlopCpp/src;
+				../../../../../Cbc/src;
+				../../../../../Clp/src;
+				../../../../../Cbc/src/OsiCbc;
+				../../../../../Osi/src/OsiCpx;
+				../../../../../Osi/src/OsiGrb;
+				../../../../../Clp/src/OsiClp;
+				../../../../../BuildTools/headers;
+				../../../../../CoinUtils/src;
+				../../../../../ThirdParty/gtest/include;
+				../../../../../ThirdParty/boost;
+				../../../../../ThirdParty/glog/src/windows;
+				%(AdditionalIncludeDirectories)
+			</AdditionalIncludeDirectories>
+			<MinimalRebuild>false</MinimalRebuild>
+			<AdditionalOptions>/permissive</AdditionalOptions>
+		</ClCompile>
+		<Link>
+			<AdditionalLibraryDirectories>
+				../../../../../ThirdParty/boost/stage/lib;
+				%(AdditionalLibraryDirectories)
+			</AdditionalLibraryDirectories>
+			<AdditionalDependencies>cplex2220.lib;%(AdditionalDependencies)</AdditionalDependencies>
+		</Link>
+	</ItemDefinitionGroup>
+
+	<!-- Debug only -->
+	<ItemDefinitionGroup Condition="'$(CPLEX_STUDIO_DIR222)' != '' And '$(Configuration)' == 'Debug'">
+		<ClCompile>
+			<PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+		</ClCompile>
+		<Link>
+			<AdditionalLibraryDirectories>
+				$(CPLEX_STUDIO_DIR222)\cplex\lib\x64_windows_msvc14\stat_mdd;
+				%(AdditionalLibraryDirectories)
+			</AdditionalLibraryDirectories>
+		</Link>
+	</ItemDefinitionGroup>
+
+	<!-- Release only -->
+	<ItemDefinitionGroup Condition="'$(CPLEX_STUDIO_DIR222)' != '' And '$(Configuration)' == 'Release'">
+		<ClCompile>
+			<PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+		</ClCompile>
+		<Link>
+			<AdditionalLibraryDirectories>
+				$(CPLEX_STUDIO_DIR222)\cplex\lib\x64_windows_msvc14\stat_mda;
+				%(AdditionalLibraryDirectories)
+			</AdditionalLibraryDirectories>
+		</Link>
+	</ItemDefinitionGroup>
+
+	<ItemGroup />
 </Project>
-
-
-
 
