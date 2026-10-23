@@ -1516,7 +1516,8 @@ namespace parallel_benders {
 					double upper_level = lower_level + cvar_H_;
 					oda_descent_target = oda_kappa_ * lower_level + (1 - oda_kappa_) * upper_level;
 				}
-				if (oda_tilde_q_ >= oda_descent_target) {
+				if ((!regularization_ && oda_tilde_q_ >= oda_descent_target) ||
+					 (regularization_ && oda_tilde_q_ >= oda_descent_target && lower_bound_ < upper_bound_)) {      // in case of reg: no global lb available, local bounds need to make sense at least
 					startTimer(INT_TIMER_ID_SOLVE_ODA);
 					//LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
 					// Do not solve subproblems, but add aggregated cut(s)
