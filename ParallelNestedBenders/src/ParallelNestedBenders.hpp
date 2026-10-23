@@ -64,11 +64,12 @@ public:
      The aim of Reset() is to clear the pnb and prepare it for one more Solve() but avoid reinitialization of all the internal structures.
      We keep solvers
     */
-	void Reset(int delete_cuts_start_it = -1, bool keep_warm_start = false, Parameter* parameter = nullptr);
+	virtual void Reset(int delete_cuts_start_it = -1, bool keep_warm_start = false, Parameter* parameter = nullptr);
     
     // Access solution methods
     double computeScenarioValue(int scenario);
-    void fixFirstStageVariables(const double* solution);
+    void FixFirstStageVariables(const std::vector<int>& column_indices, const std::vector<double>& column_values);
+    void FixFirstStageVariables(const double* solution);
 	int getNumContPhasePnbIterations() const;
 	int getNumContinuousOptimalityCuts() const;
     virtual int getCurrentThreadId() const; // works for thread_BBC but for PNB and BBC returns -1
@@ -501,7 +502,8 @@ protected:
     // Fixing first-stage variables : If unfixed write back to Smi->Core->cdclo
     boost::scoped_array<double> first_stage_original_col_lower_;
     boost::scoped_array<double> first_stage_original_col_upper_;
-    boost::scoped_array<double> fixed_solution_;
+    boost::scoped_array<double> fixed_col_lower_;
+    boost::scoped_array<double> fixed_col_upper_;
     bool fixed_first_stage_;
 
     // Help Containers for the transformation of non-staircase problems to staircase problems ( so that we can handle it )

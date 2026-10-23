@@ -578,10 +578,10 @@ double OsiStochasticParallelNestedBendersSolverInterface::getSolutionValueForSce
     return nested_benders_->computeScenarioValue(scenario);
 }
 
-void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( const double* solution )
+void OsiStochasticParallelNestedBendersSolverInterface::FixFirstStageVariables( const double* solution )
 {
     assert(solution != nullptr);
-    nested_benders_->fixFirstStageVariables(solution);
+    nested_benders_->FixFirstStageVariables(solution);
 }
 
 void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const double* solution, int num_cols )
@@ -812,7 +812,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
 			parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
             osi_pnb_->setParameters(parameters_);
-            osi_pnb_->fixFirstStageVariables(candidate_array.get());
+            osi_pnb_->FixFirstStageVariables(candidate_array.get());
 
 			current_time = CoinCpuTime();
             osi_pnb_->initialSolve();
@@ -834,7 +834,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
                 parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
 				parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
                 osi_pnb_->setParameters(parameters_);
-                osi_pnb_->fixFirstStageVariables(first_stage_solutions[i].get());
+                osi_pnb_->FixFirstStageVariables(first_stage_solutions[i].get());
 
 				current_time = CoinCpuTime();
                 osi_pnb_->initialSolve();
@@ -904,7 +904,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             osi_pnb_->setParameters(parameters_);
 
             // Fix first stage solution
-            osi_pnb_->fixFirstStageVariables(candidate_array.get());
+            osi_pnb_->FixFirstStageVariables(candidate_array.get());
 
 			current_time = CoinCpuTime();
             osi_pnb_->initialSolve();
@@ -939,7 +939,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
         osi_pnb_->setParameters(parameters_);
         // Fix first stage solution
-        osi_pnb_->fixFirstStageVariables(candidate_array.get());
+        osi_pnb_->FixFirstStageVariables(candidate_array.get());
 		current_time = CoinCpuTime();
         osi_pnb_->initialSolve();
 		time_upper_bounding += CoinCpuTime()-current_time;

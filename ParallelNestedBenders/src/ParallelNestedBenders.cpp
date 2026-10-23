@@ -300,21 +300,21 @@ namespace parallel_benders {
 
 	}
 
-	ParallelNestedBenders::ParallelNestedBenders(SmiScnModel* smi_model_ptr) :
-		smi_(smi_model_ptr), core_(smi_->getCore()), osi_solver_(nullptr), cont_phase_pnb_(nullptr), osi_solver_map_(), tree_(), tree_nodes_by_stage_(), stage_data_(),
-		num_stages_(core_->getNumStages()), num_scenarios_(smi_->getNumScenarios()), infinity_(1e20), integer_problems_(core_->getNumStages()), parameter_(),
-		zero_tolerance_(0.0), integer_tolerance_(0.0), absolute_epsilon_(0.0), relative_epsilon_(0.0),
-		current_iteration_(0), insubstantial_iteration_(0), max_iteration_(5000), cont_phase_it_limit_(0), use_first_phase_(false), minor_iteration_(0), major_iteration_(0), feasible_iteration_(0), lower_bound_(-infinity_), upper_bound_(infinity_), old_lower_bound_(-infinity_), solved_counter_(0),
-		current_stage_(0), non_staircase_problem_(false), instance_specification_file_(), testset_name_(""), problem_name_(""), instance_name_(""), instance_specs_to_file_(false), forward_(true), infeasible_problem_(false), unbounded_problem_(false), infeasible_problems_(smi_->getNumScenarios()), num_added_feasibility_cuts_(0), store_cut_information_(false), adaptive_(false), aggregation_scheme_(0), no_aggregation_(true), cut_consolidation_add_cut_(true), cut_consolidation_strike_threshold_(5), cut_consolidation_partial_threshold_(0.0), regularization_(false), regularized_solution_value_(infinity_), regularized_sigma_(1.0), regularized_gamma_(0.75), regularized_initialized_cols_(false), regularized_initialized_rows_(false), regularized_start_row_(0), start_solution_(0), auto_d2_algorithm_(false), d_square_(false), d_square_translation_term_(0), timer_(num_stages_ + 1, INT_TIMER_ID_TIMER_INIT), wall_clock_solution_time_(1, INT_TIMER_ID_SOL_WALL_CLOCK), detailed_timer_(5, INT_TIMER_ID_DETAILED_BUILD_MASTER), solution_times_(5, INT_TIMER_ID_SOLVE_MASTER), lp_cuts_timer_(10, INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX), maximal_solution_time_(0), solution_code_(0),
-		num_cpu_(1), console_mutex_ptr_(std::make_shared<std::mutex>()), solver_map_mutex_(), stage_warm_start_mutex_(), upper_bound_mutex_(), infeasible_problem_mutex_(), osi_solver_mutex_(), cgp_pnb_map_mutex_(), smi_mutex_(), add_cut_counter_mutex_(), stage_lower_upper_bounds_mutex_(), lp_dual_cgp_node_data_mutex_(), lp_round_cuts_mutex_(), misc_mutex_(), thread_pool_(0),
-		warm_start_(false), warm_start_scenarios_(false), warm_start_stage_(false), only_one_feasibility_cut_(true), generate_feasibility_and_optimality_cuts_(false),
-		cgp_pnb_map_(), lift_and_p_method_(0), lp_rounds_limit_(0), lp_root_rounds_limit_(0), global_lp_rounds_limit_(10000), lp_switches_limit_(1), lp_major_it_limit_(1), lp_max_node_depth_(std::numeric_limits<int>::max()), lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL), lp_use_cgp_pnb_cuts_(PNB_CGP_CUTS_NONE), cuts_for_fract_vars_(100), cgp_relative_epsilon_(0.0), cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE), current_lp_round_(0), lp_rounds_counter_(0), lp_switch_counter_(0), generate_lp_cuts_(false), next_lp_rounds_iteration_(1), lp_main_loop_fract_var_value_(0.0), lp_main_loop_iteration_round_(), lp_column_set_(PNB_COL_SET_NONE), store_primal_and_dual_(false), allowed_test_cases_(), generate_optimality_cuts_after_lp_cuts_(false),
-		sequencing_protocol_(0), second_iteration_stage_(0), strategy_epsilon_(0.0),
-		stage_lower_upper_bounds_(), stage_old_lower_upper_bounds_(), compute_stage_bounds_(false), at_last_iteration_(false), cuts_added_last_round_(0), theta_approximations_everywhere_(false), enforce_direction_(false), enforce_stage_(0), level_loop_forward_(false), level_loop_backward_(false), level_decomp_(false), level_stage_(0), level_euclidean_(false), level_manhattan_(false), level_infinity_(false),
-		oda_method_(false), level_lambda_(0.5), oda_kappa_(0.2), oda_gap_(infinity_), oda_lower_(-infinity_), oda_upper_(infinity_), oda_first_stage_(-infinity_), oda_phi_i_(-infinity_), oda_tilde_q_(-infinity_), num_oda_aggregates_(1), oda_chosen_optimality_cut_by_scenario_(), oda_current_tilde_q_s_(), critical_iteration_(false), uncritical_iteration_counter_(0), maximal_number_of_uncritical_iterations_(0), critical_iteration_counter_(0), last_critical_iteration_gap_(infinity_),
-		cvar_constr_decomp_(false), cvar_beta_(0.95), cvar_rho_(infinity_), cvar_H_(infinity_), cvar_alpha_(0.5), cvar_problem_lower_bound_(-infinity_), cvar_first_stage_(false), cvar_stopping_first_round_(false), cvar_stopping_second_round_(false), cvar_feasible_first_stage_solution_(false), cvar_next_iterate_problem_(false), change_cvar_alpha_(false), stop_cvar_(false), osi_stopping_criterion_solver_(nullptr),
-		warm_up_(false), warm_up_solution_(nullptr), regularized_solution_(nullptr), regularized_update_incumbent_(false), stage_aggregation_(false), begin_aggregation_stage_(0), end_aggregation_stage_(0), aggregate_from_start_(true), seperate_first_stage_solver_(true), seperate_stage_solver_(false), solve_relaxation_(0), debug_test_duplicate_indices_(false), log_level_(google::INFO), pretty_printing_(false), pretty_printing_verbose_(true), print_subproblems_(false), compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO), compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO), compute_objective_values_(false), final_solution_run_(false), first_stage_original_col_lower_(nullptr), first_stage_original_col_upper_(nullptr), fixed_solution_(nullptr), fixed_first_stage_(false), non_staircase_coefficients_(), old_discrepancies_(), optimality_cut_counter_(0), intra_cut_aggregation_time_(0), adaptive_cut_time_(0), current_solution_value_(0.0), d_square_c_triple_timer_(0.0), d_square_c_rhs_timer_(0.0), solution_similiarity_counter_(0), max_similarity_iteration_(1000)
-	{
+    ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) :
+    smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(nullptr),cont_phase_pnb_(nullptr),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
+        num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),integer_problems_(core_->getNumStages()),parameter_(),
+        zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
+        current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),cont_phase_it_limit_(0),use_first_phase_(false),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),solved_counter_(0),
+        current_stage_(0),non_staircase_problem_(false),instance_specification_file_(),testset_name_(""),problem_name_(""),instance_name_(""),instance_specs_to_file_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0), auto_d2_algorithm_(false),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1, INT_TIMER_ID_TIMER_INIT),wall_clock_solution_time_(1, INT_TIMER_ID_SOL_WALL_CLOCK),detailed_timer_(5, INT_TIMER_ID_DETAILED_BUILD_MASTER),solution_times_(5, INT_TIMER_ID_SOLVE_MASTER),lp_cuts_timer_(10, INT_TIMER_ID_LP_CUTS_SOLVE_MP_RELAX),maximal_solution_time_(0),solution_code_(0),
+        num_cpu_(1),console_mutex_ptr_(std::make_shared<std::mutex>()),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),cgp_pnb_map_mutex_(),smi_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(), lp_dual_cgp_node_data_mutex_(),lp_round_cuts_mutex_(),misc_mutex_(),thread_pool_(0),
+        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),
+		cgp_pnb_map_(),lift_and_p_method_(0),lp_rounds_limit_(0),lp_root_rounds_limit_(0),global_lp_rounds_limit_(10000),lp_switches_limit_(1),lp_major_it_limit_(1),lp_max_node_depth_(std::numeric_limits<int>::max()),lp_parallel_mode_(PNB_PARAL_MODE_ALL_SEQUENTIAL),lp_use_cgp_pnb_cuts_(PNB_CGP_CUTS_NONE),cuts_for_fract_vars_(100),cgp_relative_epsilon_(0.0),cgp_do_when_infeasible_(PNB_CGP_STOP_WHEN_INFEASIBLE),current_lp_round_(0),lp_rounds_counter_(0),lp_switch_counter_(0),generate_lp_cuts_(false),next_lp_rounds_iteration_(1),lp_main_loop_fract_var_value_(0.0),lp_main_loop_iteration_round_(),lp_column_set_(PNB_COL_SET_NONE),store_primal_and_dual_(false),allowed_test_cases_(),generate_optimality_cuts_after_lp_cuts_(false),
+        sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
+        stage_lower_upper_bounds_(),stage_old_lower_upper_bounds_(),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
+        oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
+        cvar_constr_decomp_(false),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),cvar_feasible_first_stage_solution_(false),cvar_next_iterate_problem_(false),change_cvar_alpha_(false),stop_cvar_(false),osi_stopping_criterion_solver_(nullptr),
+        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(0),debug_test_duplicate_indices_(false),log_level_(google::INFO),pretty_printing_(false),pretty_printing_verbose_(true),print_subproblems_(false),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_col_lower_(nullptr),fixed_col_upper_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(1000)
+    {
 
 	}
 
@@ -2836,19 +2836,20 @@ namespace parallel_benders {
 		current_iteration_ = 0;
 		current_stage_ = 0; // if done later might lead to the error in methods that use current_stage_
 
-		assert(num_stages_ >= 2);
-		assert(num_scenarios_ >= 1);
-		// we do not change 1st stage osi solver, keep the threads and reset their solvers
-		assert(osi_solver_ != nullptr && "Did you call Solve()?");
-		for (auto id_solver_pair : osi_solver_map_) {
-			//id_solver_pair.second->reset(); // This method throws exception with Cplex
-			id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-			// Workaround: Load empty problem. 
-			assert(id_solver_pair.second->getNumCols() == 0);
-		}
-		assert(tree_.getNumScenarios() > 0);
-		assert(tree_nodes_by_stage_.size() == num_stages_);
-		assert(stage_data_.size() == num_stages_);
+        assert(num_stages_ >= 2);
+        assert(num_scenarios_ >= 1);
+        // we do not change 1st stage osi solver, keep the threads and reset their solvers
+        assert(osi_solver_ != nullptr && "Did you call Solve()?");
+        osi_solver_map_.clear();
+        //for (auto id_solver_pair : osi_solver_map_) {
+        //    //id_solver_pair.second->reset(); // This method throws exception with Cplex
+        //    id_solver_pair.second->loadProblem(0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+        //    // Workaround: Load empty problem. 
+        //    assert(id_solver_pair.second->getNumCols() == 0);
+        //}
+        assert(tree_.getNumScenarios() > 0);
+        assert(tree_nodes_by_stage_.size() == num_stages_);
+        assert(stage_data_.size() == num_stages_);
 
 		lower_bound_ = -infinity_;
 		upper_bound_ = infinity_;
@@ -2923,55 +2924,56 @@ namespace parallel_benders {
 			}
 		}
 
-		// other memebers
-		insubstantial_iteration_ = 0;
-		minor_iteration_ = 0;
-		major_iteration_ = 0;
-		feasible_iteration_ = 0;
-		forward_ = true;
-		infeasible_problem_ = false;
-		unbounded_problem_ = false;
-		infeasible_problems_.reset();
-		num_added_feasibility_cuts_ = 0;
-		regularized_solution_value_ = infinity_;
-		solution_code_ = PNB_SOLUTION_OPTIMAL;
-		current_lp_round_ = 0;
-		lp_rounds_counter_ = 0;
-		lp_switch_counter_ = 0;
-		generate_lp_cuts_ = false;
-		next_lp_rounds_iteration_ = 1;
-		lp_main_loop_fract_var_value_ = 0.0;
-		lp_main_loop_iteration_round_.reset();
-		lp_column_set_ = PNB_COL_SET_NONE;
-		at_last_iteration_ = false;
-		cuts_added_last_round_ = 0;
-		theta_approximations_everywhere_ = false;
-		enforce_direction_ = false;
-		level_loop_forward_ = false;
-		level_loop_backward_ = false;
-		oda_gap_ = infinity_;
-		oda_lower_ = -infinity_;
-		oda_upper_ = infinity_;
-		oda_first_stage_ = -infinity_;
-		oda_phi_i_ = -infinity_;
-		oda_tilde_q_ = -infinity_;
-		oda_chosen_optimality_cut_by_scenario_.clear();
-		oda_current_tilde_q_s_.clear();
-		critical_iteration_ = false;
-		uncritical_iteration_counter_ = 0;
-		maximal_number_of_uncritical_iterations_ = 0;
-		critical_iteration_counter_ = 0;
-		last_critical_iteration_gap_ = infinity_;
-		cvar_H_ = infinity_;
-		cvar_problem_lower_bound_ = -infinity_;
-		stop_cvar_ = false;
-		assert(warm_up_ == false && "What to do with this guy in case of warm up");
-		//warm_up_solution_(nullptr);
-		regularized_update_incumbent_ = false;
-		old_discrepancies_.assign(old_discrepancies_.size(), infinity_);
-		optimality_cut_counter_ = 0;
-		current_solution_value_ = 0.0;
-		solution_similiarity_counter_ = 0;
+        // other memebers
+        insubstantial_iteration_ = 0;
+        minor_iteration_ = 0;
+        major_iteration_ = 0;
+        feasible_iteration_ = 0;
+        forward_ = true;
+        infeasible_problem_ = false;
+        unbounded_problem_ = false;
+        infeasible_problems_.reset();
+        num_added_feasibility_cuts_ = 0;
+        regularized_solution_value_ = infinity_;
+        solution_code_ = PNB_SOLUTION_OPTIMAL;
+        current_lp_round_ = 0;
+        lp_rounds_counter_ = 0;
+        lp_switch_counter_ = 0;
+        generate_lp_cuts_ = false;
+        next_lp_rounds_iteration_ = 1;
+        lp_main_loop_fract_var_value_ = 0.0;
+        lp_main_loop_iteration_round_.reset();
+        lp_column_set_ = PNB_COL_SET_NONE;
+        at_last_iteration_ = false;
+        cuts_added_last_round_ = 0;
+        theta_approximations_everywhere_ = false;
+        enforce_direction_ = false;
+        level_loop_forward_ = false;
+        level_loop_backward_ = false;
+        oda_gap_ = infinity_;
+        oda_lower_ = -infinity_;
+        oda_upper_ = infinity_;
+        oda_first_stage_ = -infinity_;
+        oda_phi_i_ = -infinity_;
+        oda_tilde_q_ = -infinity_;
+        oda_chosen_optimality_cut_by_scenario_.clear();
+        oda_current_tilde_q_s_.clear();
+        critical_iteration_ = false;
+        uncritical_iteration_counter_ = 0;
+        maximal_number_of_uncritical_iterations_ = 0;
+        critical_iteration_counter_ = 0;
+        last_critical_iteration_gap_ = infinity_;
+        cvar_H_ = infinity_;
+        cvar_problem_lower_bound_ = -infinity_;
+        stop_cvar_ = false;
+        assert(warm_up_ == false && "What to do with this guy in case of warm up");
+        //warm_up_solution_(nullptr);
+        regularized_update_incumbent_ = false;
+        old_discrepancies_.assign(old_discrepancies_.size(), infinity_);
+        optimality_cut_counter_ = 0;
+        current_solution_value_ = 0.0;
+        solution_similiarity_counter_ = 0;
+        cont_phase_pnb_.reset();
 
 		stopTimer(INT_TIMER_ID_TIMER_INIT);
 	}
@@ -3985,16 +3987,16 @@ namespace parallel_benders {
 		else
 			benders_node_pointer->column_upper_ = const_cast<double*> (core_->getDenseColUpper(current_stage_));
 
-		// If we have a fixed_solution we change the bounds to the fixed solution!
-		if (current_stage_ == 0 && fixed_first_stage_) {
-			// Delete the old ones, otherwise: memory leak
-			if (node_pointer->getColLowerLength())
-				delete[] benders_node_pointer->column_lower_;
-			if (node_pointer->getColUpperLength())
-				delete[] benders_node_pointer->column_upper_;
-			benders_node_pointer->column_upper_ = fixed_solution_.get();
-			benders_node_pointer->column_lower_ = fixed_solution_.get();
-		}
+        // If we have a fixed_solution we change the bounds to the fixed solution!
+        if ( current_stage_ == 0 && fixed_first_stage_ ){
+            // Delete the old ones, otherwise: memory leak
+			if ( node_pointer->getColLowerLength())
+                delete [] benders_node_pointer->column_lower_;
+            if ( node_pointer->getColUpperLength())
+                delete [] benders_node_pointer->column_upper_;
+            benders_node_pointer->column_upper_ = fixed_col_upper_.get();
+            benders_node_pointer->column_lower_ = fixed_col_lower_.get();
+        }
 
 		// Objective function coefficients
 		if (lp_main_loop_iteration_round_ && current_stage_ == 0) { // for L&P CGP MP
@@ -8472,22 +8474,50 @@ namespace parallel_benders {
 
 	}
 
-	void ParallelNestedBenders::fixFirstStageVariables(const double* solution)
-	{
-		// Copy old bounds
-		first_stage_original_col_lower_.reset(new double[smi_->getCore()->getNumCols(0)]);
-		first_stage_original_col_upper_.reset(new double[smi_->getCore()->getNumCols(0)]);
-		fixed_solution_.reset(new double[smi_->getCore()->getNumCols(0)]);
-		memcpy(first_stage_original_col_lower_.get(), smi_->getCore()->getDenseColLower(0), sizeof(double) * smi_->getCore()->getNumCols(0));
-		memcpy(first_stage_original_col_upper_.get(), smi_->getCore()->getDenseColUpper(0), sizeof(double) * smi_->getCore()->getNumCols(0));
-		memcpy(fixed_solution_.get(), solution, sizeof(double) * smi_->getCore()->getNumCols(0));
-		for (int i = 0; i < smi_->getCore()->getNumCols(0); i++) {
-			if (CompareWithZero(fixed_solution_[i]))
-				fixed_solution_[i] = 0.0;
-		}
-		fixed_first_stage_ = true;
+    void ParallelNestedBenders::FixFirstStageVariables(const std::vector<int>& column_indices, const std::vector<double>& column_values)
+    {
+        if (column_indices.size() > smi_->getCore()->getNumCols(0)) {
+            throw std::invalid_argument("Size of column_indices argument should be less or equal to the number of columns on the first stage.");
+        }
+        if (column_values.size() > smi_->getCore()->getNumCols(0)) {
+            throw std::invalid_argument("Size of column_values argument should  be less or equal to the number of columns on the first stage.");
+        }
+        if (column_indices.size() != column_values.size()) {
+            throw std::invalid_argument("Size of column_indices and column_values must be the same.");
+        }
 
-	}
+        // Copy old bounds
+        first_stage_original_col_lower_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        first_stage_original_col_upper_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        fixed_col_lower_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        fixed_col_upper_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        memcpy(first_stage_original_col_lower_.get(), smi_->getCore()->getDenseColLower(0), sizeof(double) * smi_->getCore()->getNumCols(0));
+        memcpy(first_stage_original_col_upper_.get(), smi_->getCore()->getDenseColUpper(0), sizeof(double) * smi_->getCore()->getNumCols(0));
+        
+        memcpy(fixed_col_lower_.get(), first_stage_original_col_lower_.get(), sizeof(double) * smi_->getCore()->getNumCols(0));
+        memcpy(fixed_col_upper_.get(), first_stage_original_col_upper_.get(), sizeof(double) * smi_->getCore()->getNumCols(0));
+        for (int i = 0; i < column_indices.size(); i++) {
+            int column_index = column_indices[i];
+            int column_value = column_values[i];
+            if (CompareWithZero(column_value)) {
+                fixed_col_lower_[column_index] = 0.0;
+                fixed_col_upper_[column_index] = 0.0;
+            }
+            else {
+                fixed_col_lower_[column_index] = column_value;
+                fixed_col_upper_[column_index] = column_value;
+            }
+        }
+        fixed_first_stage_ = true;
+    }
+
+    void ParallelNestedBenders::FixFirstStageVariables(const double* solution)
+    {
+        std:vector<int> column_indices(smi_->getCore()->getNumCols(0));
+        std::iota(column_indices.begin(), column_indices.end(), 0);
+        std::vector<double> column_values(solution, solution + smi_->getCore()->getNumCols(0));
+        FixFirstStageVariables(column_indices, column_values);
+    }
 
 	int ParallelNestedBenders::getNumContPhasePnbIterations() const
 	{

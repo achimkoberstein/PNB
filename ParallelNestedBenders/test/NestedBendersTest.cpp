@@ -458,7 +458,7 @@ public:
 						std::pair<double, double*> results = smi_model_ev->solveEV(&osi_cpx);
 						ev_solution.reset(results.second);
 						OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx, smi_model.get());
-						osi_pnb.fixFirstStageVariables(ev_solution.get());
+						osi_pnb.FixFirstStageVariables(ev_solution.get());
 						osi_pnb.initialSolve();
 						osi_pnb.printProblemCharacteristics();
 						eev2 = osi_pnb.getObjValue();
