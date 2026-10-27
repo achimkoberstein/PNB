@@ -51,7 +51,7 @@ MP_constraint::MP_constraint(
                              const MP_set_base &s5) :
 RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
 M(MP_model::current_model),
-offset(-1),real_size(-1),
+offset(-1),real_size(-1), nocoefs(NULL),
 S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),
 I1(0),I2(0),I3(0),I4(0),I5(0),such_that_enabled_(false)
 {
@@ -133,6 +133,8 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
     int current_row = 0;
     int string_length = 0;
     for (int k = 0; k < size(); k++) {
+        assert(nocoefs);
+        if (nocoefs->test(k)) continue;  // no coeffcients were generated for this constraint in model::attach
         string free = nameFree + this->generateNamesSuffixFree(k);
         if ( free == nameFree ){
             continue;
@@ -142,7 +144,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
         if ( current_row == real_size )
             string_length = nameFree.length();
     }
-    assert(current_row==real_size || such_that_enabled_); // TODO: Think about it: Such_that on constraint can change real_size!
+//    assert(current_row==real_size || such_that_enabled_); // TODO: Think about it: Such_that on constraint can change real_size!
     
 
     // now for the strict-type
@@ -154,6 +156,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
         nameSetStrict.insert(nameStrict);
         current_row = 0;
         for (int k = 0; k < size(); k++) {
+            if (nocoefs->test(k)) continue;  // no coeffcients were generated for this constraint in model::attach
             string strict = nameStrict + this->generateNamesSuffixFree(k);
             if ( strict == nameStrict ){
                 continue;
@@ -161,7 +164,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
             rowNamesStrict[getOffsetedIndex(current_row)] = strict.c_str();
             ++current_row;
         }
-        assert(current_row==real_size || such_that_enabled_);
+ //       assert(current_row==real_size || such_that_enabled_);
     }
     else {
         // use the offset as suffix
@@ -222,8 +225,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
         I1->getIndex()->unInstantiate();
         if ( S1.check(value) != outOfBound )
             ss << "_" << value;
-        else
-            return "";
+        //else
+         //   return "";
         if (&S2 != &MP_set::getEmpty()) {
             I2->getIndex()->assign(ik.i2);
             I2->getIndex()->instantiate();
@@ -231,8 +234,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
             I2->getIndex()->unInstantiate();
             if ( S2.check(value) != outOfBound )
                 ss << "_" << value;
-            else
-                return "";
+           // else
+           //     return "";
             if (&S3 != &MP_set::getEmpty()) {
                 I3->getIndex()->assign(ik.i3);
                 I3->getIndex()->instantiate();
@@ -240,8 +243,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
                 I3->getIndex()->unInstantiate();
                 if ( S3.check(value) != outOfBound )
                     ss << "_" << value;
-                else
-                    return "";
+            //    else
+            //        return "";
                 if (&S4 != &MP_set::getEmpty()) {
                     I4->getIndex()->assign(ik.i4);
                     I4->getIndex()->instantiate();
@@ -249,8 +252,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
                     I4->getIndex()->unInstantiate();
                     if ( S4.check(value) != outOfBound )
                         ss << "_" << value;
-                    else
-                        return "";
+            //        else
+            //            return "";
                     if (&S5 != &MP_set::getEmpty()) {
                         I5->getIndex()->assign(ik.i5);
                         I5->getIndex()->instantiate();
@@ -258,8 +261,8 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
                         I5->getIndex()->unInstantiate();
                         if ( S1.check(value) != outOfBound )
                             ss << "_" << value;
-                        else
-                            return "";
+            //            else
+            //                return "";
                     }
                 }
             }

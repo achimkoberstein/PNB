@@ -1,0 +1,5 @@
+TIME          modelout
+PERIODS
+    V0_0      R2_0                     STAGE_0
+    V1_1250   R0_0                     STAGE_1
+ENDATA

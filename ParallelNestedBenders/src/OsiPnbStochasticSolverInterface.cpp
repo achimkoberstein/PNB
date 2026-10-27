@@ -20,8 +20,7 @@
 
 #include "CoinTime.hpp";
 
-#define CPLEX_PRESENT
-#ifdef CPLEX_PRESENT
+#ifdef USE_CPLEX
 #include "ilcplex/cplex.h"
 #include "OsiCpxSolverInterface.hpp"
 #endif
@@ -324,10 +323,11 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         }
         else{
 #endif
-			if (nested_benders_->smi_->getIntegerLen() && relaxation != 0 && solver_benders) {
+
+			if (nested_benders_->smi_->getIntegerLen() && !relaxation && solver_benders) {
 				osi_->benders(false);
 			}
-			else if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
+			else if ( nested_benders_->smi_->getIntegerLen() && !relaxation){
                 osi_->branchAndBound();
             }
             else {

@@ -1,0 +1,5 @@
+TIME          16_scena
+PERIODS
+    y_0 dcons_0_0                STAGE_0
+    x_1_0_0 dcons_0_0                STAGE_1
+ENDATA

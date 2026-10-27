@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ImportGroup Label="PropertySheets" />
+	<PropertyGroup Label="UserMacros" />
+	<PropertyGroup>
+		<_PropertySheetDisplayName>ProjectProperties_withGrb</_PropertySheetDisplayName>
+	</PropertyGroup>
+
+	<Target Name="CheckGurobiMacro" BeforeTargets="ClCompile">
+		<Message Text="GUROBI_HOME=$(GUROBI_HOME)" Importance="High"/>
+		<Message Text="Configuration=$(Configuration)" Importance="High"/>
+	</Target>
+
+	<!-- Shared by Debug and Release -->
+	<ItemDefinitionGroup Condition="'$(GUROBI_HOME)' != ''">
+		<ClCompile>
+			<PreprocessorDefinitions>USE_GUROBI;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<AdditionalIncludeDirectories>
+				../../../../../ParallelNestedBenders/src;
+				../../../../../Smi/src;
+				../../../../../Osi/src/Osi;
+				../../../../../FlopCpp/src;
+				../../../../../Cbc/src;
+				../../../../../Clp/src;
+				../../../../../Cbc/src/OsiCbc;
+				../../../../../Osi/src/OsiCpx;
+				../../../../../Clp/src/OsiClp;
+				../../../../../Osi/src/OsiGrb;
+				../../../../../BuildTools/headers;
+				../../../../../CoinUtils/src;
+				../../../../../ThirdParty/gtest/include;
+				../../../../../ThirdParty/boost;
+				../../../../../ThirdParty/glog/src/windows;
+				%(AdditionalIncludeDirectories)
+			</AdditionalIncludeDirectories>
+			<MinimalRebuild>false</MinimalRebuild>
+			<AdditionalOptions>/permissive</AdditionalOptions>
+		</ClCompile>
+		<Link>
+			<AdditionalDependencies>libOsiGrb.lib;gurobi120.lib;%(AdditionalDependencies)</AdditionalDependencies>
+		</Link>
+	</ItemDefinitionGroup>
+
+	<!-- Debug only -->
+	<ItemDefinitionGroup Condition="'$(GUROBI_HOME)' != '' And '$(Configuration)' == 'Debug'">
+		<ClCompile>
+			<PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+		</ClCompile>
+		<Link>
+			<AdditionalLibraryDirectories>
+				$(GUROBI_HOME)/lib;
+				../../../../../FlopCpp/MSVisualStudio/v16alt/x64/Debug;
+				%(AdditionalLibraryDirectories)
+			</AdditionalLibraryDirectories>
+			<AdditionalDependencies>gurobi_c++mdd2017.lib;%(AdditionalDependencies)</AdditionalDependencies>
+		</Link>
+	</ItemDefinitionGroup>
+
+	<!-- Release only -->
+	<ItemDefinitionGroup Condition="'$(GUROBI_HOME)' != '' And '$(Configuration)' == 'Release'">
+		<ClCompile>
+			<PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+		</ClCompile>
+		<Link>
+			<AdditionalLibraryDirectories>
+				$(GUROBI_HOME)/lib;
+				../../../../../FlopCpp/MSVisualStudio/v16alt/x64/Release;
+				%(AdditionalLibraryDirectories)
+			</AdditionalLibraryDirectories>
+			<AdditionalDependencies>gurobi_c++md2017.lib;%(AdditionalDependencies)</AdditionalDependencies>
+		</Link>
+	</ItemDefinitionGroup>
+
+	<ItemGroup />
+</Project>

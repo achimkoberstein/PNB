@@ -1,0 +1,115 @@
+STOCH         16_simpl
+SCENARIOS     DISCRETE
+ SC Scen_0      'ROOT'    0.0625 STAGE_0
+    RHS       dcons_0_0 -70.331999999999993634
+    RHS       dcons_0_1 -12.795199999999999463
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 12.795199999999999463
+    RHS       dcons_2_0 70.331999999999993634
+    RHS       dcons_2_1 0
+ SC Scen_1      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -66.787000000000006139
+    RHS       dcons_0_1 -23.184300000000000352
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 23.184300000000000352
+    RHS       dcons_2_0 66.787000000000006139
+    RHS       dcons_2_1 0
+ SC Scen_2      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -29.949799999999999756
+    RHS       dcons_0_1 -11.443099999999999383
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 11.443099999999999383
+    RHS       dcons_2_0 29.949799999999999756
+    RHS       dcons_2_1 0
+ SC Scen_3      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -15.908799999999999386
+    RHS       dcons_0_1 -25.781900000000000261
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 25.781900000000000261
+    RHS       dcons_2_0 15.908799999999999386
+    RHS       dcons_2_1 0
+ SC Scen_4      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -17.926899999999999835
+    RHS       dcons_0_1 -12.496800000000000352
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 12.496800000000000352
+    RHS       dcons_2_0 17.926899999999999835
+    RHS       dcons_2_1 0
+ SC Scen_5      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -13.531800000000000495
+    RHS       dcons_0_1 -22.468399999999999039
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 22.468399999999999039
+    RHS       dcons_2_0 13.531800000000000495
+    RHS       dcons_2_1 0
+ SC Scen_6      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -60.954500000000003013
+    RHS       dcons_0_1 -19.777300000000000324
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 19.777300000000000324
+    RHS       dcons_2_0 60.954500000000003013
+    RHS       dcons_2_1 0
+ SC Scen_7      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -79.213099999999997181
+    RHS       dcons_0_1 -37.327199999999997715
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 37.327199999999997715
+    RHS       dcons_2_0 79.213099999999997181
+    RHS       dcons_2_1 0
+ SC Scen_8      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -69.057400000000001228
+    RHS       dcons_0_1 -36.297899999999998499
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 36.297899999999998499
+    RHS       dcons_2_0 69.057400000000001228
+    RHS       dcons_2_1 0
+ SC Scen_9      Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -63.763199999999997658
+    RHS       dcons_0_1 -1.4556500000000001105
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 1.4556500000000001105
+    RHS       dcons_2_0 63.763199999999997658
+    RHS       dcons_2_1 0
+ SC Scen_10     Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -60.696199999999997488
+    RHS       dcons_0_1 -26.539400000000000546
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 26.539400000000000546
+    RHS       dcons_2_0 60.696199999999997488
+    RHS       dcons_2_1 0
+ SC Scen_11     Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -73.312299999999993361
+    RHS       dcons_0_1 -16.787900000000000489
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 16.787900000000000489
+    RHS       dcons_2_0 73.312299999999993361
+    RHS       dcons_2_1 0
+ SC Scen_12     Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -46.191200000000002035
+    RHS       dcons_0_1 -20.36939999999999884
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 20.36939999999999884
+    RHS       dcons_2_0 46.191200000000002035
+    RHS       dcons_2_1 0
+ SC Scen_13     Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -35.545799999999999841
+    RHS       dcons_0_1 -25.678399999999999892
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 25.678399999999999892
+    RHS       dcons_2_0 35.545799999999999841
+    RHS       dcons_2_1 0
+ SC Scen_14     Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -62.747799999999998022
+    RHS       dcons_0_1 -20.826599999999999113
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 20.826599999999999113
+    RHS       dcons_2_0 62.747799999999998022
+    RHS       dcons_2_1 0
+ SC Scen_15     Scen_0    0.0625 STAGE_1
+    RHS       dcons_0_0 -39.935600000000000875
+    RHS       dcons_0_1 -19.134000000000000341
+    RHS       dcons_1_0 0
+    RHS       dcons_1_1 19.134000000000000341
+    RHS       dcons_2_0 39.935600000000000875
+    RHS       dcons_2_1 0
+ENDATA

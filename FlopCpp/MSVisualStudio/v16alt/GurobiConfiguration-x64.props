@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros"/>
+  <PropertyGroup>
+    <GurobiVersion>1203</GurobiVersion>
+    <_PropertySheetDisplayName>GurobiConfiguration</_PropertySheetDisplayName>
+  </PropertyGroup>
+
+	<Target Name="CheckGurobiMacro" BeforeTargets="ClCompile">
+		<Message Text="GUROBI_HOME=$(GUROBI_HOME)" Importance="High"/>
+		<Message Text="USE_GUROBI defined? $(PreprocessorDefinitions)" Importance="High"/>
+	</Target>
+	
+	<ItemDefinitionGroup   Condition="'$(GUROBI_HOME)' != ''">
+	<ClCompile>
+	   <PreprocessorDefinitions>
+			USE_GUROBI;
+			%(PreprocessorDefinitions)
+	   </PreprocessorDefinitions>
+    <!--$(GurobiVersion) is not supported in ItemDefinitionGroup-->
+      <AdditionalIncludeDirectories>
+		  $(GUROBI_HOME)/include;
+		  %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>
+	      gurobi120.lib;
+		  %(AdditionalDependencies)
+	  </AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+		  $(GUROBI_HOME)/lib;
+		  %(AdditionalLibraryDirectories)
+	  </AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="GurobiVersion">
+      <Value>$(GurobiVersion)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

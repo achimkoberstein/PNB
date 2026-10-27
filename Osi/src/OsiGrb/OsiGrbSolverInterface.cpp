@@ -25,9 +25,11 @@
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+#ifdef USE_GUROBI
 extern "C" {
 #include "gurobi_c.h"
 }
+#endif
 
 /* A utility definition which allows for easy suppression of unused variable warnings from GCC.
 */
@@ -74,7 +76,7 @@ template<> struct CompileTimeAssert<true> {};
 //#############################################################################
 // A couple of helper functions
 //#############################################################################
-
+#ifdef USE_GUROBI
 inline void freeCacheDouble( double*& ptr )
 {
   if( ptr != NULL )
@@ -762,7 +764,10 @@ CoinWarmStart* OsiGrbSolverInterface::getWarmStart() const
 {
   debugMessage("OsiGrbSolverInterface::getWarmStart()\n");
 
-  assert(!probtypemip_);
+  //assert(!probtypemip_);
+  if (probtypemip_)
+      return getEmptyWarmStart();
+
 
   if( !basisIsAvailable() )
     return NULL;
@@ -4011,3 +4016,4 @@ void OsiGrbSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
 	  }
 	}
 }
+#endif

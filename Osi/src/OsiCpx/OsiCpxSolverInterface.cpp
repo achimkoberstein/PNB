@@ -25,7 +25,10 @@
 #include "CoinWarmStartBasis.hpp"
 #include "CoinFinite.hpp"
 
-#include "cplex.h"
+#ifdef USE_CPLEX
+#include "ilcplex/cplex.h"
+//#include "cplex.h"
+#endif
 
 // CPLEX 10.0 removed CPXERR_NO_INT_SOLN
 #if !defined(CPXERR_NO_INT_SOLN)
@@ -44,7 +47,7 @@
 //#############################################################################
 // A couple of helper functions
 //#############################################################################
-
+#ifdef USE_CPLEX
 inline void freeCacheDouble( double*& ptr )
 {
   if( ptr != NULL )
@@ -248,7 +251,6 @@ OsiCpxSolverInterface::freeColType()
    }
    assert(coltype_ == NULL);
 }
-
 
 //#############################################################################
 // Solve methods
@@ -4098,6 +4100,8 @@ void OsiCpxSolverInterface::getBasics(int* index) const {
   delete[] cplex_trash;
 } /* getBasics */
 
+#endif
+
 #else /* not CPX_VERSION >= 900 */
 
 /**********************************************************************/
@@ -4152,3 +4156,5 @@ void OsiCpxSolverInterface::getBasics(int* index) const {
   exit(1);
 } /* getBasics */
 #endif /* not CPX_VERSION >= 900 */
+
+

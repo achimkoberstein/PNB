@@ -1,0 +1,5 @@
+TIME          .\SNIP_s
+PERIODS
+    x_0 R0_0                     STAGE_0
+    pi_1_0 R1_0                     STAGE_1
+ENDATA
