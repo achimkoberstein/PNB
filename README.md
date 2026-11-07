@@ -1,6 +1,5 @@
 ## Introduction
-SFlopC++ is an open-source stochastic programming modeling framework built as an extension of FlopC++, a C++ library for algebraic modeling of optimization problems, with a stochastic modeling interface (SMI).
-Offers a range of advanced acceleration techniques for multi-stage stochastic problems (NestedBenders):
+PNB Solver is an open-source stochastic programming modeling and solving framework that features an extension of FlopC++, a C++ library for algebraic modeling of optimization problems, and several optimization methods based on Benders decomposition. It offers a range of advanced acceleration techniques for two- and multi-stage stochastic problems:
 - Level decomposition (Euclidean, manhattan, infinity distance)
 - Regularized decomposition
 - On-Demand Accuracy approach
@@ -23,8 +22,6 @@ Implemented for CPLEX, Gurobi and CLP solvers (interaction via OsiSolverInterfac
 | Academic (free) | Students, faculty, and staff at degree-granting institutions | None | https://www.ibm.com/academic/topic/data-science ([tutorial](https://www.youtube.com/watch?v=BVWPhseMf-A&t=191s)) |
 | Paid | Production and commercial use | None | https://www.ibm.com/products/ilog-cplex-optimization-studio (use "Buy now") |
 
-Make sure you install the Academic Initiative build, not the Community Edition,
-or you will hit the size limits above (CPLEX error 1016).
 
 ### Gurobi
 | License | Who it's for | Limits | Link |
@@ -34,23 +31,19 @@ or you will hit the size limits above (CPLEX error 1016).
 | Paid | Production and commercial use | None | https://www.gurobi.com/pricing/ |
 
 
-__PNB is tested and supported for Windows 10 x64 and Visual Studio 2026.__
-
 ## Prerequisites:
 Windows 10 x64, Visual Studio 2026
 
 ## Quick start:
-1. 	Clone the repository: git clone https://github.com/pavloglushko/PNB.
-2. 	Open it in Visual Studio 2026, move to "easy_configuration" branch.
+1. 	Clone the repository: ``` git clone https://github.com/achimkoberstein/PNB ```
+2. 	Open it in Visual Studio 2026.
 3. Open solution FlopCpp.sln (FlopCpp/MSVisualStudio/v16alt/FlopCpp.sln). Here you will see the list of example optimization problems.	They can also be found in the following [folder](./FlopCpp/MSVisualStudio/v16alt/examples), but the launch of examples is made only through FlopCpp.sln.
 4. Build the solution.
 5. Right-click "Farmer" project, select "Set as starting project".
-   Confirm that:
-   - Solution Configuration = "Debug"
-   - Solution Platforms = "x64
+   Confirm that Solution Platforms = "x64".
    Run the project. In case of unsuccessful compilation/linking, proceed with steps 6-8.
 6. In case you installed CPLEX or Gurobi license -> Go to "Property Manager" ("View" -> "Other Windows" -> "Property Manager"). 
-   Add one or both of the following files from the directory FlopCpp\MSVisualStudio\v16alt\ProjectConfiguration to the project:
+   Make sure that one or both of the following files from the directory FlopCpp\MSVisualStudio\v16alt\ProjectConfiguration are added to the project:
    - 3_ProjectProperties.props for use of the CPLEX solver
    - 3_ProjectProperties_withGrb.props for use of the Gurobi solver
 7. Check project dependencies and references. Both should include:
@@ -127,3 +120,14 @@ pnb.initialSolve();
 |[SCDP_simple problem](./FlopCpp/MSVisualStudio/v16alt/examples/SCDP_simple)|    |    |
 
 
+## Contributors
+Csaba Fabian, Christian Wolf, Pavlo Glushko, Oleksandr Kotkov, Achim Koberstein
+
+## Publications
+
+- C. Wolf, A. Koberstein, T. Hultberg (2011). [Stochastic Extensions to FlopC++](https://doi.org/10.1007/978-3-642-20009-0_53). In: *Operations Research Proceedings 2010*, Springer, pp. 333-338.
+- C. Wolf (2013). [Advanced acceleration techniques for Nested Benders decomposition in stochastic programming](https://nbn-resolving.org/urn:nbn:de:hbz:466:2-12700). Dissertation Thesis, University of Paderborn.
+- C. Wolf, A. Koberstein (2013). [Dynamic sequencing and cut consolidation for the parallel hybrid-cut nested L-shaped method](https://doi.org/10.1016/j.ejor.2013.04.017). *European Journal of Operational Research* 230:143-156.
+- C. Wolf, C. Fábián, A. Koberstein, L. Suhl (2014). [Applying oracles of on-demand accuracy in two-stage stochastic programming – A computational study](https://doi.org/10.1016/j.ejor.2014.05.010). *European Journal of Operational Research* 239:437-448.
+- C. Fábián, C. Wolf, A. Koberstein, L. Suhl (2015). [Risk-averse Optimization in Two-Stage Stochastic Models: Computational Aspects and a Study](https://doi.org/10.1137/130918216). *SIAM Journal on Optimization* 25(1):28-52.
+- P. Glushko, C. I. Fábián, A. Koberstein (2022). [An L-shaped method with strengthened lift-and-project cuts](https://doi.org/10.1007/s10287-022-00426-y). *Computational Management Science* 19:539-565.
