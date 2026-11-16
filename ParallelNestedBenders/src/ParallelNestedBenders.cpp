@@ -8116,7 +8116,7 @@ namespace parallel_benders {
 		osi_row_cut->setUb(infinity_);
 		osi_row_cut->setRow(countels, &cut_indices[0], &cut_elements[0], debug_test_duplicate_indices_);
 		std::unique_ptr<OsiRowCut> cut_pointer(osi_row_cut);
-		std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_, getCurrentThreadId(), cut_pointer, PNB_CUT_TYPE_OPTIMALITY, num_columns, num_aggregates));
+		std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_, getCurrentThreadId(), cut_pointer, PNB_CUT_TYPE_OPTIMALITY, num_columns, benders_node_pointer->num_thetas_));
 
 		stage_data_[current_stage_]->added_optimality_cuts_ += 1;
 		std::lock_guard<std::mutex> unique_lock(misc_mutex_);
@@ -8811,7 +8811,7 @@ namespace parallel_benders {
 			// Memory
 			GRBsetdblparam(env_ptr, GRB_DBL_PAR_NODEFILESTART, 0.5);
 			// Disable solver features
-			osi_solver->setHintParam(OsiDoPresolveInInitial, true, OsiHintTry);
+			//osi_solver->setHintParam(OsiDoPresolveInInitial, true, OsiHintTry);
 			//GRBsetintparam(env_ptr, GRB_INT_PAR_PRESOLVE, 0);
 			GRBsetintparam(env_ptr, GRB_INT_PAR_CUTS, 0);
 			GRBsetdblparam(env_ptr, GRB_DBL_PAR_HEURISTICS, 0.0);
