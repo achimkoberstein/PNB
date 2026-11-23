@@ -121,7 +121,14 @@ pnb.initialSolve();
 
 
 ## Contributors
-Csaba Fabian, Christian Wolf, Pavlo Glushko, Oleksandr Kotkov, Achim Koberstein
+
+| Name | GitHub | Profile |
+|---|---|---|
+| Csaba I. Fábián | – | [ResearchGate](https://www.researchgate.net/profile/Csaba-Fabian) |
+| Christian Wolf | – | [ResearchGate](https://www.researchgate.net/profile/Christian-Wolf-21)  |
+| Pavlo Glushko | [@pavloglushko](https://github.com/pavloglushko) | - |
+| Oleksandr Kotkov | [@oleksandrkotkov](https://github.com/oleksandrkotkov) | – |
+| Achim Koberstein | [@achimkoberstein](https://github.com/achimkoberstein) | [ResearchGate](https://www.researchgate.net/profile/Achim-Koberstein) |
 
 ## Publications
 
